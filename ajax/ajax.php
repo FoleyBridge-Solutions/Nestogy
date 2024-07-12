@@ -753,7 +753,7 @@ if (isset($_GET['search'])) {
 
 if (isset($_GET['plaid_link_token'])) {
 // Create a link token
-    $create_link_token_url = "https://sandbox.plaid.com/link/token/create";
+    $create_link_token_url = "https://production.plaid.com/link/token/create";
 
     $data = [
         'client_id' => "$config_plaid_client_id",
@@ -783,3 +783,63 @@ if (isset($_GET['plaid_link_token'])) {
     
     echo $result;
 }
+
+if (isset($_GET['client_invoices'])) {
+    $client_id = intval($_GET['client_invoices']);
+    $response = [];
+
+    $sql = mysqli_query($mysqli,
+        "SELECT invoice_id, invoice_date, invoice_due, invoice_amount, invoice_status, invoice_number FROM invoices
+        WHERE invoice_client_id = $client_id AND invoice_status != 'Paid'
+        ORDER BY invoice_date ASC"
+    );
+
+    $client_currency_sql = mysqli_query($mysqli,
+        "SELECT client_currency_code FROM clients
+        WHERE client_id = $client_id"
+    );
+    $client_currency = mysqli_fetch_array($client_currency_sql)['client_currency_code'];
+
+    while ($row = mysqli_fetch_array($sql)) {
+        // get the invoice balance
+        $invoice_id = $row['invoice_id'];
+        $invoice_balance = getInvoiceBalance($invoice_id);
+        $row['invoice_balance'] = numfmt_format_currency($currency_format, $invoice_balance, $client_currency);
+        $response[] = $row;
+        //format the amount
+        $amount = numfmt_format_currency($currency_format, $row['invoice_amount'], $client_currency);
+        $row['invoice_amount'] = $amount;
+    }
+
+    echo json_encode($response);
+}
+
+if (isset($_GET['apply_payment'])) {
+    $data = file_get_contents('php://input');
+    $data = json_decode($data, true);
+
+    $invoices_amount = 0;
+    
+    $payment_amount = $data['payment_amount'];
+    $payment_date = $data['payment_date'];
+    $payment_method = $data['payment_method'];
+    $payment_reference = $data['payment_reference'];
+    $payment_account = $data['payment_account'];
+
+    foreach ($data['invoices'] as $invoice) {
+        createPayment([
+            'invoice_id' => $invoice['invoice_id'],
+            'amount' => $invoice['invoice_payment_amount'],
+            'date' => $payment_date,
+            'method' => $payment_method,
+            'reference' => $payment_reference,
+            'account' => $payment_account,
+            'balance' => $invoice['invoice_payment_amount']
+        ]);
+        error_log($invoice['invoice_payment_amount']);
+    }
+
+    //success
+    echo json_encode(['success' => true]);
+}
+

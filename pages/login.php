@@ -4,19 +4,19 @@
 header("Content-Security-Policy: default-src 'self' https://cdn.plaid.com; script-src 'self' https://cdn.plaid.com/link/v2/stable/link-initialize.js; frame-src 'self' https://cdn.plaid.com; connect-src 'self' https://production.plaid.com;");
 
 // Set the Permissions Policy header
-header("Permissions-Policy: fullscreen=(self 'https://cdn.plaid.com' 'https://cdn-testing.plaid.com' 'https://secure.plaid.com' 'https://secure-testing.plaid.com' 'https://verify.plaid.com' 'https://verify-sandbox.plaid.com' 'https://verify-testing.plaid.com');");
+header("Permissions-Policy: fullscreen=(self 'https://cdn.plaid.com' 'https://cdn-testing.plaid.com' 'https://secure.plaid.com' 'https://secure-testing.plaid.com' 'https://verify.plaid.com' 'https://verify-production.plaid.com' 'https://verify-testing.plaid.com');");
 
 if (!file_exists('/var/www/portal.twe.tech/includes/config/config.php')) {
     header("Location: setup.php");
     exit;
 }
 
+session_start();
 
-if (isset($_GET['tenant_id'])) {
-    $_SESSION['database'] = $_GET['tenant_id'];
-    if ($_SESSION['database'] == 'twe') {
-        $_SESSION['database'] = 'itflow';
-    }
+// Redirect to dashboard if already logged in
+if (isset($_SESSION['user_id'])) {
+    header("Location: /pages/dashboard.php");
+    exit;
 }
 
 require_once "/var/www/portal.twe.tech/includes/config/config.php";

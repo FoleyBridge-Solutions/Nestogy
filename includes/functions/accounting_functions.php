@@ -3,7 +3,7 @@
 // Accounting related functions
 
 function getPlaidLinkToken($client_user_id = 1) {
-    global $config_plaid_client_id, $config_plaid_secret;
+    global $config_plaid_client_id, $config_plaid_secret, $mysqli;
 
     validateAccountantRole();
 
@@ -11,8 +11,18 @@ function getPlaidLinkToken($client_user_id = 1) {
 
     $curl = curl_init();
 
+    // check if there are any access tokens in the database
+    $sql = "SELECT * FROM plaid_access_tokens WHERE client_id = 1";
+    $result = mysqli_query($mysqli, $sql);
+    if (mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        $access_token = ', "access_token": "' . $row['encrypted_access_token'] . '"';
+    } else {
+        $access_token = '';
+    }
+
     curl_setopt_array($curl, array(
-        CURLOPT_URL => 'https://sandbox.plaid.com/link/token/create',
+        CURLOPT_URL => 'https://production.plaid.com/link/token/create',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
@@ -31,6 +41,7 @@ function getPlaidLinkToken($client_user_id = 1) {
         },
         "products": ["transactions"],
         "redirect_uri": "https://portal.twe.tech/admin/plaid.php"
+        ' . $access_token . '
     }',
         CURLOPT_HTTPHEADER => array(
         'Content-Type: application/json'
@@ -90,7 +101,7 @@ function syncPlaidTransactions($next_cursor = null) {
 
     $curl = curl_init();
     $curl_array = array(
-        CURLOPT_URL => 'https://sandbox.plaid.com/transactions/sync',
+        CURLOPT_URL => 'https://production.plaid.com/transactions/sync',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
@@ -107,6 +118,8 @@ function syncPlaidTransactions($next_cursor = null) {
     $response = curl_exec($curl);
     curl_close($curl);
     $response = json_decode($response, true);
+
+    error_log(print_r($response, true));
 
     $accounts = $response['accounts'] ?? [];
     $added_transactions = $response['added'] ?? '';
@@ -918,4 +931,33 @@ function getInvoiceBalance($invoice_id)
     }
 
     return $balance;
+}
+
+function getItemTotal($item_id) {
+    global $mysqli;
+    $sql = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_id = $item_id");
+    $row = mysqli_fetch_array($sql);
+    $item_price = floatval($row['item_price']);
+    $item_qty = floatval($row['item_quantity']);
+    $item_discount = floatval($row['item_discount']);
+    $item_tax = floatval($row['item_tax']);
+    $item_subtotal = $item_price * $item_qty;
+    $item_total = $item_subtotal + $item_tax - $item_discount;
+    return $item_total;
+}
+
+function getInvoiceAmount($invoice_id)
+{
+    global $mysqli;
+
+    $invoice_id = intval($invoice_id);
+
+    // get invoice item ids
+    $sql = "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id";
+    $result = mysqli_query($mysqli, $sql);
+    $invoice_amount = 0;    
+    while ($row = mysqli_fetch_assoc($result)) {
+        $invoice_amount += getItemTotal($row['item_id']);
+    }
+    return $invoice_amount;
 }

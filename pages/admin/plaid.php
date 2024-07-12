@@ -18,14 +18,21 @@ if (!isset($_GET['oauth_state_id'])) {
 $access_token_sql = "SELECT * FROM plaid_access_tokens WHERE client_id = 1";
 $num_rows = mysqli_num_rows(mysqli_query($mysqli, $access_token_sql));
 
+if ($num_rows > 0) {
+  $link_text = "Repair Account";
+} else {
+  $link_text = "Link Account";
+}
+
+
 if ($link_token == null) {
   echo "Error getting link token";
-} elseif ($num_rows == 0) { ?>
+} ?>
   <button id="link-button" class="btn btn-primary mb-2">
     <i class="fas fa-link"></i>
       Link Account
   </button>
-<?php } 
+<?php
 
 if ($num_rows > 0) {
   echo "<a href='/post.php?sync_transactions' class='btn btn-primary'>

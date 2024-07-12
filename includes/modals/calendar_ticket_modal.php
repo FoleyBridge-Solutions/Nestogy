@@ -18,7 +18,7 @@ $ticket_status = $ticket['ticket_status'];
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="calendarTicketModalLabel">Ticket #<?php echo $ticket_prefix . $ticket_number; ?> - <?php echo $ticket_subject; ?></h5>
+                <h5 class="modal-title" id="calendarTicketModalLabel">Ticket #<?= $ticket_prefix . $ticket_number; ?> - <?= $ticket_subject; ?></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>

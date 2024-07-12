@@ -65,14 +65,14 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 <table class="datatables-basic table border-top">
                 <thead class="text-dark <?php if ($num_rows[0] == 0) { echo "d-none"; } ?>">
                 <tr>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_number&order=<?= $disp; ?>">Number</a></th>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_scope&order=<?= $disp; ?>">Scope</a></th>
-                    <th class="text-right"><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_amount&order=<?= $disp; ?>">Amount</a></th>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_frequency&order=<?= $disp; ?>">Frequency</a></th>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_last_sent&order=<?= $disp; ?>">Last Sent</a></th>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_next_date&order=<?= $disp; ?>">Next Date</a></th>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=category_name&order=<?= $disp; ?>">Category</a></th>
-                    <th><a class="text-secondary" href="?<?= $url_query_strings_sort; ?>&sort=recurring_status&order=<?= $disp; ?>">Status</a></th>
+                    <th>Number</a></th>
+                    <th>Scope</a></th>
+                    <th class="text-right">Amount</a></th>
+                    <th>Frequency</a></th>
+                    <th>Last Sent</a></th>
+                    <th>Next Date</a></th>
+                    <th>Category</a></th>
+                    <th>Status</a></th>
                     <th class="text-center">Action</th>
                 </tr>
                 </thead>
@@ -108,7 +108,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     ?>
 
                     <tr>
-                        <td class="text-bold"><a href="recurring_invoice.php?recurring_id=<?= $recurring_id; ?>"><?= "$recurring_prefix$recurring_number"; ?></a></td>
+                        <td class="text-bold"><a href="/pages/recurring_invoice.php?recurring_id=<?= $recurring_id; ?>"><?=$recurring_prefix.$recurring_number?></a></td>
                         <td><?= $recurring_scope; ?></td>
                         <td class="text-bold text-right"><?= numfmt_format_currency($currency_format, $recurring_amount, $recurring_currency_code); ?></td>
                         <td><?= ucwords($recurring_frequency); ?>ly</td>

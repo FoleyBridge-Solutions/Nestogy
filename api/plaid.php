@@ -11,13 +11,11 @@ if (isset($_GET['public_token'])) {
 
   $public_token = $data['public_token'];
 
-  error_log("public_token:".$public_token);
-
   // exchange public token for access token
   $curl = curl_init();
 
   curl_setopt_array($curl, array(
-    CURLOPT_URL => 'https://sandbox.plaid.com/item/public_token/exchange',
+    CURLOPT_URL => 'https://production.plaid.com/item/public_token/exchange',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => '',
     CURLOPT_MAXREDIRS => 10,
@@ -46,8 +44,6 @@ if (isset($_GET['public_token'])) {
 
   $response = json_decode($response, true);
 
-  error_log(print_r($response, true));
-
   $access_token = $response['access_token'];
 
   // encrypt access token
@@ -55,8 +51,5 @@ if (isset($_GET['public_token'])) {
 
   // store encrypted access token in database
   $sql = "INSERT INTO plaid_access_tokens SET encrypted_access_token = '$encrypted_access_token', client_id = 1";
-
-  if ($mysqli->query($sql) === TRUE) {
-    error_log("New record created successfully");
-  }
+  
 }

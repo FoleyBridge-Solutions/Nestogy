@@ -62,7 +62,7 @@ $bank_transactions = mysqli_query($mysqli, $bank_transactions_sql);
                             echo "<td>" . $row['name'] . "</td>";
                             ?>
                             <td>
-                                <button type="button" class="btn btn-primary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="reconcile_transaction.php?transaction_id=<?php echo $row['id']; ?>">Reconcile</button>
+                                <button type="button" class="btn btn-primary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="reconcile_transaction.php?transaction_id=<?= $row['id']; ?>">Reconcile</button>
                             </td>
                             <?php
                             echo "</tr>";

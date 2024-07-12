@@ -175,6 +175,8 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 <!-- Include script to get TOTP code via the login ID -->
 <script src="/includes/js/logins_show_otp_via_id.js"></script>
 
+
+
 <!-- Include script to generate readable passwords for login entries -->
 <script src="/includes/js/logins_generate_password.js"></script>
 

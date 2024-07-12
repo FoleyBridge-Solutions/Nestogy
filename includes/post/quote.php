@@ -2,6 +2,19 @@
 
 global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
 
+require_once '/var/www/portal.twe.tech/includes/functions/functions.php';
+
+require_once '/var/www/portal.twe.tech/includes/config/config.php';
+
+$conig_sql = mysqli_query($mysqli,"SELECT * FROM settings WHERE company_id = 1");
+
+while($row = mysqli_fetch_array($conig_sql)) {
+    $config_quote_prefix = sanitizeInput($row['config_quote_prefix']);
+    $config_quote_next_number = intval($row['config_quote_next_number']);
+    $config_invoice_prefix = sanitizeInput($row['config_invoice_prefix']);
+    $config_invoice_next_number = intval($row['config_invoice_next_number']);
+}
+
 /*
  * ITFlow - GET/POST request handler for quotes
  */
@@ -10,7 +23,7 @@ if (isset($_POST['add_quote'])) {
 
     global $mysqli, $session_company_currency, $config_quote_prefix, $config_quote_next_number, $session_ip, $session_user_agent, $session_user_id, $currency_format;
 
-    require_once '/var/www/portal.twe.tech/post/models/quote_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/quote_model.php';
 
     $client = intval($_POST['client']);
 
@@ -219,7 +232,7 @@ if (isset($_POST['quote_note'])) {
 
 if (isset($_POST['edit_quote'])) {
 
-    require_once '/var/www/portal.twe.tech/post/models/quote_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/quote_model.php';
 
     $quote_id = intval($_POST['quote_id']);
 

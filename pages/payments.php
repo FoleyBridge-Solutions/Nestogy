@@ -33,6 +33,11 @@ $credits_num_rows = mysqli_num_rows($sql_credits);
 <div class="card">
     <div class="card-header py-3">
         <h3 class="card-title"><i class="fas fa-fw fa-credit-card mr-2"></i>Payments</h3>
+        <div class="card-actions">
+            <a href="/pages/payment_add.php" class="btn btn-primary btn-sm">
+                <i class="fas fa-fw fa-plus mr-2"></i>Add Payment
+            </a>
+        </div> 
     </div>
 
     <div class="card-body">
@@ -128,5 +133,4 @@ $credits_num_rows = mysqli_num_rows($sql_credits);
 </div>
 
 <?php require_once '/var/www/portal.twe.tech/includes/footer.php';
- ?>
- 
+?>

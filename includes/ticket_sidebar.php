@@ -1,4 +1,5 @@
 <!-- Right -->
+
 <div class="col<?= $session_mobile ? '' : '-3'; ?> ">
     <div class="card card-action mb-3">
         <div class="card-header">
@@ -146,7 +147,7 @@
                                 <tr>
                                     <td>Billable:</td>
                                     <td>
-                                        <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_billable_modal.php?ticket_id=<?= $ticket_id; ?>">
+                                        <a href="/post.php?ticket_<?php if($ticket_billable == 1){?>un<?php }?>billable=<?= $ticket_id; ?>">
                                             <?php if ($ticket_billable == 1) { ?>
                                                 <span class="badge rounded-pill bg-label-success p-2">$</span>
                                             <?php } else { ?>

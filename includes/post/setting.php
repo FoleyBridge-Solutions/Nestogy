@@ -12,7 +12,7 @@ if (isset($_POST['edit_company'])) {
     validateCSRFToken($_POST['csrf_token']);
     validateAdminRole();
 
-    require_once '/var/www/portal.twe.tech/post/models/setting_company_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/setting_company_model.php';
 
 
     $sql = mysqli_query($mysqli,"SELECT company_logo FROM companies WHERE company_id = 1");

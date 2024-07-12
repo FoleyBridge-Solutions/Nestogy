@@ -9,7 +9,7 @@ global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_i
 
 if (isset($_POST['add_invoice'])) {
 
-    require_once '/var/www/portal.twe.tech/post/models/invoice_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/invoice_model.php';
 
     $parameters['invoice_client_id'] = intval($_POST['client']);
     $parameters['invoice_date'] = sanitizeInput($_POST['date']);
@@ -23,7 +23,7 @@ if (isset($_POST['add_invoice'])) {
 
 if (isset($_POST['edit_invoice'])) {
 
-    require_once '/var/www/portal.twe.tech/post/models/invoice_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/invoice_model.php';
 
     $invoice_id = intval($_POST['invoice_id']);
     $due = sanitizeInput($_POST['due']);
@@ -515,4 +515,20 @@ if (isset($_POST['add_item_product'])) {
     $product['product_category_id'] = $item_category_id;
 
     createProduct($product);
+}
+
+if (isset($_GET['save_invoice_item_order'])) {
+    $invoice_id = intval($_GET['save_invoice_item_order']);
+    $data = json_decode(file_get_contents('php://input'), true);
+    $item_order = $data['order'];
+
+    // Update the order of the items one by one
+    $i = 1;
+    foreach ($item_order as $item_id) {
+        $item_id = intval($item_id);
+        mysqli_query($mysqli, "UPDATE invoice_items SET item_order = $i WHERE item_id = $item_id AND item_invoice_id = $invoice_id");
+        $i++;
+    }
+
+    echo json_encode(['status' => 'success']);
 }

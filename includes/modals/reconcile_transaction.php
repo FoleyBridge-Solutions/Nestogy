@@ -58,19 +58,19 @@ if ($amount < 0) {
                         <tbody>
                             <tr>
                                 <td>Transaction Date</td>
-                                <td><?php echo $date; ?></td>
+                                <td><?= $date; ?></td>
                             </tr>
                             <tr>
                                 <td>Transaction Account</td>
-                                <td><?php echo $name; ?></td>
+                                <td><?= $name; ?></td>
                             </tr>
                             <tr>
                                 <td>Amount</td>
-                                <td><?php echo $amount; ?></td>
+                                <td><?= $amount; ?></td>
                             </tr>
                             <tr>
                                 <td>Transaction Name</td>
-                                <td><?php echo $name; ?></td>
+                                <td><?= $name; ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -83,7 +83,7 @@ if ($amount < 0) {
                 <div class="card-body">
                     <div class="row">
                         <div class="col-9">
-                        <input type="hidden" name="transaction_id" value="<?php echo $transaction_id; ?>">
+                        <input type="hidden" name="transaction_id" value="<?= $transaction_id; ?>">
                             <?php if ($payments) { ?>
                                 <select name="payment_id" class="form-select">
                                     <option value="">Select Payment</option>

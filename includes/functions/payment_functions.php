@@ -12,17 +12,17 @@ function createPayment(
 
     $date = $payment['date'];
     $amount = floatval($payment['amount']);
-    $currency_code = sanitizeInput($payment['currency_code']);
+    $currency_code = sanitizeInput($payment['currency_code']) ?? getSettingValue('company_currency');
     $account = intval($payment['account']);
     $payment_method = sanitizeInput($payment['method']);
     $reference = sanitizeInput($payment['reference']);
     $invoice_id = intval($payment['invoice_id']);
-    $email_receipt = intval($payment['email_receipt']);
+    $email_receipt = intval($payment['email_receipt']) ?? 1;
     $balance = floatval($payment['balance']);
 
 
      //Check to see if amount entered is greater than the balance of the invoice
-     if ($amount > $balance) {
+    if ($amount > $balance) {
         $payment_is_credit = true;
 
         // Calculate the overpayment amount

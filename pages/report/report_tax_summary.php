@@ -134,13 +134,13 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 ?>
                                 <td class=''>
                                     <div class="">
-                                        <a href="breakdown.php?tax_name=<?php echo urlencode($tax_name); ?>&month=<?php echo $i; ?>&year=<?php echo $year; ?>&type=payments">
-                                            <?php echo numfmt_format_currency($currency_format, $row_payments, $company_currency); ?>
+                                        <a href="breakdown.php?tax_name=<?= urlencode($tax_name); ?>&month=<?= $i; ?>&year=<?= $year; ?>&type=payments">
+                                            <?= numfmt_format_currency($currency_format, $row_payments, $company_currency); ?>
                                         </a>
                                     </div>
                                     <div class="small">
-                                        <a href="breakdown.php?tax_name=<?php echo urlencode($tax_name); ?>&month=<?php echo $i; ?>&year=<?php echo $year; ?>&type=taxes">
-                                            <?php echo numfmt_format_currency($currency_format, $row_tax_due, $company_currency); ?>
+                                        <a href="breakdown.php?tax_name=<?= urlencode($tax_name); ?>&month=<?= $i; ?>&year=<?= $year; ?>&type=taxes">
+                                            <?= numfmt_format_currency($currency_format, $row_tax_due, $company_currency); ?>
                                         </a>
                                     </div>
                                 </td>
@@ -163,13 +163,13 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 ?>
                                 <td class='text-right'>
                                     <div class="">
-                                        <a href="breakdown.php?tax_name=<?php echo urlencode($tax_name); ?>&quarter=<?php echo $quarter; ?>&year=<?php echo $year; ?>&type=payments">
-                                            <?php echo numfmt_format_currency($currency_format, $total_payments - $total_tax_due, $company_currency); ?>
+                                        <a href="breakdown.php?tax_name=<?= urlencode($tax_name); ?>&quarter=<?= $quarter; ?>&year=<?= $year; ?>&type=payments">
+                                            <?= numfmt_format_currency($currency_format, $total_payments - $total_tax_due, $company_currency); ?>
                                         </a>
                                     </div>
                                     <div class="small">
-                                        <a href="breakdown.php?tax_name=<?php echo urlencode($tax_name); ?>&quarter=<?php echo $quarter; ?>&year=<?php echo $year; ?>&type=taxes">
-                                            <?php echo numfmt_format_currency($currency_format, $total_tax_due, $company_currency); ?>
+                                        <a href="breakdown.php?tax_name=<?= urlencode($tax_name); ?>&quarter=<?= $quarter; ?>&year=<?= $year; ?>&type=taxes">
+                                            <?= numfmt_format_currency($currency_format, $total_tax_due, $company_currency); ?>
                                         </a>
                                     </div>
                                 </td>

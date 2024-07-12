@@ -1128,7 +1128,7 @@ if (isset($_POST['add_recurring_ticket'])) {
 
     validateTechRole();
 
-    require_once '/var/www/portal.twe.tech/post/models/recurring_ticket_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/recurring_ticket_model.php';
 
     $start_date = sanitizeInput($_POST['start_date']);
 
@@ -1156,7 +1156,7 @@ if (isset($_POST['edit_recurring_ticket'])) {
 
     validateTechRole();
 
-    require_once '/var/www/portal.twe.tech/post/models/recurring_ticket_model.php';
+    require_once '/var/www/portal.twe.tech/includes/post/models/recurring_ticket_model.php';
 
     $scheduled_ticket_id = intval($_POST['scheduled_ticket_id']);
     $next_run_date = sanitizeInput($_POST['next_date']);
@@ -1642,4 +1642,34 @@ if (isset($_GET['delete_ticket_product'])) {
     $_SESSION['alert_message'] = "Product removed from ticket. Please see administrator to return inventory";
     header("Location: ". $_SERVER["HTTP_REFERER"]);
 
+}
+
+if (isset($_GET['ticket_billable'])) {
+
+    validateTechRole();
+
+    $ticket_id = intval($_GET['ticket_billable']);
+
+    $parameters = [
+        'ticket_id' => $ticket_id,
+        'ticket_billable' => 1
+    ];
+
+    $return_data = updateTicket($parameters);
+    referWithAlert($return_data['type'], $return_data['message']);
+}
+
+if (isset($_GET['ticket_unbillable'])) {
+
+    validateTechRole();
+
+    $ticket_id = intval($_GET['ticket_unbillable']);
+
+    $parameters = [
+        'ticket_id' => $ticket_id,
+        'ticket_billable' => 0
+    ];
+
+    $return_data = updateTicket($parameters);
+    referWithAlert($return_data['type'], $return_data['message']);
 }

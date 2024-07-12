@@ -5,6 +5,21 @@
         </div>
     </div>
 </div>
+<!-- Include script to copy text to clipboard -->
+<script src="/includes/plugins/clipboardjs/clipboard.min.js"></script>
+
+<!-- Include script to copy text to clipboard and display success message -->
+ <script>
+    var clipboard = new ClipboardJS('.clipboardjs');
+
+    clipboard.on('success', function(e) {
+        e.clearSelection();
+        e.trigger.innerHTML = "<i class='fas fa-check text-success'></i>";
+        setTimeout(function() {
+            e.trigger.innerHTML = "<i class='far fa-copy text-secondary'></i>";
+        }, 1000);
+    });
+</script>
 
 <?php
     require_once "/var/www/portal.twe.tech/includes/inc_confirm_modal.php";

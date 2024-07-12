@@ -148,6 +148,17 @@ if (isset($_GET['invoice_id'])) {
     }
 ?>
 
+<style>
+    .drag-handle {
+        cursor: grab;
+        padding: 10px;
+    }
+    .item-container:hover .drag-handle {
+        color: #007bff;
+    }
+</style>
+
+
 
     <div class="row invoice-edit">
         <!-- Invoice Edit-->
@@ -242,93 +253,85 @@ if (isset($_GET['invoice_id'])) {
                     $tax_total = 0;
                     $total_cost = 0;
                     ?>
+                    <div id="invoiceItemsContainer">
+                        <?php while ($row = mysqli_fetch_array($sql_invoice_items)) {
+                            $item_id = intval($row['item_id']);
+                            $item_name = nullable_htmlentities($row['item_name']);
+                            $item_description = nullable_htmlentities($row['item_description']);
+                            $item_price = floatval($row['item_price']);
+                            $item_qty = floatval($row['item_quantity']);
+                            $item_discount = floatval($row['item_discount']);
+                            $item_tax_id = floatval($row['item_tax_id']);
+                            $item_tax = floatval($row['item_tax']);
+                            $item_subtotal = $item_price * $item_qty;
+                            $tax_percent = floatval($row['tax_percent']);
+                            $tax_name = nullable_htmlentities($row['tax_name']);
+                            $item_product_id = intval($row['item_product_id']);
 
-        
-                    <?php while ($row = mysqli_fetch_array($sql_invoice_items)) {
-                        $item_id = intval($row['item_id']);
-                        $item_name = nullable_htmlentities($row['item_name']);
-                        $item_description = nullable_htmlentities($row['item_description']);
-                        $item_price = floatval($row['item_price']);
-                        $item_qty = floatval($row['item_quantity']);
-                        $item_discount = floatval($row['item_discount']);
-                        $item_tax_id = floatval($row['item_tax_id']);
-                        $item_tax = floatval($row['item_tax']);
-                        $item_subtotal = $item_price * $item_qty; // Calculate the total of the item
-                        $tax_percent = floatval($row['tax_percent']);
-                        $tax_name = nullable_htmlentities($row['tax_name']);
-                        $item_product_id = intval($row['item_product_id']);
+                            $tax_total += $item_tax;
+                            $item_total = getItemTotal($item_id);
+                            $subtotal += $item_subtotal;
+                            $discount_total += $item_discount;
 
-                        $tax_total += $item_tax; // Calculate the total tax
-                        $item_total = $item_subtotal + $item_tax - $item_discount; // Calculate the total of the item after tax and discount
-
-                        $subtotal += $item_subtotal; // Calculate the subtotal of all items
-                        $discount_total += $item_discount; // Calculate the total discount
-
-                        // Calculate the discount percentage
-                        if ($item_discount > 0) {
-                            if ($item_subtotal) {
-                                $item_discount_percent = ($item_discount / $item_subtotal) * 100;
+                            if ($item_discount > 0) {
+                                if ($item_subtotal) {
+                                    $item_discount_percent = ($item_discount / $item_subtotal) * 100;
+                                } else {
+                                    $item_discount_percent = 0;
+                                }
                             } else {
-                                $item_discount_percent = 0;  // Default or error value if subtotal is zero
+                                $item_discount_percent = 0;
                             }
-                        } else {
-                            $item_discount_percent = 0;
-                        }
 
-                        $profit = 0;
+                            $profit = 0;
 
-                        if ($item_product_id > 0) {
-                            $product_sql = mysqli_query($mysqli, "SELECT * FROM products WHERE product_id = $item_product_id");
-                            $product_row = mysqli_fetch_array($product_sql);
-                            $product_cost = floatval($product_row['product_cost']);
-                            $item_cost = $item_qty * $product_cost;
+                            if ($item_product_id > 0) {
+                                $product_sql = mysqli_query($mysqli, "SELECT * FROM products WHERE product_id = $item_product_id");
+                                $product_row = mysqli_fetch_array($product_sql);
+                                $product_cost = floatval($product_row['product_cost']);
+                                $item_cost = $item_qty * $product_cost;
+                                $total_cost += $item_cost;
+                                $item_profit = $item_subtotal - ($item_qty * $product_cost);
+                                $profit += $item_profit;
 
-                            $total_cost += $item_cost;
+                                if ($item_subtotal != 0) {
+                                    $item_margin = $item_profit / $item_subtotal;
+                                } else {
+                                    $item_margin = 0;
+                                }
 
-                            $item_profit = $item_subtotal - ($item_qty * $product_cost);
-                            $profit += $item_profit;
-
-                            if ($item_subtotal != 0) {
-                                $item_margin = $item_profit / $item_subtotal;
+                                if ($item_cost != 0) {
+                                    $item_markup = $item_profit / $item_cost;
+                                } else {
+                                    $item_markup = 0;
+                                }
                             } else {
-                                $item_margin = 0;  // Default or error value if subtotal is zero
+                                $item_cost = 0;
+                                $item_profit = 0;
+                                $item_margin = 0;
+                                $item_markup = 0;
                             }
-                            
-                            if ($item_cost != 0) {
-                                $item_markup = $item_profit / $item_cost;
-                            } else {
-                                $item_markup = 0;  // Default or error value if cost is zero
-                            }
-                        } else {
-                            $item_cost = 0;
-                            $item_profit = 0;
-                            $item_margin = 0;
-                            $item_markup = 0;
-                        }
-
-
-                    ?>
+                        ?>
 
                         <hr class="mx-n4" />
-
-                        <div class="pt-0 pt-md-4 mb-4">
-                            <form action="/post.php" method="post" autocomplete="off" enctype="multipart/form-data" >
+                        <div class="pt-0 pt-md-4 mb-4 item-container" id="item<?=$item_id?>">
+                            <form action="/post.php" method="post" autocomplete="off" enctype="multipart/form-data">
                                 <input type="hidden" name="invoice_id" value="<?=$invoice_id?>" />
                                 <input type="hidden" name="item_id" value="<?=$item_id?>" />
-                                <div id="item<?=$item_id?>" class="d-flex border rounded position-relative pe-0 item-container">
+                                <div class="d-flex border rounded position-relative pe-0">
                                     <div class="row w-100 m-0 p-3">
                                         <div class="col-md-7 col-12 mb-md-0 mb-3 ps-md-0">
                                             <p class="mb-2 repeater-title">Item</p>
-                                            <input type="text" class="form-control invoice-item-name mb-2" value="<?= $item_name ?>" name="name"/>
+                                            <input type="text" class="form-control invoice-item-name mb-2" value="<?= $item_name ?>" name="name" />
                                             <textarea class="form-control" rows="1" id="item_<?=$item_id?>_description" name="description">
                                                 <?= $item_description ?>
                                             </textarea>
                                         </div>
                                         <div class="col-md-2 col-12 mb-md-0 mb-3">
                                             <p class="mb-2 repeater-title">Unit Price</p>
-                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="<?= number_format($item_price, 2) ?>" placeholder="<?= number_format($item_price, 2) ?>"/>
+                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="<?= number_format($item_price, 2) ?>" placeholder="<?= number_format($item_price, 2) ?>" />
                                             <div class="d-flex me-1">
-                                                <span class="discount me-1"  data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: <?=numfmt_format_currency($currency_format, $item_discount, $client_currency_code)?>"><?=number_format($item_discount_percent, 0)?>%</span>
+                                                <span class="discount me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: <?=numfmt_format_currency($currency_format, $item_discount, $client_currency_code)?>"><?=number_format($item_discount_percent, 0)?>%</span>
                                                 <span class="tax me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tax: <?= numfmt_format_currency($currency_format, $item_tax, $client_currency_code)?>"><?=number_format($tax_percent, 3)?>%</span>
                                             </div>
                                             <div class="d-flex me-1">
@@ -353,8 +356,7 @@ if (isset($_GET['invoice_id'])) {
                                             <i class="bx bx-check fs-4"></i>
                                         </button>
                                         <div class="dropdown">
-                                            <i class="bx bx-cog bx-xs text-muted cursor-pointer more-options-dropdown" role="button" id="dropdownMenuButton" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                                            </i>
+                                            <i class="bx bx-cog bx-xs text-muted cursor-pointer more-options-dropdown" role="button" id="dropdownMenuButton" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"></i>
                                             <div class="dropdown-menu dropdown-menu-end w-px-300 p-3" aria-labelledby="dropdownMenuButton">
                                                 <div class="row g-3">
                                                     <div class="col-6" data-bs-toggle="tooltip" data-bs-placement="top" title="<?= $invoice_currency_code; ?> or end with % ">
@@ -385,7 +387,7 @@ if (isset($_GET['invoice_id'])) {
                                                 <div class="dropdown-divider"></div>
                                                 <div class="row g-3">
                                                     <div class="col">
-                                                    <label for="product_id" class="form-label">Product</label>
+                                                        <label for="product_id" class="form-label">Product</label>
                                                         <div class="input-group">
                                                             <select class="form-select select2" name="product_id" id="product_id">
                                                                 <?php
@@ -404,18 +406,20 @@ if (isset($_GET['invoice_id'])) {
                                                             </select>
                                                             <button type="submit" name="add_item_product" class="btn btn-primary mt-2">
                                                                 <i class="bx bx-plus"></i>
-                                                            </button>                                                            
+                                                            </button>
                                                         </div>
-                                                        
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        <i class="fas fa-arrows-alt drag-handle"></i> <!-- Drag handle icon -->
                                     </div>
                                 </div>
                             </form>
                         </div>
-                    <?php } ?>
+                        <?php } ?>
+                    </div>
+
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
@@ -694,7 +698,55 @@ $(document).ready(function() {
     });
 
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    initializeSortable();
+});
+
+function initializeSortable() {
+    if (typeof Sortable !== 'undefined') {
+        Sortable.create(document.getElementById('invoiceItemsContainer'), {
+            animation: 150,
+            handle: '.drag-handle', // Use the drag handle
+            onEnd: function (evt) {
+                var itemElements = Array.from(evt.from.children);
+                var itemOrder = itemElements.map(function (itemElement) {
+                    var inputElement = itemElement.querySelector('input[name="item_id"]');
+                    return inputElement ? inputElement.value : null;
+                }).filter(function (value) {
+                    return value !== null;
+                });
+
+                // You can send this itemOrder array to the server to save the new order
+                saveOrder(itemOrder);
+
+                console.log(itemOrder); // Debugging: see the new order
+            }
+        });
+    }
+}
+
+function saveOrder(order) {
+    fetch('/post.php?save_invoice_item_order=<?=$invoice_id?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order: order })
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+}
+
+// Re-initialize SortableJS after dynamic content update
+function updateInvoiceItems(newItems) {
+    document.getElementById('invoiceItemsContainer').innerHTML = newItems;
+    initializeSortable();
+}
+
 </script>
+
 
 <style>
     .ui-autocomplete {

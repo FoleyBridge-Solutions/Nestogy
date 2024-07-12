@@ -323,6 +323,11 @@ function validateAccountantRole()
 
 function sanitizeInput($input)
 {
+
+    if ($input == null) {
+        return null;
+    }
+
     global $mysqli;
     //Check what type of input we're dealing with
     $type = gettype($input);
