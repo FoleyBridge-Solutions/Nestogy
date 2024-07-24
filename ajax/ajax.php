@@ -825,6 +825,12 @@ if (isset($_GET['apply_payment'])) {
     $payment_method = $data['payment_method'];
     $payment_reference = $data['payment_reference'];
     $payment_account = $data['payment_account'];
+    $credit = $data['credit'];
+
+    if ($credit) {
+        //Create a credit
+        
+    }
 
     foreach ($data['invoices'] as $invoice) {
         createPayment([
@@ -843,3 +849,68 @@ if (isset($_GET['apply_payment'])) {
     echo json_encode(['success' => true]);
 }
 
+if (isset($_GET['client_credits'])) {
+    $client_id = intval($_GET['client_credits']);
+    $response = [];
+
+    $sql = mysqli_query($mysqli, "SELECT * FROM credits WHERE credit_client_id = $client_id");
+    while ($row = mysqli_fetch_array($sql)) {
+        $response[] = $row;
+    }
+    echo json_encode($response);
+}
+
+if (isset($_GET['create_credit'])) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    error_log("Received data: " . print_r($data, true)); // Log the received data
+
+    if (!is_null($data)) {
+        $credit_amount = isset($data['credit_amount']) ? (float)$data['credit_amount'] : 0.00;
+        $credit_date = isset($data['credit_date']) ? $data['credit_date'] : '';
+        $credit_description = isset($data['credit_description']) ? $data['credit_description'] : '';
+        $credit_notes = isset($data['credit_notes']) ? $data['credit_notes'] : '';
+        $client_id = isset($data['client_id']) ? (int)$data['client_id'] : 0;
+        $invoice_id = isset($data['invoice_id']) ? (int)$data['invoice_id'] : 0;
+
+        error_log("credit_amount: $credit_amount, credit_date: $credit_date, client_id: $client_id"); // Log individual fields
+
+        if ($credit_amount > 0 && $credit_date != '' && $client_id > 0) {
+            $sql = mysqli_query($mysqli,
+                "INSERT INTO credits SET
+                    credit_amount = $credit_amount,
+                    credit_currency_code = 'USD',
+                    credit_date = '$credit_date',
+                    credit_reference = '$credit_description',
+                    credit_client_id = $client_id"
+            );
+
+            if ($sql) {
+                // Assuming these session variables are set properly
+                $session_name = mysqli_real_escape_string($mysqli, $_SESSION['name']);
+                $session_ip = mysqli_real_escape_string($mysqli, $_SERVER['REMOTE_ADDR']);
+                $session_user_agent = mysqli_real_escape_string($mysqli, $_SERVER['HTTP_USER_AGENT']);
+                $session_user_id = (int)$_SESSION['user_id'];
+
+                mysqli_query($mysqli,
+                    "INSERT INTO logs SET
+                        log_type = 'Credit',
+                        log_action = 'Create',
+                        log_description = '$session_name created a credit for invoice $invoice_id',
+                        log_ip = '$session_ip',
+                        log_user_agent = '$session_user_agent',
+                        log_client_id = $client_id,
+                        log_user_id = $session_user_id"
+                );
+
+                echo json_encode("Credit created successfully");
+            } else {
+                echo json_encode("Error creating credit: " . mysqli_error($mysqli));
+            }
+        } else {
+            echo json_encode("Invalid input data");
+        }
+    } else {
+        echo json_encode("No input data");
+    }
+}

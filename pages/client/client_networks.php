@@ -72,11 +72,6 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 <table class="datatables-basic table border-top">
                         <thead class="text-dark <?php if ($num_rows[0] == 0) { echo "d-none"; } ?>">
                         <tr>
-                            <td class="pr-0">
-                                <div class="form-check">
-                                    <input class="form-check-input" id="selectAllCheckbox"  type="checkbox" onclick="checkAll(this)">
-                                </div>
-                            </td>
                             <th><a class="text-secondary" href="?<?= $url_query_strings_sb; ?>&sort=network_name&order=<?= $disp; ?>">Name</a></th>
                             <th><a class="text-secondary" href="?<?= $url_query_strings_sb; ?>&sort=network_vlan&order=<?= $disp; ?>">vLAN</a></th>
                             <th><a class="text-secondary" href="?<?= $url_query_strings_sb; ?>&sort=network&order=<?= $disp; ?>">Network</a></th>
@@ -118,7 +113,9 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             ?>
                             <tr>
                                 <td>
-                                    <a class="text-dark" href="#" data-bs-toggle="modal" onclick="populateNetworkEditModal(<?= $client_id, ",", $network_id ?>)" data-bs-target="#editNetworkModal">
+                                    <a class="text-dark loadModalContentBtn" href="#" data-bs-toggle="modal"
+                                        data-modal-file="client_network_edit_modal.php?client_id=<?= $client_id; ?>&network_id=<?= $network_id; ?>"
+                                        data-modal-target="#dynamicModal">
                                         <div class="media">
                                             <i class="fa fa-fw fa-2x fa-network-wired mr-3"></i>
                                             <div class="media-body">
@@ -139,7 +136,9 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                             <i class="fas fa-ellipsis-h"></i>
                                         </button>
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" onclick="populateNetworkEditModal(<?= $client_id, ",", $network_id ?>)" data-bs-target="#editNetworkModal">
+                                            <a class="dropdown-item loadModalContentBtn" href="#" data-bs-toggle="modal"
+                                                data-modal-file="client_network_edit_modal.php?client_id=<?= $client_id; ?>&network_id=<?= $network_id; ?>"
+                                                data-modal-target="#dynamicModal">
                                                 <i class="fas fa-fw fa-edit mr-2"></i>Edit
                                             </a>
                                             <?php if ($session_user_role == 3) { ?>

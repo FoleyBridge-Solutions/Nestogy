@@ -185,6 +185,14 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td>Trips:</td>
+                                    <td>
+                                        <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="trip_add_modal.php?client_id=<?= $client_id; ?>">
+                                            Add a Trip
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td>
                                         Collaborators:
                                     </td>

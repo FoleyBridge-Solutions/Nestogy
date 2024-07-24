@@ -961,3 +961,15 @@ function getInvoiceAmount($invoice_id)
     }
     return $invoice_amount;
 }
+
+function getRecurringInvoiceAmount($recurring_id) {
+    global $mysqli;
+    $recurring_id = intval($recurring_id);
+    $sql = "SELECT * FROM invoice_items WHERE item_recurring_id = $recurring_id";
+    $result = mysqli_query($mysqli, $sql);
+    $recurring_amount = 0;
+    while ($row = mysqli_fetch_assoc($result)) {
+        $recurring_amount += getItemTotal($row['item_id']);
+    }
+    return $recurring_amount;
+}

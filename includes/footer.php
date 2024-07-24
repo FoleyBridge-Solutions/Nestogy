@@ -7,6 +7,14 @@
 </div>
 <!-- Include script to copy text to clipboard -->
 <script src="/includes/plugins/clipboardjs/clipboard.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCa21nqFlNCdPX3TXhaEyyJ_vk9Icpqhu0&libraries=places"></script>
+
+<style>
+                        /* Ensure this CSS is loaded after the Google Maps API CSS */
+.pac-container {
+    z-index: 99999 !important; /* Adjust this value as needed */
+                        }
+</style>
 
 <!-- Include script to copy text to clipboard and display success message -->
  <script>

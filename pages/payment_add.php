@@ -245,6 +245,7 @@ $alert = false;
         }
 
         $('#Client').select2().on('change', function() {
+            //Get invoices for client
             $.ajax({
                 url: `/ajax/ajax.php?client_invoices=${$(this).val()}`,
                 type: 'GET',
@@ -263,6 +264,20 @@ $alert = false;
                 },
                 error: handleError
             });
+            //Get Credits for client
+            $.ajax({
+                url: `/ajax/ajax.php?client_credits=${$(this).val()}`,
+                type: 'GET',
+                success: function(response) {
+                    //Create an alert if credits are available
+                    if (response.length > 0) {
+                        alert('Credits available for client. [${response[0].credit_amount}]');
+                    }
+                },
+                error: handleError
+            });
+            //Log url for error logging
+            console.log(`/ajax/ajax.php?client_credits=${$(this).val()}`);
         });
 
         $('#check_all').on('change', function() {
@@ -292,7 +307,6 @@ $alert = false;
 
             var inputtedAmount = parseFloat($('#inputted_amount').text().replace(/[^0-9.-]+/g, ''));
 
-            if (parseFloat(data.payment_amount) !== inputtedAmount) return alert('Payment amount does not match the total amount to apply');
             if (!data.payment_date) return alert('Payment date is required');
             if (!data.payment_method) return alert('Payment method is required');
             if (!data.payment_account) return alert('Payment account is required');

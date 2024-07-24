@@ -61,6 +61,13 @@ $num_rows = mysqli_num_rows($sql);
                     while ($row = mysqli_fetch_array($sql)) {
                         $credit_id = intval($row['credit_id']);
                         $credit_amount = floatval($row['credit_amount']);
+
+                        // if amount is 0, delete credit
+                        if($credit_amount == 0) {
+                            mysqli_query($mysqli, "DELETE FROM credits WHERE credit_id = $credit_id");
+                            continue;
+                        }
+
                         $credit_currency_code = sanitizeInput($row['credit_currency_code']);
                         $credit_date = $row['credit_date'];
                         $credit_reference = intval($row['credit_reference']);
@@ -68,6 +75,7 @@ $num_rows = mysqli_num_rows($sql);
                         $credit_payment_id = intval($row['credit_payment_id']);
                         $credit_account_id = intval($row['credit_account_id']);
                         $client_name = sanitizeInput($row['client_name']);
+                        $client_balance = getClientBalance($credit_client_id);
 
                         // Get account name from DB
                         if($credit_account_id != null) {
@@ -102,12 +110,10 @@ $num_rows = mysqli_num_rows($sql);
                         }
 
                         $credit_display_amount = numfmt_format_currency($currency_format, $credit_amount, $credit_currency_code);
-
-                        $client_balance = getClientBalance( $credit_client_id);
                         ?>
 
                         <tr>
-                            <td><a href="client_overview.php?client_id=<?= $credit_client_id; ?>"><?= $client_name; ?></a>
+                            <td><a href="client_overview.php?client_id=<?= $credit_client_id; ?>"><?= $client_name; ?> (Balance: <?= $client_balance; ?>)</a>
                             <td><?= $account_name; ?></td>
                             <td class="text-right
                                 <?php if ($sort == "credit_amount") { echo "sorting-$order"; } ?>">
@@ -117,8 +123,10 @@ $num_rows = mysqli_num_rows($sql);
                             <td><?= $credit_reference; ?></td>
                             <td><a href="client_payments.php?client_id=<?= $credit_client_id; ?>"><?= $payment_invoice_display; ?></a></td>
                             <td>
-                                <a href="/post.php?apply_credit=<?= $credit_id; ?>" class="btn btn-sm btn-soft-primary"
-                                title="Apply"><i class="fas fa-credit-card"></i></a>
+                                <?php if($client_balance > 0) { ?>
+                                    <a href="/post.php?apply_credit=<?= $credit_id; ?>" class="btn btn-sm btn-soft-primary"
+                                    title="Apply"><i class="fas fa-credit-card"></i></a>
+                                <?php } ?>
                                 <a href="/post.php?delete_credit=<?= $credit_id; ?>" class="btn btn-sm btn-danger"
                                 title="Delete"><i class="fas fa-trash"></i></a>
                             </td>

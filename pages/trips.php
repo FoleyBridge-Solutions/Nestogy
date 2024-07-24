@@ -131,7 +131,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
         </div>
     </div>
-
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCa21nqFlNCdPX3TXhaEyyJ_vk9Icpqhu0&libraries=places"></script>
 <?php
 
 require_once '/var/www/portal.twe.tech/includes/footer.php';

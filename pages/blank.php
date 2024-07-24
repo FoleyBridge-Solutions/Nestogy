@@ -1,70 +1,51 @@
 <?php
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require "/var/www/portal.twe.tech/includes/inc_all.php";
 
-// this page is to check for invoices where the amount row does not equal the sum of the line items using the getInvoiceAmount function
-// we will just start with a table of invoices that have a discrepancy so we can investigate further as we noticed a few invoices that were not adding up correctly
-
-function getInvoices(){
-    global $mysqli;
-    //fetch invoice_id and invoice_amount from invoices table
-    $sql = "SELECT invoice_id, invoice_amount FROM invoices";
-    $result = mysqli_query($mysqli, $sql);
-
-    $invoices = array();
-
-    while($row = mysqli_fetch_assoc($result)){
-        $invoices[] = $row;
-    }
-
-    return  $invoices;
-}
-
-
-//start by getting all invoices
-$invoices = getInvoices();
-
+// this page is to check for recurring invoices that their amounts are different than the invoice amount based on adding the items in it
+$recurring = mysqli_query($mysqli, "SELECT * FROM recurring");
 ?>
 
 <table>
-    <tr>
-        <th>Invoice ID</th>
-        <th>Invoice Amount</th>
-        <th>Line Item Amount</th>
-        <th>Discrepancy</th>
-    </tr>
-
+    <thead>
+        <tr>
+            <th>Recurring ID</th>
+            <th>Recurring Amount</th>
+            <th>Recurring Items Amount</th>
+            <th>Difference</th>
+        </tr>
+    </thead>
+    <tbody>
 
 <?php
 
-//loop through invoices and check if the amount row equals the sum of the line items
-foreach($invoices as $invoice){
-    $invoice_id = $invoice['invoice_id'];
-    $invoice_amount = $invoice['invoice_amount'];
-    $line_item_amount = getInvoiceAmount($invoice_id);
 
-    $discrepancy = false;
+foreach ($recurring as $row) {
+    $recurring_amount = getRecurringInvoiceAmount($row['recurring_id']);
+    // check if the recurring amount is different than the recurring items amount by more than 1 cent
 
-    // check if they are off by more than 1 cent
-    if(abs($invoice_amount - $line_item_amount) > 0.01){
-        $discrepancy = true;
-    }
-
-    if($discrepancy) {
+    if (abs($row['recurring_amount'] - $recurring_amount) > 0.01) {
         echo "<tr>";
-        echo "<td><a href='/pages/invoice.php?invoice_id=".$invoice_id."'>".$invoice_id."</a></td>";
-        echo "<td>".$invoice_amount."</td>";
-        echo "<td>".$line_item_amount."</td>";
-        echo "<td>".($invoice_amount - $line_item_amount)."</td>";
+        echo "<td><a href='/pages/recurring_invoice.php?recurring_id=" . $row['recurring_id'] . "'>" . $row['recurring_id'] . "</a></td>";
+        echo "<td>" . $row['recurring_amount'] . "</td>";
+        echo "<td>" . $recurring_amount . "</td>";
+        echo "<td>" . ($row['recurring_amount'] - $recurring_amount);
+        // find an product that has the same amount as the difference, 
+
         echo "</tr>";
     }
 }
-
 ?>
 
+
+
+</tbody>
 </table>
-
-
 
 <?php
 require "/var/www/portal.twe.tech/includes/footer.php";
+?>

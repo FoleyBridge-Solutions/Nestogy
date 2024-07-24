@@ -7,8 +7,7 @@ $(document).ready(function() {
         var modalFile = clickedElement.data('modal-file');
 
         // Change modal body to loading message
-        $('#dynamicModal .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
-        
+        $('#dynamicModal .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div');
 
         if (modalFile) {
             var fullPath = '/includes/modals/' + modalFile;
@@ -17,12 +16,33 @@ $(document).ready(function() {
                 // Create a temporary div to hold the loaded content
                 var tempDiv = $('<div>').html(data);
 
-                // Output the loaded content to the console
                 // Extract and replace the modal title, body, and footer from the loaded content
                 $('#dynamicModalLabel').html(tempDiv.find('.modal-title').html());
                 $('#dynamicModal .modal-body').html(tempDiv.find('.modal-body').html());
                 $('#dynamicModal .modal-footer').html(tempDiv.find('.modal-footer').html());
 
+                // Extract and execute scripts from the loaded content
+                tempDiv.find('script').each(function() {
+                    try {
+                        var script = document.createElement('script');
+                        script.type = 'text/javascript';
+                        if (this.src) {
+                            script.src = this.src;
+                            script.onload = function() {
+                                console.log('External script loaded:', script.src);
+                            };
+                            script.onerror = function() {
+                                console.error('Error loading external script:', script.src);
+                            };
+                        } else {
+                            script.text = $(this).html();
+                            console.log('Executing inline script:', script.text);
+                        }
+                        document.body.appendChild(script);
+                    } catch (error) {
+                        console.error('Error executing script:', error);
+                    }
+                });
 
                 // Reinitialize any plugins if needed, e.g., for select2 or date pickers in the modal
 
@@ -51,7 +71,13 @@ $(document).ready(function() {
                     }, { once: true });
                 });
 
-                
+                // Initialize Google Maps Autocomplete
+                if (typeof google === 'object' && typeof google.maps === 'object') {
+                    initAutocomplete();
+                } else {
+                    console.error('Google Maps API not loaded');
+                }
+
             }).fail(function() {
                 console.error('Failed to load the modal content from ' + fullPath);
             });
@@ -66,7 +92,7 @@ $(document).ready(function() {
         var modalFile = clickedElement.data('modal-file');
 
         // Change modal body to loading message
-        $('#dynamicModal .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+        $('#dynamicModal .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div');
 
         if (modalFile) {
             var fullPath = '/includes/modals/' + modalFile;
@@ -75,11 +101,33 @@ $(document).ready(function() {
                 // Create a temporary div to hold the loaded content
                 var tempDiv = $('<div>').html(data);
 
-                // Output the loaded content to the console
                 // Extract and replace the modal title, body, and footer from the loaded content
                 $('#dynamicModalLabel').html(tempDiv.find('.modal-title').html());
                 $('#dynamicModal .modal-body').html(tempDiv.find('.modal-body').html());
                 $('#dynamicModal .modal-footer').html(tempDiv.find('.modal-footer').html());
+
+                // Extract and execute scripts from the loaded content
+                tempDiv.find('script').each(function() {
+                    try {
+                        var script = document.createElement('script');
+                        script.type = 'text/javascript';
+                        if (this.src) {
+                            script.src = this.src;
+                            script.onload = function() {
+                                console.log('External script loaded:', script.src);
+                            };
+                            script.onerror = function() {
+                                console.error('Error loading external script:', script.src);
+                            };
+                        } else {
+                            script.text = $(this).html();
+                            console.log('Executing inline script:', script.text);
+                        }
+                        document.body.appendChild(script);
+                    } catch (error) {
+                        console.error('Error executing script:', error);
+                    }
+                });
 
             }).fail(function() {
                 console.error('Failed to load the modal content from ' + fullPath);
@@ -87,5 +135,3 @@ $(document).ready(function() {
         }
     });
 });
-
-

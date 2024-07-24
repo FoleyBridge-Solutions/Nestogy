@@ -41,6 +41,7 @@ function createPayment(
     $payment_id = mysqli_insert_id($mysqli);
 
     if($payment_is_credit) {
+        createCreadit($credit_amount, $payment_id);
         //Create a credit for the overpayment
         mysqli_query($mysqli,"INSERT INTO credits SET credit_amount = $credit_amount, credit_currency_code = '$currency_code', credit_date = '$date', credit_reference = 'Overpayment: $reference', credit_client_id = (SELECT invoice_client_id FROM invoices WHERE invoice_id = $invoice_id), credit_payment_id = $payment_id, credit_account_id = $account");
         // Get credit ID for reference
@@ -145,7 +146,7 @@ function createPayment(
                 $body = "Hello $contact_name,<br><br>We have received partial payment in the amount of " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . " and it has been applied to invoice <a href=\'https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>$invoice_prefix$invoice_number</a>. Please keep this email as a receipt for your records.<br><br>Amount: " . numfmt_format_currency($currency_format, $amount, $invoice_currency_code) . "<br>Balance: " . numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) . "<br><br>Thank you for your business!<br><br><br>~<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
 
 
-            // Queue Mail
+            // Queue MailL
             $email = [
                 'from' => $config_invoice_from_email,
                 'from_name' => $config_invoice_from_name,

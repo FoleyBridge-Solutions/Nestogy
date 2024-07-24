@@ -496,6 +496,14 @@ if ($config_send_invoice_reminders == 1) {
             $contact_email = sanitizeInput($row['contact_email']);
             $invoice_balance = getInvoiceBalance( $invoice_id);
 
+            //Check for overpayment
+            $overpayment = $invoice_balance - $invoice_amount;
+
+            // exit loop if overpayment is greater than 0
+            if ($overpayment > 0) {
+                continue;
+            }
+
             // Late Charges
 
             if ($config_invoice_late_fee_enable == 1) {

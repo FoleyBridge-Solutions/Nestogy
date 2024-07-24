@@ -532,3 +532,20 @@ if (isset($_GET['save_invoice_item_order'])) {
 
     echo json_encode(['status' => 'success']);
 }
+
+if (isset($_GET['create_credit_custom'])) {
+    $amount = floatval($_GET['create_credit_custom']);
+    $payment_id = intval($_GET['payment_id']);
+
+    error_log("Amount: $amount, Payment ID: $payment_id");
+    $credit_id = createCredit($amount, $payment_id);
+
+    //remove overpayment from original payment
+    mysqli_query($mysqli, "UPDATE payments SET payment_amount = payment_amount - $amount WHERE payment_id = $payment_id");
+
+    if (isset($credit_id)) {
+        referWithAlert("Credit created", "success");
+    } else {
+        referWithAlert("Credit creation failed", "error");
+    }
+}

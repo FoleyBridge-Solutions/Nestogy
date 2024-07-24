@@ -1,4 +1,11 @@
 <?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
+
+<?php
+$client_id = $_GET['client_id'];
+
+$service_types = mysqli_query($mysqli, "SELECT * FROM products WHERE product_is_service = 1");
+?>
+
 <div class="modal" id="addServiceModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content bg-dark">
@@ -45,6 +52,20 @@
               </div>
 
               <div class="form-group">
+                <label>Type <strong class="text-danger">*</strong></label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fa fa-fw fa-stream"></i></span>
+                  </div>
+                  <select class="form-control select2" id='select2' name="type" required>
+                    <?php while ($row = mysqli_fetch_array($service_types)): ?>
+                      <option value="<?= $row['product_id'] ?>"><?= $row['product_name'] ?></option>
+                    <?php endwhile; ?>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label>Description <strong class="text-danger">*</strong></label>
                 <div class="input-group">
                   <div class="input-group-prepend">
@@ -80,13 +101,18 @@
               </div>
 
               <div class="form-group">
-                <label>Backup</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="fa fa-fw fa-hdd"></i></span>
-                  </div>
-                  <input type="text" class="form-control" name="backup" placeholder="Backup strategy">
-                </div>
+                <label>Quantity</label>
+                <input type="text" class="form-control" name="quantity" placeholder="Quantity">
+              </div>
+
+              <div class="form-group">
+                <label>Matches Seats: </label>
+                <input type="checkbox" name="matches_seats" value="1">
+              </div>
+
+              <div class="form-group" id="seats-group" style="display: none;">
+                <label>Seats</label>
+                <input type="text" class="form-control" name="seats" placeholder="Seats">
               </div>
 
               <div class="form-group">
@@ -213,3 +239,19 @@
     </div>
   </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    console.log('Document is ready.');
+    $('input[name="matches_seats"]').change(function() {
+      if ($(this).is(':checked')) {
+        console.log('Checkbox is checked. Showing seats group.');
+        $('#seats-group').show();
+      } else {
+        console.log('Checkbox is unchecked. Hiding seats group.');
+        $('#seats-group').hide();
+      }
+    });
+  });
+</script>

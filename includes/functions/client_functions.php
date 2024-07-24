@@ -382,3 +382,15 @@ function readContacts() {
     return $contacts;
 }
 
+function getLocations($client_id) {
+    global $mysqli;
+
+    $locations = [];
+    $sql = mysqli_query($mysqli, "SELECT * FROM locations WHERE location_client_id = $client_id ORDER BY location_name ASC");
+    while($row = mysqli_fetch_array($sql)) {
+        $locations[] = $row;
+    }
+
+    return $locations;
+}
+

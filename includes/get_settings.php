@@ -191,6 +191,17 @@ $category_types_array = array (
     'Referral'
 );
 
+$service_types_array = array (
+    'ProActiv Workstation',
+    'ProActiv Server',
+    'ProActiv Network',
+    'Workstation Backup',
+    'Server Backup',
+    'VoIP',
+    'Hosted',
+    'Other'
+);
+
 $asset_types_array = array (
     'Laptop'=>'fa-laptop',
     'Desktop'=>'fa-desktop',
@@ -205,6 +216,7 @@ $asset_types_array = array (
     'Camera'=>'fa-video',
     'TV'=>'fa-tv',
     'Virtual Machine'=>'fa-cloud',
+    'UniFi Device'=>'fa-wifi',
     'Other'=>'fa-tag'
 );
 
