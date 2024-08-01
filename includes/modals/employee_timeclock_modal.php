@@ -1,6 +1,7 @@
 <?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
 
 <?php
+$employee_break_taken =  false; 
 // employee_timeclock_modal.php
 $user_id = $_POST['user_id'] ?? $session_user_id;
 
@@ -46,7 +47,7 @@ if (mysqli_num_rows($employee_time) > 0) {
 ?>
 
 <div class="modal-header">
-    <h5 class="modal-title">Employee Time Clock</h5>
+    <h5 class="modal-title">Employee Ticket Clock</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
