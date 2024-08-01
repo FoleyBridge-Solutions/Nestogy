@@ -12,107 +12,102 @@ class SupportController {
     private $pdo;
     private $auth;
     private $view;
+
     public function __construct($pdo) {
         $this->pdo = $pdo;
+        $this->auth = new Auth($this->pdo);
+        $this->view = new View();
     }
 
     public function index($client_id = null, $status = null) {
-    //View all tickets, or view tickets for a specific client
+        error_log("SupportController::index called with client_id: $client_id, status: $status");
+
         $supportModel = new Support($this->pdo);
-        $view = new View();
-        $auth = new Auth($this->pdo);
+
         // Check if user has access to the support class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
-        // If user does not have access, display an error message
-            $view->error([
+        if (!$this->auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
+            error_log("Access denied for user_id: {$_SESSION['user_id']} to view support tickets.");
+            $this->view->error([
                 'title' => 'Access Denied',
                 'message' => 'You do not have permission to view support tickets.'
             ]);
             return;
         }
 
-        if (isset($client_id)) {
-        // Check if client_id is set to view tickets for a specific client
+        if ($client_id !== null) {
             // Check if user has access to client
-            if (!$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-            // If user does not have access, display an error message
-                $view->error([
+            if (!$this->auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
+                error_log("Access denied for user_id: {$_SESSION['user_id']} to view client_id: $client_id tickets.");
+                $this->view->error([
                     'title' => 'Access Denied',
                     'message' => 'You do not have permission to view this client\'s tickets.'
                 ]);
                 return;
             }
+
             // Get client details
             $clientModel = new Client($this->pdo);
             $client = $clientModel->getClient($client_id);
-            // if client_id is set, view tickets for that client
-            if (isset($status) && $status == 5) {
-                $data = [
-                    'tickets' => $supportModel->getClosedTickets($client_id),
-                    'client' => $client,
-                    'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
-                ];
-            } else {
-                $data = [
-                    'tickets' => $supportModel->getOpenTickets($client_id),
-                    'client' => $client,
-                    'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
-                ];
-            }
-            // Render the view
-            $view->render('tickets', $data, true);
+            $client_header = $clientModel->getClientHeader($client_id);
+            error_log("Client details retrieved for client_id: $client_id");
+            error_log("Client header: " . json_encode($client_header));
+
+            // View tickets for that client
+            $data = [
+                'tickets' => $status == 5 ? $supportModel->getClosedTickets($client_id) : $supportModel->getOpenTickets($client_id),
+                'client' => $client,
+                'client_header' => $client_header['client_header'], // Ensure correct structure
+                'client_page' => true,
+                'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
+            ];
+            error_log("Tickets retrieved for client_id: $client_id, status: $status");
+            $this->view->render('tickets', $data, true);
         } else {
-        // If client_id is not set, view all tickets
-            if (isset($status) && $status == 5) {
-                $data = [
-                    'tickets' => $supportModel->getClosedTickets(),
-                    'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
-                ];
-            } else {
-                // Assemble data to pass to the view
-                $data = [
-                    'tickets' => $supportModel->getOpenTickets(),
-                    'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
-                ];
-            }
-            // Render the view
-            $view->render('tickets', $data);
+            // View all tickets
+            $data = [
+                'tickets' => $status == 5 ? $supportModel->getClosedTickets() : $supportModel->getOpenTickets(),
+                'client_page' => false,
+                'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
+            ];
+            error_log("All tickets retrieved, status: $status");
+            $this->view->render('tickets', $data);
         }
     }
 
-    //View a specific ticket
     public function show($ticket_id) {
-        $view = new View();
-        $auth = new Auth($this->pdo);
+        error_log("SupportController::show called with ticket_id: $ticket_id");
+
         // Check if user has access to the support class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
-        // If user does not have access, display an error message
-            $view->error([
+        if (!$this->auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
+            error_log("Access denied for user_id: {$_SESSION['user_id']} to view support tickets.");
+            $this->view->error([
                 'title' => 'Access Denied',
                 'message' => 'You do not have permission to view support tickets.'
             ]);
             return;
         }
+
         $supportModel = new Support($this->pdo);
         $clientModel = new Client($this->pdo);
         $ticket = $supportModel->getTicket($ticket_id);
+        error_log("Ticket details retrieved for ticket_id: $ticket_id");
 
         $data = [
             'ticket' => $ticket,
             'ticket_replies' => $supportModel->getTicketReplies($ticket_id),
+            'ticket_collaborators' => $supportModel->getTicketCollaborators($ticket_id)
         ];
-        $data['ticket']['ticket_collaborators'] = $supportModel->getTicketCollaborators($ticket_id);
-
 
         if (!empty($ticket['ticket_client_id'])) {
             $client_id = $ticket['ticket_client_id'];
             $data['client'] = $clientModel->getClient($client_id);
             $data['client_header'] = $clientModel->getClientHeader($client_id)['client_header'];
-            $client_page = true;
+            error_log("Client details retrieved for client_id: $client_id associated with ticket_id: $ticket_id");
+            $data['client_page'] = true;
         } else {
-            $client_page = false;
+            $data['client_page'] = false;
         }
 
-        $view->render('ticket', $data, $client_page);
+        $this->view->render('ticket', $data, $data['client_page']);
     }
 }

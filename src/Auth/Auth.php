@@ -10,7 +10,6 @@ class Auth {
         $this->pdo = $pdo;
     }
     public static function check() {
-        error_log('check: ' . print_r($_SESSION, true));
         return isset($_SESSION['user_id']);
     }
 
@@ -40,6 +39,22 @@ class Auth {
         } else {
             return false;
         }
+    }
+
+    public function getUsername($user_id) {
+        $stmt = $this->pdo->prepare('SELECT user_name FROM users WHERE user_id = :user_id');
+        $stmt->execute(['user_id' => $user_id]);
+        return $stmt->fetchColumn();
+    }
+
+    public function getUsers() {
+        $stmt = $this->pdo->prepare('SELECT user_id, user_name FROM users');
+        $stmt->execute();
+        $users = [];
+        while ($user = $stmt->fetch()) {
+            $users[$user['user_id']] = $user['user_name'];
+        }
+        return $users;
     }
 
     public function checkClientAccess($user_id, $client_id, $type) {
