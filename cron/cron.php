@@ -203,7 +203,6 @@ foreach ($certificateAlertArray as $day) {
 $warranty_alert_array = [1,7,14,30,90,120];
 
 foreach ($warranty_alert_array as $day) {
-
     //Get Asset Warranty Expiring
     $sql = mysqli_query(
         $mysqli,
@@ -222,7 +221,6 @@ foreach ($warranty_alert_array as $day) {
         mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Asset Warranty Expiring', notification = 'Asset $asset_name warranty for $client_name will expire in $day Days on $asset_warranty_expire', notification_action = 'client_assets.php?client_id=$client_id', notification_client_id = $client_id");
 
     }
-
 }
 // Logging
 //mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Cron', log_action = 'Task', log_description = 'Cron created notifications for asset warranties expiring'");
