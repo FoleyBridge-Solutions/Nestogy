@@ -913,10 +913,8 @@ function getInvoiceBalance($invoice_id)
     $sql_payments = mysqli_query(
         $mysqli,
         "SELECT SUM(payment_amount) AS total_payments FROM payments
-        WHERE payment_invoice_id = $invoice_id
-        "
+        WHERE payment_invoice_id = $invoice_id"
     );
-
     $row = mysqli_fetch_array($sql_payments);
     $total_payments = floatval($row['total_payments']);
 
@@ -960,6 +958,75 @@ function getInvoiceAmount($invoice_id)
         $invoice_amount += getItemTotal($row['item_id']);
     }
     return $invoice_amount;
+}
+
+function getInvoicePayments($invoice_id)
+{
+    global $mysqli;
+
+    $invoice_id = intval($invoice_id);
+
+    $sql = "SELECT SUM(payment_amount) AS total_payments FROM payments WHERE payment_invoice_id = $invoice_id";
+    $result = mysqli_query($mysqli, $sql);
+    $row = mysqli_fetch_assoc($result);
+    return floatval($row['total_payments']);
+}
+
+function getMostRecentPaymentDate($invoice_id)
+{
+    global $mysqli;
+
+    $invoice_id = intval($invoice_id);
+
+    $sql = "SELECT payment_date FROM payments WHERE payment_invoice_id = $invoice_id ORDER BY payment_date DESC LIMIT 1";
+    $result = mysqli_query($mysqli, $sql);
+    $num = mysqli_num_rows($result);
+    if ($num > 0) {
+        $row = mysqli_fetch_assoc($result);
+        return $row['payment_date'];
+    } else {
+        return null;
+    }
+}
+
+function createCreditForInvoice($invoice_id, $credit_amount) {
+
+    global $mysqli;
+
+    $invoice_id = intval($invoice_id);
+    $credit_amount = floatval($credit_amount);
+
+    // Create new payment with the credit amount, and link it to the invoice
+    $sql = "INSERT INTO payments SET
+        payment_invoice_id = $invoice_id,
+        payment_amount = $credit_amount,
+        payment_date = CURDATE(),
+        payment_method = 'Credit',
+        payment_currency_code = 'USD',
+        payment_reference = 'Credit',
+        payment_account_id = 1
+    ";
+
+    mysqli_query($mysqli, $sql);
+    $payment_id = mysqli_insert_id($mysqli);
+
+    // Create credit for the payment
+    $sql = "INSERT INTO credits SET
+        credit_payment_id = $payment_id,
+        credit_amount = $credit_amount,
+        credit_date = CURDATE(),
+        credit_currency_code = 'USD',
+        credit_client_id = (SELECT invoice_client_id FROM invoices WHERE invoice_id = $invoice_id),
+        credit_reference = 'Credit'
+        ";
+    $result = mysqli_query($mysqli, $sql);
+    $credit_id = mysqli_insert_id($mysqli);
+    
+    if ($result) {
+        return $credit_id;
+    } else {
+        return false;
+    }
 }
 
 function getRecurringInvoiceAmount($recurring_id) {

@@ -394,3 +394,10 @@ function getLocations($client_id) {
     return $locations;
 }
 
+function getClientName($client_id) {
+    global $mysqli;
+
+    $sql = mysqli_query($mysqli, "SELECT client_name FROM clients WHERE client_id = $client_id");
+    $row = mysqli_fetch_array($sql);
+    return $row['client_name'];
+}

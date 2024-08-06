@@ -496,8 +496,9 @@ if ($config_send_invoice_reminders == 1) {
             $contact_email = sanitizeInput($row['contact_email']);
             $invoice_balance = getInvoiceBalance( $invoice_id);
 
-            //Check for overpayment
+            //Check for overpaymenPt
             $overpayment = $invoice_balance - $invoice_amount;
+
 
             // exit loop if overpayment is greater than 0
             if ($overpayment > 0) {
