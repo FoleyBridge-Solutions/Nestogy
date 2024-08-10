@@ -1,7 +1,7 @@
 <?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
 
 <?php
-$employee_break_taken =  false; 
+$employee_break_taken = false; 
 // employee_timeclock_modal.php
 $user_id = $_POST['user_id'] ?? $session_user_id;
 
@@ -9,17 +9,20 @@ $user_id = $_POST['user_id'] ?? $session_user_id;
 $employee_time = mysqli_query($mysqli,
     "SELECT * FROM employee_times
     WHERE employee_id = '$user_id'
-    AND employee_time_end = '0000-00-00 00:00:00'
-");
+    AND employee_time_end = '0000-00-00 00:00:00'"
+);
+
 if (mysqli_num_rows($employee_time) > 0) {
-    $time_id = $_SESSION['time_id'] ?? 0;
     $time = mysqli_fetch_assoc($employee_time);
+    $time_id = $time['employee_time_id'];
     $time_in = $time['employee_time_start'];
+
     $employee_breaks = mysqli_query($mysqli,
         "SELECT * FROM employee_time_breaks
         WHERE employee_time_id = '$time_id'
-        AND employee_break_time_end = '0000-00-00 00:00:00'
-    ");
+        AND employee_break_time_end = '0000-00-00 00:00:00'"
+    );
+
     if (mysqli_num_rows($employee_breaks) > 0) {
         $break = mysqli_fetch_assoc($employee_breaks);
         $break_time_in = $break['employee_break_time_start'];
@@ -30,9 +33,8 @@ if (mysqli_num_rows($employee_time) > 0) {
         $employee_breaks = mysqli_query($mysqli,
             "SELECT * FROM employee_time_breaks
             WHERE employee_time_id = '$time_id'
-            AND employee_break_time_end != '0000-00-00 00:00:00'
-            AND employee_time_id = '$time_id'
-        ");
+            AND employee_break_time_end != '0000-00-00 00:00:00'"
+        );
         if (mysqli_num_rows($employee_breaks) > 0) {
             $break = mysqli_fetch_assoc($employee_breaks);
             $break_time_in = $break['employee_break_time_start'];
@@ -70,6 +72,7 @@ if (mysqli_num_rows($employee_time) > 0) {
         </p>
         <form method="post" action="/post.php">
             <input type="hidden" name="user_id" value="<?= $user_id; ?>">
+            <input type="hidden" name="time_id" value="<?= $time_id; ?>">
             <?php
                 if (!$employee_break_taken) {
                     echo "<button type='submit' name='employee_break_start' class='btn btn-primary'>Start Break</button>";
@@ -96,6 +99,7 @@ if (mysqli_num_rows($employee_time) > 0) {
         </p>
         <form method="post" action="/post.php">
             <input type="hidden" name="user_id" value="<?= $user_id; ?>">
+            <input type="hidden" name="break_id" value="<?= $break['employee_time_break_id']; ?>">
             <button type="submit" name="employee_break_end" class="btn btn-primary">End Break</button>
         </form>
     <?php } ?>

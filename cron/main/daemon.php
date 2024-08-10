@@ -3,9 +3,10 @@
 namespace Twetech\Nestogy\Core;
 
 use Twetech\Nestogy\Database;
-use Twetech\Nestogy\Tasks\StartupTask;
-use Twetech\Nestogy\Tasks\CleanUpTask;
-use Twetech\Nestogy\Tasks\NotificationTask;
+use Twetech\Nestogy\Cron\Tasks\StartupTask;
+use Twetech\Nestogy\Cron\Tasks\CleanUpTask;
+use Twetech\Nestogy\Cron\Tasks\NotificationTask;
+use Twetech\Nestogy\Cron\Tasks\SubscriptionTask;
 
 class Daemon
 {
@@ -18,9 +19,8 @@ class Daemon
 
         $this->tasks[] = new StartupTask($pdo, $cronKey, $config['cron']['enable']);
         $this->tasks[] = new CleanUpTask($pdo);
-        $this->tasks[] = new NotificationTask();
-
-
+        $this->tasks[] = new NotificationTask($pdo);
+        $this->tasks[] = new SubscriptionTask($pdo);
     }
 
     public function run(): void

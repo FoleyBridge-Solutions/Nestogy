@@ -344,7 +344,7 @@ function sanitizeInput($input)
             $sanitized = htmlspecialchars($input);
             $sanitized = strip_tags($sanitized);
             $sanitized = trim($sanitized);
-            $sanitized = mysqli_real_escape_string($mysqli, $sanitized);
+            #TODO: $sanitized = mysqli_real_escape_string($mysqli, $sanitized);
             return $sanitized;
         } else {
             //If it's not a string, just return it

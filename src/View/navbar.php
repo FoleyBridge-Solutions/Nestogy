@@ -32,7 +32,7 @@ if ($client_page) {
         [
             'title' => 'All Clients',
             'icon' => 'bx bx-briefcase',
-            'link' => '/public/?page=client'
+            'link' => '/public/?page=clients'
         ],
         [
             'title' => 'Client Overview',
@@ -68,11 +68,11 @@ if ($client_page) {
             'title' => 'Finance',
             'icon' => 'bx bx-dollar',
             'children' => [
-                ['title' => 'Invoices', 'link' => '/public/?page=invoice&client_id=' . $client_id, 'icon' => 'bx bx-receipt'],
-                ['title' => 'Quotes', 'link' => '/public/?page=quote&client_id=' . $client_id, 'icon' => 'bx bx-message-square-detail'],
-                ['title' => 'Payments', 'link' => '/public/?page=payment&client_id=' . $client_id, 'icon' => 'bx bx-credit-card'],
+                ['title' => 'Invoices', 'link' => '/public/?page=invoices&client_id=' . $client_id, 'icon' => 'bx bx-receipt'],
+                ['title' => 'Quotes', 'link' => '/public/?page=quotes&client_id=' . $client_id, 'icon' => 'bx bx-message-square-detail'],
+                ['title' => 'Payments', 'link' => '/public/?page=payments&client_id=' . $client_id, 'icon' => 'bx bx-credit-card'],
                 ['title' => 'Statements', 'link' => '/public/?page=statement&client_id=' . $client_id, 'icon' => 'bx bx-file'],
-                ['title' => 'Credits', 'link' => '/public/?page=credit&client_id=' . $client_id, 'icon' => 'bx bx-money'],
+                ['title' => 'Credits', 'link' => '/public/?page=credits&client_id=' . $client_id, 'icon' => 'bx bx-money'],
             ]
         ],
         [
@@ -115,7 +115,6 @@ if ($client_page) {
             'title' => 'Accounting',
             'icon' => 'bx bx-money-withdraw',
             'children' => [
-                ['title' => 'Recurring Invoices', 'link' => '/public/?page=recurring_invoices', 'icon' => 'bx bx-receipt'],
                 ['title' => 'Payments', 'link' => '/public/?page=payment', 'icon' => 'bx bx-credit-card'],
                 ['title' => 'Credits', 'link' => '/public/?page=credit', 'icon' => 'bx bx-money'],
                 ['title' => 'Expenses', 'link' => '/public/?page=expense', 'icon' => 'bx bx-money'],

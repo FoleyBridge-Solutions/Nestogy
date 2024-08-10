@@ -1,6 +1,6 @@
 <?php
 
-namespace Twetech\Nestogy\Tasks;
+namespace Twetech\Nestogy\Cron\Tasks;
 
 use Twetech\Nestogy\Interfaces\TaskInterface;
 use PDO;

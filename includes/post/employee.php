@@ -57,7 +57,6 @@ if (isset($_POST['update_employee'])) {
     }
     $stmt->close();
 }
-
 if (isset($_POST['employee_time_in'])) {
     $user_id = $_POST['user_id'];
     $time_notes = $_POST['time_notes'] ?? "";
@@ -68,8 +67,6 @@ if (isset($_POST['employee_time_in'])) {
     $stmt->bind_param("is", $user_id, $time_in);
 
     if ($stmt->execute()) {
-        $time_id = $stmt->insert_id;
-        $_SESSION['time_id'] = $time_id;
         referWithAlert("Employee clocked in successfully.", "success");
     } else {
         referWithAlert("Error clocking in employee: " . $stmt->error, "danger");
@@ -78,13 +75,14 @@ if (isset($_POST['employee_time_in'])) {
 }
 
 if (isset($_POST['employee_time_out'])) {
-    if (!isset($_SESSION['time_id'])) {
+    $time_id = $_POST['time_id'] ?? null;
+
+    if (!$time_id) {
         referWithAlert("Error clocking out: No time ID found.", "danger");
-        error_log("Clock out error: No time ID found in session.");
+        error_log("Clock out error: No time ID found in request.");
         return;
     }
 
-    $time_id = $_SESSION['time_id'];
     $time_out = date("Y-m-d H:i:s");
 
     $sql = "UPDATE employee_times SET employee_time_end = ? WHERE employee_time_id = ?";
@@ -99,7 +97,6 @@ if (isset($_POST['employee_time_out'])) {
     $stmt->bind_param("si", $time_out, $time_id);
 
     if ($stmt->execute()) {
-        unset($_SESSION['time_id']);
         referWithAlert("Employee clocked out successfully.", "success");
     } else {
         referWithAlert("Error clocking out employee: " . $stmt->error, "danger");
@@ -109,7 +106,7 @@ if (isset($_POST['employee_time_out'])) {
 }
 
 if (isset($_POST['employee_break_start'])) {
-    $time_id = $_SESSION['time_id'];
+    $time_id = $_POST['time_id'] ?? null;
     $break_notes = $_POST['break_notes'] ?? "";
     $break_start = date("Y-m-d H:i:s");
 
@@ -118,8 +115,6 @@ if (isset($_POST['employee_break_start'])) {
     $stmt->bind_param("iss", $time_id, $break_start, $break_notes);
 
     if ($stmt->execute()) {
-        $break_id = $stmt->insert_id;
-        $_SESSION['break_id'] = $break_id;
         referWithAlert("Employee break started successfully.", "success");
     } else {
         referWithAlert("Error starting break: " . $stmt->error, "danger");
@@ -128,7 +123,14 @@ if (isset($_POST['employee_break_start'])) {
 }
 
 if (isset($_POST['employee_break_end'])) {
-    $break_id = $_SESSION['break_id'];
+    $break_id = $_POST['break_id'] ?? null;
+
+    if (!$break_id) {
+        referWithAlert("Error ending break: No break ID found.", "danger");
+        error_log("Break end error: No break ID found in request.");
+        return;
+    }
+
     $break_end = date("Y-m-d H:i:s");
 
     $sql = "UPDATE employee_time_breaks SET employee_break_time_end = ? WHERE employee_time_break_id = ?";
@@ -136,7 +138,6 @@ if (isset($_POST['employee_break_end'])) {
     $stmt->bind_param("si", $break_end, $break_id);
 
     if ($stmt->execute()) {
-        unset($_SESSION['break_id']);
         referWithAlert("Employee break ended successfully.", "success");
     } else {
         referWithAlert("Error ending break: " . $stmt->error, "danger");

@@ -26,7 +26,6 @@ $datatable_settings = "";
         </div>
         <div class="collapse">
             <div class="card-body p-1">
-                <textarea class="form-control" rows=8 id="clientNotes" placeholder="Enter quick notes here" onblur="updateClientNotes(<?= $client_id ?>)"><?= $client_notes ?></textarea>
             </div>
         </div>
     </div>

@@ -45,13 +45,13 @@ class Router
         $this->add('trip', 'TripController', 'show', ['trip_id']);
 
         // Accounting routes
-        $this->add('invoices', 'AccountingController', 'showInvoices');
+        $this->add('invoices', 'AccountingController', 'showInvoices', ['client_id']);
         $this->add('invoice', 'AccountingController', 'showInvoice', ['invoice_id']);
-        $this->add('recurring_invoices', 'AccountingController', 'showRecurringInvoices');
-        $this->add('recurring_invoice', 'AccountingController', 'recurring_invoice', ['recurring_invoice_id']);
-        $this->add('payments', 'AccountingController', 'showPayments');
+        $this->add('subscriptions','AccountingController','showSubscriptions',['client_id']);
+        $this->add('subscription','AccountingController','showSubscription',['subscription_id']);
+        $this->add('payments', 'AccountingController', 'showPayments', ['client_id']);
         $this->add('payment', 'AccountingController', 'showPayment', ['payment_id']);
-        $this->add('quotes', 'AccountingController', 'showQuotes');
+        $this->add('quotes', 'AccountingController', 'showQuotes', ['client_id']);
         $this->add('quote', 'AccountingController', 'showQuote', ['quote_id']);
     }
 

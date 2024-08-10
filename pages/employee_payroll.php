@@ -173,11 +173,23 @@ $pay_period_employees = mysqli_query($mysqli, $pay_period_employees_sql);
                                     }
 
                                     // convert seconds to hours
-                                    $hours_worked = round($hours_worked / 3600, 2);
-                                    $break_time = round($break_time / 3600, 2);
-
-                                    echo $hours_worked-$break_time. ' (-'.$break_time.'h of breaks)' . ($time_running_icon ? '<i class="fas fa-running"></i>' : '') . ' ' . ($break_icon ? '<i class="fas fa-coffee"></i>' : '');
+                                    $hours_worked = round($hours_worked / 3600, 3);
+                                    $break_time = round($break_time / 3600, 1);
+                                    $pay_rate = $employee['user_pay_rate'];
+                                    $total_pay = ($hours_worked - $break_time) * $pay_rate;
                                     ?>
+                                        <div class="row">
+                                            <?= $hours_worked - $break_time?> payroll hours
+                                            <?php if ($time_running_icon): ?>
+                                                <i class="fas fa-stopwatch"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="row small">
+                                            <?= $break_time ?> hours on break
+                                            <?php if ($break_icon): ?>
+                                                <i class="fas fa-coffee"></i>
+                                            <?php endif; ?>
+                                        </div>
                                 </td>
                                 <td>
                                 </td>
