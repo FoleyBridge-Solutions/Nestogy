@@ -10,18 +10,13 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
-if (isset($_GET['tenant_id'])) {
-    $database = $_GET['tenant_id'];
-    if ($database == 'twe') {
-        $database = 'itflow';
-    }
-}
 
 //Check to see if setup is enabled
 if (!isset($config_enable_setup) || $config_enable_setup == 1) {
     echo "Setup is enabled, please disable setup in the config.php file to continue.";
     exit;
 }
+
 
 // Check user is logged in with a valid session
 if (!isset($_SESSION['logged']) || !$_SESSION['logged']) {

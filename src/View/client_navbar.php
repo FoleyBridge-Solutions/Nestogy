@@ -1,4 +1,4 @@
-<div class="card card-action d-print-none">
+<div class="card card-action d-print-none mb-3">
     <div class="card-header">
         <div class="card-action-title">
             <h4>
@@ -12,10 +12,10 @@
         <div class="card-action-element">
             <ul class="list-inline mb-0">
                 <li class="list-inline-item">
-                    <a href="javascript:void(0);" class="card-collapsible"><i class="tf-icons bx bx-chevron-up"></i></a>
+                    <a href="javascript:void(0);" data-bs-toggle='tooltip' data-bs-placement='top' title='More Information Toggle' class="card-collapsible"><i class="tf-icons bx bx-chevron-up"></i></a>
                 </li>
                 <li class="list-inline-item">
-                    <div class="dropdown dropleft text-center">
+                    <div class="dropdown dropleft text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit, Export or Archive <?= initials($client_name); ?>">
                         <button class="btn btn-dark btn-sm float-right" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-fw fa-ellipsis-v"></i>
                         </button>

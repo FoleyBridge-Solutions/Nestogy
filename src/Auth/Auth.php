@@ -13,8 +13,10 @@ class Auth {
         return isset($_SESSION['user_id']);
     }
 
-    public static function login($user_id) {
+    public static function login($user_id, $user_role = 1) {
         $_SESSION['user_id'] = $user_id;
+        $_SESSION['user_role'] = $user_role;
+        $_SESSION['logged'] = true;
         header('Location: /public/');
         
     }
@@ -59,9 +61,6 @@ class Auth {
 
     public function checkClientAccess($user_id, $client_id, $type) {
         // Return true if user has access to client(no restrictions set)
-
-
-
         // Check database for client access restriction
         $stmt = $this->pdo->prepare('SELECT * FROM user_client_restrictions WHERE restriction_user_id = :user_id AND restriction_client_id = :client_id');
         $stmt->execute(['user_id' => $user_id, 'client_id' => $client_id]);
@@ -101,5 +100,11 @@ class Auth {
             }
         }
         return true;
+    }
+    public function getCompany() {
+        $company_id = 1; #TODO: dont hardcode this
+        $stmt = $this->pdo->prepare('SELECT * FROM companies WHERE company_id = :company_id');
+        $stmt->execute(['company_id' => $company_id]);
+        return $stmt->fetch();
     }
 }

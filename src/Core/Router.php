@@ -32,7 +32,6 @@ class Router
 
     public function registerRoutes()
     {
-        $this->add('home', 'HomeController', 'index');
         $this->add('clients', 'ClientController', 'index');
         $this->add('client', 'ClientController', 'show', ['client_id']);
         $this->add('tickets', 'SupportController', 'index', ['client_id', 'status']);
@@ -58,7 +57,7 @@ class Router
     public function dispatch()
     {
         // Get the page from the URL
-        $page = $_GET['page'] ?? 'home';
+        $page = $_GET['page'] ?? 'clients'; #TODO: Change this to the default page
         $route = $this->routes[$page] ?? null;
 
         // If the page is not found, handle the error

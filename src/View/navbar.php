@@ -19,24 +19,24 @@ if ($client_page) {
     $location_state = $client_header['client_primary_location']['location_state'] ?? '';
     $location_zip = $client_header['client_primary_location']['location_zip'] ?? '';
     $location_country = $client_header['client_primary_location']['location_country'] ?? '';
-    
+
 
     $contact_name = $client_header['client_primary_contact']['contact_name'] ?? '';
     $contact_email = $client_header['client_primary_contact']['contact_email'] ?? '';
     $contact_phone = $client_header['client_primary_contact']['contact_phone'] ?? '';
     $contact_mobile = $client_header['client_primary_contact']['contact_mobile'] ?? '';
 
-    
+
 
     $clientMenuItems = [
         [
-            'title' => 'All Clients',
-            'icon' => 'bx bx-briefcase',
+            'title' => 'Client List',
+            'icon' => 'bx bx-list-ul',
             'link' => '/public/?page=clients'
         ],
         [
             'title' => 'Client Overview',
-            'icon' => 'bx bx-stats',
+            'icon' => 'bx bx-info-circle',
             'link' => '/public/?page=client&action=show&client_id=' . $client_id
         ],
         [
@@ -69,10 +69,11 @@ if ($client_page) {
             'icon' => 'bx bx-dollar',
             'children' => [
                 ['title' => 'Invoices', 'link' => '/public/?page=invoices&client_id=' . $client_id, 'icon' => 'bx bx-receipt'],
+                ['title' => 'Subscriptions', 'link' => '/public/?page=subscriptions&client_id=' . $client_id, 'icon' => 'bx bx-receipt'],
                 ['title' => 'Quotes', 'link' => '/public/?page=quotes&client_id=' . $client_id, 'icon' => 'bx bx-message-square-detail'],
                 ['title' => 'Payments', 'link' => '/public/?page=payments&client_id=' . $client_id, 'icon' => 'bx bx-credit-card'],
                 ['title' => 'Statements', 'link' => '/public/?page=statement&client_id=' . $client_id, 'icon' => 'bx bx-file'],
-                ['title' => 'Credits', 'link' => '/public/?page=credits&client_id=' . $client_id, 'icon' => 'bx bx-money'],
+                ['title' => 'Credits', 'link' => '/public/?page=credits&client_id=' . $client_id, 'icon' => 'bx bx-money']
             ]
         ],
         [
@@ -90,7 +91,7 @@ if ($client_page) {
         [
             'title' => 'Clients',
             'icon' => 'bx bx-briefcase',
-            'link' => '/public/?page=client'
+            'link' => '/public/?page=clients'
         ],
         [
             'title' => 'Support',
@@ -108,6 +109,7 @@ if ($client_page) {
             'children' => [
                 ['title' => 'Quotes', 'link' => '/public/?page=quotes', 'icon' => 'bx bx-message-square-detail'],
                 ['title' => 'Invoices', 'link' => '/public/?page=invoices', 'icon' => 'bx bx-receipt'],
+                ['title'=> 'Subscriptions', 'link'=> '/public/?page=subscriptions', 'icon' => 'bx bx-credit-card'],
                 ['title' => 'Products', 'link' => '/public/?page=products', 'icon' => 'bx bx-box'],
             ]
         ],
@@ -127,18 +129,21 @@ if ($client_page) {
             'title' => 'Reports',
             'icon' => 'bx bx-bar-chart',
             'children' => [
-                ['title' => 'Financial', 'icon' => 'bx bx-dollar', 'children' => [
-                    ['title' => 'Income', 'link' => '/public/?page=report&report=income_summary', 'icon' => 'bx bx-box'],
-                    ['title' => 'Income By Client', 'link' => '/public/?page=report&report=income_by_client', 'icon' => 'bx bx bx-box'],
-                    ['title' => 'Recurring Income by Client' , 'link' => '/public/?page=report&report=recurring_by_client', 'icon' => 'bx bx-box'],
-                    ['title' => 'Expenses', 'link' => '/public/?page=report&report=expense_summary', 'icon' => 'bx bx-box'],
-                    ['title' => 'Expenses By Vendor', 'link' => '/public/?page=report&report=expenses_by_vendor', 'icon' => 'bx bx-box'],
-                    ['title' => 'Budgets', 'link' => '/public/?page=report&report=budget', 'icon' => 'bx bx-box'],
-                    ['title' => 'Profit & Loss', 'link' => '/public/?page=report&report=profit_loss', 'icon' => 'bx bx-box'],
-                    ['title' => 'Balance Sheet', 'link' => '/public/?page=report&report=balance_sheet', 'icon' => 'bx bx-box'],
-                    ['title' => 'Cash Flow', 'link' => '/public/?page=report&report=cash_flow', 'icon' => 'bx bx-box'],
-                    ['title' => 'Tax Summary', 'link' => '/public/?page=report&report=tax_summary', 'icon' => 'bx bx-box'],
-                    ['title' => 'Collections', 'link' => '/public/?page=report&report=collections', 'icon' => 'bx bx-box']
+                [
+                    'title' => 'Financial',
+                    'icon' => 'bx bx-dollar',
+                    'children' => [
+                        ['title' => 'Income', 'link' => '/public/?page=report&report=income_summary', 'icon' => 'bx bx-box'],
+                        ['title' => 'Income By Client', 'link' => '/public/?page=report&report=income_by_client', 'icon' => 'bx bx bx-box'],
+                        ['title' => 'Recurring Income by Client', 'link' => '/public/?page=report&report=recurring_by_client', 'icon' => 'bx bx-box'],
+                        ['title' => 'Expenses', 'link' => '/public/?page=report&report=expense_summary', 'icon' => 'bx bx-box'],
+                        ['title' => 'Expenses By Vendor', 'link' => '/public/?page=report&report=expenses_by_vendor', 'icon' => 'bx bx-box'],
+                        ['title' => 'Budgets', 'link' => '/public/?page=report&report=budget', 'icon' => 'bx bx-box'],
+                        ['title' => 'Profit & Loss', 'link' => '/public/?page=report&report=profit_loss', 'icon' => 'bx bx-box'],
+                        ['title' => 'Balance Sheet', 'link' => '/public/?page=report&report=balance_sheet', 'icon' => 'bx bx-box'],
+                        ['title' => 'Cash Flow', 'link' => '/public/?page=report&report=cash_flow', 'icon' => 'bx bx-box'],
+                        ['title' => 'Tax Summary', 'link' => '/public/?page=report&report=tax_summary', 'icon' => 'bx bx-box'],
+                        ['title' => 'Collections', 'link' => '/public/?page=report&report=collections', 'icon' => 'bx bx-box']
                     ]
                 ],
                 ['title' => 'Technical', 'icon' => 'bx bx-cog', 'children' => [
@@ -211,7 +216,8 @@ if ($client_page) {
 }
 
 // Render Nav menu
-function renderMenu($menuItems, $isSubmenu = false) {
+function renderMenu($menuItems, $isSubmenu = false)
+{
     $ulClass = $isSubmenu ? 'menu-sub' : 'menu-inner';
     $html = "<ul class=\"$ulClass\">";
 
@@ -238,7 +244,8 @@ function renderMenu($menuItems, $isSubmenu = false) {
 }
 
 // Render user shortcuts
-function renderUserShortcuts($shortcutsData, $shortcutsMap) {
+function renderUserShortcuts($shortcutsData, $shortcutsMap)
+{
     $html = '<div class="row row-bordered overflow-visible g-0">';
     $colCount = 0;
 
@@ -271,48 +278,73 @@ require_once "/var/www/portal.twe.tech/includes/shortcuts.php";
 $num_notifications = 0;
 
 if ($client_page) {
-    $nav_title = 'TWE: '.$client_name;
+    $nav_title = 'TWE: ' . initials($client_name);
 } else {
     $nav_title = 'TWE Technologies';
 }
 $nav_title_link = '/public/';
 
 ?>
+<!-- Layout wrapper -->
+<div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
 
-            
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+            <div class="app-brand demo">
+                <a href="<?= $nav_title_link ?>" class="app-brand-link gap-2">
+                    <span class="app-brand-text demo menu-text fw-bold"><?= $nav_title ?></span>
+                </a>
+                <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+                    <i class="bx bx-chevron-left bx-sm d-flex align-items-center justify-content-center"></i>
+                </a>
+            </div>
+
+            <div class="menu-inner-shadow"></div>
+
+            <div class="menu-inner py-1">
+                <?php if ($client_page) {
+                    renderMenu($clientMenuItems);
+                } else {
+                    renderMenu($menuItems);
+                } ?>
+            </div>
+
+        </aside>
+
+        <!-- Layout container -->
+        <div class="layout-page">
+
             <!-- Navbar -->
-            <nav class="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme d-print-none" id="layout-navbar">
-                <div class="container-xxl">
-                    <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-4">
-                        <a href="<?= $nav_title_link ?>" class="app-brand-link gap-2">
-                            <span class="app-brand-text demo menu-text fw-bold"><?= $nav_title ?></span>
-                            </span>
-                        </a>
+            <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+                id="layout-navbar">
 
-                        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
-                            <i class="bx bx-chevron-left bx-sm align-middle"></i>
-                        </a>
-                    </div>
-
-                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
                         <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
                             <i class="bx bx-menu bx-sm"></i>
                         </a>
                     </div>
 
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-                        <ul class="navbar-nav flex-row align-items-center ms-auto">
-                            <!-- Search -->
-                            <li class="nav-item navbar-search-wrapper me-2 me-xl-0">
-                                <a class="nav-link search-toggler" href="javascript:void(0);">
-                                    <i class="bx bx-search bx-sm"></i>
-                                </a>
-                            </li>
-                            <!-- /Search -->
 
+                        <!-- Search -->
+                        <div class="navbar-nav align-items-center">
+                            <div class="nav-item navbar-search-wrapper mb-0">
+                                <a
+                                    class="nav-item nav-link search-toggler px-0"
+                                    href="javascript:void(0);">
+                                    <i class="bx bx-search bx-md"></i>
+                                    <span
+                                        class="d-none d-md-inline-block text-muted fw-normal ms-4">Search (Ctrl+/)</span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- /Search -->
+
+                        <ul class="navbar-nav flex-row align-items-center ms-auto">
                             <!-- Quick links  -->
                             <li class="nav-item dropdown-shortcuts navbar-dropdown dropdown me-2 me-xl-0">
-                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
                                     <i class="bx bx-grid-alt bx-sm"></i>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end py-0">
@@ -325,7 +357,7 @@ $nav_title_link = '/public/';
                                         <?php
                                             !isset($shortcutsData) ? $shortcutsData = [] : $shortcutsData;
                                             renderUserShortcuts($shortcutsData, $shortcutsMap);
-                                        ?>
+                                            ?>
                                     </div>
                                 </div>
                             </li>
@@ -358,41 +390,47 @@ $nav_title_link = '/public/';
 
                             <!-- Notification -->
                             <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
-                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
                                     <i class="bx bx-bell bx-sm"></i>
-                                    <?= $num_notifications > 0 ? '<span class="badge bg-danger rounded-pill badge-notifications">'. $num_notifications . '</span>' : $num_notifications ?>
+                                    <?= $num_notifications > 0 ? '<span class="badge bg-danger rounded-pill badge-notifications">' . $num_notifications . '</span>' : $num_notifications ?>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end py-0">
                                     <li class="dropdown-menu-header border-bottom">
                                         <div class="dropdown-header d-flex align-items-center py-3">
                                             <h5 class="text-body mb-0 me-auto">Notification</h5>
-                                            <a href="javascript:void(0)" class="dropdown-notifications-all text-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark all as read"><i class="bx fs-4 bx-envelope-open"></i></a>
+                                            <a href="javascript:void(0)" class="dropdown-notifications-all text-body"
+                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Mark all as read"><i
+                                                    class="bx fs-4 bx-envelope-open"></i></a>
                                         </div>
                                     </li>
                                     <li class="dropdown-notifications-list scrollable-container">
                                         <ul class="list-group list-group-flush">
                                             <?php
                                                 //TODO: Implement notifications
-                                            ?>
+                                                ?>
                                         </ul>
                                     </li>
                                     <li class="dropdown-menu-footer border-top p-3">
-                                        <a class="btn btn-primary text-uppercase w-100" href="/pages/notifications.php">view all notifications</a>
+                                        <a class="btn btn-primary text-uppercase w-100" href="/pages/notifications.php">view all
+                                            notifications</a>
                                     </li>
                                 </ul>
                             </li>
                             <!-- Open Tickets -->
-                                <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
-                                    <a class="nav-link loadModalContentBtn" href="#" data-toggle="modal" data-target="#dynamicModal" id="openTicketsModal" data-modal-file="top_nav_tickets_modal.php">
-                                        <i class="bx bx-first-aid bx-sm"></i>
-                                        <span class="badge rounded-pill badge-notifications" id="runningTicketsCount">0</span>
-                                    </a>
-                                </li>
+                            <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
+                                <a class="nav-link loadModalContentBtn" href="#" data-toggle="modal" data-target="#dynamicModal"
+                                    id="openTicketsModal" data-modal-file="top_nav_tickets_modal.php">
+                                    <i class="bx bx-first-aid bx-sm"></i>
+                                    <span class="badge rounded-pill badge-notifications" id="runningTicketsCount">0</span>
+                                </a>
+                            </li>
                             <!-- User -->
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                                     <div class="avatar avatar-online">
-                                        <img src="<?= "/uploads/users/$user_id/$session_avatar"; ?>" alt class="w-px-40 h-auto rounded-circle" />
+                                        <img src="<?= "/uploads/users/$user_id/$session_avatar"; ?>" alt
+                                            class="w-px-40 h-auto rounded-circle" />
                                     </div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -401,12 +439,15 @@ $nav_title_link = '/public/';
                                             <div class="d-flex">
                                                 <div class="flex-shrink-0 me-3">
                                                     <div class="avatar avatar-online">
-                                                        <img src="<?= "/uploads/users/$session_user_id/$session_avatar"; ?>" alt class="w-px-40 h-auto rounded-circle" />
+                                                        <img src="<?= "/uploads/users/$session_user_id/$session_avatar"; ?>" alt
+                                                            class="w-px-40 h-auto rounded-circle" />
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <span class="fw-medium d-block"><?= stripslashes(nullable_htmlentities($session_name)); ?></span>
-                                                    <small class="text-muted"><?= nullable_htmlentities($session_user_role_display); ?></small>
+                                                    <span
+                                                        class="fw-medium d-block"><?= stripslashes(nullable_htmlentities($session_name)); ?></span>
+                                                    <small
+                                                        class="text-muted"><?= nullable_htmlentities($session_user_role_display); ?></small>
                                                 </div>
                                             </div>
                                         </a>
@@ -439,33 +480,19 @@ $nav_title_link = '/public/';
                             </li>
                             <!--/ User -->
                         </ul>
-                    </div>
 
                     <!-- Search Small Screens -->
                     <div class="navbar-search-wrapper search-input-wrapper container-xxl d-none">
-                        <input type="text" class="form-control search-input border-0" placeholder="Search..." aria-label="Search..." />
+                        <input type="text" class="form-control search-input border-0" placeholder="Search..."
+                            aria-label="Search..." />
                         <i class="bx bx-x bx-sm search-toggler cursor-pointer"></i>
                     </div>
                 </div>
             </nav> <!-- / Navbar -->
-            <!-- Layout container -->
-            <div class="layout-page">
-                <!-- Content wrapper -->
-                <div class="content-wrapper">
-                    <!-- Menu -->
-                    <aside id="layout-menu" class="layout-menu-horizontal menu-horizontal menu bg-menu-theme flex-grow-0 d-print-none">
-                        <div class="container-xxl d-flex h-100">
-                            <?php if ($client_page) {
-                                renderMenu($clientMenuItems);
-                            } else {
-                                renderMenu($menuItems);
-                            } ?>
-                        </div>
-                    </aside>
-                    <!-- / Menu -->
 
-                    <!-- Content -->
-                    <div class="container-xxl flex-grow-1 container-p-y">
 
-                        
+            <!-- Content wrapper -->
+            <div class="content-wrapper">
 
+                <!-- Content -->
+                <div class="container-xxl flex-grow-1 container-p-y">

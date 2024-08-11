@@ -47,6 +47,16 @@ class ClientController {
     public function show($client_id) {
         $view = new View();
         $auth = new Auth($this->pdo);
+        
+        // If client_id is not an integer, display an error message
+        if (!is_numeric($client_id)) {
+            $view->error([
+                'title' => 'Invalid Client ID',
+                'message' => 'The client ID must be an integer.'
+            ]);
+            return;
+        }
+
         // Check if user has access to the client class
         if (!$auth->checkClassAccess($_SESSION['user_id'], 'client', 'view') || !$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
             // If user does not have access, display an error message
@@ -56,6 +66,7 @@ class ClientController {
             ]);
             return;
         }
+
         $clientModel = new Client($this->pdo);
         $client = $clientModel->getClient($client_id);
 

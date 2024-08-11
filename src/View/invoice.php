@@ -1,12 +1,46 @@
 <!-- src/view/invoice.php -->
 <?php
 // src/View/invoice.php
+// This view is used to display the invoice, quote, and recurring invoice pages
+
+
+if (isset($invoice)) {
+    $wording = 'Invoice';
+    $invoice_items = $invoice['items'];
+    $invoice_number = $invoice['invoice_number'];
+    $invoice_date = $invoice['invoice_date'];
+    $invoice_due = $invoice['invoice_due'];
+    $invoice_status = $invoice['invoice_status'];
+    $invoice_id = $invoice['invoice_id'];
+    $invoice_prefix = $invoice['invoice_prefix'];
+    $invoice_currency_code = $invoice['invoice_currency_code'];
+    $invoice_url_key = $invoice['invoice_url_key'];
+} else if (isset($quote)) {
+    $wording = 'Quote';
+    $quote_items = $quote['items'];
+    $quote_number = $quote['quote_number'];
+    $quote_date = $quote['quote_date'];
+    $quote_due = $quote['quote_due'];
+    $quote_status = $quote['quote_status'];
+    $quote_id = $quote['quote_id'];
+    $quote_prefix = $quote['quote_prefix'];
+    $quote_currency_code = $quote['quote_currency_code'];
+    $quote_url_key = $quote['quote_url_key'];
+}
+
+$company_name = $company['company_name'];
+$company_address = $company['company_address'];
+$company_city = $company['company_city'];
+$company_state = $company['company_state'];
+$company_zip = $company['company_zip'];
+$company_phone = $company['company_phone'];
+$company_email = $company['company_email'];
+$company_website = $company['company_website'];
 ?>
 
 <div class="row invoice-edit">
         <!-- Invoice Edit-->
         <div class="col-lg-9 col-12 mb-lg-0 mb-4">
-
         <div class="card invoice-preview-card">
                 <div class="card-body">
                     <div class="row p-sm-3 p-0">
@@ -22,7 +56,7 @@
                         <div class="col-md-6">
                             <dl class="row mb-2">
                                 <dt class="col-sm-6 mb-2 mb-sm-0 text-md-end">
-                                    <span class="h4 text-capitalize mb-0 text-nowrap">Invoice <?= $invoice_prefix ?></span>
+                                    <span class="h4 text-capitalize mb-0 text-nowrap"><?= $wording ?> <?= $invoice_prefix ?></span>
                                 </dt>
                                 <dd class="col-sm-6 d-flex justify-content-md-end">
                                     <div class="w-px-150">
@@ -69,7 +103,7 @@
 
                     <div class="row p-sm-3 p-0">
                         <div class="col-md-6 col-sm-5 col-12 mb-sm-0 mb-4">
-                            <h6 class="pb-2">Invoice To:</h6>
+                            <h6 class="pb-2"> <?= $wording ?> To:</h6>
                             <p class="mb-1"><strong><?= $contact_name; ?></strong></p>
                             <p class="mb-1"><strong><?= $client_name; ?></strong></p>
                             <p class="mb-1"><?= $location_address; ?></p>
@@ -77,42 +111,36 @@
                             <p class="mb-1"><?= "$contact_phone $contact_extension"; ?></p>
                             <p class="mb-1"><?= $contact_mobile; ?></p>
                             <p class="mb-0"><?= $contact_email; ?></p>
-
-
                         </div>
                     </div>
 
 
                     <div class="mb-3">
 
-                    <?php $sql_invoice_items = mysqli_query($mysqli, 
-                        "SELECT * FROM invoice_items
-                        LEFT JOIN taxes ON item_tax_id = tax_id
-                        WHERE item_invoice_id = $invoice_id
-                        ORDER BY item_order ASC"); 
-
-                    $subtotal = 0;
-                    $discount_total = 0;
-                    $tax_total = 0;
-                    $total_cost = 0;
+                    <?php 
+                        $subtotal = 0;
+                        $discount_total = 0;
+                        $tax_total = 0;
+                        $total_cost = 0;
                     ?>
                     <div id="invoiceItemsContainer">
-                        <?php while ($row = mysqli_fetch_array($sql_invoice_items)) {
-                            $item_id = intval($row['item_id']);
-                            $item_name = nullable_htmlentities($row['item_name']);
-                            $item_description = nullable_htmlentities($row['item_description']);
-                            $item_price = floatval($row['item_price']);
-                            $item_qty = floatval($row['item_quantity']);
-                            $item_discount = floatval($row['item_discount']);
-                            $item_tax_id = floatval($row['item_tax_id']);
-                            $item_tax = floatval($row['item_tax']);
+                    <?php 
+                        foreach ($invoice_items as $item) {
+                            $item_id = $item['item_id'];
+                            $item_name = $item['item_name'];
+                            $item_description = $item['item_description'];
+                            $item_price = $item['item_price'];
+                            $item_qty = $item['item_quantity'];
+                            $item_discount = $item['item_discount'];
+                            $item_tax_id = $item['item_tax_id'];
+                            $item_tax = $item['item_tax'];
                             $item_subtotal = $item_price * $item_qty;
-                            $tax_percent = floatval($row['tax_percent']);
-                            $tax_name = nullable_htmlentities($row['tax_name']);
-                            $item_product_id = intval($row['item_product_id']);
+                            $tax_percent = $item['tax_percent'];
+                            $tax_name = $item['tax_name'];
+                            $item_product_id = $item['item_product_id'];
 
                             $tax_total += $item_tax;
-                            $item_total = getItemTotal($item_id);
+                            $item_total = $item_subtotal + $item_tax;
                             $subtotal += $item_subtotal;
                             $discount_total += $item_discount;
 
@@ -127,33 +155,6 @@
                             }
 
                             $profit = 0;
-
-                            if ($item_product_id > 0) {
-                                $product_sql = mysqli_query($mysqli, "SELECT * FROM products WHERE product_id = $item_product_id");
-                                $product_row = mysqli_fetch_array($product_sql);
-                                $product_cost = floatval($product_row['product_cost']);
-                                $item_cost = $item_qty * $product_cost;
-                                $total_cost += $item_cost;
-                                $item_profit = $item_subtotal - ($item_qty * $product_cost);
-                                $profit += $item_profit;
-
-                                if ($item_subtotal != 0) {
-                                    $item_margin = $item_profit / $item_subtotal;
-                                } else {
-                                    $item_margin = 0;
-                                }
-
-                                if ($item_cost != 0) {
-                                    $item_markup = $item_profit / $item_cost;
-                                } else {
-                                    $item_markup = 0;
-                                }
-                            } else {
-                                $item_cost = 0;
-                                $item_profit = 0;
-                                $item_margin = 0;
-                                $item_markup = 0;
-                            }
                         ?>
 
                         <hr class="mx-n4" />
@@ -172,14 +173,12 @@
                                         </div>
                                         <div class="col-md-2 col-12 mb-md-0 mb-3">
                                             <p class="mb-2 repeater-title">Unit Price</p>
-                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="<?= number_format($item_price, 2) ?>" placeholder="<?= number_format($item_price, 2) ?>" />
+                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="" placeholder=""/>
                                             <div class="d-flex me-1">
-                                                <span class="discount me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: <?=numfmt_format_currency($currency_format, $item_discount, $client_currency_code)?>"><?=number_format($item_discount_percent, 0)?>%</span>
-                                                <span class="tax me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tax: <?= numfmt_format_currency($currency_format, $item_tax, $client_currency_code)?>"><?=number_format($tax_percent, 3)?>%</span>
+                                                <span class="discount me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: ">%</span>
+                                                <span class="tax me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tax: ">%</span>
                                             </div>
                                             <div class="d-flex me-1">
-                                                <span class="markup me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Markup: <?=numfmt_format_currency($currency_format, $item_profit, $client_currency_code)?>"><?=number_format($item_markup*100, 0)?>%</span>
-                                                <span class="margin me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Margin"><?=number_format($item_margin*100, 0)?>%</span>
                                             </div>
                                         </div>
                                         <div class="col-md-1 col-12 mb-md-0 mb-3">
@@ -188,7 +187,7 @@
                                         </div>
                                         <div class="col-md-2 col-12 pe-0">
                                             <p class="mb-2 repeater-title">Line Total</p>
-                                            <p class="mb-0"><?=numfmt_format_currency($currency_format, $item_total, $client_currency_code)?></p>
+                                            <p class="mb-0"><?=$item_total?></p>
                                         </div>
                                     </div>
                                     <div class="d-flex flex-column align-items-center justify-content-between border-start p-2">
@@ -210,20 +209,6 @@
                                                         <label for="taxInput1" class="form-label">Tax</label>
                                                         <select class="form-select select2 invoice-item-tax mb-2" name="tax_id" id="tax" style="width: 100%;">
                                                             <option value="0">No Tax</option>
-                                                            <?php
-                                                            $tax_sql = "SELECT * FROM taxes";
-                                                            $tax_result = mysqli_query($mysqli, $tax_sql);
-
-                                                            while ($tax_row = mysqli_fetch_assoc($tax_result)) {
-                                                                $tax_id = $tax_row['tax_id'];
-                                                                $tax_name = $tax_row['tax_name'];
-                                                                $tax_rate = $tax_row['tax_percent'];
-                                                                ?>
-
-                                                                <option value="<?=$tax_id?>" data-rate="<?=$tax_rate?>" <?php if ($tax_id == $item_tax_id) { echo 'selected'; } ?>>
-                                                                    <?=$tax_name?> (<?=$tax_rate?>%)
-                                                                </option>
-                                                            <?php } ?>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -233,20 +218,9 @@
                                                         <label for="product_id" class="form-label">Product</label>
                                                         <div class="input-group">
                                                             <select class="form-select select2" name="product_id" id="product_id">
-                                                                <?php
-                                                                $product_sql = "SELECT * FROM products ORDER BY product_name";
-                                                                $product_result = mysqli_query($mysqli, $product_sql);
 
-                                                                while ($product_row = mysqli_fetch_assoc($product_result)) {
-                                                                    $product_id = $product_row['product_id'];
-                                                                    $product_name = $product_row['product_name'];
-                                                                    ?>
-
-                                                                    <option value="<?=$product_id?>" <?php if ($product_id == $item_product_id) { echo 'selected'; } ?>>
-                                                                        <?=$product_name?>
-                                                                    </option>
-                                                                <?php } ?>
                                                             </select>
+                                                                
                                                             <button type="submit" name="add_item_product" class="btn btn-primary mt-2">
                                                                 <i class="bx bx-plus"></i>
                                                             </button>
@@ -260,7 +234,7 @@
                                 </div>
                             </form>
                         </div>
-                        <?php } ?>
+                    <?php } ?>
                     </div>
 
                     </div>
@@ -294,20 +268,20 @@
                             <div class="invoice-calculations">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="w-px-100">Subtotal:</span>
-                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $subtotal, $client_currency_code)?></span>
+                                    <span class="fw-medium"></span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="w-px-100">Discount:</span>
-                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $discount_total, $client_currency_code)?></span>
+                                    <span class="fw-medium"></span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="w-px-100">Tax:</span>
-                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $tax_total, $client_currency_code)?></span>
+                                    <span class="fw-medium"</span>
                                 </div>
                                 <hr />
                                 <div class="d-flex justify-content-between">
                                     <span class="w-px-100">Total:</span>
-                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $subtotal-$discount_total+$tax_total, $client_currency_code)?></span>
+                                    <span class="fw-medium"></span>
                                     <?php
 
 
@@ -325,6 +299,7 @@
         <!-- Invoice Actions -->
         <div class="col-lg-3 col-12 invoice-actions">
             <div class="card mb-4">
+                <?php if (isset($invoice)) { ?>
                 <div class="card-body">
                     <?php if ($invoice_status == 'Draft') { ?>
                         <div class="d-grid d-flex my-3 w-100">
@@ -364,14 +339,14 @@
                             <i class="bx bx-dollar me-2"></i>
                             <span class="fw-medium">Amount Due:</span>
                         </div>
-                        <span class="fw-medium"><?=numfmt_format_currency($currency_format, $balance, $client_currency_code)?></span>
+                        <span class="fw-medium"></span>
                     </div>
                     <div class="d-flex justify-content-between mt-3">
                         <div class="d-flex align-items-center">
                             <i class="bx bx-credit-card me-2"></i>
                             <span class="fw-medium">Amount Paid:</span>
                         </div>
-                        <span class="fw-medium"><?=numfmt_format_currency($currency_format, $amount_paid, $client_currency_code)?></span>
+                        <span class="fw-medium"></span>
                     </div>
                     <div class="d-flex justify-content-between mt-3">
                         <div class="d-flex align-items-center">
@@ -384,30 +359,20 @@
                             } else {
                                 $margin = 0;  // Default or error value if cost is zero
                             }
-                            if ($margin < $margin_goal/100) {
-                                echo "<span class='fw-medium text-danger'>";
-                            } else {
-                                echo "<span class='fw-medium text-success'>";
-                            }
                             echo number_format($margin*100, 1) . "%";
                             echo "</span>";
                             ?>
                     </div>
                 </div>
             </div>
-
             <div class="card">
                 <div class="card-header text-bold">
                     <i class="fa fa-cog mr-2"></i>Tickets
                     <div class="card-tools">
-
-
-                        <?php if (mysqli_num_rows($sql_tickets_billable) > 0) { ?>
+                        <?php #TODO; add ticket model ?>
                         <a class="btn btn-tool loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="invoice_add_ticket_modal.php?invoice_id=<?=$invoice_id?>">
                             <i class="fas fa-plus"></i>
                         </a>
-                        <?php } ?>
-
 
                         <a class="btn btn-tool" href="tickets.php?client_id=<?= $client_id; ?>">
                             <i class="fas fa-external-link-alt"></i>
@@ -421,23 +386,23 @@
 
                         </button>
 
+                        <?php } else if (isset($quote)) { ?>
+
+                        <?php } ?>
 
                 </div>
 
                 <div class="card-body">
                     <?php
-                        while ($row = mysqli_fetch_array($sql_tickets)) {
-                            $ticket_id = intval($row['ticket_id']);
-                            $ticket_created_at = nullable_htmlentities($row['ticket_created_at']);
-                            $ticket_subject = nullable_htmlentities($row['ticket_subject']);
-                            $ticket_status = nullable_htmlentities($row['ticket_status']);
-                            $ticket_priority = nullable_htmlentities($row['ticket_priority']);
-                            $ticket_assigned_to_id = intval($row['ticket_assigned_to']);
-                            $ticket_total_time_worked = floatval($row['total_time_worked']);
+                        foreach ($data['tickets'] as $ticket) {
+                            $ticket_id = intval($ticket['ticket_id']);
+                            $ticket_created_at = nullable_htmlentities($ticket['ticket_created_at']);
+                            $ticket_subject = nullable_htmlentities($ticket['ticket_subject']);
+                            $ticket_status = nullable_htmlentities($ticket['ticket_status']);
+                            $ticket_priority = nullable_htmlentities($ticket['ticket_priority']);
+                            $ticket_assigned_to = intval($ticket['ticket_assigned_to']);
+                            $ticket_total_time_worked = floatval($ticket['total_time_worked']);
 
-                            $sql_assigned_to = mysqli_query($mysqli, "SELECT * FROM users WHERE user_id = $ticket_assigned_to_id");
-                            $row = mysqli_fetch_array($sql_assigned_to);
-                            $ticket_assigned_to = nullable_htmlentities($row['user_name']);
                             ?>
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -596,3 +561,4 @@ function updateInvoiceItems(newItems) {
         z-index: 9999999;
     }
 </style>
+</div>

@@ -9,13 +9,6 @@ $session_mobile = false;
 
 ?>
 
-
-<style>
-    .popover {
-        max-width: 600px;
-    }
-
-</style>
 <div class="card">
     <div class="card-header header-elements">
         <h3 class="me-2">
@@ -163,29 +156,29 @@ $session_mobile = false;
                             <tr class="<?= empty($ticket_updated_at) ? "text-bold" : "" ?>">
                                 <td>
                                     <small>
-                                        <a href="/public/?page=ticket&action=show&ticket_id=<?=$ticket_id?>">
+                                        <a href="/public/?page=ticket&action=show&ticket_id=<?=$ticket_id?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View ticket">
                                             <span class="badge rounded-pill bg-label-secondary p-3"><?=$ticket_number?></span>
                                         </a>
                                     </small>
                                 </td>
                                 <td>
-                                    <a href="/public/?page=ticket&action=show&ticket_id=<?=$ticket_id?>">
+                                    <a href="/public/?page=ticket&action=show&ticket_id=<?=$ticket_id?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View ticket">
                                         <?=$ticket_subject?>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="/public/?page=client&action=show&client_id=<?=$ticket['client_id']?>">
+                                    <a href="/public/?page=tickets&client_id=<?=$ticket['client_id']?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View client tickets">
                                         <?=$client_name?>
                                     </a>
                                     <br>
                                     <small>
-                                        <a href="/public/?page=contact&action=show&contact_id=<?=$ticket['contact_id']?>">
+                                        <a href="/public/?page=contact&action=show&contact_id=<?=$ticket['contact_id']?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View contact">
                                             <?=$contact_name?>
                                         </a>
                                     </small>
                                 </td>
                                 <td>
-                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_priority_modal.php?ticket_id=<?= $ticket_id; ?>">
+                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_priority_modal.php?ticket_id=<?= $ticket_id; ?>&client_id=<?= $ticket['client_id']; ?>">
                                         <span class='p-2 badge rounded-pill bg-label-<?= $ticket_priority_color; ?>'>
                                             <?= $ticket_priority; ?>
                                         </span>

@@ -4,11 +4,33 @@
 function initials($str)
 {
     if (!empty($str)) {
-        $ret = '';
-        foreach (explode(' ', $str) as $word)
-            $ret .= strtoupper($word[0]);
-        $ret = substr($ret, 0, 2);
-        return $ret;
+        // Split the string into an array of words
+        $words = explode(' ', $str);
+
+        // Initialize an empty string to store the initials
+        $initials = '';
+
+        // Loop through each word and add the first letter to the initials string if it is longer than 3 characters or 1 character
+        foreach ($words as $word) {
+            //remove any non-alphabetical characters, but keep any dashes or ampersands
+            $word = preg_replace('/[^a-zA-Z-&]/', '', $word);
+            //replace ampersands with n
+            $word = str_replace('&', 'n', $word);
+            //if word is all caps, add all the letters
+            if (ctype_upper($word)) {
+                $initials .= $word;
+            } else {
+                if (strlen($word) > 2) {
+                    $initials .= $word[0];
+                }
+                if (strlen($word) == 1) {
+                    $initials .= $word[0];
+                }
+            }
+            // add periods to the initials
+            $initials .= '.';
+        }
+        return $initials;
     }
 }
 

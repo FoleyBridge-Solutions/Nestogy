@@ -3,14 +3,14 @@
 <?php
 isset($_GET['ticket_id']) ? $ticket_id = intval($_GET['ticket_id']) : $ticket_id = '';
 
-$ticket_data = readTicket($ticket_id);
+$ticket_data = readTicket(['ticket_id' => $ticket_id]);
 $ticket_prefix = $ticket_data[$ticket_id]['ticket_prefix'];
 $ticket_number = $ticket_data[$ticket_id]['ticket_number'];
 $ticket_priority = $ticket_data[$ticket_id]['ticket_priority'];
 
 isset($_GET['client_id']) ? $client_id = intval($_GET['client_id']) : $client_id = $ticket_data[$ticket_id]['client_id'];
 
-$client_data = readClient($client_id);
+$client_data = readClient(['client_id' => $client_id]);
 $client_name = $client_data[$client_id]['client_name'];
 
 ?>

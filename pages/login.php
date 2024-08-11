@@ -1,5 +1,9 @@
 <?php
 
+//redirect to the new login page
+header("Location: /public/");
+exit;
+
 // Set the Content Security Policy header
 header("Content-Security-Policy: default-src 'self' https://cdn.plaid.com; script-src 'self' https://cdn.plaid.com/link/v2/stable/link-initialize.js; frame-src 'self' https://cdn.plaid.com; connect-src 'self' https://production.plaid.com;");
 
@@ -13,11 +17,6 @@ if (!file_exists('/var/www/portal.twe.tech/includes/config/config.php')) {
 
 session_start();
 
-// Redirect to dashboard if already logged in
-if (isset($_SESSION['user_id'])) {
-    header("Location: /pages/dashboard.php");
-    exit;
-}
 
 require_once "/var/www/portal.twe.tech/includes/config/config.php";
 

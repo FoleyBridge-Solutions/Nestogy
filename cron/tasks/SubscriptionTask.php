@@ -53,7 +53,7 @@ class Subscription
     public function createInvoiceItems(): void
     {
         // Go though the subscription items and create corresponding invoice items from products
-        $query = "SELECT product_id, quantity FROM subscriptions WHERE client_id = :client_id";
+        $query = "SELECT subscription_product_id, subbscription_product_quantity FROM subscriptions WHERE subscription_client_id = :client_id";
         $stmt = $this->pdo->prepare($query);
         $stmt->execute(['client_id' => $this->clientId]);
         $subscriptions = $stmt->fetchAll();

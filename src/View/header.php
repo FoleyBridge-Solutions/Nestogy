@@ -1,6 +1,6 @@
 <!doctype html>
 
-<html lang="en" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default" data-assets-path="/includes/assets/" data-template="horizontal-menu-template">
+<html lang="en" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default" data-assets-path="/includes/assets/" data-template="vertical-menu-template">
 
 <head>
     <meta charset="utf-8" />
@@ -68,7 +68,3 @@
 </head>
 
 <body>
-    <!-- Layout wrapper -->
-    <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
-        <div class="layout-container">
-            

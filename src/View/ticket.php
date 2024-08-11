@@ -177,7 +177,24 @@ $task_count = 0; // TODO: Implement task count
                                             <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
                                         </div>
                                         <select class="form-control select2" id='select2' name="status" required>
-                                            <?php 
+                                            <?php
+                                            $ticket_statuses = [
+                                                [
+                                                    'ticket_status_id' => 2,
+                                                    'ticket_status_name' => 'Open'
+                                                ],
+                                                [
+                                                    'ticket_status_id' => 3,
+                                                    'ticket_status_name' => 'On Hold'
+                                                ],
+                                                [
+                                                    'ticket_status_id' => 4,
+                                                    'ticket_status_name' => 'Resolved'
+                                                ]
+                                            ];
+                                            foreach ($ticket_statuses as $status) {
+                                                echo "<option value='".$status['ticket_status_id']."'>".$status['ticket_status_name']."</option>";
+                                            }
 
                                             ?>
 
