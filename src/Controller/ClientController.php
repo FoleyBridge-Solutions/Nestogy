@@ -5,6 +5,7 @@ namespace Twetech\Nestogy\Controller;
 
 use Twetech\Nestogy\Model\Client;
 use Twetech\Nestogy\Model\Contact;
+use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\View\View;
 use Twetech\Nestogy\Auth\Auth;
 
@@ -34,12 +35,13 @@ class ClientController {
             return;
         }
         $clientModel = new Client($this->pdo);
+        $accountingModel = new Accounting($this->pdo);
         $clients = $clientModel->getClients(true);
 
         // Add Additional Data for Each Client
         foreach ($clients as &$client) {
-            $client['client_balance'] = $clientModel->getClientBalance($client['client_id'])['balance'];
-            $client['client_payments'] = $clientModel->getClientPaidAmount($client['client_id'])['amount_paid'];
+            $client['client_balance'] = $accountingModel->getClientBalance($client['client_id']);
+            $client['client_payments'] = $accountingModel->getClientPaidAmount($client['client_id']);
         }
         
         $view->render('clients', ['clients' => $clients]);
@@ -47,6 +49,8 @@ class ClientController {
     public function show($client_id) {
         $view = new View();
         $auth = new Auth($this->pdo);
+
+        $this->clientAccessed($client_id);
         
         // If client_id is not an integer, display an error message
         if (!is_numeric($client_id)) {
@@ -175,5 +179,9 @@ class ClientController {
         ];
 
         $view->render('simpleTable', $data, true);
+    }
+    public function clientAccessed($client_id) {
+        $clientModel = new Client($this->pdo);
+        $clientModel->clientAccessed($client_id);
     }
 }

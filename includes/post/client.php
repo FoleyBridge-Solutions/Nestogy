@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -153,7 +153,7 @@ if (isset($_POST['export_clients_csv'])) {
 
     if ($sql->num_rows > 0) {
         $delimiter = ",";
-        $filename = $session_company_name . "-Clients-" . date('Y-m-d') . ".csv";
+        $filename = $company_name . "-Clients-" . date('Y-m-d') . ".csv";
 
         //create a file pointer
         $f = fopen('php://memory', 'w');
@@ -255,7 +255,7 @@ if (isset($_POST['export_client_pdf'])) {
         var docDefinition = {
             info: {
                 title: '<?= strtoAZaz09($client_name); ?>-IT Documentation',
-                author: <?= json_encode($session_company_name); ?>
+                author: <?= json_encode($company_name); ?>
             },
 
             pageMargins: [ 15, 15, 15, 15 ],

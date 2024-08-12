@@ -12,27 +12,27 @@
         <div class="btn-group">
             <div class="btn-group" role="group">
                 <button class="btn btn-label-dark dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
-                    <?=$session_mobile ? "" : "My Tickets"?>
+                    <?=$mobile ? "" : "My Tickets"?>
                     <i class="fa fa-fw fa-envelope m-2"></i>
                 </button>
                 <div class="dropdown-menu">
-                    <a class="dropdown-item" href="?status=Open&assigned=<?= $session_user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
-                    <a class="dropdown-item " href="?status=5&assigned=<?= $session_user_id ?>">Closed tickets</a>
+                    <a class="dropdown-item" href="?status=Open&assigned=<?= $user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
+                    <a class="dropdown-item " href="?status=5&assigned=<?= $user_id ?>">Closed tickets</a>
                 </div>
             </div>
             <?php if (!isset($_GET['client_id'])) { ?>
                 <a href="?assigned=unassigned" class="btn btn-label-danger">
-                    <strong><?=$session_mobile ? "" : "Unassigned:"?> <?= " ".$total_tickets_unassigned; ?></strong>
+                    <strong><?=$mobile ? "" : "Unassigned:"?> <?= " ".$total_tickets_unassigned; ?></strong>
                     <span class="tf-icons fa fa-fw fa-exclamation-triangle mr-2"></span>
                 </a> 
             <?php } ?>
             <a href="<?=isset($_GET['client_id']) ? "/pages/client/client_" : '/pages/'?>recurring_tickets.php" class="btn btn-label-info">
-            <strong><?=$session_mobile ? "" : "Recurring:"?> <?= $total_scheduled_tickets; ?> </strong>
+            <strong><?=$mobile ? "" : "Recurring:"?> <?= $total_scheduled_tickets; ?> </strong>
                 <span class="tf-icons fa fa-fw fa-redo-alt mr-2"></span>
             </a>
-            <?php if ($session_user_role == 3) { ?>
+            <?php if ($user_role == 3) { ?>
                 <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php">
-                    <?=$session_mobile ? "Add Ticket" : ""?>
+                    <?=$mobile ? "Add Ticket" : ""?>
                     <i class="fa fa-fw fa-plus mr-2"></i>
                 </a>
             <?php } ?>

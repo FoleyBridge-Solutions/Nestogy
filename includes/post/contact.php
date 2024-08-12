@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -57,7 +57,7 @@ if (isset($_POST['add_contact'])) {
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Create', log_description = '$session_name created contact $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Create', log_description = '$name created contact $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
     $_SESSION['alert_message'] = "Contact <strong>$name</strong> created" . $extended_alert_description;
 
@@ -167,7 +167,7 @@ if (isset($_POST['edit_contact'])) {
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$session_name modified contact $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$name modified contact $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
     $_SESSION['alert_message'] = "Contact <strong>$name</strong> updated" . $extended_alert_description;
 
@@ -203,7 +203,7 @@ if (isset($_POST['bulk_assign_contact_location'])) {
             mysqli_query($mysqli,"UPDATE contacts SET contact_location_id = $location_id WHERE contact_id = $contact_id");
 
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$session_name assigned $contact_name to Location $location_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$name assigned $contact_name to Location $location_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
         } // End Assign Location Loop
         
@@ -237,7 +237,7 @@ if (isset($_POST['bulk_edit_contact_phone'])) {
             mysqli_query($mysqli,"UPDATE contacts SET contact_phone = '$phone' WHERE contact_id = $contact_id");
 
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$session_name set Phone Number to $phone for $contact_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$name set Phone Number to $phone for $contact_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
         } // End Assign Location Loop
         
@@ -271,7 +271,7 @@ if (isset($_POST['bulk_edit_contact_department'])) {
             mysqli_query($mysqli,"UPDATE contacts SET contact_department = '$department' WHERE contact_id = $contact_id");
 
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$session_name set Department to $department for $contact_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$name set Department to $department for $contact_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
         } // End Assign Location Loop
         
@@ -307,7 +307,7 @@ if (isset($_POST['bulk_edit_contact_role'])) {
             mysqli_query($mysqli,"UPDATE contacts SET contact_important = $contact_important, contact_billing = $contact_billing, contact_technical = $contact_technical WHERE contact_id = $contact_id");
 
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$session_name updated $contact_name role', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Modify', log_description = '$name updated $contact_name role', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
         } // End Assign Location Loop
         
@@ -405,7 +405,7 @@ if (isset($_GET['anonymize_contact'])) {
     mysqli_query($mysqli,"UPDATE contacts SET contact_archived_at = NOW() WHERE contact_id = $contact_id");
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Anonymize', log_description = '$session_name anonymized contact', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Anonymize', log_description = '$name anonymized contact', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Contact $contact_name anonymized & archived";
@@ -428,7 +428,7 @@ if (isset($_GET['archive_contact'])) {
     mysqli_query($mysqli,"UPDATE contacts SET contact_important = 0, contact_billing = 0, contact_technical = 0, contact_auth_method = '', contact_password_hash = '', contact_archived_at = NOW() WHERE contact_id = $contact_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Archive', log_description = '$session_name archived contact $contact_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Archive', log_description = '$name archived contact $contact_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Contact <strong>$contact_name</strong> archived";
@@ -452,7 +452,7 @@ if (isset($_GET['delete_contact'])) {
     mysqli_query($mysqli,"DELETE FROM contacts WHERE contact_id = $contact_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Delete', log_description = '$session_name deleted contact $contact_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $contact_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Delete', log_description = '$name deleted contact $contact_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $contact_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Contact <strong>$contact_name</strong> deleted.";
@@ -504,7 +504,7 @@ if (isset($_POST['export_client_contacts_csv'])) {
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Export', log_description = '$session_name exported $num_rows contact(s) to a CSV file', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Export', log_description = '$name exported $num_rows contact(s) to a CSV file', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
     exit;
 
@@ -593,7 +593,7 @@ if (isset($_POST["import_client_contacts_csv"])) {
         fclose($file);
 
         //Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Import', log_description = '$session_name imported $row_count contact(s) via CSV file', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Contact', log_action = 'Import', log_description = '$name imported $row_count contact(s) via CSV file', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "$row_count Contact(s) added, $duplicate_count duplicate(s) detected";
         header("Location: " . $_SERVER["HTTP_REFERER"]);

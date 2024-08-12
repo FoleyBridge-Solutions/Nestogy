@@ -1,6 +1,6 @@
 <?php
 
-$session_mobile = false; //TODO: Implement mobile session
+$mobile = false; //TODO: Implement mobile session
 
 $ticket_prefix = $ticket['ticket_prefix'];
 $ticket_number = $ticket['ticket_number'];
@@ -35,12 +35,12 @@ $task_count = 0; // TODO: Implement task count
 <div class="row">
     
 
-    <?php if ($session_mobile) {
+    <?php if ($mobile) {
         require_once "/var/www/portal.twe.tech/includes/ticket_sidebar.php";
         }
     ?>
     <!-- Left -->
-    <div class="col<?= $session_mobile ? '' : '-9'; ?>">
+    <div class="col<?= $mobile ? '' : '-9'; ?>">
         <!-- Ticket Details -->
         <div class="card mb-3">
             <div class="card-header">
@@ -80,7 +80,7 @@ $task_count = 0; // TODO: Implement task count
                         </ul>
                     </div>
                 </div>
-                <div class="collapse <?= !$session_mobile ? 'show' : ''; ?>">
+                <div class="collapse <?= !$mobile ? 'show' : ''; ?>">
                     <div class="card-body">
                         <!-- Ticket replies -->
                         <table class="datatables-basic table border-top">
@@ -233,7 +233,7 @@ $task_count = 0; // TODO: Implement task count
                             $ticket_reply_button_icon = "paper-plane";
 
                             // Internal responses by default if 1) the contact email is empty or 2) the contact email matches the agent responding
-                            if (empty($contact_email) || $contact_email == $session_email) {
+                            if (empty($contact_email) || $contact_email == $email) {
                                 // Internal
                                 $ticket_reply_button_wording = "Add note";
                                 $ticket_reply_button_check = "";
@@ -292,7 +292,7 @@ $task_count = 0; // TODO: Implement task count
             </table>
         </div>
     </div>
-    <?php if (!$session_mobile) {
+    <?php if (!$mobile) {
         require_once "/var/www/portal.twe.tech/includes/ticket_sidebar.php";
         }
     ?>

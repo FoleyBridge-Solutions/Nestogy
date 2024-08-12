@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -15,7 +15,7 @@ if (isset($_POST['add_category'])) {
     mysqli_query($mysqli,"INSERT INTO categories SET category_name = '$name', category_type = '$type', category_color = '$color'");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Create', log_description = '$name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Create', log_description = '$name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Category added";
 
@@ -33,7 +33,7 @@ if (isset($_POST['edit_category'])) {
     mysqli_query($mysqli,"UPDATE categories SET category_name = '$name', category_type = '$type', category_color = '$color' WHERE category_id = $category_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Modify', log_description = '$name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Modify', log_description = '$name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Category modified";
 
@@ -75,7 +75,7 @@ if (isset($_GET['delete_category'])) {
     mysqli_query($mysqli,"DELETE FROM categories WHERE category_id = $category_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Delete', log_description = '$category_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Delete', log_description = '$category_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Category deleted";
     $_SESSION['alert_type'] = "error";

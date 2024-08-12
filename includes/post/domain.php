@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -59,7 +59,7 @@ if (isset($_POST['add_domain'])) {
     }
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Create', log_description = '$session_name created domain $name$extended_log_description', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $domain_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Create', log_description = '$name created domain $name$extended_log_description', log_ip = '$ip', log_user_agent = '$user_agent',  log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $domain_id");
 
     $_SESSION['alert_message'] = "Domain <strong>$name</strong> created";
 
@@ -110,7 +110,7 @@ if (isset($_POST['edit_domain'])) {
     mysqli_query($mysqli,"UPDATE domains SET domain_name = '$name', domain_description = '$description', domain_registrar = $registrar,  domain_webhost = $webhost, domain_expire = $expire, domain_ip = '$a', domain_name_servers = '$ns', domain_mail_servers = '$mx', domain_txt = '$txt', domain_raw_whois = '$whois', domain_notes = '$notes' WHERE domain_id = $domain_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Modify', log_description = '$session_name modified domain $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $domain_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Modify', log_description = '$name modified domain $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $domain_id");
 
     $_SESSION['alert_message'] = "Domain <strong>$name</strong> updated";
 
@@ -133,7 +133,7 @@ if (isset($_GET['delete_domain'])) {
     mysqli_query($mysqli,"DELETE FROM domains WHERE domain_id = $domain_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Delete', log_description = '$session_name deleted domain $domain_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $domain_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Delete', log_description = '$name deleted domain $domain_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $domain_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Domain <strong>$domain_name</strong> deleted";
@@ -157,13 +157,13 @@ if (isset($_POST['bulk_delete_domains'])) {
 
             $domain_id = intval($domain_id);
             mysqli_query($mysqli, "DELETE FROM domains WHERE domain_id = $domain_id AND domain_client_id = $client_id");
-            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Domain', log_action = 'Delete', log_description = '$session_name deleted a domain (bulk)', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $domain_id");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Domain', log_action = 'Delete', log_description = '$name deleted a domain (bulk)', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $domain_id");
 
             $count++;
         }
 
         // Logging
-        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Domain', log_action = 'Delete', log_description = '$session_name bulk deleted $count domains', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Domain', log_action = 'Delete', log_description = '$name bulk deleted $count domains', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "Deleted $count certificate(s)";
 
@@ -217,7 +217,7 @@ if (isset($_POST['export_client_domains_csv'])) {
     }
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Export', log_description = '$session_name exported $num_rows domain(s) to a CSV file', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Domain', log_action = 'Export', log_description = '$name exported $num_rows domain(s) to a CSV file', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
     exit;
 

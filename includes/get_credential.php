@@ -106,20 +106,20 @@ if (hash('sha256', $row['user_extension_key']) !== hash('sha256', $_COOKIE['user
 session_id($row['user_php_session']);
 session_start();
 
-$session_user_id = intval($row['user_id']);
-$session_name = $row['user_name'];
-$session_email = $row['user_email'];
-$session_user_role = $row['user_role'];
+$user_id = intval($row['user_id']);
+$name = $row['user_name'];
+$email = $row['user_email'];
+$user_role = $row['user_role'];
 
 // Check user access level is correct (not an accountant)
-if ($session_user_role < 1) {
+if ($user_role < 1) {
     $data['found'] = "FALSE";
     $data['message'] = WORDING_ROLECHECK_FAILED;
     echo json_encode($data);
 
     //Logging
-    $user_name = mysqli_real_escape_string($mysqli, $session_name);
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Login', log_action = 'Extension Failed', log_description = '$user_name not authorised to use extension', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $session_user_id");
+    $user_name = mysqli_real_escape_string($mysqli, $name);
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Login', log_action = 'Extension Failed', log_description = '$user_name not authorised to use extension', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     exit();
 }
@@ -143,7 +143,7 @@ if (isset($_GET['host'])) {
             // Logging
             $login_name = sanitizeInput($row['login_name']);
             $login_user = sanitizeInput($row['login_username']);
-            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Login', log_action = 'Extension requested', log_description = 'Credential $login_name, username $login_user', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $session_user_id");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Login', log_action = 'Extension requested', log_description = 'Credential $login_name, username $login_user', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
         }
     }

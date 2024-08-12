@@ -32,7 +32,7 @@
                                 <select class="form-control select2" id='select2' name="currency_code" required>
                                     <option value="">- Currency -</option>
                                     <?php foreach($currencies_array as $currency_code => $currency_name) { ?>
-                                        <option <?php if ($session_company_currency == $currency_code) { echo "selected"; } ?> value="<?= $currency_code; ?>"><?= "$currency_code - $currency_name"; ?></option>
+                                        <option <?php if ($company_currency == $currency_code) { echo "selected"; } ?> value="<?= $currency_code; ?>"><?= "$currency_code - $currency_name"; ?></option>
                                     <?php } ?>
                                 </select>
                             </div>

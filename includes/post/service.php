@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -97,7 +97,7 @@ if (isset($_POST['add_service'])) {
         }
 
         //Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Service', log_action = 'Create', log_description = '$session_name created service $service_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Service', log_action = 'Create', log_description = '$name created service $service_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "Service added";
         header("Location: " . $_SERVER["HTTP_REFERER"]);
@@ -206,7 +206,7 @@ if (isset($_POST['edit_service'])) {
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Service', log_action = 'Modify', log_description = '$session_name modified service $service_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Service', log_action = 'Modify', log_description = '$name modified service $service_name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Service updated";
     header("Location: " . $_SERVER["HTTP_REFERER"]);
@@ -234,7 +234,7 @@ if (isset($_GET['delete_service'])) {
         mysqli_query($mysqli, "DELETE FROM service_certificates WHERE service_id = $service_id");
 
         //Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Service', log_action = 'Delete', log_description = '$session_name deleted service $service_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Service', log_action = 'Delete', log_description = '$name deleted service $service_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "Service deleted";
         header("Location: " . $_SERVER["HTTP_REFERER"]);

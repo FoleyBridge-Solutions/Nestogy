@@ -8,7 +8,7 @@ function createPayment(
 ) {
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_base_url, $config_invoice_from_name, $config_invoice_from_email, $config_invoice_receipt_email, $config_invoice_receipt_email_subject, $config_invoice_receipt_email_body, $currency_format;
+    global $mysqli, $user_id, $ip, $user_agent, $config_base_url, $config_invoice_from_name, $config_invoice_from_email, $config_invoice_receipt_email, $config_invoice_receipt_email_subject, $config_invoice_receipt_email_body, $currency_format;
 
     $date = $payment['date'];
     $amount = floatval($payment['amount']);
@@ -48,7 +48,7 @@ function createPayment(
         $credit_id = mysqli_insert_id($mysqli);
         
         //Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Credit', log_action = 'Create', log_description = 'Credit for Overpayment', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Credit', log_action = 'Create', log_description = 'Credit for Overpayment', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
     }
 
     //Add up all the payments for the invoice and get the total amount paid to the invoice
@@ -183,10 +183,10 @@ function createPayment(
     mysqli_query($mysqli,"INSERT INTO history SET history_status = '$invoice_status', history_description = 'Payment added', history_invoice_id = $invoice_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Create', log_description = 'Payment created for $amount', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $payment_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Create', log_description = 'Payment created for $amount', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $payment_id");
 
     if ($email_receipt == 1) {
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Email', log_description = 'Payment receipt for invoice $invoice_prefix$invoice_number queued to $contact_email Email ID: $email_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $payment_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Email', log_description = 'Payment receipt for invoice $invoice_prefix$invoice_number queued to $contact_email Email ID: $email_id', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $payment_id");
     }
 }
 
@@ -195,7 +195,7 @@ function createBulkPayment(
 ){
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_base_url, $config_invoice_from_name, $config_invoice_from_email, $currency_format;
+    global $mysqli, $user_id, $ip, $user_agent, $config_base_url, $config_invoice_from_name, $config_invoice_from_email, $currency_format;
 
     $date = $bulk_payment['date'];
     $bulk_payment_amount = floatval($bulk_payment['amount']);
@@ -282,7 +282,7 @@ function createBulkPayment(
     } // End Invoice Loop
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Create', log_description = 'Bulk Payment of $bulk_payment_amount_static', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Create', log_description = 'Bulk Payment of $bulk_payment_amount_static', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
 }
 
@@ -302,7 +302,7 @@ function deletePayment(
     $payment_id
 ){
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     $sql = mysqli_query($mysqli,"SELECT * FROM payments WHERE payment_id = $payment_id");
     $row = mysqli_fetch_array($sql);
@@ -338,7 +338,7 @@ function deletePayment(
     mysqli_query($mysqli,"DELETE FROM payments WHERE payment_id = $payment_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Delete', log_description = '$payment_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Delete', log_description = '$payment_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 }
 
 function getPaymentsForInvoice(

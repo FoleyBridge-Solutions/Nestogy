@@ -1,6 +1,6 @@
 <!-- Right -->
 
-<div class="col<?= $session_mobile ? '' : '-3'; ?> ">
+<div class="col<?= $mobile ? '' : '-3'; ?> ">
     <div class="card card-action mb-3">
         <div class="card-header">
             <div class="card-action-title row">
@@ -33,7 +33,7 @@
                                     <i class="fas fa-fw fa-user mr-2"></i>Change Contact
                                 </a>
 
-                                <?php if ($session_user_role == 3) { ?>
+                                <?php if ($user_role == 3) { ?>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item text-danger text-bold confirm-link" href="/post.php?delete_ticket=<?= $ticket_id; ?>">
                                     <i class="fas fa-fw fa-trash mr-2"></i>Delete
@@ -45,7 +45,7 @@
                 </ul>
             </div>
         </div>
-        <div class="collapse <?= !$session_mobile ? 'show' : ''; ?>">
+        <div class="collapse <?= !$mobile ? 'show' : ''; ?>">
             <div class="card-body">
                 <div class="row">
                     <h5><strong><?= $client_name; ?></strong></h5>
@@ -317,14 +317,7 @@
                                 </tr>
                                 <!-- Ticket closure info -->
                                 <?php if ($ticket_status == "Closed") {
-                                    $sql_closed_by = mysqli_query($mysqli, "SELECT * FROM tickets, users WHERE ticket_closed_by = user_id");
-                                    $row = mysqli_fetch_array($sql_closed_by);
-                                    $ticket_closed_by_display = nullable_htmlentities($row['user_name']);
                                     ?>
-                                    <tr>
-                                        <td>Closed by:</td>
-                                        <td><?= ucwords($ticket_closed_by_display); ?></td>
-                                    </tr>
                                     <tr>
                                         <td>Feedback:</td>
                                         <td><?= $ticket_feedback; ?></td>

@@ -26,13 +26,11 @@ class AccountingController {
             exit;
         }
     }
-
     public function index() {
         //Redirect to /public/?page=home temporarily
         header('Location: /public/?page=home');
         exit;
     }
-
     public function showInvoices($client_id = false) {
         $auth = new Auth($this->pdo);
 
@@ -55,7 +53,11 @@ class AccountingController {
         }
 
         $data['card']['title'] = 'Invoices';
-        $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount', 'Date', 'Status'];
+        if ($client_page) {
+            $data['table']['header_rows'] = ['Number', 'Scope', 'Amount', 'Date', 'Status'];
+        } else {
+            $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount', 'Date', 'Status'];
+        }
 
 
         $invoices = $this->accounting->getInvoices($client_id);
@@ -76,20 +78,29 @@ class AccountingController {
             if ($invoice['invoice_status'] == 'Sent' && $invoice['invoice_due_date'] < date('Y-m-d')) {
                 $invoice['invoice_status'] .= ' & Overdue';
             }
-
-            $data['table']['body_rows'][] = [
-                $invoice_number_display,
-                $client_name_display,
-                $invoice['invoice_scope'],
-                $invoice['invoice_amount'],
-                $invoice['invoice_date'],
-                $invoice['invoice_status']
-            ];
+        
+            if ($client_page) {
+                $data['table']['body_rows'][] = [
+                    $invoice_number_display,    
+                    $invoice['invoice_scope'],
+                    $invoice['invoice_amount'],
+                    $invoice['invoice_date'],
+                    $invoice['invoice_status']
+                ];
+            } else {
+                $data['table']['body_rows'][] = [
+                    $invoice_number_display,
+                    $client_name_display,
+                    $invoice['invoice_scope'],
+                    $invoice['invoice_amount'],
+                    $invoice['invoice_date'],
+                    $invoice['invoice_status']
+                ];
+            }
         }
 
         $this->view->render('simpleTable', $data, $client_page);
     }
-
     public function showInvoice($invoice_id) {
         $invoice = $this->accounting->getInvoice($invoice_id);
         $client_id = $invoice['invoice_client_id'];
@@ -108,7 +119,6 @@ class AccountingController {
 
         $this->view->render('invoice', $data, true);
     }
-
     public function showQuotes($client_id = false) {
         $auth = new Auth($this->pdo);
 
@@ -162,7 +172,6 @@ class AccountingController {
 
         $this->view->render('simpleTable', $data, $client_page);
     }
-
     public function showQuote($quote_id) {
         $quote = $this->accounting->getQuote($quote_id);
         $client_id = $quote['quote_client_id'];
@@ -174,7 +183,6 @@ class AccountingController {
         ];
         $this->view->render('invoice', $data, true);
     }
-
     public function showSubscriptions($client_id = false) {
         $auth = new Auth($this->pdo);
 
@@ -223,5 +231,65 @@ class AccountingController {
     public function showSubscription($subscription_id) {
         $subscription = $this->accounting->getSubscription($subscription_id);
         $this->view->render('simpleTable', $subscription, true);
+    }
+    public function showPayments($client_id = false) {
+        $payments = $this->accounting->getPayments($client_id);
+        
+        $auth = new Auth($this->pdo);
+        if (!$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
+            // If user does not have access, display an error message
+            $this->view->error([
+                'title' => 'Access Denied',
+                'message' => 'You do not have permission to view this client.'
+            ]);
+            return;
+        }
+
+        if ($client_id) {
+            $client_page = true;
+            $client = new Client($this->pdo);
+            $client_header = $client->getClientHeader($client_id);
+            $data['client_header'] = $client_header['client_header'];
+        } else {
+            $client_page = false;
+        }
+
+        $data['card']['title'] = 'Payments';
+        $data['table']['header_rows'] = ['Reference', 'Amount', 'Date'];
+        foreach ($payments as $payment) {
+            $data['table']['body_rows'][] = [
+                "<a href='?page=payment&payment_reference=$payment[payment_reference]'>$payment[payment_reference]</a>",
+                $payment['payment_amount'],
+                $payment['payment_date'],
+            ];
+        }
+        $this->view->render('simpleTable', $data, $client_page);
+    }
+    public function showPayment($reference) {
+        $payment = $this->accounting->getPaymentsByReference($reference);
+
+        $auth = new Auth($this->pdo);
+        if (!$auth->checkClientAccess($_SESSION['user_id'], $payment['payment_client_id'], 'view')) {
+            // If user does not have access, display an error message
+            $this->view->error([
+                'title' => 'Access Denied',
+                'message' => 'You do not have permission to view this client.'
+            ]);
+            return;
+        }
+
+        $client_page = FALSE;
+        
+        $data['card']['title'] = 'Payment';
+        $data['table']['header_rows'] = ['Payment ID', 'Invoice ID', 'Amount', 'Date'];
+        foreach ($payment as $payment) {
+            $data['table']['body_rows'][] = [
+                $payment['payment_id'],
+                $payment['payment_invoice_id'],
+                $payment['payment_amount'],
+                $payment['payment_date'],
+            ];
+        }
+        $this->view->render('simpleTable', $data, $client_page);
     }
 }

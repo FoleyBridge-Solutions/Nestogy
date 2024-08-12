@@ -7,7 +7,7 @@ function createCredit(
     $payment_id
 ) {
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     //get payment details for other details
     $payment_sql = mysqli_query($mysqli, "SELECT * FROM payments WHERE payment_id = $payment_id");
@@ -32,7 +32,7 @@ function applyCredit(
 ) {
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_base_url, $currency_format, $config_invoice_from_name, $config_invoice_from_email;
+    global $mysqli, $user_id, $ip, $user_agent, $config_base_url, $currency_format, $config_invoice_from_name, $config_invoice_from_email;
 
     $credit_sql = mysqli_query($mysqli,"SELECT * FROM credits WHERE credit_id = $credit_id");
     $credit_row = mysqli_fetch_array($credit_sql);
@@ -163,14 +163,14 @@ function applyCredit(
         $email_id = mysqli_insert_id($mysqli);
 
         // Email Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Email', log_description = 'Bulk Payment receipt for multiple Invoices queued to $contact_email Email ID: $email_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Email', log_description = 'Bulk Payment receipt for multiple Invoices queued to $contact_email Email ID: $email_id', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] .= "Email receipt sent and ";
 
     } // End Email
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Create', log_description = 'Bulk Payment of $credit_amount', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Payment', log_action = 'Create', log_description = 'Bulk Payment of $credit_amount', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
 }
 
@@ -179,10 +179,10 @@ function deleteCredit(
 ){
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     mysqli_query($mysqli,"DELETE FROM credits WHERE credit_id = $credit_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Credit', log_action = 'Delete', log_description = 'Credit $credit_id deleted', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Credit', log_action = 'Delete', log_description = 'Credit $credit_id deleted', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 }

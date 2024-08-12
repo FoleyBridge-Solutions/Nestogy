@@ -20,6 +20,43 @@ class Accounting {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }
+    public function getPayments($client_id = false) {
+        if ($client_id) {
+            $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_invoice_id IN (SELECT invoice_id FROM invoices WHERE invoice_client_id = :client_id)");
+            $stmt->execute(['client_id' => $client_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $stmt = $this->pdo->query("SELECT * FROM payments ORDER BY payment_date DESC");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+    public function getClientBalance($client_id) {
+        $invoices = $this->getInvoices($client_id);
+        $payments = $this->getPayments($client_id);
+
+        $balance = 0;
+        foreach ($invoices as $invoice) {
+            $balance += $invoice['invoice_amount'];
+        }
+        foreach ($payments as $payment) {
+            $balance -= $payment['payment_amount'];
+        }
+        return $balance;
+    }
+    public function getClientPaidAmount($client_id) {
+        // Get the total amount paid by the client during the year
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(payment_amount), 0) AS amount_paid
+                FROM payments
+            LEFT JOIN invoices
+                ON payments.payment_invoice_id = invoices.invoice_id
+            WHERE invoice_client_id = :client_id
+                AND payment_date >= DATE_FORMAT(NOW(), '%Y-01-01')
+        ");
+        $stmt->execute(['client_id' => $client_id]);
+        $amount_paid = $stmt->fetch();
+        return $amount_paid['amount_paid'];
+    }
     public function getInvoice($invoice_id) {
         $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_id = :invoice_id");
         $stmt->execute(['invoice_id' => $invoice_id]);
@@ -85,5 +122,15 @@ class Accounting {
         $stmt = $this->pdo->prepare("SELECT * FROM products WHERE product_id = :product_id");
         $stmt->execute(['product_id' => $product_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    public function getPayment($payment_id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_id = :payment_id");
+        $stmt->execute(['payment_id' => $payment_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    public function getPaymentsByReference($reference) {
+        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_reference = :reference");
+        $stmt->execute(['reference' => $reference]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

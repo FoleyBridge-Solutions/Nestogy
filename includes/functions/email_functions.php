@@ -152,7 +152,7 @@ function emailInvoice(
     $invoice_id
 ){
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_base_url, $config_invoice_from_name, $config_invoice_from_email, $currency_format;
+    global $mysqli, $user_id, $ip, $user_agent, $config_base_url, $config_invoice_from_name, $config_invoice_from_email, $currency_format;
 
     $sql = mysqli_query($mysqli,"SELECT * FROM invoices
         LEFT JOIN clients ON invoice_client_id = client_id
@@ -228,7 +228,7 @@ function emailInvoice(
     }
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Email', log_description = 'Invoice $invoice_prefix$invoice_number queued to $contact_email Email ID: $email_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $invoice_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Email', log_description = 'Invoice $invoice_prefix$invoice_number queued to $contact_email Email ID: $email_id', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $invoice_id");
 
     // Send copies of the invoice to any additional billing contacts
     $sql_billing_contacts = mysqli_query(
@@ -258,7 +258,7 @@ function emailInvoice(
         ];
 
         // Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Email', log_description = 'Invoice $invoice_prefix$invoice_number queued to $billing_contact_email Email ID: $email_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $invoice_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Email', log_description = 'Invoice $invoice_prefix$invoice_number queued to $billing_contact_email Email ID: $email_id', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $invoice_id");
     }
 
     addToMailQueue($mysqli, $data);

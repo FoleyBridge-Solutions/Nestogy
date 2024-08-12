@@ -6,7 +6,7 @@
 
 
 
-$session_company_id = 1;
+$company_id = 1;
 require_once '/var/www/portal.twe.tech/includes/config/config.php';
 
 require_once '/var/www/portal.twe.tech/includes/functions/functions.php';

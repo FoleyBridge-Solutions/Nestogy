@@ -32,14 +32,21 @@ class Router
 
     public function registerRoutes()
     {
+        // Client routes
         $this->add('clients', 'ClientController', 'index');
         $this->add('client', 'ClientController', 'show', ['client_id']);
-        $this->add('tickets', 'SupportController', 'index', ['client_id', 'status']);
-        $this->add('ticket', 'SupportController', 'show', ['ticket_id']);
         $this->add('contact', 'ClientController', 'showContacts', ['client_id']);
         $this->add('location', 'ClientController', 'showLocations', ['client_id']);
+
+        // Support routes
+        $this->add('tickets', 'SupportController', 'index', ['client_id', 'status']);
+        $this->add('ticket', 'SupportController', 'show', ['ticket_id']);
+
+        // Documentation routes
         $this->add('documentations', 'DocumentationController', 'index');
         $this->add('documentation', 'DocumentationController', 'show', ['documentation_type', 'client_id']);
+
+        // Trip routes
         $this->add('trips', 'TripController', 'index', ['client_id']);
         $this->add('trip', 'TripController', 'show', ['trip_id']);
 
@@ -49,9 +56,14 @@ class Router
         $this->add('subscriptions','AccountingController','showSubscriptions',['client_id']);
         $this->add('subscription','AccountingController','showSubscription',['subscription_id']);
         $this->add('payments', 'AccountingController', 'showPayments', ['client_id']);
-        $this->add('payment', 'AccountingController', 'showPayment', ['payment_id']);
+        $this->add('payment', 'AccountingController', 'showPayment', ['payment_reference']);
         $this->add('quotes', 'AccountingController', 'showQuotes', ['client_id']);
         $this->add('quote', 'AccountingController', 'showQuote', ['quote_id']);
+        $this->add('contracts', 'AccountingController', 'showContracts', ['client_id']);
+        $this->add('contract', 'AccountingController', 'showContract', ['contract_id']);
+
+        // Administration routes
+        $this->add('admin', 'AdministrationController', 'index', ['admin_page']);
     }
 
     public function dispatch()
@@ -63,7 +75,6 @@ class Router
         // If the page is not found, handle the error
         if (!$route) {
             $this->handleNotFound();
-            error_log('Router::dispatch - page: ' . $page . ' not found');
             return;
         }
 
@@ -89,6 +100,8 @@ class Router
             
         }
     }
+
+
 
     // Get the parameters from the URL
     private function getParams($middlewares)

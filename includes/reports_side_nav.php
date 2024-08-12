@@ -1,4 +1,4 @@
-<?php  if ($session_user_role == 1 || $session_user_role == 3 && $config_module_enable_accounting == 1) { ?>
+<?php  if ($user_role == 1 || $user_role == 3 && $config_module_enable_accounting == 1) { ?>
     <!-- Financial -->
     <li class="u-sidebar-nav-menu__item <?php if (
         basename($_SERVER["PHP_SELF"]) == "report_income_summary.php" ||
@@ -140,7 +140,7 @@
     <hr>
 <?php } // End support IF statement ?>
 
-<?php  if ($session_user_role == 2 || $session_user_role == 3) { ?>
+<?php  if ($user_role == 2 || $user_role == 3) { ?>
     <!-- Technical -->
     <li class="u-sidebar-nav-menu__item <?php if (
         basename($_SERVER["PHP_SELF"]) == "report_ticket_summary.php" ||

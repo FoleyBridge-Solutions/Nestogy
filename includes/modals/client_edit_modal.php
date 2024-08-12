@@ -38,7 +38,7 @@ $client_created_at = $row['client_created_at'];
                 <input type="hidden" name="client_id" value="<?= $client_id; ?>">
                 <input type="hidden" name="lead" value="0">
                 <input type="hidden" name="currency_code" value="<?php if (empty($currency_code)) {
-                    echo $session_company_currency;
+                    echo $company_currency;
                 } else {
                     echo $currency_code;
                 } ?>">

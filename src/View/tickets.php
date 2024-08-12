@@ -5,7 +5,7 @@ $total_tickets_closed = $support_header_numbers['closed_tickets'];
 $total_tickets_unassigned = $support_header_numbers['unassigned_tickets'];
 $total_scheduled_tickets = $support_header_numbers['scheduled_tickets'];
 
-$session_mobile = false;
+$mobile = false;
 
 ?>
 
@@ -28,26 +28,26 @@ $session_mobile = false;
             <div class="btn-group">
                 <div class="btn-group" role="group">
                     <button class="btn btn-label-dark dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
-                        <?=$session_mobile ? "" : "My Tickets"?>
+                        <?=$mobile ? "" : "My Tickets"?>
                         <i class="fa fa-fw fa-envelope m-2"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="?status=Open&assigned=<?= $session_user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
-                        <a class="dropdown-item " href="?status=5&assigned=<?= $session_user_id ?>">Closed tickets</a>
+                        <a class="dropdown-item" href="?status=Open&assigned=<?= $user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
+                        <a class="dropdown-item " href="?status=5&assigned=<?= $user_id ?>">Closed tickets</a>
                     </div>
                 </div>
                 <?php if (!isset($_GET['client_id'])) { ?>
                     <a href="?assigned=unassigned" class="btn btn-label-danger">
-                        <strong><?=$session_mobile ? "" : "Unassigned:"?> <?= " ".$total_tickets_unassigned; ?></strong>
+                        <strong><?=$mobile ? "" : "Unassigned:"?> <?= " ".$total_tickets_unassigned; ?></strong>
                         <span class="tf-icons fa fa-fw fa-exclamation-triangle mr-2"></span>
                     </a>
                 <?php } ?>
                 <a href="<?=isset($_GET['client_id']) ? "/pages/client/client_" : '/pages/'?>recurring_tickets.php" class="btn btn-label-info">
-                <strong><?=$session_mobile ? "" : "Recurring:"?> <?= $total_scheduled_tickets; ?> </strong>
+                <strong><?=$mobile ? "" : "Recurring:"?> <?= $total_scheduled_tickets; ?> </strong>
                     <span class="tf-icons fa fa-fw fa-redo-alt mr-2"></span>
                 </a>
                 <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php">
-                    <?=$session_mobile ? "Add Ticket" : ""?>
+                    <?=$mobile ? "Add Ticket" : ""?>
                     <i class="fa fa-fw fa-plus mr-2"></i>
                 </a>
 
@@ -64,7 +64,7 @@ $session_mobile = false;
                         <tr>
                             <?php
                             // table head
-                            if (!$session_mobile) {
+                            if (!$mobile) {
                                 $rows = [ 'Number', 'Subject', 'Client / Contact', 'Priority', 'Status', 'Assigned', 'Last Response', 'Created' ];
                                 $datatable_order = "[[7,'desc']]";
                                 $datatable_priority = [
@@ -118,9 +118,9 @@ $session_mobile = false;
                             $last_response = $ticket['ticket_last_response'];
 
                             if ($billable == 1) {
-                                $billable = "<span class='badge rounded-pill bg-label-success'>$</span>";
+                                $billable = "<a href='/post.php?ticket_unbillable=$ticket_id' class='badge rounded-pill bg-label-success' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as unbillable'>$</a>";
                             } else {
-                                $billable = "<span class='badge rounded-pill bg-label-secondary'>X</span>";
+                                $billable = "<a href='/post.php?ticket_billable=$ticket_id' class='badge rounded-pill bg-label-secondary' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as billable'>X</a>";
                             }
                             $ticket_priority = $priority == 1 ? 'Low' : ($priority == 2 ? 'Medium' : 'High');
                             $ticket_priority_color = $priority == 1 ? 'success' : ($priority == 2 ? 'warning' : 'danger');
@@ -178,21 +178,21 @@ $session_mobile = false;
                                     </small>
                                 </td>
                                 <td>
-                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_priority_modal.php?ticket_id=<?= $ticket_id; ?>&client_id=<?= $ticket['client_id']; ?>">
+                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_priority_modal.php?ticket_id=<?= $ticket_id; ?>&client_id=<?= $ticket['client_id']; ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit ticket priority">
                                         <span class='p-2 badge rounded-pill bg-label-<?= $ticket_priority_color; ?>'>
                                             <?= $ticket_priority; ?>
                                         </span>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_status_modal.php?ticket_id=<?= $ticket_id; ?>">
+                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_status_modal.php?ticket_id=<?= $ticket_id; ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit ticket status">
                                         <span class='p-2 badge rounded-pill bg-label-<?= $status_color; ?>'>
                                             <?= $ticket_status; ?>
                                         </span>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_assigned_modal.php?ticket_id=<?= $ticket_id; ?>">
+                                    <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_assign_modal.php?ticket_id=<?= $ticket_id; ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit ticket assigned">
                                         <?= $ticket_assigned; ?>
                                     </a>
                                 </td>
@@ -213,7 +213,7 @@ $session_mobile = false;
                                         <div class="dropdown-menu">
                                             <?php
                                                 foreach ($ticket_actions as $action => $data) {
-                                                    echo "<a class='dropdown-item' href='" . $data['url'] . "' data-bs-toggle='modal' data-bs-target='#dynamicModal' data-modal-file='ticket_edit_modal.php?ticket_id=$ticket_id'>" . $action . "</a>";
+                                                    echo "<a class='dropdown-item loadModalContentBtn' href='" . $data['url'] . "' data-bs-toggle='modal' data-bs-target='#dynamicModal' data-modal-file='ticket_edit_modal.php?ticket_id=$ticket_id&action='>" . $action . "</a>";
                                                 }
                                             ?>
                                         </div>

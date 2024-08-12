@@ -11,7 +11,7 @@ $leads = $_GET['leads'];
     <div class="modal-body">
             <input type="hidden" name="lead" value="0">
             <input type="hidden" name="net_terms" value="0">
-            <input type="hidden" name="currency_code" value="<?= $session_company_currency; ?>">
+            <input type="hidden" name="currency_code" value="<?= $company_currency; ?>">
             <ul class="nav nav-pills mb-3">
                 <li class="nav-item">
                     <a class="nav-link active" role="tab" data-bs-toggle="tab" href="#pills-details">Details</a>
@@ -142,7 +142,7 @@ $leads = $_GET['leads'];
                             <select class="form-control select2" id='select2' name="country">
                                 <option value="">- Country -</option>
                                 <?php foreach($countries_array as $country_name) { ?>
-                                    <option <?php if ($session_company_country == $country_name) { echo "selected"; } ?> ><?= $country_name; ?></option>
+                                    <option <?php if ($company_country == $country_name) { echo "selected"; } ?> ><?= $country_name; ?></option>
                                 <?php } ?>
                             </select>
                         </div>
@@ -222,7 +222,7 @@ $leads = $_GET['leads'];
                             <select class="form-control select2" id='select2' name="currency_code" required>
                                 <option value="">- Currency -</option>
                                 <?php foreach($currencies_array as $currency_code => $currency_name) { ?>
-                                    <option <?php if ($session_company_currency == $currency_code) { echo "selected"; } ?> value="<?= $currency_code; ?>"><?= "$currency_code - $currency_name"; ?></option>
+                                    <option <?php if ($company_currency == $currency_code) { echo "selected"; } ?> value="<?= $currency_code; ?>"><?= "$currency_code - $currency_name"; ?></option>
                                 <?php } ?>
                             </select>
                         </div>

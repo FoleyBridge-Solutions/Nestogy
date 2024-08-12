@@ -11,7 +11,7 @@ function verifyContactTicketAccess($requested_ticket_id, $expected_ticket_state)
 {
 
     // Access the global variables
-    global $mysqli, $session_contact_id, $session_contact_primary, $session_contact_is_technical_contact, $session_client_id;
+    global $mysqli, $contact_id, $contact_primary, $contact_is_technical_contact, $client_id;
 
     // Setup
     if ($expected_ticket_state == "5") {
@@ -23,13 +23,13 @@ function verifyContactTicketAccess($requested_ticket_id, $expected_ticket_state)
     }
 
     // Verify the contact has access to the provided ticket ID
-    $sql = "SELECT * FROM tickets WHERE ticket_id = $requested_ticket_id AND $ticket_state_snippet AND ticket_client_id = $session_client_id LIMIT 1";
+    $sql = "SELECT * FROM tickets WHERE ticket_id = $requested_ticket_id AND $ticket_state_snippet AND ticket_client_id = $client_id LIMIT 1";
     error_log($sql);
     $sql = mysqli_query($mysqli, $sql);
     $row = mysqli_fetch_array($sql);
     $ticket_id = $row['ticket_id'];
 
-    if (intval($ticket_id) && ($session_contact_id == $row['ticket_contact_id'] || $session_contact_primary == 1 || $session_contact_is_technical_contact)) {
+    if (intval($ticket_id) && ($contact_id == $row['ticket_contact_id'] || $contact_primary == 1 || $contact_is_technical_contact)) {
         // Client is ticket owner, primary contact, or a technical contact
         return true;
     }

@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -13,7 +13,7 @@ if(isset($_POST['change_records_per_page'])){
 
     $records_per_page = intval($_POST['change_records_per_page']);
 
-    mysqli_query($mysqli,"UPDATE user_settings SET user_config_records_per_page = $records_per_page WHERE user_id = $session_user_id");
+    mysqli_query($mysqli,"UPDATE user_settings SET user_config_records_per_page = $records_per_page WHERE user_id = $user_id");
 
     header("Location: " . $_SERVER["HTTP_REFERER"]);
 
@@ -32,10 +32,10 @@ if (isset($_GET['dismiss_notification'])) {
 
     $notification_id = intval($_GET['dismiss_notification']);
 
-    mysqli_query($mysqli,"UPDATE notifications SET notification_dismissed_at = NOW(), notification_dismissed_by = $session_user_id WHERE notification_id = $notification_id");
+    mysqli_query($mysqli,"UPDATE notifications SET notification_dismissed_at = NOW(), notification_dismissed_by = $user_id WHERE notification_id = $notification_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Notification', log_action = 'Dismiss', log_description = '$session_name dismissed notification', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Notification', log_action = 'Dismiss', log_description = '$name dismissed notification', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Notification Dismissed";
 
@@ -45,7 +45,7 @@ if (isset($_GET['dismiss_notification'])) {
 
 if (isset($_GET['dismiss_all_notifications'])) {
 
-    global $mysqli, $session_user_id, $session_name, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $name, $ip, $user_agent;
 
     $sql = mysqli_query($mysqli,"SELECT * FROM notifications WHERE notification_dismissed_at IS NULL");
 
@@ -55,12 +55,12 @@ if (isset($_GET['dismiss_all_notifications'])) {
         $notification_id = intval($row['notification_id']);
         $notification_dismissed_at = sanitizeInput($row['notification_dismissed_at']);
 
-        mysqli_query($mysqli,"UPDATE notifications SET notification_dismissed_at = NOW(), notification_dismissed_by = $session_user_id WHERE notification_id = $notification_id");
+        mysqli_query($mysqli,"UPDATE notifications SET notification_dismissed_at = NOW(), notification_dismissed_by = $user_id WHERE notification_id = $notification_id");
 
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Notification', log_action = 'Dismiss', log_description = '$session_name dismissed $num_notifications notifications', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Notification', log_action = 'Dismiss', log_description = '$name dismissed $num_notifications notifications', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "$num_notifications Notifications Dismissed";
 
@@ -86,7 +86,7 @@ if (isset($_GET['deactivate_shared_item'])) {
     mysqli_query($mysqli, "DELETE FROM shared_items WHERE item_id = $item_id");
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Sharing', log_action = 'Delete', log_description = '$session_name deactivated shared $item_type link. Item ID: $item_related_id. Share ID $item_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $item_client_id, log_user_id = $session_user_id, log_entity_id = $item_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Sharing', log_action = 'Delete', log_description = '$name deactivated shared $item_type link. Item ID: $item_related_id. Share ID $item_id', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $item_client_id, log_user_id = $user_id, log_entity_id = $item_id");
 
     $_SESSION['alert_message'] = "Link deactivated";
 

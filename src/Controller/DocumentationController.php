@@ -28,6 +28,11 @@ class DocumentationController {
         exit;
     }
 
+    private function clientAccessed($client_id) {
+        $clientModel = new Client($this->pdo);
+        $clientModel->clientAccessed($client_id);
+    }
+
     public function show($documentation_type, $client_id = false) {
         $view = new View();
         $auth = new Auth($this->pdo);
@@ -45,6 +50,7 @@ class DocumentationController {
         $data = [];
 
         if ($client_id) {
+            $this->clientAccessed($client_id);
             // Check if user has access to the client
             if (!$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
                 // If user does not have access, display an error message

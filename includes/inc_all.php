@@ -84,7 +84,7 @@ if (isset($client_page)) {
 $datatable_order = "[[0, 'desc']]";
 
 //Get user shortcuts from the database
-$shortcuts_sql = "SELECT * FROM user_shortcuts WHERE user_shortcut_user_id = $session_user_id ORDER BY user_shortcut_order ASC";
+$shortcuts_sql = "SELECT * FROM user_shortcuts WHERE user_shortcut_user_id = $user_id ORDER BY user_shortcut_order ASC";
 $shortcuts_result = mysqli_query($mysqli, $shortcuts_sql);
 while ($row = mysqli_fetch_assoc($shortcuts_result)) {
     $shortcutsData[] = [

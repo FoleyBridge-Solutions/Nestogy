@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -79,7 +79,6 @@ if (isset($_POST['employee_time_out'])) {
 
     if (!$time_id) {
         referWithAlert("Error clocking out: No time ID found.", "danger");
-        error_log("Clock out error: No time ID found in request.");
         return;
     }
 
@@ -90,7 +89,6 @@ if (isset($_POST['employee_time_out'])) {
 
     if (!$stmt) {
         referWithAlert("Error preparing statement: " . $mysqli->error, "danger");
-        error_log("Clock out error: " . $mysqli->error);
         return;
     }
 
@@ -100,7 +98,6 @@ if (isset($_POST['employee_time_out'])) {
         referWithAlert("Employee clocked out successfully.", "success");
     } else {
         referWithAlert("Error clocking out employee: " . $stmt->error, "danger");
-        error_log("Clock out error: " . $stmt->error);
     }
     $stmt->close();
 }
@@ -127,7 +124,6 @@ if (isset($_POST['employee_break_end'])) {
 
     if (!$break_id) {
         referWithAlert("Error ending break: No break ID found.", "danger");
-        error_log("Break end error: No break ID found in request.");
         return;
     }
 

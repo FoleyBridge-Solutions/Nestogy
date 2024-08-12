@@ -133,7 +133,7 @@ $client_id = intval($_GET['client_id']);
                                         while ($row = mysqli_fetch_array($sql)) {
                                             $user_id = intval($row['user_id']);
                                             $user_name = nullable_htmlentities($row['user_name']); ?>
-                                            <option <?php if ($session_user_id == $user_id) { echo "selected"; } ?> value="<?= $user_id; ?>"><?= $user_name; ?></option>
+                                            <option <?php if ($user_id == $user_id) { echo "selected"; } ?> value="<?= $user_id; ?>"><?= $user_name; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>

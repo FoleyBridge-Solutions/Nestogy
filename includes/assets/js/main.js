@@ -443,6 +443,15 @@ if (typeof $ !== 'undefined') {
             $('.content-backdrop').addClass('show').removeClass('fade');
         });
     }
+    
+    $('.search-input').bind('typeahead:render', function() {
+        $('.content-backdrop').addClass('show').removeClass('fade');
+    }).bind('typeahead:close', function() {
+        $('.search-input').val('');
+        $('.search-input-wrapper').addClass('d-none');
+        $('.content-backdrop').addClass('fade').removeClass('show');
+    });
+    
 
     function bindSearchShortcut(wrapper, input) {
         $(document).on('keydown', function (event) {
@@ -454,88 +463,138 @@ if (typeof $ !== 'undefined') {
         });
     }
 
-    function setupSearch() {
-        var searchInput = $('.search-input');
-        if (searchInput.length) {
+function setupSearch() {
+    var searchInput = $('.search-input');
+    if (searchInput.length) {
 
-            function initializeBloodhound(category) {
-                return new Bloodhound({
-                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-                    queryTokenizer: Bloodhound.tokenizers.whitespace,
-                    remote: {
-                        url: '/ajax/ajax.php?search=%QUERY%&category=' + category,
-                        wildcard: '%QUERY',
-                        transform: function(response) {
-                            console.log(response);  // Check what the server returns
-                            // Assuming the response is an array of objects
-                            return $.map(response, function(item) {
-                                return {
-                                    name: item.name,
-                                    id: item.id,  // Additional data like ID can be used
-                                    url: item.url  // URL if you want to make the item clickable
-                                };
-                            });
-                        }
+        function initializeBloodhound(category) {
+            return new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '/ajax/ajax.php?search=%QUERY%&category=' + category,
+                    wildcard: '%QUERY',
+                    transform: function(response) {
+                        return $.map(response, function(item) {
+                            return {
+                                name: item.name,
+                                id: item.id,
+                                url: item.url
+                            };
+                        });
                     }
-                });
-            }
-
-            // Initialize Bloodhound engines for each category
-            var clientsEngine = initializeBloodhound('clients');
-            var contactsEngine = initializeBloodhound('contacts');
-            var ticketsEngine = initializeBloodhound('tickets');
-            var documentsEngine = initializeBloodhound('documents');
-            var loginsEngine = initializeBloodhound('logins');
-            var ticketRepliesEngine = initializeBloodhound('ticketReplies');
-            var assetsEngine = initializeBloodhound('assets');
-            var invoicesEngine = initializeBloodhound('invoices');
-
-            // Function to prepare templates for each category
-            function categoryTemplate(categoryName) {
-                return {
-                    name: categoryName,
-                    display: 'name',
-                    source: eval(categoryName + 'Engine'),  // Use the corresponding engine
-                    templates: {
-                        header: '<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">'+ categoryName.charAt(0).toUpperCase() + categoryName.slice(1) + '</h6>',
-                        suggestion: function(data) {
-                            return '<a href="' + data.url + '"><div><i class="bx bx-user me-2"></i><span class="align-middle">' + data.name + '</span></div></a>';
-                        }
-                    }
-                };
-            }
-
-            // Initialize Typeahead with Templates
-            $('.search-input').typeahead({
-                minLength: 2,
-                highlight: true
-            }, 
-            categoryTemplate('clients'),
-            categoryTemplate('contacts'),
-            categoryTemplate('tickets'),
-            categoryTemplate('documents'),
-            categoryTemplate('logins'),
-            categoryTemplate('ticketReplies'),
-            categoryTemplate('assets'),
-            categoryTemplate('invoices')
-            );
-
-            // Bindings for typeahead behavior
-            $('.search-input').bind('typeahead:render', function() {
-                $('.content-backdrop').addClass('show').removeClass('fade');
-            }).bind('typeahead:select', function(ev, suggestion) {
-                window.location = suggestion.url;  // Redirect to the selected item's URL
-            }).bind('typeahead:close', function() {
-                $('.search-input').val('');
-                $('.search-input-wrapper').addClass('d-none');
-                $('.content-backdrop').addClass('fade').removeClass('show');
+                }
             });
-
-            setupPerfectScrollbar();
         }
+
+        // Initialize Bloodhound engines for each category
+        var clientsEngine = initializeBloodhound('clients');
+        var contactsEngine = initializeBloodhound('contacts');
+        var ticketsEngine = initializeBloodhound('tickets');
+        var documentsEngine = initializeBloodhound('documents');
+        var loginsEngine = initializeBloodhound('logins');
+        var ticketRepliesEngine = initializeBloodhound('ticketReplies');
+        var assetsEngine = initializeBloodhound('assets');
+        var invoicesEngine = initializeBloodhound('invoices');
+
+        // Create a single card container outside the typeahead logic with added styling
+        const resultsCard = $('<div class="card mt-3 search-results-card"><div class="card-body"><div class="search-results"></div></div></div>');
+        $('.search-input-wrapper').append(resultsCard);
+        resultsCard.css({
+            'background-color': '#fff !important',    // White background
+            'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1) !important',  // Soft shadow for elevation
+            'padding': '10px !important',              // Padding inside the card
+            'position': 'absolute !important',         // Position it above other content
+            'z-index': '1000 !important',              // Ensure it's on top
+            'width': '100% !important'                 // Full width of the input wrapper
+        });
+        resultsCard.hide();  // Hide initially
+
+        // Function to prepare templates for each category
+        function categoryTemplate(categoryName, engine) {
+            // Define icons for each category
+            const icons = {
+                clients: 'bx bx-user',
+                contacts: 'bx bx-phone',
+                tickets: 'bx bx-ticket',
+                documents: 'bx bx-file',
+                logins: 'bx bx-lock',
+                ticketReplies: 'bx bx-chat',
+                assets: 'bx bx-box',
+                invoices: 'bx bx-receipt'
+            };
+        
+            // Get the appropriate icon for the current category
+            const iconClass = icons[categoryName] || 'bx bx-folder'; // Default icon if category is not found
+        
+            return {
+                name: categoryName,
+                display: 'name',
+                source: engine,
+                templates: {
+                    header: `<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">${categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}</h6>`,
+                    suggestion: function(data) {
+                        return `
+                            <div class="search-result-item">
+                                <i class="${iconClass} me-2"></i>
+                                <a href="${data.url}" class="align-middle">${data.name}</a>
+                            </div>`;
+                    }
+                }
+            };
+        }
+        
+        // Initialize Typeahead with Templates
+        $('.search-input').typeahead({
+            minLength: 2,
+            highlight: true
+        },
+        categoryTemplate('clients', clientsEngine),
+        categoryTemplate('contacts', contactsEngine),
+        categoryTemplate('tickets', ticketsEngine),
+        categoryTemplate('documents', documentsEngine),
+        categoryTemplate('logins', loginsEngine),
+        categoryTemplate('ticketReplies', ticketRepliesEngine),
+        categoryTemplate('assets', assetsEngine),
+        categoryTemplate('invoices', invoicesEngine)
+        ).on('typeahead:select', function(e, suggestion) {
+            // Redirect to the selected item's URL
+            window.location.href = suggestion.url;
+        });
+        
+        
+
+        // Bindings for typeahead behavior
+        $('.search-input').bind('typeahead:render', function(ev, suggestions, async, dataset) {
+            if (!dataset || !suggestions.length) return;
+
+            const categoryHeader = `<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">${dataset.name.charAt(0).toUpperCase() + dataset.name.slice(1)}</h6>`;
+            const resultsContainer = resultsCard.find('.search-results');
+            
+            resultsContainer.append(categoryHeader);
+            suggestions.forEach(function(suggestion) {
+                const suggestionHTML = `
+                    <div class="search-result-item">
+                        <i class="bx bx-user me-2"></i>
+                        <a href="${suggestion.url}" class="align-middle">${suggestion.name}</a>
+                    </div>`;
+                resultsContainer.append(suggestionHTML);
+            });
+            resultsCard.show();  // Show the card when there are results
+        }).bind('typeahead:close', function() {
+            $('.search-input').val('');
+            $('.search-input-wrapper').addClass('d-none');
+            $('.content-backdrop').addClass('fade').removeClass('show');
+            resultsCard.hide();  // Hide the card when search is closed
+            resultsCard.find('.search-results').empty();  // Clear the results
+        });
+
+        setupPerfectScrollbar();
     }
+}
 
-
+    
+    
     function setupPerfectScrollbar() {
         $('.navbar-search-suggestion').each(function () {
             new PerfectScrollbar($(this)[0], {

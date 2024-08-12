@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -41,7 +41,7 @@ if (isset($_POST['send_bulk_mail_now'])) {
         addToMailQueue($mysqli, $data);
         
         // Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Bulk Mail', log_action = 'Send', log_description = '$session_name sent bulk email', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Bulk Mail', log_action = 'Send', log_description = '$name sent bulk email', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "You Sent Bulk Mail";
     

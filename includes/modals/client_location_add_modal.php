@@ -124,7 +124,7 @@ $client_id = intval($_GET['client_id']);
                                     <select class="form-control select2" id='select2' name="country">
                                         <option value="">- Country -</option>
                                         <?php foreach($countries_array as $country_name) { ?>
-                                            <option <?php if ($session_company_country == $country_name) { echo "selected"; } ?> ><?= $country_name; ?></option>
+                                            <option <?php if ($company_country == $country_name) { echo "selected"; } ?> ><?= $country_name; ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>

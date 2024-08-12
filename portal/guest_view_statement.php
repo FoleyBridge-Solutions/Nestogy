@@ -5,7 +5,7 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
 
 
-    $client_id = $session_client_id;
+    $client_id = $client_id;
 
 
     $sql_client_details = "

@@ -35,12 +35,12 @@ function createInvoice(
     }
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     if (!empty($parameters['api_key_name'])) {
-        $session_user_id = 0;
-        $session_ip = $parameters['api_key_ip']??'';
-        $session_user_agent = $parameters['api_key_name']??'';
+        $user_id = 0;
+        $ip = $parameters['api_key_ip']??'';
+        $user_agent = $parameters['api_key_name']??'';
     }
 
     $config_invoice_next_number = getSettingValue('config_invoice_next_number');
@@ -78,7 +78,7 @@ function createInvoice(
     error_log("SQL Error: " . $hist_sql_error . " in query:" . $sql_query);
 
     //Logging
-    $sql_query = "INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = '$config_invoice_prefix$invoice_number', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id";
+    $sql_query = "INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = '$config_invoice_prefix$invoice_number', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id";
     mysqli_query($mysqli, $sql_query);
     $log_sql_error = mysqli_error($mysqli);
     error_log("SQL Error: " . $log_sql_error . " in query:" . $sql_query);
@@ -175,12 +175,12 @@ function updateInvoice(
     }
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     if (!empty($parameters['api_key_name'])) {
-        $session_user_id = 0;
-        $session_ip = $parameters['api_key_ip']??'';
-        $session_user_agent = $parameters['api_key_name']??'';
+        $user_id = 0;
+        $ip = $parameters['api_key_ip']??'';
+        $user_agent = $parameters['api_key_name']??'';
     }
 
     mysqli_query($mysqli,"UPDATE invoices SET 
@@ -207,9 +207,9 @@ function updateInvoice(
         log_type = 'Invoice',
         log_action = 'Update',
         log_description = '$invoice_prefix$invoice_number',
-        log_ip = '$session_ip',
-        log_user_agent = '$session_user_agent',
-        log_user_id = $session_user_id
+        log_ip = '$ip',
+        log_user_agent = '$user_agent',
+        log_user_id = $user_id
     ");
 
     $return_data = [
@@ -227,7 +227,7 @@ function deleteInvoice(
     $invoice_id = intval($parameters['invoice_id']);
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     mysqli_query($mysqli,"DELETE FROM invoices WHERE invoice_id = $invoice_id");
 
@@ -256,7 +256,7 @@ function deleteInvoice(
     mysqli_query($mysqli,"UPDATE tickets SET ticket_invoice_id = 0 WHERE ticket_invoice_id = $invoice_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Delete', log_description = '$invoice_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Delete', log_description = '$invoice_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 }
 
 // Below this are functions not called directly by the API
@@ -266,7 +266,7 @@ function copyInvoice(
 ) {
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_invoice_prefix, $config_invoice_next_number;
+    global $mysqli, $user_id, $ip, $user_agent, $config_invoice_prefix, $config_invoice_next_number;
 
     //Get Net Terms
     $sql = mysqli_query($mysqli,"SELECT client_net_terms FROM clients, invoices WHERE client_id = invoice_client_id AND invoice_id = $invoice_id");
@@ -314,7 +314,7 @@ function copyInvoice(
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = 'Copied Invoice', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = 'Copied Invoice', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     return $return_data = [
         'status' => 'success',
@@ -364,14 +364,14 @@ function updateInvoiceStatus(
     endswitch;
 
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     mysqli_query($mysqli,"UPDATE invoices SET invoice_status = '$status'$archived_query WHERE invoice_id = $invoice_id");
 
     mysqli_query($mysqli,"INSERT INTO history SET history_status = '$status', history_description = '$history_description', history_invoice_id = $invoice_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Status', log_description = 'Invoice ID $invoice_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Status', log_description = 'Invoice ID $invoice_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 }
 
 function addInvoiceToTicket(
@@ -379,7 +379,7 @@ function addInvoiceToTicket(
     $ticket_id
 ) {
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     mysqli_query($mysqli,"UPDATE invoices SET invoice_ticket_id = $ticket_id WHERE invoice_id = $invoice_id");
 }

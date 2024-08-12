@@ -8,21 +8,21 @@ function createRecurringInvoice(
     $scope
 ) {
     // Access global variables
-    global $mysqli, $session_company_currency, $session_user_id, $session_ip, $session_user_agent, $config_recurring_prefix, $config_recurring_next_number;
+    global $mysqli, $company_currency, $user_id, $ip, $user_agent, $config_recurring_prefix, $config_recurring_next_number;
 
     //Get the last Recurring Number and add 1 for the new Recurring number
     $recurring_number = $config_recurring_next_number;
     $new_config_recurring_next_number = $config_recurring_next_number + 1;
     mysqli_query($mysqli,"UPDATE settings SET config_recurring_next_number = $new_config_recurring_next_number WHERE company_id = 1");
 
-    mysqli_query($mysqli,"INSERT INTO recurring SET recurring_prefix = '$config_recurring_prefix', recurring_number = $recurring_number, recurring_scope = '$scope', recurring_frequency = '$frequency', recurring_next_date = '$start_date', recurring_category_id = $category, recurring_status = 1, recurring_currency_code = '$session_company_currency', recurring_client_id = $client");
+    mysqli_query($mysqli,"INSERT INTO recurring SET recurring_prefix = '$config_recurring_prefix', recurring_number = $recurring_number, recurring_scope = '$scope', recurring_frequency = '$frequency', recurring_next_date = '$start_date', recurring_category_id = $category, recurring_status = 1, recurring_currency_code = '$company_currency', recurring_client_id = $client");
 
     $recurring_id = mysqli_insert_id($mysqli);
 
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Active', history_description = 'Recurring Invoice created!', history_recurring_id = $recurring_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Recurring', log_action = 'Create', log_description = '$start_date - $category', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Recurring', log_action = 'Create', log_description = '$start_date - $category', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 }
 
 function createInvoiceFromRecurring(
@@ -30,7 +30,7 @@ function createInvoiceFromRecurring(
     $recurring_frequency
 ){
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_recurring_prefix, $config_recurring_next_number;
+    global $mysqli, $user_id, $ip, $user_agent, $config_recurring_prefix, $config_recurring_next_number;
 
     $sql = mysqli_query($mysqli,"SELECT * FROM invoices WHERE invoice_id = $invoice_id");
     $row = mysqli_fetch_array($sql);
@@ -70,7 +70,7 @@ function createInvoiceFromRecurring(
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = 'From recurring invoice', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = 'From recurring invoice', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
 
 }
@@ -97,7 +97,7 @@ function updateRecurringInvoice(
     $recurring_discount
 ) {
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     //Calculate new total
     $sql = mysqli_query($mysqli,"SELECT * FROM invoice_items WHERE item_recurring_id = $recurring_id");
@@ -113,7 +113,7 @@ function updateRecurringInvoice(
     mysqli_query($mysqli,"INSERT INTO history SET history_status = '$status', history_description = 'Recurring modified', history_recurring_id = $recurring_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Recurring', log_action = 'Modify', log_description = '$recurring_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Recurring', log_action = 'Modify', log_description = '$recurring_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
 }
 
@@ -121,7 +121,7 @@ function deleteRecurringInvoice(
     $recurring_id
 ) {
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     mysqli_query($mysqli,"DELETE FROM recurring WHERE recurring_id = $recurring_id");
 
@@ -145,9 +145,9 @@ function deleteRecurringInvoice(
         log_type = 'Recurring',
         log_action = 'Delete',
         log_description = '$recurring_id',
-        log_ip = '$session_ip',
-        log_user_agent = '$session_user_agent',
-        log_user_id = $session_user_id
+        log_ip = '$ip',
+        log_user_agent = '$user_agent',
+        log_user_id = $user_id
     ");
 }
 
@@ -155,7 +155,7 @@ function forceRecurring(
     $recurring_id
 ) {
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent, $config_recurring_auto_send_invoice, $config_invoice_next_number, $config_invoice_prefix, $config_invoice_from_email, $config_invoice_from_name, $config_base_url, $session_name;
+    global $mysqli, $user_id, $ip, $user_agent, $config_recurring_auto_send_invoice, $config_invoice_next_number, $config_invoice_prefix, $config_invoice_from_email, $config_invoice_from_name, $config_base_url, $name;
 
 
     $sql_recurring = mysqli_query($mysqli,"SELECT * FROM recurring, clients WHERE client_id = recurring_client_id AND recurring_id = $recurring_id");
@@ -283,11 +283,11 @@ function forceRecurring(
         } else {
             // Error reporting
             mysqli_query($mysqli,"INSERT INTO notifications SET notification_type = 'Mail', notification = 'Failed to send email to $contact_email', notification_client_id = $client_id");
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Mail', log_action = 'Error', log_description = 'Failed to send email to $contact_email regarding $subject. $mail', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Mail', log_action = 'Error', log_description = 'Failed to send email to $contact_email regarding $subject. $mail', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
         }
 
     } //End Recurring Invoices Loop
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = '$session_name forced recurring invoice into an invoice', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $new_invoice_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice', log_action = 'Create', log_description = '$name forced recurring invoice into an invoice', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $new_invoice_id");
 }

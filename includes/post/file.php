@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -47,7 +47,7 @@ if (isset($_POST['upload_files'])) {
 
             //Logging
             $file_id = intval(mysqli_insert_id($mysqli));
-            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'File', log_action = 'Upload', log_description = '$session_name uploaded $file_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $file_id");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'File', log_action = 'Upload', log_description = '$name uploaded $file_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $file_id");
         } else {
             $_SESSION['alert_message'] = 'There was an error moving the file to upload directory. Please make sure the upload directory is writable by web server.';
         }
@@ -68,7 +68,7 @@ if (isset($_POST['rename_file'])) {
     mysqli_query($mysqli,"UPDATE files SET file_name = '$file_name' WHERE file_id = $file_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Rename', log_description = '$session_name renamed file to $file_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $file_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Rename', log_description = '$name renamed file to $file_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $file_id");
 
     $_SESSION['alert_message'] = "File <strong>$file_name</strong> renamed";
 
@@ -88,7 +88,7 @@ if (isset($_POST['move_file'])) {
     mysqli_query($mysqli,"UPDATE files SET file_folder_id = $folder_id WHERE file_id = $file_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Move', log_description = '$session_name moved file', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $file_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Move', log_description = '$name moved file', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $file_id");
 
 
     $_SESSION['alert_message'] = "File moved";
@@ -112,7 +112,7 @@ if (isset($_GET['archive_file'])) {
     mysqli_query($mysqli,"UPDATE files SET file_archived_at = NOW() WHERE file_id = $file_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Archive', log_description = '$session_name archived file $file_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $file_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Archive', log_description = '$name archived file $file_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $file_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "File <strong>$file_name</strong> archived";
@@ -139,7 +139,7 @@ if (isset($_POST['delete_file'])) {
     mysqli_query($mysqli,"DELETE FROM files WHERE file_id = $file_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Delete', log_description = '$file_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = '$client_id', log_user_id = $session_user_id, log_entity_id = $file_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Delete', log_description = '$file_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = '$client_id', log_user_id = $user_id, log_entity_id = $file_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "File <strong>$file_name</strong> deleted";
@@ -176,7 +176,7 @@ if (isset($_POST['bulk_move_files'])) {
             mysqli_query($mysqli,"UPDATE files SET file_folder_id = $folder_id WHERE file_id = $file_id");
 
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Move', log_description = '$session_name moved file $file_name to folder $folder_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $file_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'File', log_action = 'Move', log_description = '$name moved file $file_name to folder $folder_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $file_id");
         }
     }
 

@@ -1,46 +1,50 @@
 <?php
 
 // public/login.php
-
 require '../bootstrap.php';
 require_once "/var/www/portal.twe.tech/includes/rfc6238.php";
-
 
 use Twetech\Nestogy\Auth\Auth;
 
 $auth = new Auth($pdo);
 
+// Check if the user has a valid "Remember Me" cookie
+$auth->checkRememberMe();
+
+if (Auth::check()) {
+    // User is already logged in, redirect them to the dashboard
+    header('Location: /public/');
+    exit;
+}
+
 if (isset($_POST['login'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
+    $remember_me = isset($_POST['remember_me']) ? true : false;
 
     $user = $auth->findUser($email, $password);
 
     if ($user) {
         if (isset($user['user_token'])) {
-            $token_field =
-                '<div class="form-group mb-4">
-                    <label for="token">Token</label>
-                    <input type="text" class="form-control" placeholder="2FA Token" name="token" required>
-                </div>';
+            $token_field = '<div class="form-group mb-4"><label for="token">Token</label><input type="text" class="form-control" placeholder="2FA Token" name="token" required></div>';
         } else {
-            Auth::login($user['user_id']);
+            $auth->login($user['user_id'], $user['user_role'], $user['user_avatar'], $remember_me);
             exit;
         }
 
         if (isset($_POST['token'])) {
             if (TokenAuth6238::verify($user['user_token'], $_POST['token'])) {
-                Auth::login($user['user_id']);
+                $auth->login($user['user_id'], $user['user_role'], $user['user_avatar'], $remember_me);
                 exit;
             } else {
                 $response = 'Invalid token.';
             }
         }
-
     } else {
         $response = 'Invalid email or password.';
     }
 }
+
 
 
 ?>

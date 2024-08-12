@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -42,7 +42,7 @@ if (isset($_POST['add_certificate'])) {
     $certificate_id = mysqli_insert_id($mysqli);
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Create', log_description = '$session_name created certificate $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $certificate_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Create', log_description = '$name created certificate $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $certificate_id");
 
     $_SESSION['alert_message'] = "Certificate <strong>$name</strong> created";
 
@@ -84,7 +84,7 @@ if (isset($_POST['edit_certificate'])) {
     mysqli_query($mysqli,"UPDATE certificates SET certificate_name = '$name', certificate_description = '$description', certificate_domain = '$domain', certificate_issued_by = '$issued_by', certificate_expire = $expire, certificate_public_key = '$public_key', certificate_notes = '$notes', certificate_domain_id = '$domain_id' WHERE certificate_id = $certificate_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Modify', log_description = '$session_name modified certificate $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $certificate_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Modify', log_description = '$name modified certificate $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $certificate_id");
 
     $_SESSION['alert_message'] = "Certificate <strong>$name</strong> updated";
 
@@ -107,7 +107,7 @@ if (isset($_GET['archive_certificate'])) {
     mysqli_query($mysqli,"UPDATE certificates SET certificate_archived_at = NOW() WHERE certificate_id = $certificate_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Archive', log_description = '$session_name archived certificate $certificate_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $certificate_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Archive', log_description = '$name archived certificate $certificate_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $certificate_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Certificate <strong>$certificate_name</strong> archived";
@@ -131,7 +131,7 @@ if (isset($_GET['delete_certificate'])) {
     mysqli_query($mysqli,"DELETE FROM certificates WHERE certificate_id = $certificate_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Delete', log_description = '$session_name deleted certificate $certificate_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $certificate_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Delete', log_description = '$name deleted certificate $certificate_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $certificate_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Certificate <strong>$certificate_name</strong> deleted";
@@ -155,13 +155,13 @@ if (isset($_POST['bulk_delete_certificates'])) {
 
             $certificate_id = intval($certificate_id);
             mysqli_query($mysqli, "DELETE FROM certificates WHERE certificate_id = $certificate_id AND certificate_client_id = $client_id");
-            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Certificate', log_action = 'Delete', log_description = '$session_name deleted a certificate (bulk)', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $certificate_id");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Certificate', log_action = 'Delete', log_description = '$name deleted a certificate (bulk)', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $certificate_id");
 
             $count++;
         }
 
         // Logging
-        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Certificate', log_action = 'Delete', log_description = '$session_name bulk deleted $count certificates', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Certificate', log_action = 'Delete', log_description = '$name bulk deleted $count certificates', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "Deleted $count certificate(s)";
 
@@ -215,7 +215,7 @@ if (isset($_POST['export_client_certificates_csv'])) {
     }
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Export', log_description = '$session_name exported $num_rows certificate(s) to a CSV file', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Certificate', log_action = 'Export', log_description = '$name exported $num_rows certificate(s) to a CSV file', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
     exit;
 

@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -9,7 +9,7 @@ global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_i
 
 if (isset($_POST['edit_your_user_details'])) {
 
-    global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id, $session_company_name, $config_mail_from_name, $config_mail_from_email, $config_app_name;
+    global $mysqli, $name, $ip, $user_agent, $user_id, $company_name, $config_mail_from_name, $config_mail_from_email, $config_app_name;
 
     // CSRF Check
     validateCSRFToken($_POST['csrf_token']);
@@ -17,7 +17,7 @@ if (isset($_POST['edit_your_user_details'])) {
     $name = sanitizeInput($_POST['name']);
     $email = sanitizeInput($_POST['email']);
 
-    $sql = mysqli_query($mysqli,"SELECT user_avatar FROM users WHERE user_id = $session_user_id");
+    $sql = mysqli_query($mysqli,"SELECT user_avatar FROM users WHERE user_id = $user_id");
     $row = mysqli_fetch_array($sql);
     $existing_file_name = sanitizeInput($row['user_avatar']);
 
@@ -25,7 +25,7 @@ if (isset($_POST['edit_your_user_details'])) {
     $extended_log_description = '';
 
     // Email notification when password or email is changed
-    $user_old_email_sql = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT user_email FROM users WHERE user_id = $session_user_id"));
+    $user_old_email_sql = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT user_email FROM users WHERE user_id = $user_id"));
     $user_old_email = sanitizeInput($user_old_email_sql['user_email']);
 
     // Sanitize Config Vars from get_settings.php and Session Vars from check_login.php
@@ -38,7 +38,7 @@ if (isset($_POST['edit_your_user_details'])) {
         $details = "Your email address was changed. New email: $email.";
 
         $subject = "$config_app_name account update confirmation for $name";
-        $body = "Hi $name, <br><br>Your $config_app_name account has been updated, details below: <br><br> <b>$details</b> <br><br> If you did not perform this change, contact your $config_app_name administrator immediately. <br><br>Thanks, <br>ITFlow<br>$session_company_name";
+        $body = "Hi $name, <br><br>Your $config_app_name account has been updated, details below: <br><br> <b>$details</b> <br><br> If you did not perform this change, contact your $config_app_name administrator immediately. <br><br>Thanks, <br>ITFlow<br>$company_name";
 
         $data = [
             [
@@ -60,15 +60,15 @@ if (isset($_POST['edit_your_user_details'])) {
             $file_tmp_path = $_FILES['file']['tmp_name'];
 
             // directory in which the uploaded file will be moved
-            $upload_file_dir = "/var/www/portal.twe.tech/uploads/users/$session_user_id/";
+            $upload_file_dir = "/var/www/portal.twe.tech/uploads/users/$user_id/";
             $dest_path = $upload_file_dir . $new_file_name;
             move_uploaded_file($file_tmp_path, $dest_path);
 
             // Delete old file
-            unlink("/uploads/users/$session_user_id/$existing_file_name");
+            unlink("/uploads/users/$user_id/$existing_file_name");
 
             // Set Avatar
-            mysqli_query($mysqli,"UPDATE users SET user_avatar = '$new_file_name' WHERE user_id = $session_user_id");
+            mysqli_query($mysqli,"UPDATE users SET user_avatar = '$new_file_name' WHERE user_id = $user_id");
 
             // Extended Logging
             $extended_log_description .= ", profile picture updated";
@@ -80,10 +80,10 @@ if (isset($_POST['edit_your_user_details'])) {
         }
     }
 
-    mysqli_query($mysqli,"UPDATE users SET user_name = '$name', user_email = '$email' WHERE user_id = $session_user_id");
+    mysqli_query($mysqli,"UPDATE users SET user_name = '$name', user_email = '$email' WHERE user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Details', log_action = 'Modify', log_description = '$session_name modified their details $extended_log_description', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Details', log_action = 'Modify', log_description = '$name modified their details $extended_log_description', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "User details updated";
 
@@ -97,7 +97,7 @@ if (isset($_POST['edit_your_user_details'])) {
 
 if (isset($_POST['edit_your_user_password'])) {
 
-    global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+    global $mysqli, $name, $ip, $user_agent, $user_id;
 
     // CSRF Check
     validateCSRFToken($_POST['csrf_token']);
@@ -110,7 +110,7 @@ if (isset($_POST['edit_your_user_password'])) {
     }
 
     // Email notification when password or email is changed
-    $user_sql = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT user_name, user_email FROM users WHERE user_id = $session_user_id"));
+    $user_sql = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT user_name, user_email FROM users WHERE user_id = $user_id"));
     $name = sanitizeInput($user_sql['user_name']);
     $user_email = sanitizeInput($user_sql['user_email']);
 
@@ -141,10 +141,10 @@ if (isset($_POST['edit_your_user_password'])) {
 
     $new_password = password_hash($new_password, PASSWORD_DEFAULT);
     $user_specific_encryption_ciphertext = encryptUserSpecificKey($_POST['new_password']);
-    mysqli_query($mysqli,"UPDATE users SET user_password = '$new_password', user_specific_encryption_ciphertext = '$user_specific_encryption_ciphertext' WHERE user_id = $session_user_id");
+    mysqli_query($mysqli,"UPDATE users SET user_password = '$new_password', user_specific_encryption_ciphertext = '$user_specific_encryption_ciphertext' WHERE user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Preferences', log_action = 'Modify', log_description = '$session_name changed their password', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Preferences', log_action = 'Modify', log_description = '$name changed their password', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Your password was updated";
 
@@ -153,7 +153,7 @@ if (isset($_POST['edit_your_user_password'])) {
 
 if (isset($_POST['edit_your_user_browser_extention'])) {
 
-    global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+    global $mysqli, $name, $ip, $user_agent, $user_id;
 
     // CSRF Check
     validateCSRFToken($_POST['csrf_token']);
@@ -162,7 +162,7 @@ if (isset($_POST['edit_your_user_browser_extention'])) {
     if (isset($_POST['extension']) && $_POST['extension'] == 'Yes') {
         if (!isset($_COOKIE['user_extension_key'])) {
             $extension_key = randomString(156);
-            mysqli_query($mysqli, "UPDATE users SET user_extension_key = '$extension_key' WHERE user_id = $session_user_id");
+            mysqli_query($mysqli, "UPDATE users SET user_extension_key = '$extension_key' WHERE user_id = $user_id");
 
             $extended_log_description .= "enabled browser extension access";
             $logout = true;
@@ -171,12 +171,12 @@ if (isset($_POST['edit_your_user_browser_extention'])) {
 
     // Disable extension access
     if (!isset($_POST['extension'])) {
-        mysqli_query($mysqli, "UPDATE users SET user_extension_key = '' WHERE user_id = $session_user_id");
+        mysqli_query($mysqli, "UPDATE users SET user_extension_key = '' WHERE user_id = $user_id");
         $extended_log_description .= "disabled browser extension access";
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Preferences', log_action = 'Modify', log_description = '$session_name $extended_log_description', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Preferences', log_action = 'Modify', log_description = '$name $extended_log_description', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "User preferences updated";
 
@@ -190,7 +190,7 @@ if (isset($_POST['verify'])) {
 
     $currentcode = intval($_POST['code']);  //code to validate, for example received from device
 
-    if (TokenAuth6238::verify($session_token, $currentcode)) {
+    if (TokenAuth6238::verify($token, $currentcode)) {
         $_SESSION['alert_message'] = "VALID!";
     }else{
         $_SESSION['alert_type'] = "error";
@@ -203,17 +203,17 @@ if (isset($_POST['verify'])) {
 
 if(isset($_POST['enable_2fa'])){
 
-    global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+    global $mysqli, $name, $ip, $user_agent, $user_id;
 
     // CSRF Check
     validateCSRFToken($_POST['csrf_token']);
 
     $token = sanitizeInput($_POST['token']);
 
-    mysqli_query($mysqli,"UPDATE users SET user_token = '$token' WHERE user_id = $session_user_id");
+    mysqli_query($mysqli,"UPDATE users SET user_token = '$token' WHERE user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Settings', log_action = 'Modify', log_description = '$session_name enabled 2FA on their account', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Settings', log_action = 'Modify', log_description = '$name enabled 2FA on their account', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Two-factor authentication enabled";
 
@@ -223,15 +223,15 @@ if(isset($_POST['enable_2fa'])){
 
 if(isset($_POST['disable_2fa'])){
 
-    global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+    global $mysqli, $name, $ip, $user_agent, $user_id;
 
     // CSRF Check
     validateCSRFToken($_POST['csrf_token']);
 
-    mysqli_query($mysqli,"UPDATE users SET user_token = '' WHERE user_id = $session_user_id");
+    mysqli_query($mysqli,"UPDATE users SET user_token = '' WHERE user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Settings', log_action = 'Modify', log_description = '$session_name disabled 2FA on their account', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'User Settings', log_action = 'Modify', log_description = '$name disabled 2FA on their account', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     // Sanitize Config Vars from get_settings.php and Session Vars from check_login.php
     $config_mail_from_name = sanitizeInput($config_mail_from_name);
@@ -240,15 +240,15 @@ if(isset($_POST['disable_2fa'])){
 
     // Email notification
     if (!empty($config_smtp_host)) {
-        $subject = "$config_app_name account update confirmation for $session_name";
-        $body = "Hi $session_name, <br><br>Your $config_app_name account has been updated, details below: <br><br> <b>2FA was disabled.</b> <br><br> If you did not perform this change, contact your $config_app_name administrator immediately. <br><br>Thanks, <br>ITFlow<br>$session_company_name";
+        $subject = "$config_app_name account update confirmation for $name";
+        $body = "Hi $name, <br><br>Your $config_app_name account has been updated, details below: <br><br> <b>2FA was disabled.</b> <br><br> If you did not perform this change, contact your $config_app_name administrator immediately. <br><br>Thanks, <br>ITFlow<br>$company_name";
 
         $data = [
             [
                 'from' => $config_mail_from_email,
                 'from_name' => $config_mail_from_name,
-                'recipient' => $session_email,
-                'recipient_name' => $session_name,
+                'recipient' => $email,
+                'recipient_name' => $name,
                 'subject' => $subject,
                 'body' => $body
             ]
@@ -265,10 +265,10 @@ if(isset($_POST['disable_2fa'])){
 
 if (isset($_GET['logout'])) {
 
-    global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id, $config_login_key_secret;
+    global $mysqli, $name, $ip, $user_agent, $user_id, $config_login_key_secret;
 
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Logout', log_action = 'Success', log_description = '$session_name logged out', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
-    mysqli_query($mysqli, "UPDATE users SET user_php_session = '' WHERE user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Logout', log_action = 'Success', log_description = '$name logged out', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
+    mysqli_query($mysqli, "UPDATE users SET user_php_session = '' WHERE user_id = $user_id");
 
     setcookie("PHPSESSID", '', time() - 3600, "/");
     unset($_COOKIE['PHPSESSID']);

@@ -3,7 +3,7 @@
 <?php
 $employee_break_taken = false; 
 // employee_timeclock_modal.php
-$user_id = $_POST['user_id'] ?? $session_user_id;
+$user_id = $_POST['user_id'] ?? $user_id;
 
 // Find if the user is already clocked in
 $employee_time = mysqli_query($mysqli,

@@ -18,12 +18,12 @@ $allowed_extensions = array('jpg', 'jpeg', 'gif', 'png', 'webp', 'pdf', 'txt', '
 if (isset($_GET['id']) && intval($_GET['id'])) {
     $ticket_id = intval($_GET['id']);
 
-    if ($session_contact_primary == 1 || $session_contact_is_technical_contact) {
+    if ($contact_primary == 1 || $contact_is_technical_contact) {
         // For a primary / technical contact viewing all tickets
-        $ticket_sql = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN users on ticket_assigned_to = user_id WHERE ticket_id = $ticket_id AND ticket_client_id = $session_client_id");
+        $ticket_sql = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN users on ticket_assigned_to = user_id WHERE ticket_id = $ticket_id AND ticket_client_id = $client_id");
     } else {
         // For a user viewing their own ticket
-        $ticket_sql = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN users on ticket_assigned_to = user_id WHERE ticket_id = $ticket_id AND ticket_client_id = $session_client_id AND ticket_contact_id = $session_contact_id");
+        $ticket_sql = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN users on ticket_assigned_to = user_id WHERE ticket_id = $ticket_id AND ticket_client_id = $client_id AND ticket_contact_id = $contact_id");
     }
 
     $ticket_row = mysqli_fetch_array($ticket_sql);
@@ -166,7 +166,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                 $ticket_reply_by_display = nullable_htmlentities($row['contact_name']);
                 $user_initials = initials($row['contact_name']);
                 $user_avatar = $row['contact_photo'];
-                $avatar_link = "/includes/uploads/clients/$session_client_id/$user_avatar";
+                $avatar_link = "/includes/uploads/clients/$client_id/$user_avatar";
             } else {
                 $ticket_reply_by_display = nullable_htmlentities($row['user_name']);
                 $user_id = intval($row['user_id']);

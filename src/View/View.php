@@ -12,6 +12,7 @@ class View {
             ]);
             return;
         }
+        extract($_SESSION);
         extract($data);
         require "../src/View/header.php";
         require "../src/View/navbar.php";

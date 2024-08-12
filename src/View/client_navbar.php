@@ -32,7 +32,7 @@
                             <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="dropdown-item loadModalContentBtn" data-modal-file="client_archive_modal.php?client_id=<?= $client_id; ?>">
                                 <i class="fas fa-fw fa-archive mr-2"></i>Archive Client
                             </a>
-                            <?php if ($session_user_role == 3) { ?>
+                            <?php if ($user_role == 3) { ?>
                                 <div class="dropdown-divider"></div>
                                 <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="dropdown-item loadModalContentBtn" data-modal-file="client_delete_modal.php?client_id=<?= $client_id; ?>">
                                     <i class="fas fa-fw fa-trash mr-2"></i>Delete Client
@@ -53,7 +53,7 @@
                     <h5 class="text-secondary mt-1">Primary Location</h5>
                     <?php if (!empty($location_address)) { ?>
                         <div>
-                            <a href="//maps.<?= $session_map_source; ?>.com/?q=<?= "$location_address $location_zip"; ?>" target="_blank">
+                            <a href="//maps.<?= $map_source; ?>.com/?q=<?= "$location_address $location_zip"; ?>" target="_blank">
                                 <i class="fa fa-fw fa-map-marker-alt text-secondary ml-1 mr-2"></i><?= $location_address; ?>
                                 <div><i class="fa fa-fw ml-1 mr-2"></i><?= "$location_city $location_state $location_zip"; ?></div>
                             </a>
@@ -129,7 +129,7 @@
                         </tr>
                         <tr>
                             <td class="text-secondary">Balance:</td>
-                            <td class="<?php if ($balance > 0 || $balance < 0) {
+                            <td class="<?php if ($client_balance > 0 || $client_balance < 0) {
                                             echo "text-danger";
                                         } else {
                                             echo "text-dark";

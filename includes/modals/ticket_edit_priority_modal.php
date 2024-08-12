@@ -11,7 +11,7 @@ $ticket_priority = $ticket_data[$ticket_id]['ticket_priority'];
 isset($_GET['client_id']) ? $client_id = intval($_GET['client_id']) : $client_id = $ticket_data[$ticket_id]['client_id'];
 
 $client_data = readClient(['client_id' => $client_id]);
-$client_name = $client_data[$client_id]['client_name'];
+error_log("client_data: " . print_r($client_data, true));
 
 ?>
 

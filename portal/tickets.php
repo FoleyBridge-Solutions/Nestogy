@@ -25,20 +25,20 @@ if (!isset($_GET['status'])) {
     $ticket_status_snippet = "ticket_status LIKE '%'";
 }
 
-$contact_tickets = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN contacts ON ticket_contact_id = contact_id LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id WHERE $ticket_status_snippet AND ticket_contact_id = $session_contact_id AND ticket_client_id = $session_client_id ORDER BY ticket_id DESC");
+$contact_tickets = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN contacts ON ticket_contact_id = contact_id LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id WHERE $ticket_status_snippet AND ticket_contact_id = $contact_id AND ticket_client_id = $client_id ORDER BY ticket_id DESC");
 
 //Get Total tickets closed
-$sql_total_tickets_closed = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tickets_closed FROM tickets WHERE ticket_status = '5' AND ticket_client_id = $session_client_id AND ticket_contact_id = $session_contact_id");
+$sql_total_tickets_closed = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tickets_closed FROM tickets WHERE ticket_status = '5' AND ticket_client_id = $client_id AND ticket_contact_id = $contact_id");
 $row = mysqli_fetch_array($sql_total_tickets_closed);
 $total_tickets_closed = intval($row['total_tickets_closed']);
 
 //Get Total tickets open
-$sql_total_tickets_open = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tickets_open FROM tickets WHERE ticket_status != '5' AND ticket_client_id = $session_client_id AND ticket_contact_id = $session_contact_id");
+$sql_total_tickets_open = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tickets_open FROM tickets WHERE ticket_status != '5' AND ticket_client_id = $client_id AND ticket_contact_id = $contact_id");
 $row = mysqli_fetch_array($sql_total_tickets_open);
 $total_tickets_open = intval($row['total_tickets_open']);
 
 //Get Total tickets
-$sql_total_tickets = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tickets FROM tickets WHERE  ticket_client_id = $session_client_id AND ticket_contact_id = $session_contact_id");
+$sql_total_tickets = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tickets FROM tickets WHERE  ticket_client_id = $client_id AND ticket_contact_id = $contact_id");
 $row = mysqli_fetch_array($sql_total_tickets);
 $total_tickets = intval($row['total_tickets']);
 
@@ -97,7 +97,7 @@ $total_tickets = intval($row['total_tickets']);
 
         <a href="?status=%" class="btn btn-light btn-block p-3 mb-3 text-left">All my tickets | <strong><?= $total_tickets ?></strong></a>
         <?php
-        if ($session_contact_primary == 1 || $session_contact_is_technical_contact) {
+        if ($contact_primary == 1 || $contact_is_technical_contact) {
         ?>
 
         <hr>

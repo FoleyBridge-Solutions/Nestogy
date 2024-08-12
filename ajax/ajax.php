@@ -198,11 +198,11 @@ if (isset($_POST['client_set_notes'])) {
         "INSERT INTO logs SET
             log_type = 'Client',
             log_action = 'Modify',
-            log_description = '$session_name modified client notes',
-            log_ip = '$session_ip',
-            log_user_agent = '$session_user_agent',
+            log_description = '$name modified client notes',
+            log_ip = '$ip',
+            log_user_agent = '$user_agent',
             log_client_id = $client_id,
-            log_user_id = $session_user_id
+            log_user_id = $user_id
         ");
 
 }
@@ -219,10 +219,10 @@ if (isset($_POST['contact_set_notes'])) {
         "INSERT INTO logs SET
             log_type = 'Contact',
             log_action = 'Modify',
-            log_description = '$session_name modified contact notes',
-            log_ip = '$session_ip',
-            log_user_agent = '$session_user_agent',
-            log_user_id = $session_user_id
+            log_description = '$name modified contact notes',
+            log_ip = '$ip',
+            log_user_agent = '$user_agent',
+            log_user_id = $user_id
         ");
 
 }
@@ -239,10 +239,10 @@ if (isset($_POST['asset_set_notes'])) {
         "INSERT INTO logs SET
             log_type = 'Assets',
             log_action = 'Modify',
-            log_description = '$session_name modified asset notes',
-            log_ip = '$session_ip',
-            log_user_agent = '$session_user_agent',
-            log_user_id = $session_user_id
+            log_description = '$name modified asset notes',
+            log_ip = '$ip',
+            log_user_agent = '$user_agent',
+            log_user_id = $user_id
         ");
 
 }
@@ -258,7 +258,7 @@ if (isset($_GET['ticket_add_view'])) {
     mysqli_query($mysqli,
         "INSERT INTO ticket_views SET
             view_ticket_id = $ticket_id,
-            view_user_id = $session_user_id,
+            view_user_id = $user_id,
             view_timestamp = NOW()
         ");
 }
@@ -275,7 +275,7 @@ if (isset($_GET['ticket_query_views'])) {
         "SELECT user_name FROM ticket_views
         LEFT JOIN users ON view_user_id = user_id
         WHERE view_ticket_id = $ticket_id
-        AND view_user_id != $session_user_id
+        AND view_user_id != $user_id
         AND view_timestamp > DATE_SUB(NOW(), INTERVAL 2 MINUTE)
     ");
     while ($row = mysqli_fetch_array($query)) {
@@ -410,7 +410,7 @@ if (isset($_GET['share_generate_link'])) {
         $body = "Hello,
             <br>
             <br>
-            $session_name from $company_name sent you a time sensitive secure link regarding \"$item_name\".
+            $name from $company_name sent you a time sensitive secure link regarding \"$item_name\".
             <br>
             <br>
             The link will expire in <strong>$item_expires_friendly</strong> and may only be viewed <strong>$item_view_limit</strong> times, before the link is destroyed.
@@ -452,9 +452,9 @@ if (isset($_GET['share_generate_link'])) {
                     log_type = 'Mail',
                     log_action = 'Error',
                     log_description = 'Failed to send email to $item_email regarding $subject. $item_mail',
-                    log_ip = '$session_ip',
-                    log_user_agent = '$session_user_agent',
-                    log_user_id = $session_user_id"
+                    log_ip = '$ip',
+                    log_user_agent = '$user_agent',
+                    log_user_id = $user_id"
                 );
         }
 
@@ -467,11 +467,11 @@ if (isset($_GET['share_generate_link'])) {
     "INSERT INTO logs SET
         log_type = 'Sharing',
         log_action = 'Create',
-        log_description = '$session_name created shared link for $item_type - $item_name',
+        log_description = '$name created shared link for $item_type - $item_name',
         log_client_id = $client_id,
-        log_ip = '$session_ip',
-        log_user_agent = '$session_user_agent',
-        log_user_id = $session_user_id
+        log_ip = '$ip',
+        log_user_agent = '$user_agent',
+        log_user_id = $user_id
     ");
 
 }
@@ -643,7 +643,7 @@ if (isset($_GET['get_totp_token_via_id'])) {
         "SELECT COUNT(log_id) AS recent_totp_view FROM logs
         WHERE log_type = 'Login'
         AND log_action = 'View TOTP'
-        AND log_user_id = $session_user_id
+        AND log_user_id = $user_id
         AND log_entity_id = $login_id
         AND log_client_id = $client_id
         AND log_created_at > (NOW() - INTERVAL 5 MINUTE)
@@ -655,11 +655,11 @@ if (isset($_GET['get_totp_token_via_id'])) {
         "INSERT INTO logs SET
             log_type = 'Login',
             log_action = 'View TOTP',
-            log_description = '$session_name viewed login TOTP code for $name',
-            log_ip = '$session_ip',
-            log_user_agent = '$session_user_agent',
+            log_description = '$name viewed login TOTP code for $name',
+            log_ip = '$ip',
+            log_user_agent = '$user_agent',
             log_client_id = $client_id,
-            log_user_id = $session_user_id,
+            log_user_id = $user_id,
             log_entity_id = $login_id
         ");
     }
@@ -699,35 +699,35 @@ if (isset($_GET['search'])) {
     switch ($category) {
         case "clients":
             $sql = $sql . " $client_sql";
-            $url = "/pages/client/client_overview.php?client_id=";
+            $url = "/public/?page=client&action=show&client_id=";
             break;
         case "contacts":
             $sql = $sql . " $contact_sql";
-            $url = "/pages/client/client_contacts.php?client_id=";
+            $url = "/public/?page=contact&client_id=";
             break;
         case "tickets":
             $sql = $sql . " $ticket_sql";
-            $url = "/pages/ticket.php?ticket_id=";
+            $url = "/public/?page=ticket&action=show&ticket_id=";
             break;
         case "documents":
             $sql = $sql . " $document_sql";
-            $url = "/pages/client/client_documents.php?client_id=";
+            $url = "/public/?page=documentaion&documentation_type=document&client_id=";
             break;
         case "logins":
             $sql = $sql . " $login_sql";
-            $url = "/pages/client/client_logins.php?client_id=";
+            $url = "/public/?page=documentation&documentation_type=login&client_id=";
             break;
         case "ticket_replies":
             $sql = $sql . " $ticket_reply_sql";
-            $url = "/pages/client/ticket.php?ticket_id=";
+            $url = "/public/?page=ticket&action=show&ticket_id=";
             break;
         case "assets":
             $sql = $sql . " $asset_sql";
-            $url = "/pages/client/client_assets.php?client_id=";
+            $url = "/public/?page=documentation&documentation_type=asset&client_id=";
             break;
         case "invoices":
             $sql = $sql . " $invoice_sql";
-            $url = "/pages/invoices.php?invoice_id=";
+            $url = "/public/?page=invoice&action=show&invoice_id=";
             break;
         default:
             $sql = $sql . " $client_sql UNION $contact_sql UNION $ticket_sql UNION $document_sql UNION $login_sql UNION $ticket_reply_sql UNION $asset_sql";
@@ -887,20 +887,20 @@ if (isset($_GET['create_credit'])) {
 
             if ($sql) {
                 // Assuming these session variables are set properly
-                $session_name = mysqli_real_escape_string($mysqli, $_SESSION['name']);
-                $session_ip = mysqli_real_escape_string($mysqli, $_SERVER['REMOTE_ADDR']);
-                $session_user_agent = mysqli_real_escape_string($mysqli, $_SERVER['HTTP_USER_AGENT']);
-                $session_user_id = (int)$_SESSION['user_id'];
+                $name = mysqli_real_escape_string($mysqli, $_SESSION['name']);
+                $ip = mysqli_real_escape_string($mysqli, $_SERVER['REMOTE_ADDR']);
+                $user_agent = mysqli_real_escape_string($mysqli, $_SERVER['HTTP_USER_AGENT']);
+                $user_id = (int)$_SESSION['user_id'];
 
                 mysqli_query($mysqli,
                     "INSERT INTO logs SET
                         log_type = 'Credit',
                         log_action = 'Create',
-                        log_description = '$session_name created a credit for invoice $invoice_id',
-                        log_ip = '$session_ip',
-                        log_user_agent = '$session_user_agent',
+                        log_description = '$name created a credit for invoice $invoice_id',
+                        log_ip = '$ip',
+                        log_user_agent = '$user_agent',
                         log_client_id = $client_id,
-                        log_user_id = $session_user_id"
+                        log_user_id = $user_id"
                 );
 
                 echo json_encode("Credit created successfully");

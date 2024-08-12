@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -11,7 +11,7 @@ if (isset($_POST['add_user'])) {
 
     require_once '/var/www/portal.twe.tech/includes/post/models/user_model.php';
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name, $config_smtp_host, $config_mail_from_name, $config_mail_from_email, $config_ticket_from_email, $config_login_key_secret, $config_base_url;
+    global $mysqli, $ip, $user_agent, $user_id, $name, $config_smtp_host, $config_mail_from_name, $config_mail_from_email, $config_ticket_from_email, $config_login_key_secret, $config_base_url;
 
     validateAdminRole();
     validateCSRFToken($_POST['csrf_token']);
@@ -84,13 +84,13 @@ if (isset($_POST['add_user'])) {
 
         if ($mail !== true) {
             mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Mail', notification = 'Failed to send email to $email'");
-            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Mail', log_action = 'Error', log_description = 'Failed to send email to $email regarding $subject. $mail', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id, log_entity_id = $user_id");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Mail', log_action = 'Error', log_description = 'Failed to send email to $email regarding $subject. $mail', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id, log_entity_id = $user_id");
         }
 
     }
 
     // Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Create', log_description = '$session_name created user $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Create', log_description = '$name created user $name', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_message'] = "User <strong>$name</strong> created" . $extended_alert_description;
 
@@ -102,7 +102,7 @@ if (isset($_POST['edit_user'])) {
 
     require_once '/var/www/portal.twe.tech/includes/post/models/user_model.php';
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
     validateAdminRole();
 
@@ -161,14 +161,14 @@ if (isset($_POST['edit_user'])) {
 
     if (!empty($two_fa) && $two_fa == 'disable') {
         mysqli_query($mysqli, "UPDATE users SET user_token = '' WHERE user_id = '$user_id'");
-        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name disabled 2FA for $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$name disabled 2FA for $name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
     }
 
     //Update User Settings
     mysqli_query($mysqli, "UPDATE user_settings SET user_role = $role, user_config_force_mfa = $force_mfa WHERE user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name modified user $name $extended_log_description', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$name modified user $name $extended_log_description', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_message'] = "User <strong>$name</strong> updated" . $extended_alert_description;
 
@@ -191,7 +191,7 @@ if (isset($_GET['activate_user'])) {
     mysqli_query($mysqli, "UPDATE users SET user_status = 1 WHERE user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name activated user $user_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$name activated user $user_name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_message'] = "User <strong>$user_name</strong> activated";
 
@@ -218,7 +218,7 @@ if (isset($_GET['disable_user'])) {
     mysqli_query($mysqli, "UPDATE scheduled_tickets SET scheduled_ticket_assigned_to = 0 WHERE scheduled_ticket_assigned_to = $user_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name disabled user $user_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$name disabled user $user_name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "User <strong>$user_name</strong> disabled";
@@ -242,7 +242,7 @@ if (isset($_GET['revoke_remember_me'])) {
     mysqli_query($mysqli, "DELETE FROM remember_tokens WHERE remember_token_user_id = $user_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name revoked all remember me tokens', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$name revoked all remember me tokens', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "User <strong>$user_name</strong> remember me tokens revoked";
@@ -271,7 +271,7 @@ if (isset($_GET['archive_user'])) {
     mysqli_query($mysqli, "UPDATE users SET user_name = '$name (archived)', user_password = '$password', user_status = 0, user_specific_encryption_ciphertext = '', user_archived_at = NOW() WHERE user_id = $user_id");
 
     // Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Archive', log_description = '$session_name archived user $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Archive', log_description = '$name archived user $name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id, log_entity_id = $user_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "User <strong>$name</strong> archived";
@@ -289,7 +289,7 @@ if (isset($_POST['export_users_csv'])) {
 
     if ($sql->num_rows > 0) {
         $delimiter = ", ";
-        $filename = $session_company_name . "-Users-" . date('Y-m-d') . ".csv";
+        $filename = $company_name . "-Users-" . date('Y-m-d') . ".csv";
 
         //create a file pointer
         $f = fopen('php://memory', 'w');
@@ -346,7 +346,7 @@ if (isset($_POST['ir_reset_user_password'])) {
 
     // Confirm logged-in user password, for security
     $admin_password = $_POST['admin_password'];
-    $sql = mysqli_query($mysqli, "SELECT * FROM users WHERE user_id = $session_user_id");
+    $sql = mysqli_query($mysqli, "SELECT * FROM users WHERE user_id = $user_id");
     $userRow = mysqli_fetch_array($sql);
     if (!password_verify($admin_password, $userRow['user_password'])) {
         $_SESSION['alert_type'] = "error";
@@ -356,7 +356,7 @@ if (isset($_POST['ir_reset_user_password'])) {
     }
 
     // Get agents/users, other than the current user
-    $sql_users = mysqli_query($mysqli, "SELECT * FROM users WHERE (user_archived_at IS NULL AND user_id != $session_user_id)");
+    $sql_users = mysqli_query($mysqli, "SELECT * FROM users WHERE (user_archived_at IS NULL AND user_id != $user_id)");
 
     // Reset passwords
     while ($row = mysqli_fetch_array($sql_users)) {
@@ -374,7 +374,7 @@ if (isset($_POST['ir_reset_user_password'])) {
     }
 
     // Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name reset ALL user passwords', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$name reset ALL user passwords', log_ip = '$ip', log_user_agent = '$user_agent',  log_user_id = $user_id");
 
     exit; // Stay on the plain text password page
 

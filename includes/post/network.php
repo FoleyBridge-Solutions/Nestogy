@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -26,7 +26,7 @@ if (isset($_POST['add_network'])) {
     $network_id = mysqli_insert_id($mysqli);
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Create', log_description = '$session name created network $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $network_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Create', log_description = '$session name created network $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $network_id");
 
     $_SESSION['alert_message'] = "Network <strong>$name</strong> created";
 
@@ -52,7 +52,7 @@ if (isset($_POST['edit_network'])) {
     mysqli_query($mysqli,"UPDATE networks SET network_name = '$name', network_description = '$description', network_vlan = $vlan, network = '$network', network_gateway = '$gateway', network_dhcp_range = '$dhcp_range', network_notes = '$notes', network_location_id = $location_id WHERE network_id = $network_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Modify', log_description = '$session_name modified network $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $network_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Modify', log_description = '$name modified network $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $network_id");
 
     $_SESSION['alert_message'] = "Network <strong>$name</strong> updated";
 
@@ -75,7 +75,7 @@ if (isset($_GET['archive_network'])) {
     mysqli_query($mysqli,"UPDATE networks SET network_archived_at = NOW() WHERE network_id = $network_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Archive', log_description = '$session_name archived network $network_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $network_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Archive', log_description = '$name archived network $network_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $network_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Network <strong>$network_name</strong> archived";
@@ -98,7 +98,7 @@ if (isset($_GET['delete_network'])) {
     mysqli_query($mysqli,"DELETE FROM networks WHERE network_id = $network_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Delete', log_description = '$session_name deleted network $network_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $network_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Delete', log_description = '$name deleted network $network_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $network_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Network <strong>$network_name</strong> deleted";
@@ -122,13 +122,13 @@ if (isset($_POST['bulk_delete_networks'])) {
 
             $network_id = intval($network_id);
             mysqli_query($mysqli, "DELETE FROM networks WHERE network_id = $network_id AND network_client_id = $client_id");
-            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Network', log_action = 'Delete', log_description = '$session_name deleted a network (bulk)', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $network_id");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Network', log_action = 'Delete', log_description = '$name deleted a network (bulk)', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $network_id");
 
             $count++;
         }
 
         // Logging
-        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Certificate', log_action = 'Network', log_description = '$session_name bulk deleted $count networks', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Certificate', log_action = 'Network', log_description = '$name bulk deleted $count networks', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
         $_SESSION['alert_message'] = "Deleted $count network(s)";
 
@@ -182,7 +182,7 @@ if (isset($_POST['export_client_networks_csv'])) {
     }
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Export', log_description = '$session_name exported $num_rows network(s) to a CSV file', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Network', log_action = 'Export', log_description = '$name exported $num_rows network(s) to a CSV file', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id");
 
     exit;
 

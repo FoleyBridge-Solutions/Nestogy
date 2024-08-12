@@ -31,7 +31,7 @@ function createClient(
     $contact_mobile = $parameters['contact_mobile']??'';
     $contact_email = $parameters['contact_email']??'';
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id;
+    global $mysqli, $ip, $user_agent, $user_id;
 
     $extended_log_description = "";
 
@@ -59,7 +59,7 @@ function createClient(
     if(mysqli_num_rows($sql) == 0) {
         mysqli_query($mysqli, "INSERT INTO categories SET category_name = '$referral', category_type = 'Referral'");
         // Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Create', log_description = '$name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Create', log_description = '$name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
     }
 
     // Create Location
@@ -124,7 +124,7 @@ function createClient(
     }
 
     // Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Client', log_action = 'Create', log_description = '$name$extended_log_description', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $client_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Client', log_action = 'Create', log_description = '$name$extended_log_description', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id, log_entity_id = $client_id");
 
 
     $return_data = [
@@ -164,7 +164,7 @@ function updateClient(
     $lead = $parameters['lead'];
     $notes = $parameters['notes'];
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
     mysqli_query($mysqli, "UPDATE clients SET client_name = '$name', client_type = '$type', client_website = '$website', client_referral = '$referral', client_rate = $rate, client_currency_code = '$currency_code', client_net_terms = $net_terms, client_tax_id_number = '$tax_id_number', client_lead = $lead, client_notes = '$notes' WHERE client_id = $client_id");
 
@@ -173,7 +173,7 @@ function updateClient(
     if(mysqli_num_rows($sql) == 0) {
         mysqli_query($mysqli, "INSERT INTO categories SET category_name = '$referral', category_type = 'Referral'");
         // Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Create', log_description = '$name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Category', log_action = 'Create', log_description = '$name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
     }
 
     // Tags
@@ -187,7 +187,7 @@ function updateClient(
     }
 
     // Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Modify', log_description = '$session_name modified client $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $client_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Modify', log_description = '$name modified client $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $client_id");
 
     return ['status' => 'success'];
 }
@@ -197,7 +197,7 @@ function archiveClient(
 ) {
     $client_id = $parameters['client_id'];
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
     // Get Client Name
     $sql = mysqli_query($mysqli, "SELECT * FROM clients WHERE client_id = $client_id");
@@ -207,7 +207,7 @@ function archiveClient(
     mysqli_query($mysqli, "UPDATE clients SET client_archived_at = NOW() WHERE client_id = $client_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Archive', log_description = '$session_name archived client $client_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $client_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Archive', log_description = '$name archived client $client_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $client_id");
 
     return ['status' => 'success'];
 }
@@ -217,7 +217,7 @@ function unarchiveClient(
 ) {
     $client_id = $parameters['client_id'];
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
     // Get Client Name
     $sql = mysqli_query($mysqli, "SELECT * FROM clients WHERE client_id = $client_id");
@@ -227,7 +227,7 @@ function unarchiveClient(
     mysqli_query($mysqli, "UPDATE clients SET client_archived_at = NULL WHERE client_id = $client_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Unarchive', log_description = '$session_name unarchived client $client_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $client_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Unarchive', log_description = '$name unarchived client $client_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $client_id");
 
     return ['status' => 'success'];
 }
@@ -237,7 +237,7 @@ function deleteClient(
 ) {
     $client_id = $parameters['client_id'];
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
     //Get Client Name
     $sql = mysqli_query($mysqli, "SELECT * FROM clients WHERE client_id = $client_id");
@@ -342,7 +342,7 @@ function deleteClient(
     mysqli_query($mysqli, "DELETE FROM clients WHERE client_id = $client_id");
 
     //Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Delete', log_description = '$session_name deleted client $client_name and all associated data', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client', log_action = 'Delete', log_description = '$name deleted client $client_name and all associated data', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
 
     return ['status' => 'success'];

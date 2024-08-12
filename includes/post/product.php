@@ -1,6 +1,6 @@
 <?php
 
-global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_id;
+global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
 /*
@@ -10,15 +10,15 @@ global $mysqli, $session_name, $session_ip, $session_user_agent, $session_user_i
 // Products
 if (isset($_POST['add_product'])) {
 
-    global $mysqli, $session_company_currency, $session_name, $session_ip, $session_user_agent, $session_user_id;
+    global $mysqli, $company_currency, $name, $ip, $user_agent, $user_id;
 
     require_once '/var/www/portal.twe.tech/includes/post/models/product_model.php';
 
 
-    mysqli_query($mysqli,"INSERT INTO products SET product_name = '$name', product_description = '$description', product_price = '$price', product_cost = $cost, product_currency_code = '$session_company_currency', product_tax_id = $tax, product_category_id = $category");
+    mysqli_query($mysqli,"INSERT INTO products SET product_name = '$name', product_description = '$description', product_price = '$price', product_cost = $cost, product_currency_code = '$company_currency', product_tax_id = $tax, product_category_id = $category");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Create', log_description = '$session_name created product $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Create', log_description = '$name created product $name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Product <strong>$name</strong> created";
 
@@ -36,10 +36,10 @@ if (isset($_POST['edit_product'])) {
     mysqli_query($mysqli,"UPDATE products SET product_name = '$name', product_description = '$description', product_price = '$price', product_tax_id = $tax, product_cost = $cost, product_category_id = $category WHERE product_id = $product_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Modify', log_description = '$name', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Modify', log_description = '$name', log_user_id = $user_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Modify', log_description = '$session_name modified product $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Modify', log_description = '$name modified product $name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_message'] = "Product <strong>$name</strong> modified";
 
@@ -61,7 +61,7 @@ if (isset($_GET['archive_product'])) {
     mysqli_query($mysqli,"UPDATE products SET product_archived_at = NOW() WHERE product_id = $product_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Archive', log_description = '$session_name archived product $product_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id, log_entity_id = $product_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Archive', log_description = '$name archived product $product_name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id, log_entity_id = $product_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Product <strong>$product_name</strong> archived";
@@ -81,7 +81,7 @@ if (isset($_GET['delete_product'])) {
     mysqli_query($mysqli,"DELETE FROM products WHERE product_id = $product_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Delete', log_description = '$session_name deleted product $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Delete', log_description = '$name deleted product $name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
     $_SESSION['alert_type'] = "error";
     $_SESSION['alert_message'] = "Product <strong>$product_name</strong> deleted";

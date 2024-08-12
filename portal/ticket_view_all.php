@@ -8,7 +8,7 @@ require_once '/var/www/portal.twe.tech/includes/inc_portal.php';
 
 
 
-if ($session_contact_primary == 0 && !$session_contact_is_technical_contact) {
+if ($contact_primary == 0 && !$contact_is_technical_contact) {
     header("Location: portal_post.php?logout");
     exit();
 }
@@ -29,7 +29,7 @@ if (!isset($_GET['status'])) {
     $ticket_status_snippet = "ticket_status LIKE '%'";
 }
 
-$all_tickets = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN contacts ON ticket_contact_id = contact_id WHERE $ticket_status_snippet AND ticket_client_id = $session_client_id ORDER BY ticket_id DESC");
+$all_tickets = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN contacts ON ticket_contact_id = contact_id WHERE $ticket_status_snippet AND ticket_client_id = $client_id ORDER BY ticket_id DESC");
 ?>
 
     <h2>All tickets</h2>

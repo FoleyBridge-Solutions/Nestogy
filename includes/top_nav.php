@@ -415,7 +415,7 @@ $nav_title_link = '/pages/dashboard.php';
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                                     <div class="avatar avatar-online">
-                                        <img src="<?= "/uploads/users/$session_user_id/$session_avatar"; ?>" alt class="w-px-40 h-auto rounded-circle" />
+                                        <img src="<?= "/uploads/users/$user_id/$avatar"; ?>" alt class="w-px-40 h-auto rounded-circle" />
                                     </div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -424,12 +424,12 @@ $nav_title_link = '/pages/dashboard.php';
                                             <div class="d-flex">
                                                 <div class="flex-shrink-0 me-3">
                                                     <div class="avatar avatar-online">
-                                                        <img src="<?= "/uploads/users/$session_user_id/$session_avatar"; ?>" alt class="w-px-40 h-auto rounded-circle" />
+                                                        <img src="<?= "/uploads/users/$user_id/$avatar"; ?>" alt class="w-px-40 h-auto rounded-circle" />
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <span class="fw-medium d-block"><?= stripslashes(nullable_htmlentities($session_name)); ?></span>
-                                                    <small class="text-muted"><?= nullable_htmlentities($session_user_role_display); ?></small>
+                                                    <span class="fw-medium d-block"><?= stripslashes(nullable_htmlentities($name)); ?></span>
+                                                    <small class="text-muted"><?= nullable_htmlentities($user_role_display); ?></small>
                                                 </div>
                                             </div>
                                         </a>
@@ -444,7 +444,7 @@ $nav_title_link = '/pages/dashboard.php';
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="employee_timeclock_modal.php?user_id=<?= $session_user_id ?>">
+                                        <a class="dropdown-item loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="employee_timeclock_modal.php?user_id=<?= $user_id ?>">
                                             <i class="bx bx-time"></i>
                                             <span class="align-middle">Time Clock</span>
                                         </a>

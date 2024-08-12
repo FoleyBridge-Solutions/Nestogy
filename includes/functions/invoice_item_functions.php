@@ -225,7 +225,7 @@ function deleteInvoiceItem(
     $item_id
 ) {
     // Access global variables
-    global $mysqli, $session_user_id, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $ip, $user_agent;
 
     switch($type) {
         case "invoice":
@@ -244,7 +244,7 @@ function deleteInvoiceItem(
             mysqli_query($mysqli,"DELETE FROM invoice_items WHERE item_id = $item_id");
         
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice Item', log_action = 'Delete', log_description = '$item_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Invoice Item', log_action = 'Delete', log_description = '$item_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
         
             break;
         
@@ -264,7 +264,7 @@ function deleteInvoiceItem(
             mysqli_query($mysqli,"DELETE FROM invoice_items WHERE item_id = $item_id");
         
             //Logging
-            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Recurring Item', log_action = 'Delete', log_description = 'Item ID $item_id from Recurring ID $recurring_id', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+            mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Recurring Item', log_action = 'Delete', log_description = 'Item ID $item_id from Recurring ID $recurring_id', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
             break;
     }
 }

@@ -8,12 +8,12 @@
 
 require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
-if ($session_contact_primary == 0 && !$session_contact_is_billing_contact) {
+if ($contact_primary == 0 && !$contact_is_billing_contact) {
     header("Location: portal_post.php?logout");
     exit();
 }
 
-$quotes_sql = mysqli_query($mysqli, "SELECT * FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Draft' ORDER BY quote_date DESC");
+$quotes_sql = mysqli_query($mysqli, "SELECT * FROM quotes WHERE quote_client_id = $client_id AND quote_status != 'Draft' ORDER BY quote_date DESC");
 ?>
 
 <div class="row">
@@ -68,7 +68,7 @@ $quotes_sql = mysqli_query($mysqli, "SELECT * FROM quotes WHERE quote_client_id 
                 <tr>
                     <td><a target="_blank" href="//<?= $config_base_url ?>/portal/guest_view_quote.php?quote_id=<?= "$quote_id&url_key=$quote_url_key"?>"> <?= "$quote_prefix$quote_number"; ?></a></td>
                     <td><?= $quote_scope_display; ?></td>
-                    <td><?= numfmt_format_currency($currency_format, $quote_amount, $session_company_currency); ?></td>
+                    <td><?= numfmt_format_currency($currency_format, $quote_amount, $company_currency); ?></td>
                     <td><?= $quote_date; ?></td>
                     <td>
                         <span class="p-2 badge badge-<?= $quote_badge_color; ?>">

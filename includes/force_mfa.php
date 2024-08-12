@@ -20,7 +20,7 @@ require_once "header.php";
         <form action="/post.php" method="post" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
-            <?php if (empty($session_token)) { ?>
+            <?php if (empty($token)) { ?>
                 <button type="submit" name="enable_2fa" class="btn btn-success btn-block mt-3"><i class="fa fa-fw fa-lock"></i><br> Enable 2FA</button>
             <?php } else { ?>
                 <p>You have set up 2FA. Your QR code is below.</p>
@@ -36,12 +36,12 @@ require_once "header.php";
                 //Generate a base32 Key
                 $secretkey = key32gen();
 
-                if (!empty($session_token)) {
+                if (!empty($token)) {
 
                     //Generate QR Code based off the generated key
-                    print sprintf('<img src="%s"/>', TokenAuth6238::getBarCodeUrl($session_name, ' ', $session_token, $_SERVER['SERVER_NAME']));
+                    print sprintf('<img src="%s"/>', TokenAuth6238::getBarCodeUrl($name, ' ', $token, $_SERVER['SERVER_NAME']));
 
-                    echo "<p class='text-secondary'>$session_token</p>";
+                    echo "<p class='text-secondary'>$token</p>";
                 }
 
                 ?>
@@ -51,7 +51,7 @@ require_once "header.php";
 
         </form>
 
-        <?php if (!empty($session_token)) { ?>
+        <?php if (!empty($token)) { ?>
             <form action="/post.php" method="post" autocomplete="off">
                 <div class="form-group">
                     <div class="input-group">

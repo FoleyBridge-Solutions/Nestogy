@@ -77,14 +77,14 @@ function createAsset(
         return ['status' => 'error', 'message' => $return_message];
     }
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
-    if (!isset($session_ip)) {
+    if (!isset($ip)) {
         //Assume API is making changes
-        $session_ip = $parameters['api_ip'];
-        $session_user_agent = $parameters['api_key_name'];
-        $session_name = "API";
-        $session_user_id = 0;
+        $ip = $parameters['api_ip'];
+        $user_agent = $parameters['api_key_name'];
+        $name = "API";
+        $user_id = 0;
     }
 
     $alert_extended = "";
@@ -107,14 +107,14 @@ function createAsset(
         $login_id = mysqli_insert_id($mysqli);
 
         //Logging
-        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Login', log_action = 'Create', log_description = '$session_name created login credentials for asset $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $login_id");
+        mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Login', log_action = 'Create', log_description = '$name created login credentials for asset $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $login_id");
 
         $alert_extended = " along with login credentials";
 
     }
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Create', log_description = '$session_name created asset $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $asset_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Create', log_description = '$name created asset $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $asset_id");
 
     $return_data = [];
     $return_data['alert_extended'] = $alert_extended;
@@ -216,20 +216,20 @@ function updateAsset(
         } 
     }
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
-    if (!isset($session_ip)) {
+    if (!isset($ip)) {
         //Assume API is making changes
-        $session_ip = "API";
-        $session_user_agent = "API";
-        $session_user_id = 0;
-        $session_name = "API";
+        $ip = "API";
+        $user_agent = "API";
+        $user_id = 0;
+        $name = "API";
     }
 
     mysqli_query($mysqli,"UPDATE assets SET asset_name = '$name', asset_description = '$description', asset_type = '$type', asset_make = '$make', asset_model = '$model', asset_serial = '$serial', asset_os = '$os', asset_ip = '$ip', asset_nat_ip = '$nat_ip', asset_mac = '$mac', asset_uri = '$uri', asset_uri_2 = '$uri_2', asset_location_id = $location, asset_vendor_id = $vendor, asset_contact_id = $contact, asset_status = '$status', asset_purchase_date = $purchase_date, asset_warranty_expire = $warranty_expire, asset_install_date = $install_date, asset_notes = '$notes', asset_network_id = $network WHERE asset_id = $asset_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Modify', log_description = '$session_name modified asset $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $asset_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Modify', log_description = '$name modified asset $name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $asset_id");
 
     $return_data = [
         'status' => 'success',
@@ -245,15 +245,15 @@ function deleteAsset(
 ) {
     $asset_id = $parameters['asset_id'];
 
-    if (!isset($session_ip)) {
+    if (!isset($ip)) {
         //Assume API is making changes
-        $session_ip = "API";
-        $session_user_agent = "API";
-        $session_user_id = 0;
-        $session_name = "API";
+        $ip = "API";
+        $user_agent = "API";
+        $user_id = 0;
+        $name = "API";
     }
 
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
     // Get Asset Name and Client ID for logging and alert message
     $sql = mysqli_query($mysqli,"SELECT asset_name, asset_client_id FROM assets WHERE asset_id = $asset_id");
@@ -264,7 +264,7 @@ function deleteAsset(
     mysqli_query($mysqli,"DELETE FROM assets WHERE asset_id = $asset_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Delete', log_description = '$session_name deleted asset $asset_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $asset_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Delete', log_description = '$name deleted asset $asset_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $asset_id");
 
     $return_data = [
         'status' => 'success',
@@ -279,14 +279,14 @@ function deleteAsset(
 function archiveAsset(
     $asset_id
 ) {
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
-    if (!isset($session_ip)) {
+    if (!isset($ip)) {
         //Assume API is making changes
-        $session_ip = "API";
-        $session_user_agent = "API";
-        $session_user_id = 0;
-        $session_name = "API";
+        $ip = "API";
+        $user_agent = "API";
+        $user_id = 0;
+        $name = "API";
     }
 
     // Get Asset Name and Client ID for logging and alert message
@@ -298,7 +298,7 @@ function archiveAsset(
     mysqli_query($mysqli,"UPDATE assets SET asset_archived_at = NOW() WHERE asset_id = $asset_id");
 
     //logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Archive', log_description = '$session_name archived asset $asset_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $asset_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Archive', log_description = '$name archived asset $asset_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $asset_id");
 
     $return_data = [
         'status' => 'success',
@@ -312,14 +312,14 @@ function archiveAsset(
 function unarchiveAsset(
     $asset_id
 ) {
-    global $mysqli, $session_ip, $session_user_agent, $session_user_id, $session_name;
+    global $mysqli, $ip, $user_agent, $user_id, $name;
 
-    if (!isset($session_ip)) {
+    if (!isset($ip)) {
         //Assume API is making changes
-        $session_ip = "API";
-        $session_user_agent = "API";
-        $session_user_id = 0;
-        $session_name = "API";
+        $ip = "API";
+        $user_agent = "API";
+        $user_id = 0;
+        $name = "API";
     }
 
     // Get Asset Name and Client ID for logging and alert message
@@ -331,7 +331,7 @@ function unarchiveAsset(
     mysqli_query($mysqli,"UPDATE assets SET asset_archived_at = NULL WHERE asset_id = $asset_id");
 
     //Logging
-    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Unarchive', log_description = '$session_name unarchived asset $asset_name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $asset_id");
+    mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Asset', log_action = 'Unarchive', log_description = '$name unarchived asset $asset_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $asset_id");
 
     $return_data = [
         'status' => 'success',

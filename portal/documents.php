@@ -8,12 +8,12 @@
 
 require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
-if ($session_contact_primary == 0 && !$session_contact_is_technical_contact) {
+if ($contact_primary == 0 && !$contact_is_technical_contact) {
     header("Location: portal_post.php?logout");
     exit();
 }
 
-$documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, document_created_at, folder_name FROM documents LEFT JOIN folders ON document_folder_id = folder_id WHERE document_client_id = $session_client_id AND document_template = 0 ORDER BY folder_id, document_name DESC");
+$documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, document_created_at, folder_name FROM documents LEFT JOIN folders ON document_folder_id = folder_id WHERE document_client_id = $client_id AND document_template = 0 ORDER BY folder_id, document_name DESC");
 ?>
 
 <div class="row">

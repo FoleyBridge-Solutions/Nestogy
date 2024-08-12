@@ -2,7 +2,7 @@
 
 if (isset($_GET['add_shortcut'])) {
 
-    global $mysqli, $session_user_id;
+    global $mysqli, $user_id;
 
     $shortcut_key = $_GET['add_shortcut'];
 
@@ -16,7 +16,7 @@ if (isset($_GET['add_shortcut'])) {
     }
 
     //check if the shortcut already exists in the user_shortcuts table
-    $shortcut_sql = "SELECT * FROM user_shortcuts WHERE user_shortcut_user_id = $session_user_id AND user_shortcut_key = '$shortcut_key'";
+    $shortcut_sql = "SELECT * FROM user_shortcuts WHERE user_shortcut_user_id = $user_id AND user_shortcut_key = '$shortcut_key'";
     $shortcut_result = mysqli_query($mysqli, $shortcut_sql);
     
     if (mysqli_num_rows($shortcut_result) > 0) {
@@ -24,10 +24,10 @@ if (isset($_GET['add_shortcut'])) {
         exit;
     }
 
-    $shortcut_sql = "SELECT * FROM user_shortcuts WHERE user_shortcut_user_id = $session_user_id";
+    $shortcut_sql = "SELECT * FROM user_shortcuts WHERE user_shortcut_user_id = $user_id";
     $shortcut_result = mysqli_query($mysqli, $shortcut_sql);
 
-    $shortcut_sql = "INSERT INTO user_shortcuts SET user_shortcut_key = '$shortcut_key', user_shortcut_user_id = $session_user_id, user_shortcut_order = ".mysqli_num_rows($shortcut_result);
+    $shortcut_sql = "INSERT INTO user_shortcuts SET user_shortcut_key = '$shortcut_key', user_shortcut_user_id = $user_id, user_shortcut_order = ".mysqli_num_rows($shortcut_result);
     mysqli_query($mysqli, $shortcut_sql);
 
     referWithAlert("Shortcut added", "success");

@@ -8,7 +8,7 @@
 
 require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
-if ($session_contact_primary == 0 && !$session_contact_is_technical_contact) {
+if ($contact_primary == 0 && !$contact_is_technical_contact) {
     header("Location: portal_post.php?logout");
     exit();
 }
@@ -27,7 +27,7 @@ if (!isset($_GET['id']) && !intval($_GET['id'])) {
 }
 
 $document_id = intval($_GET['id']);
-$sql_document = mysqli_query($mysqli, "SELECT document_id, document_name, document_content FROM documents WHERE document_id = $document_id AND document_client_id = $session_client_id AND document_template = 0 LIMIT 1");
+$sql_document = mysqli_query($mysqli, "SELECT document_id, document_name, document_content FROM documents WHERE document_id = $document_id AND document_client_id = $client_id AND document_template = 0 LIMIT 1");
 
 $row = mysqli_fetch_array($sql_document);
 

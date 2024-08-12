@@ -13,14 +13,14 @@ require_once '/var/www/portal.twe.tech/includes/inc_portal.php';
 
     <h2>Profile</h2>
 
-    <p>Name: <?= stripslashes(nullable_htmlentities($session_contact_name)); ?></p>
-    <p>Email: <?= $session_contact_email ?></p>
-    <p>PIN: <?= $session_contact_pin ?></p>
-    <p>Client: <?= $session_client_name ?></p>
+    <p>Name: <?= stripslashes(nullable_htmlentities($contact_name)); ?></p>
+    <p>Email: <?= $contact_email ?></p>
+    <p>PIN: <?= $contact_pin ?></p>
+    <p>Client: <?= $client_name ?></p>
     <br>
-    <p>Client Primary Contact: <?php if ($session_contact_primary == 1) {echo "Yes"; } else {echo "No";} ?></p>
-    <p>Client Technical Contact: <?php if ($session_contact_is_technical_contact) {echo "Yes"; } else {echo "No";} ?></p>
-    <p>Client Billing Contact: <?php if ($session_contact_is_billing_contact == $session_contact_id) {echo "Yes"; } else {echo "No";} ?></p>
+    <p>Client Primary Contact: <?php if ($contact_primary == 1) {echo "Yes"; } else {echo "No";} ?></p>
+    <p>Client Technical Contact: <?php if ($contact_is_technical_contact) {echo "Yes"; } else {echo "No";} ?></p>
+    <p>Client Billing Contact: <?php if ($contact_is_billing_contact == $contact_id) {echo "Yes"; } else {echo "No";} ?></p>
 
 
     <p>Login via: <?= $_SESSION['login_method'] ?> </p>

@@ -19,14 +19,17 @@ class SupportController {
         $this->view = new View();
     }
 
+    private function clientAccessed($client_id) {
+        $clientModel = new Client($this->pdo);
+        $clientModel->clientAccessed($client_id);
+    }
+
     public function index($client_id = null, $status = null) {
-        error_log("SupportController::index called with client_id: $client_id, status: $status");
 
         $supportModel = new Support($this->pdo);
 
         // Check if user has access to the support class
         if (!$this->auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
-            error_log("Access denied for user_id: {$_SESSION['user_id']} to view support tickets.");
             $this->view->error([
                 'title' => 'Access Denied',
                 'message' => 'You do not have permission to view support tickets.'
@@ -35,9 +38,9 @@ class SupportController {
         }
 
         if ($client_id !== null) {
+            $this->clientAccessed($client_id);
             // Check if user has access to client
             if (!$this->auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-                error_log("Access denied for user_id: {$_SESSION['user_id']} to view client_id: $client_id tickets.");
                 $this->view->error([
                     'title' => 'Access Denied',
                     'message' => 'You do not have permission to view this client\'s tickets.'
@@ -49,8 +52,7 @@ class SupportController {
             $clientModel = new Client($this->pdo);
             $client = $clientModel->getClient($client_id);
             $client_header = $clientModel->getClientHeader($client_id);
-            error_log("Client details retrieved for client_id: $client_id");
-            error_log("Client header: " . json_encode($client_header));
+
 
             // View tickets for that client
             $data = [
@@ -60,7 +62,6 @@ class SupportController {
                 'client_page' => true,
                 'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
             ];
-            error_log("Tickets retrieved for client_id: $client_id, status: $status");
             $this->view->render('tickets', $data, true);
         } else {
             // View all tickets
@@ -69,17 +70,14 @@ class SupportController {
                 'client_page' => false,
                 'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
             ];
-            error_log("All tickets retrieved, status: $status");
             $this->view->render('tickets', $data);
         }
     }
 
     public function show($ticket_id) {
-        error_log("SupportController::show called with ticket_id: $ticket_id");
 
         // Check if user has access to the support class
         if (!$this->auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
-            error_log("Access denied for user_id: {$_SESSION['user_id']} to view support tickets.");
             $this->view->error([
                 'title' => 'Access Denied',
                 'message' => 'You do not have permission to view support tickets.'
@@ -90,7 +88,6 @@ class SupportController {
         $supportModel = new Support($this->pdo);
         $clientModel = new Client($this->pdo);
         $ticket = $supportModel->getTicket($ticket_id);
-        error_log("Ticket details retrieved for ticket_id: $ticket_id");
 
         $data = [
             'ticket' => $ticket,
@@ -99,10 +96,10 @@ class SupportController {
         ];
 
         if (!empty($ticket['ticket_client_id'])) {
+            $this->clientAccessed($ticket['ticket_client_id']);
             $client_id = $ticket['ticket_client_id'];
             $data['client'] = $clientModel->getClient($client_id);
             $data['client_header'] = $clientModel->getClientHeader($client_id)['client_header'];
-            error_log("Client details retrieved for client_id: $client_id associated with ticket_id: $ticket_id");
             $data['client_page'] = true;
         } else {
             $data['client_page'] = false;

@@ -6,7 +6,7 @@ function createTicket(
     $parameters
 ){
 
-    global $mysqli, $session_user_id, $session_name, $session_ip, $session_user_agent, $config_ticket_next_number, $config_ticket_prefix, $config_ticket_from_name, $config_ticket_from_email, $config_base_url, $config_smtp_host, $config_ticket_client_general_notifications;
+    global $mysqli, $user_id, $name, $ip, $user_agent, $config_ticket_next_number, $config_ticket_prefix, $config_ticket_from_name, $config_ticket_from_email, $config_base_url, $config_smtp_host, $config_ticket_client_general_notifications;
 
     $client_id = intval($parameters['ticket_client_id']);
     $assigned_to = intval($parameters['ticket_assigned_to'] ?? 0);
@@ -50,7 +50,7 @@ function createTicket(
 
     mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
 
-    mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = '$billable', ticket_status = $ticket_status, ticket_vendor_ticket_number = '$vendor_ticket_number', ticket_vendor_id = $vendor_id, ticket_asset_id = $asset_id, ticket_created_by = $session_user_id, ticket_assigned_to = $assigned_to, ticket_contact_id = $contact, ticket_client_id = $client_id, ticket_invoice_id = 0");
+    mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$config_ticket_prefix', ticket_number = $ticket_number, ticket_subject = '$subject', ticket_details = '$details', ticket_priority = '$priority', ticket_billable = '$billable', ticket_status = $ticket_status, ticket_vendor_ticket_number = '$vendor_ticket_number', ticket_vendor_id = $vendor_id, ticket_asset_id = $asset_id, ticket_created_by = $user_id, ticket_assigned_to = $assigned_to, ticket_contact_id = $contact, ticket_client_id = $client_id, ticket_invoice_id = 0");
 
     $ticket_id = mysqli_insert_id($mysqli);
 
@@ -131,7 +131,7 @@ function createTicket(
     }
 
     // Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Create', log_description = '$session_name created ticket $config_ticket_prefix$ticket_number - $ticket_subject', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $ticket_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Create', log_description = '$name created ticket $config_ticket_prefix$ticket_number - $ticket_subject', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $ticket_id");
 
     $return_data = [
         'ticket_id' => $ticket_id,
@@ -179,14 +179,14 @@ function updateTicket(
     $parameters
 ) {
 
-    global $mysqli, $session_user_id, $session_name, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $name, $ip, $user_agent;
 
-    if (!isset($session_ip) || !isset($session_user_agent) || !isset($session_user_id) || !isset($session_name)){
+    if (!isset($ip) || !isset($user_agent) || !isset($user_id) || !isset($name)){
         //Assume API is making changes
-        $session_ip = "API";
-        $session_user_agent = "API";
-        $session_user_id = 0;
-        $session_name = "API";
+        $ip = "API";
+        $user_agent = "API";
+        $user_id = 0;
+        $name = "API";
     }
 
     //if in parameters, set the new value, add to update_sql 
@@ -205,7 +205,7 @@ function updateTicket(
     mysqli_query($mysqli, $update_sql);
 
 
-    $ticket_reply = "Ticket updated by $session_name, changes: ";
+    $ticket_reply = "Ticket updated by $name, changes: ";
     foreach ($parameters as $key => $value) {
         if ($key !== 'ticket_id') {
             //remove ticket_ from key
@@ -248,10 +248,10 @@ function updateTicket(
     $subject = sanitizeInput($ticket_data[$ticket_id]['ticket_subject']);
     $client_id = intval($ticket_data[$ticket_id]['ticket_client_id']);
 
-    mysqli_query($mysqli, "INSERT INTO ticket_replies SET ticket_reply = '$ticket_reply', ticket_reply_type = 'Internal', ticket_reply_time_worked = '00:01:00', ticket_reply_by = $session_user_id, ticket_reply_ticket_id = $ticket_id");
+    mysqli_query($mysqli, "INSERT INTO ticket_replies SET ticket_reply = '$ticket_reply', ticket_reply_type = 'Internal', ticket_reply_time_worked = '00:01:00', ticket_reply_by = $user_id, ticket_reply_ticket_id = $ticket_id");
 
     // Logging
-    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Modify', log_description = '$session_name modified ticket $ticket_number - $subject', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $ticket_id");
+    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Modify', log_description = '$name modified ticket $ticket_number - $subject', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $ticket_id");
 
     //drop ticket_id from parameters for return data message
     unset($parameters['ticket_id']);
@@ -269,7 +269,7 @@ function deleteTicket(
     $parameters
 ) {
 
-    global $mysqli, $session_user_id, $session_name, $session_ip, $session_user_agent;
+    global $mysqli, $user_id, $name, $ip, $user_agent;
 
     $ticket_id = intval($parameters['ticket_id']);
 
@@ -292,7 +292,7 @@ function deleteTicket(
         mysqli_query($mysqli, "DELETE FROM ticket_views WHERE view_ticket_id = $ticket_id");
 
         // Logging
-        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Delete', log_description = '$session_name deleted ticket $ticket_prefix$ticket_number - $ticket_subject along with all replies', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_client_id = $client_id, log_user_id = $session_user_id, log_entity_id = $ticket_id");
+        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Delete', log_description = '$name deleted ticket $ticket_prefix$ticket_number - $ticket_subject along with all replies', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $ticket_id");
 
         $return_data = [
             'status' => 'success',

@@ -99,7 +99,7 @@ $datatable_settings = ",
 
                             </td>
                             <td>
-                                <a href="//maps.<?= $session_map_source; ?>.com/?q=<?= urlencode($location_address . ' ' . $location_zip) ?>" target="_blank">
+                                <a href="//maps.google.com/?q=<?= urlencode($location_address . ' ' . $location_zip) ?>" target="_blank">
                                     <?= $location_address_display; ?>
                                 </a>
                             </td>

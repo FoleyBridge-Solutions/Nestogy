@@ -9,12 +9,12 @@
 require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
 
-if ($session_contact_primary == 0 && !$session_contact_is_billing_contact) {
+if ($contact_primary == 0 && !$contact_is_billing_contact) {
     header("Location: portal_post.php?logout");
     exit();
 }
 
-$invoices_sql = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' ORDER BY invoice_date DESC");
+$invoices_sql = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_client_id = $client_id AND invoice_status != 'Draft' ORDER BY invoice_date DESC");
 ?>
 
 <div class="row">
@@ -77,7 +77,7 @@ $invoices_sql = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_clie
                 <tr>
                     <td><a target="_blank" href="//<?= $config_base_url ?>/portal/guest_view_invoice.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key"?>"> <?= "$invoice_prefix$invoice_number"; ?></a></td>
                     <td><?= $invoice_scope_display; ?></td>
-                    <td><?= numfmt_format_currency($currency_format, $invoice_amount, $session_company_currency); ?></td>
+                    <td><?= numfmt_format_currency($currency_format, $invoice_amount, $company_currency); ?></td>
                     <td><?= $invoice_date; ?></td>
                     <td class="<?= $overdue_color; ?>"><?= $invoice_due; ?></td>
                     <td>
