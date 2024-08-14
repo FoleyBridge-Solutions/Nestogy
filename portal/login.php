@@ -225,10 +225,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
 
                         </form>
                         <div class="col text-center">
-                        <a href="/pages/login.php">
+                        <a href="/public/login.php">
                                 <button type="button" class="btn btn-label-secondary">Employee Login</button>
                             </a>
-                            <a href="/pages/login.php">
+                            <a href="/public/login.php">
                                 <button type="button" class="btn btn-label-secondary">Vendor Login</button>
                             </a>
                         </div>

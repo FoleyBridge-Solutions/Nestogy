@@ -80,20 +80,17 @@ if ($client_page) {
 
 
     $clientMenuItems = [
-        [
-            'title' => 'Client List',
+        ['title' => 'Client List',
             'icon' => 'bx bx-list-ul',
             'link' => '/public/?page=clients',
             'roles' => ['admin', 'accounting', 'sales', 'tech']
         ],
-        [
-            'title' => 'Client Overview',
+        ['title' => 'Client Overview',
             'icon' => 'bx bx-info-circle',
             'link' => '/public/?page=client&action=show&client_id=' . $client_id,
             'roles' => ['admin', 'accounting', 'sales', 'tech']
         ],
-        [
-            'title' => 'Support',
+        [ 'title' => 'Support',
             'icon' => 'bx bx-support',
             'children' => [
                 ['title' => 'Tickets', 'link' => '/public/?page=tickets&client_id=' . $client_id, 'icon' => 'bx bx-first-aid', 'roles' => ['admin', 'tech']],
@@ -104,8 +101,7 @@ if ($client_page) {
             ],
             'roles' => ['admin', 'tech']
         ],
-        [
-            'title' => 'Documentation',
+        ['title' => 'Documentation',
             'icon' => 'bx bx-book',
             'children' => [
                 ['title' => 'Assets', 'link' => '/public/?page=documentation&documentation_type=asset&client_id=' . $client_id, 'icon' => 'bx bx-box', 'roles' => ['admin', 'tech']],
@@ -119,8 +115,7 @@ if ($client_page) {
             ],
             'roles' => ['admin', 'tech']
         ],
-        [
-            'title' => 'Finance',
+        ['title' => 'Finance',
             'icon' => 'bx bx-dollar',
             'children' => [
                 ['title' => 'Invoices', 'link' => '/public/?page=invoices&client_id=' . $client_id, 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'accounting', 'sales']],
@@ -132,8 +127,7 @@ if ($client_page) {
             ],
             'roles' => ['admin', 'accounting', 'sales']
         ],
-        [
-            'title' => 'Other',
+        ['title' => 'Other',
             'icon' => 'bx bx-plus',
             'children' => [
                 ['title' => 'Contracts', 'link' => '/public/?page=contracts&client_id=' . $client_id, 'icon' => 'bx bx-file', 'roles' => ['admin', 'accounting', 'sales']],
@@ -146,14 +140,12 @@ if ($client_page) {
     ];
 } else {
     $menuItems = [
-        [
-            'title' => 'Clients',
+        ['title' => 'Clients',
             'icon' => 'bx bx-briefcase',
             'link' => '/public/?page=clients',
             'roles' => ['admin', 'accounting', 'sales', 'tech']
         ],
-        [
-            'title' => 'Support',
+        ['title' => 'Support',
             'icon' => 'bx bx-support',
             'children' => [
                 ['title' => 'Tickets', 'link' => '/public/?page=tickets', 'icon' => 'bx bx-first-aid', 'roles' => ['admin', 'tech']],
@@ -163,8 +155,7 @@ if ($client_page) {
             ],
             'roles' => ['admin', 'tech']
         ],
-        [
-            'title' => 'Sales',
+        ['title' => 'Sales',
             'icon' => 'bx bx-shopping-bag',
             'children' => [
                 ['title' => 'Quotes', 'link' => '/public/?page=quotes', 'icon' => 'bx bx-message-square-detail', 'roles' => ['admin', 'sales']  ],
@@ -175,11 +166,17 @@ if ($client_page) {
             ],
             'roles' => ['admin', 'sales']
         ],
-        [
-            'title' => 'Accounting',
+        ['title' => 'Accounting',
             'icon' => 'bx bx-money-withdraw',
             'children' => [
-                ['title' => 'Payments', 'link' => '/public/?page=payments', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
+                ['title' => 'Payments', 
+                    'icon' => 'bx bx-credit-card', 
+                    'children' => [
+                        ['title' => 'View Payments', 'link' => '/public/?page=payments', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
+                        ['title' => 'Make Payment', 'link' => '/public/?page=make_payment', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']]
+                    ],
+                    'roles' => ['admin', 'accounting']
+                ],
                 ['title' => 'Credits', 'link' => '/public/?page=credits', 'icon' => 'bx bx-money', 'roles' => ['admin', 'accounting']],
                 ['title' => 'Expenses', 'link' => '/public/?page=expenses', 'icon' => 'bx bx-money', 'roles' => ['admin', 'accounting']],
                 ['title' => 'Transfers', 'link' => '/public/?page=transfers', 'icon' => 'bx bx-transfer', 'roles' => ['admin', 'accounting']],
@@ -188,8 +185,16 @@ if ($client_page) {
             ],
             'roles' => ['admin', 'accounting']
         ],
-        [
-            'title' => 'Reports',
+        ['title' => 'Human Resources',
+            'icon' => 'bx bx-user-voice',
+            'children' => [
+                ['title' => 'Employees', 'link' => '/public/?page=hr&hr_page=employees', 'icon' => 'bx bx-user', 'roles' => ['admin']],
+                ['title' => 'Time Tracking', 'link' => '/public/?page=hr&hr_page=time_tracking', 'icon' => 'bx bx-stopwatch', 'roles' => ['admin']],
+                ['title' => 'Payroll', 'link' => '/public/?page=hr&hr_page=payroll', 'icon' => 'bx bx-money', 'roles' => ['admin']]
+            ],
+            'roles' => ['admin']
+        ],
+        ['title' => 'Reports',
             'icon' => 'bx bx-bar-chart',
             'children' => [
                 [
@@ -219,8 +224,7 @@ if ($client_page) {
             ],
             'roles' => ['admin']
         ],
-        [
-            'title' => 'Administration',
+        ['title' => 'Administration',
             'icon' => 'bx bx-wrench',
             'children' => [
                 ['title' => 'Users', 'link' => '/public/?page=admin&admin_page=users', 'icon' => 'bx bx-user', 'roles' => ['admin']],
@@ -247,8 +251,7 @@ if ($client_page) {
             ],
             'roles' => ['admin']
         ],
-        [
-            'title' => 'Settings',
+        ['title' => 'Settings',
             'icon' => 'bx bx-cog',
             'children' => [
                 ['title' => 'Modules', 'icon' => 'bx bx-checkbox', 'children' => [
@@ -277,6 +280,15 @@ if ($client_page) {
                 ]]
             ],
             'roles' => ['admin']
+        ],
+        ['title' => 'Help',
+            'icon' => 'bx bx-help-circle',
+            'children' => [
+                ['title' => 'Help Course', 'link' => '?page=learn', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']],
+                ['title' => 'Knowledge Base', 'link' => '?page=help&help_page=knowledge_base', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']],
+                ['title' => 'Standard Operating Procedures', 'link' => '?page=help&help_page=sop', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']]
+            ],
+            'roles' => ['tech', 'admin', 'sales', 'accounting']
         ]
     ];
 }
@@ -288,14 +300,16 @@ function renderMenu($menuItems, $userRole = ['tech'], $isSubmenu = false)
     $html = "<ul class=\"$ulClass\">";
 
     foreach ($menuItems as $item) {
-
-        foreach ($item['roles'] as $role) {
-            if (in_array($role, $userRole)) {
-                $hasAccess = true;
-                break;
-            } else {
-                $hasAccess = false;
+        $hasAccess = false;
+        if (isset($item['roles'])) {
+            foreach ($item['roles'] as $role) {
+                if (in_array($role, $userRole)) {
+                    $hasAccess = true;
+                    break;
+                }
             }
+        } else {
+            $hasAccess = true;
         }
 
         if (!$hasAccess) {

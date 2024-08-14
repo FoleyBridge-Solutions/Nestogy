@@ -9,35 +9,64 @@ class Support {
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
-    public function getOpenTickets($client_id = false) {
+    public function getOpenTickets($client_id = false, $user_id = false) {
         if ($client_id) {
-            $stmt = $this->pdo->prepare(
-                'SELECT * FROM tickets
-                LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
-                LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
-                LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
-                LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
-                WHERE ticket_client_id = :client_id
-                AND ticket_status != 5
-                ORDER BY ticket_created_at DESC
-            ');
-            $stmt->execute(['client_id' => $client_id]);
+            if ($user_id) {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_client_id = :client_id
+                    AND ticket_status != 5
+                    AND ticket_assigned_to = :user_id
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute(['client_id' => $client_id, 'user_id' => $user_id]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_client_id = :client_id
+                    AND ticket_status != 5
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute(['client_id' => $client_id]);
+            }
             $tickets = $stmt->fetchAll();
             foreach ($tickets as $key => $ticket) {
                 $tickets[$key]['ticket_last_response'] = $this->getLastResponse($ticket['ticket_id']);
             }
             return $tickets;
         } else {
-            $stmt = $this->pdo->prepare(
-                'SELECT * FROM tickets
-                LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
-                LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
-                LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
-                LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
-                WHERE ticket_status != 5
-                ORDER BY ticket_created_at DESC
-            ');
-            $stmt->execute();
+            if ($user_id) {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_status != 5
+                    AND ticket_assigned_to = :user_id
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute(['user_id' => $user_id]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_status != 5
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute();
+            }
             $tickets = $stmt->fetchAll();
             foreach ($tickets as $key => $ticket) {
                 $tickets[$key]['ticket_last_response'] = $this->getLastResponse($ticket['ticket_id']);
@@ -45,35 +74,61 @@ class Support {
             return $tickets;
         }
     }
-    public function getClosedTickets($client_id = false) {
+    public function getClosedTickets($client_id = false, $user_id = false) {
         if ($client_id) {
-            $stmt = $this->pdo->prepare(
-                'SELECT * FROM tickets
-                LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
-                LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
-                LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
-                LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
-                WHERE ticket_client_id = :client_id
-                AND ticket_status = 5
-                ORDER BY ticket_created_at DESC
-            ');
-            $stmt->execute(['client_id' => $client_id]);
+            if ($user_id) {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_client_id = :client_id
+                    AND ticket_status = 5
+                    AND ticket_assigned_to = :user_id
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute(['client_id' => $client_id, 'user_id' => $user_id]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_status = 5
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute();
+            }
             $tickets = $stmt->fetchAll();
             foreach ($tickets as $key => $ticket) {
                 $tickets[$key]['ticket_last_response'] = $this->getLastResponse($ticket['ticket_id']);
             }
             return $tickets;
         } else {
-            $stmt = $this->pdo->prepare(
-                'SELECT * FROM tickets
-                LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
-                LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
-                LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
-                LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
-                WHERE ticket_status = 5
-                ORDER BY ticket_created_at DESC
-            ');
-            $stmt->execute();
+            if ($user_id) {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_status = 5
+                    AND ticket_assigned_to = :user_id
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute(['user_id' => $user_id]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'SELECT * FROM tickets
+                    LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
+                    LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
+                    WHERE ticket_status = 5
+                    ORDER BY ticket_created_at DESC
+                ');
+                $stmt->execute();
+            }
             $tickets = $stmt->fetchAll();
             foreach ($tickets as $key => $ticket) {
                 $tickets[$key]['ticket_last_response'] = $this->getLastResponse($ticket['ticket_id']);

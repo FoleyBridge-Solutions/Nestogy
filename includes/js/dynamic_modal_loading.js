@@ -135,6 +135,13 @@ $(document).ready(function() {
                     }
                 });
 
+                // Initialize Google Maps Autocomplete
+                if (typeof google === 'object' && typeof google.maps === 'object') {
+                    initAutocomplete();
+                } else {
+                    console.error('Google Maps API not loaded');
+                }
+
             }).fail(function() {
                 console.error('Failed to load the modal content from ' + fullPath);
             });

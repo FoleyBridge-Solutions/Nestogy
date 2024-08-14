@@ -3,6 +3,7 @@
 $ticket_id = intval($_GET['ticket_id']);
 
 $sql = "SELECT * FROM tickets LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id WHERE ticket_id = $ticket_id";
+error_log($sql);
 $result = mysqli_query($mysqli, $sql);
 $row = mysqli_fetch_assoc($result);
 
@@ -34,10 +35,11 @@ $client_name = $row['client_name'];
                             <select class="form-control select2" id='select2' name="assigned_to">
                                 <option value="0">Not Assigned</option>
                                 <?php
-                                $sql_users_select = mysqli_query($mysqli, "SELECT * FROM users 
+                                $sql_users_select = mysqli_query($mysqli, "SELECT * FROM users
                                     LEFT JOIN user_settings on users.user_id = user_settings.user_id
-                                    WHERE user_role > 1
-                                    AND user_archived_at IS NULL 
+                                    WHERE user_archived_at IS NULL
+                                    AND user_status = 1
+                                    AND (user_role = 'tech' OR user_role = 'admin')
                                     ORDER BY user_name DESC"
                                 );
                                 while ($row = mysqli_fetch_array($sql_users_select)) {

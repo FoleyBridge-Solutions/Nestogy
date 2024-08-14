@@ -43,7 +43,6 @@ class ClientController {
             $client['client_balance'] = $accountingModel->getClientBalance($client['client_id']);
             $client['client_payments'] = $accountingModel->getClientPaidAmount($client['client_id']);
         }
-        
         $view->render('clients', ['clients' => $clients]);
     }
     public function show($client_id) {
@@ -114,9 +113,12 @@ class ClientController {
         $contacts = [];
         foreach ($rawContacts as $contact) {
             $contacts[] = [
-                $contact['contact_name'],
+                '<a href="#" class="dropdown-item loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="client_contact_edit_modal.php?contact_id=' . $contact['contact_id'] . '">
+                    ' . $contact['contact_name'] . '
+                </a>',
                 $contact['contact_email'],
-                $contact['contact_phone']
+                $contact['contact_phone'],
+                $contact['contact_mobile']
             ];
         }
         $data = [
@@ -125,7 +127,7 @@ class ClientController {
             ],
             'client_header' => $clientModel->getClientHeader($client_id)['client_header'],
             'table' => [
-                'header_rows' => ['Name', 'Email', 'Phone'],
+                'header_rows' => ['Name', 'Email', 'Phone', 'Mobile'],
                 'body_rows' => $contacts
             ]
         ];

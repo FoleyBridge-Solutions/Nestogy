@@ -10,18 +10,15 @@ Nestogy is a cutting-edge platform designed specifically for Managed Service Pro
 - Significant time is wasted in retrieving relevant client data for resolving tickets.
 - The financial operations involving pricing, quoting, invoicing, and general accounting are cumbersome and time-consuming.
 
-## Benefits Over ITFlow - Classic
+## Features
+- Employee Management and Time Tracking
+- Bank Transaction Syncing and Reconciliation
+- Client Management
+- Project and Ticket Management
+- Billing, Invoicing, and Quote Management
+- Online Payments, Recurring Billing, and Subscriptions
+- and much more!
 
-- **Faster Response Times**: Dynamic modal loading significantly reduces latency when accessing large amounts of data.
-- **Flexible Data Management**: Enhanced features from Datatables.js allow for dynamic data handling capabilities not present in ITFlow - Classic.
-- **Modern Interface**: A premium theme ensures a contemporary and responsive user interface.
-- **Mobile Version**: A mobile optimized version on each page helps you get what you need where ever you may need it.
-- **Enhanced Search Functionality**: Type-ahead searching offers a more intuitive and quicker way to find information.
-- **Strategic Insights**: Greater emphasis on financial analytics helps in tracking and improving profit margins across various business aspects.
-- **Codebase Maintainability**: Refactoring into an Object Oriented codebase, with a Model, View, Controller architechture to help with bloat and increase mainatainability.
-- **Bank Transaction Syncing**: Sync your bank transactions with Nestogy to easily reconcile your accounts.
-- 
-- 
 
 ## Paid Services Offered:
 - **Migration Services**: Migrate your data from ITFlow - Classic to Nestogy.

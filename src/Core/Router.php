@@ -5,8 +5,7 @@ namespace Twetech\Nestogy\Core;
 use Twetech\Nestogy\Auth\Auth;
 use Twetech\Nestogy\Database;
 
-class Router
-{
+class Router {
     private $routes = [];
     private $middlewares = [];
     private $defaultController = 'HomeController';
@@ -39,7 +38,7 @@ class Router
         $this->add('location', 'ClientController', 'showLocations', ['client_id']);
 
         // Support routes
-        $this->add('tickets', 'SupportController', 'index', ['client_id', 'status']);
+        $this->add('tickets', 'SupportController', 'index', ['client_id', 'status', 'user_id']);
         $this->add('ticket', 'SupportController', 'show', ['ticket_id']);
 
         // Documentation routes
@@ -57,13 +56,25 @@ class Router
         $this->add('subscription','AccountingController','showSubscription',['subscription_id']);
         $this->add('payments', 'AccountingController', 'showPayments', ['client_id']);
         $this->add('payment', 'AccountingController', 'showPayment', ['payment_reference']);
+        $this->add('make_payment', 'AccountingController', 'makePayment');
         $this->add('quotes', 'AccountingController', 'showQuotes', ['client_id']);
         $this->add('quote', 'AccountingController', 'showQuote', ['quote_id']);
         $this->add('contracts', 'AccountingController', 'showContracts', ['client_id']);
         $this->add('contract', 'AccountingController', 'showContract', ['contract_id']);
+        $this->add('products', 'AccountingController', 'showProducts');
+        $this->add('product', 'AccountingController', 'showProduct', ['product_id']);
+        
+        // Reports routes
+        $this->add('report', 'ReportController', 'index', ['report']);
 
         // Administration routes
         $this->add('admin', 'AdministrationController', 'index', ['admin_page']);
+
+        // Human Resources routes
+        $this->add('hr', 'HumanResourcesController', 'index', ['hr_page', 'pay_period']);
+
+        // Course route
+        $this->add('learn', 'CourseController', 'index', ['course_id']);
     }
 
     public function dispatch()
@@ -78,12 +89,10 @@ class Router
             return;
         }
 
-
         // Get the controller and action from the route
         $controller = "Twetech\\Nestogy\\Controller\\" . $route['controller'];
         $action = $route['action'];
         $params = $this->getParams($route['middlewares']);
-
 
         // If the user is not logged in and the page is not the login page, redirect to the login page
         if (!Auth::check() && $page !== 'login') {
@@ -94,14 +103,25 @@ class Router
         // If the controller and action exist, call them
         if (class_exists($controller) && method_exists($controller, $action)) {
             $controllerInstance = new $controller($this->pdo);
-            call_user_func_array([$controllerInstance, $action], $params);
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $postData = $this->sanitizePostData($_POST);
+                call_user_func_array([$controllerInstance, $action], array_merge($params, [$postData]));
+            } else {
+                call_user_func_array([$controllerInstance, $action], $params);
+            }
         } else {
             $this->handleNotFound();
-            
         }
     }
 
-
+    private function sanitizePostData($data)
+    {
+        $sanitizedData = [];
+        foreach ($data as $key => $value) {
+            $sanitizedData[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        }
+        return $sanitizedData;
+    }
 
     // Get the parameters from the URL
     private function getParams($middlewares)

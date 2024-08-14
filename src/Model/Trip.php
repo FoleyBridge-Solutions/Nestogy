@@ -12,9 +12,15 @@ class Trip {
         $this->pdo = $pdo;
     }
 
-    public function getTrips() {
-        $sql = "SELECT * FROM trips";
-        $stmt = $this->pdo->prepare($sql);
+    public function getTrips($client_id = false) {
+        if ($client_id) {
+            $sql = "SELECT * FROM trips WHERE trip_client_id = :client_id";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':client_id', $client_id, PDO::PARAM_INT);
+        } else {
+            $sql = "SELECT * FROM trips";
+            $stmt = $this->pdo->prepare($sql);
+        }
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

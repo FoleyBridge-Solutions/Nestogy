@@ -35,10 +35,6 @@
                         </div>
                     </div>
 
-                    <!-- Add switch button here -->
-                    <div class="form-group text-center" id="switch-button-group">
-                        <button type="button" class="btn btn-secondary" onclick="switchInputs()">Switch Origin and Destination</button>
-                    </div>
 
                     <div class="form-group">
                         <label for="destination">Destination <strong class="text-danger">*</strong></label>
@@ -145,7 +141,7 @@
                 <div class="modal-footer bg-white">
                     <button type="submit" name="add_trip" class="btn btn-label-primary text-bold"></i>Create</button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal"></i>Cancel</button>
-                    <script src="/includes/js/trip_add_modal.js"></script>
+                    <script src="/includes/js/trip_add_modal.js"></script> <!-- TRIP ADD MODAL JS -->
                 </div>
             </form>
         </div> <!-- Modal Content -->

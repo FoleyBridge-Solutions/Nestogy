@@ -14,7 +14,25 @@ class Auth {
         return isset($_SESSION['user_id']);
     }
 
-    public function login($user_id, $user_role = 'admin', $user_avatar = null, $remember_me = false) {
+    public function login($user) {
+        $user_id = $user['user_id'];
+        $user_role = $user['user_role'];
+        $user_avatar = $user['user_avatar'];
+        $remember_me = $user['remember_me'];
+        $user_encryption_ciphertext = $user['user_specific_encryption_ciphertext'];
+        $user_password = $user['user_password'];
+
+        error_log("User password: " . $user_password);
+        error_log("User encryption ciphertext: " . $user_encryption_ciphertext);
+
+
+        // Decrypt the master key using the user's password
+        $site_encryption_master_key = $this->decryptUserSpecificKey($user_encryption_ciphertext, $user_password);
+        error_log("Decrypted master key: " . $site_encryption_master_key);
+
+        // Generate a session key and store it
+        generateUserSessionKey($site_encryption_master_key);
+
         $_SESSION['user_id'] = $user_id;
         $_SESSION['user_role'] = $user_role;
         $_SESSION['logged'] = true;
@@ -36,13 +54,41 @@ class Auth {
         exit;
     }
 
+    private function setUserEncryptionCiphertext($user) {
+        $user_encryption_ciphertext = $user['user_specific_encryption_ciphertext'];
+        $user_role = $user['user_role'];
+        $password = $user['user_password'];
+
+        // Setup encryption session key
+        if (isset($user_encryption_ciphertext) && $user_role > 1) {
+            $site_encryption_master_key = decryptUserSpecificKey($user_encryption_ciphertext, $password);
+            generateUserSessionKey($site_encryption_master_key);
+        }
+    }
+
+    private function decryptUserSpecificKey($user_encryption_ciphertext, $user_password) {
+        //Get the IV, salt and ciphertext
+        $salt = substr($user_encryption_ciphertext, 0, 16);
+        $iv = substr($user_encryption_ciphertext, 16, 16);
+        $ciphertext = substr($user_encryption_ciphertext, 32);
+
+        //Generate 128-bit (16 byte/char) kdhash of the users password
+        $user_password_kdhash = hash_pbkdf2('sha256', $user_password, $salt, 100000, 16);
+
+        //Use this hash to get the original/master key
+        return openssl_decrypt($ciphertext, 'aes-128-cbc', $user_password_kdhash, 0, $iv);
+    }
+
     public static function logout($pdo) {
         // Clear the session
         unset($_SESSION['user_id']);
+        unset($_SESSION['user_encryption_session_ciphertext']);
+        unset($_SESSION['user_encryption_session_iv']);
         session_destroy();
     
         // Clear the remember me cookie
         setcookie('remember_me', '', time() - 3600, '/', '', true, true);
+        setcookie('user_encryption_session_key', '', time() - 3600, '/', '', true, true);
     
         // Optionally, delete the token from the database
         if (isset($_COOKIE['remember_me'])) {
@@ -67,7 +113,8 @@ class Auth {
 
             if ($stored_token_hash && password_verify($token, $stored_token_hash)) {
                 // Token is valid, log in the user
-                $this->login($user_id, $this->getUserRole($user_id), $this->getUserAvatar($user_id), true);
+                $user = $this->getUser($user_id);
+                $this->login($user);
             }
         }
     }
@@ -89,6 +136,8 @@ class Auth {
                 'user_role' => $user['user_role'],
                 'user_token' => $user['user_token'] ?? null,
                 'user_avatar' => $user['user_avatar'] ?? null,
+                'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'] ?? null,
+                'user_password' => $password, // Pass the password for decryption
             ];
         } else {
             return false;
@@ -102,9 +151,13 @@ class Auth {
     }
 
     public function getUser($user_id) {
-        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE user_id = :user_id LEFT JOIN user_settings ON user_settings.user_id = users.user_id');
+        $stmt = $this->pdo->prepare('SELECT * FROM users LEFT JOIN user_settings ON user_settings.user_id = users.user_id WHERE users.user_id = :user_id');
         $stmt->execute(['user_id' => $user_id]);
         return $stmt->fetch();
+    }
+    
+    public function getUsername($user_id) {
+        return $this->getUser($user_id)['user_name'];
     }
 
     public function getUsers() {

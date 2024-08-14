@@ -24,7 +24,7 @@ class SupportController {
         $clientModel->clientAccessed($client_id);
     }
 
-    public function index($client_id = null, $status = null) {
+    public function index($client_id = null, $status = null, $user_id = null) {
 
         $supportModel = new Support($this->pdo);
 
@@ -56,7 +56,7 @@ class SupportController {
 
             // View tickets for that client
             $data = [
-                'tickets' => $status == 5 ? $supportModel->getClosedTickets($client_id) : $supportModel->getOpenTickets($client_id),
+                'tickets' => $status == 5 ? $supportModel->getClosedTickets($client_id, $user_id) : $supportModel->getOpenTickets($client_id, $user_id),
                 'client' => $client,
                 'client_header' => $client_header['client_header'], // Ensure correct structure
                 'client_page' => true,
@@ -66,7 +66,7 @@ class SupportController {
         } else {
             // View all tickets
             $data = [
-                'tickets' => $status == 5 ? $supportModel->getClosedTickets() : $supportModel->getOpenTickets(),
+                'tickets' => $status == 5 ? $supportModel->getClosedTickets($client_id, $user_id) : $supportModel->getOpenTickets($client_id, $user_id),
                 'client_page' => false,
                 'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
             ];
@@ -84,7 +84,6 @@ class SupportController {
             ]);
             return;
         }
-
         $supportModel = new Support($this->pdo);
         $clientModel = new Client($this->pdo);
         $ticket = $supportModel->getTicket($ticket_id);

@@ -17,10 +17,10 @@ $mobile = false;
         </h3>
         <div class="card-header-elements">
             <span class="badge rounded-pill bg-label-secondary p-2">Total: <?=$total_tickets_open + $total_tickets_closed?></span> |
-            <a href="<?= isset($client_id) ? "/pages/client/client_" : "/pages/" ?>tickets.php?status=Open&assigned=all<?= isset($client_id) ? "&client_id=$client_id" : "" ?>" class="badge rounded-pill bg-label-primary p-2">
+            <a href="/public/?page=tickets" class="badge rounded-pill bg-label-primary p-2">
                 Open: <?=$total_tickets_open?>
             </a> |
-            <a href="<?= isset($client_id) ? "/pages/client/client_" : "/pages/" ?>tickets.php?status=5&assigned=all<?= isset($client_id) ? "&client_id=$client_id" : "" ?>" class="badge rounded-pill bg-label-danger p-2">
+            <a href="/public/?page=tickets&status=5" class="badge rounded-pill bg-label-danger p-2">
                 Closed: <?=$total_tickets_closed?>
             </a>
         </div>
@@ -32,8 +32,8 @@ $mobile = false;
                         <i class="fa fa-fw fa-envelope m-2"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="?status=Open&assigned=<?= $user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
-                        <a class="dropdown-item " href="?status=5&assigned=<?= $user_id ?>">Closed tickets</a>
+                        <a class="dropdown-item" href="?page=tickets&user_id=<?= $user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
+                        <a class="dropdown-item " href="?page=tickets&status=5&user_id=<?= $user_id ?>">Closed tickets</a>
                     </div>
                 </div>
                 <?php if (!isset($_GET['client_id'])) { ?>
@@ -122,8 +122,8 @@ $mobile = false;
                             } else {
                                 $billable = "<a href='/post.php?ticket_billable=$ticket_id' class='badge rounded-pill bg-label-secondary' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as billable'>X</a>";
                             }
-                            $ticket_priority = $priority == 1 ? 'Low' : ($priority == 2 ? 'Medium' : 'High');
-                            $ticket_priority_color = $priority == 1 ? 'success' : ($priority == 2 ? 'warning' : 'danger');
+                            $ticket_priority = $priority == 1 ? 'High' : ($priority == 2 ? 'Medium' : 'Low');
+                            $ticket_priority_color = $priority == 1 ? 'danger' : ($priority == 2 ? 'warning' : 'success');
 
                             $ticket_assigned = $assigned == 0 ? 'Unassigned' : $assigned;
 
@@ -136,19 +136,25 @@ $mobile = false;
 
                             $ticket_actions = [
                                 'View' => [
+                                    'modal' => false,
                                     'icon' => 'fa-eye',
-                                    'url' => isset($_GET['client_id']) ? "/pages/client/client_" : "/pages/" . "ticket.php?ticket_id=$ticket_id"
+                                    'url' => '/public/?page=ticket&action=show&ticket_id=' . $ticket_id
                                 ],
                                 'Edit' => [
+                                    'modal' => true,
                                     'icon' => 'fa-edit',
-                                    'url' => isset($_GET['client_id']) ? "/pages/client/client_" : "/pages/" . "ticket_edit.php?ticket_id=$ticket_id"
+                                    'modal_file' => 'ticket_edit_modal.php?ticket_id=' . $ticket_id
+                                
+                                ],
+                                'Change Client' => [
+                                    'modal' => true,
+                                    'icon' => 'fa-exchange-alt',
+                                    'modal_file' => 'ticket_edit_client_modal.php?ticket_id=' . $ticket_id
                                 ],
                                 'Delete' => [
+                                    'modal' => false,
                                     'icon' => 'fa-trash',
-                                    'url' => "/post/ticket_delete.php",
-                                    'data' => [
-                                        'ticket_id' => $ticket_id
-                                    ]
+                                    'url' => "/post.php?delete_ticket=".$ticket_id
                                 ]
                             ];
                         ?>
@@ -172,7 +178,7 @@ $mobile = false;
                                     </a>
                                     <br>
                                     <small>
-                                        <a href="/public/?page=contact&action=show&contact_id=<?=$ticket['contact_id']?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View contact">
+                                        <a href="/public/?page=contact&action=show&contact_id=<?=$ticket['client_id']?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View contact">
                                             <?=$contact_name?>
                                         </a>
                                     </small>
@@ -213,7 +219,11 @@ $mobile = false;
                                         <div class="dropdown-menu">
                                             <?php
                                                 foreach ($ticket_actions as $action => $data) {
-                                                    echo "<a class='dropdown-item loadModalContentBtn' href='" . $data['url'] . "' data-bs-toggle='modal' data-bs-target='#dynamicModal' data-modal-file='ticket_edit_modal.php?ticket_id=$ticket_id&action='>" . $action . "</a>";
+                                                    if ($data['modal']) {
+                                                        echo "<a class='dropdown-item loadModalContentBtn' href='" . $data['url'] . "' data-bs-toggle='modal' data-bs-target='#dynamicModal' data-modal-file='" . $data['modal_file'] . "'>" . $action . "</a>";
+                                                    } else {
+                                                        echo "<a class='dropdown-item' href='" . $data['url'] . "'>" . $action . "</a>";
+                                                    }
                                                 }
                                             ?>
                                         </div>

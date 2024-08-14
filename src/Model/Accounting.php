@@ -26,7 +26,11 @@ class Accounting {
             $stmt->execute(['client_id' => $client_id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
-            $stmt = $this->pdo->query("SELECT * FROM payments ORDER BY payment_date DESC");
+            $stmt = $this->pdo->query(
+                "SELECT * FROM payments 
+                LEFT JOIN invoices ON payments.payment_invoice_id = invoices.invoice_id
+                LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id
+                ORDER BY payment_date DESC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }
@@ -118,13 +122,8 @@ class Accounting {
         $stmt->execute(['subscription_id' => $subscription_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    public function getProduct($product_id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM products WHERE product_id = :product_id");
-        $stmt->execute(['product_id' => $product_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
     public function getPayment($payment_id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_id = :payment_id");
+        $stmt = $this->pdo->prepare("SELECT * FROM payments LEFT JOIN clients ON payments.payment_client_id = clients.client_id WHERE payment_id = :payment_id");
         $stmt->execute(['payment_id' => $payment_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -133,4 +132,99 @@ class Accounting {
         $stmt->execute(['reference' => $reference]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function getPaymentCategories() {
+        $stmt = $this->pdo->query("SELECT * FROM categories WHERE category_type = 'Payment Method' AND category_archived_at IS NULL ORDER BY category_name ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getPaymentAccounts() {
+        $stmt = $this->pdo->query("SELECT * FROM accounts LEFT JOIN account_types ON accounts.account_type = account_types.account_type_id WHERE accounts.account_archived_at IS NULL ORDER BY accounts.account_name ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getProducts() {
+        $stmt = $this->pdo->query("SELECT * FROM products WHERE product_archived_at IS NULL ORDER BY product_name ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getProduct($product_id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM products WHERE product_id = :product_id");
+        $stmt->execute(['product_id' => $product_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    public function getTaxes() {
+        $stmt = $this->pdo->query("SELECT * FROM taxes WHERE tax_archived_at IS NULL ORDER BY tax_name ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getCategories($type = 'Income') {
+        $stmt = $this->pdo->prepare("SELECT * FROM categories WHERE category_archived_at IS NULL AND category_type = :category_type ORDER BY category_name ASC");
+        $stmt->execute(['category_type' => $type]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getInvoiceBalance($invoice_id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_id = :invoice_id");
+        $stmt->execute(['invoice_id' => $invoice_id]);
+        $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
+        $invoice_amount = $invoice['invoice_amount'];
+
+        $payments = $this->getPaymentsByInvoice($invoice_id);
+        $payments_amount = array_sum(array_column($payments, 'payment_amount'));
+        return $invoice_amount - $payments_amount;
+    }
+    public function getPaymentsByInvoice($invoice_id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_invoice_id = :invoice_id");
+        $stmt->execute(['invoice_id' => $invoice_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getTaxReport($year = false, $month = false) {
+        if (!$year) {
+            $year = date('Y');
+        }
+        if (!$month) {
+            $month = date('n');
+        }
+        
+        $sql = "
+            SELECT * FROM payments
+            LEFT JOIN invoices ON payments.payment_invoice_id = invoices.invoice_id
+            LEFT JOIN invoice_items ON invoices.invoice_id = invoice_items.item_invoice_id
+            LEFT JOIN taxes ON invoice_items.item_tax_id = taxes.tax_id
+            LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id
+            WHERE YEAR(payments.payment_date) = :year
+            ORDER BY taxes.tax_name, MONTH(payments.payment_date), taxes.tax_id, clients.client_name, invoices.invoice_id, payments.payment_id, invoice_items.item_id
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['year' => $year]);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $monthly_fractional_payment = array_fill(1, 12, []);
+        $monthly_tax_owed = array_fill(1, 12, []);
+
+        foreach ($result as $row) {
+            $month = date('n', strtotime($row['payment_date']));
+            $tax_name = $row['tax_name'];
+        
+            $invoice_amount = $row['invoice_amount'];
+            $payment_amount = $row['payment_amount'];
+            $percent_paid = $invoice_amount > 0 ? $payment_amount / $invoice_amount : 0;
+            $item_price = $row['item_price'];
+            $item_quantity = $row['item_quantity'];
+            $item_discount = $row['item_discount'];
+            $item_total = ($item_price * $item_quantity) - $item_discount;
+            $fractional_payment_amount = $item_total * $percent_paid;
+            $tax_rate = $row['tax_percent'];
+            $tax_owed = $fractional_payment_amount * $tax_rate / 100;
+        
+            $total_fractional_payment = isset($monthly_fractional_payment[$month][$tax_name]) ? $monthly_fractional_payment[$month][$tax_name] : 0;
+            $total_tax_owed = isset($monthly_tax_owed[$month][$tax_name]) ? $monthly_tax_owed[$month][$tax_name] : 0;
+        
+            $monthly_fractional_payment[$month][$tax_name] = $total_fractional_payment + $fractional_payment_amount;
+            $monthly_tax_owed[$month][$tax_name] = $total_tax_owed + $tax_owed;
+        }
+
+        $return_data = [
+            'monthly_fractional_payment' => $monthly_fractional_payment,
+            'monthly_tax_owed' => $monthly_tax_owed,
+        ];
+
+        return $return_data;
+    }
+
 }

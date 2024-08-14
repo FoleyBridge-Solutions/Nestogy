@@ -13,12 +13,14 @@ class AccountingController {
     private $view;
     private $auth;
     private $accounting;
+    private $client;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->view = new View();
         $this->auth = new Auth($pdo);
         $this->accounting = new Accounting($pdo);
+        $this->client = new Client($pdo);
 
         if (!$this->auth->check()) {
             // Redirect to login page or handle unauthorized access
@@ -54,10 +56,19 @@ class AccountingController {
 
         $data['card']['title'] = 'Invoices';
         if ($client_page) {
-            $data['table']['header_rows'] = ['Number', 'Scope', 'Amount', 'Date', 'Status'];
+            $data['table']['header_rows'] = ['Number', 'Scope', 'Amount','Balance', 'Date', 'Status'];
+            $data['action'] = [
+                'title' => 'Create Invoice',
+                'modal' => 'invoice_add_modal.php?client_id='.$client_id
+            ];
         } else {
-            $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount', 'Date', 'Status'];
+            $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount','Balance', 'Date', 'Status'];
+            $data['action'] = [
+                'title' => 'Create Invoice',
+                'modal' => 'invoice_add_modal.php'
+            ];
         }
+
 
 
         $invoices = $this->accounting->getInvoices($client_id);
@@ -78,12 +89,15 @@ class AccountingController {
             if ($invoice['invoice_status'] == 'Sent' && $invoice['invoice_due_date'] < date('Y-m-d')) {
                 $invoice['invoice_status'] .= ' & Overdue';
             }
+
+            $invoice_balance = $this->accounting->getInvoiceBalance($invoice_id);
         
             if ($client_page) {
                 $data['table']['body_rows'][] = [
                     $invoice_number_display,    
                     $invoice['invoice_scope'],
                     $invoice['invoice_amount'],
+                    $invoice_balance,
                     $invoice['invoice_date'],
                     $invoice['invoice_status']
                 ];
@@ -93,6 +107,7 @@ class AccountingController {
                     $client_name_display,
                     $invoice['invoice_scope'],
                     $invoice['invoice_amount'],
+                    $invoice_balance,
                     $invoice['invoice_date'],
                     $invoice['invoice_status']
                 ];
@@ -113,9 +128,8 @@ class AccountingController {
             'invoice' => $invoice,
             'tickets' => $invoice_tickets,
             'unbilled_tickets' => $unbilled_tickets,
-            'company' => $this->auth->getCompany()
+            'company' => $this->auth->getCompany(),
         ];
-
 
         $this->view->render('invoice', $data, true);
     }
@@ -136,12 +150,23 @@ class AccountingController {
             $client = new Client($this->pdo);
             $client_header = $client->getClientHeader($client_id);
             $data['client_header'] = $client_header['client_header'];
+            $data['action'] = [
+                'title' => 'Create Quote',
+                'modal' => 'quote_add_modal.php?client_id='.$client_id
+            ];
+            $data['table']['header_rows'] = ['Number','Scope', 'Amount', 'Date', 'Status'];
+
         } else {
             $client_page = false;
+            $data['action'] = [
+                'title'=> 'Create Quote',
+                'modal'=> 'quote_add_modal.php'
+            ];
+            $data['table']['header_rows'] = ['Number','Client Name','Scope','Amount','Date','Status'];
         }
 
+
         $data['card']['title'] = 'Quotes';
-        $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount', 'Date', 'Status'];
 
         $quotes = $this->accounting->getQuotes($client_id);
         foreach ($quotes as $quote) {
@@ -160,14 +185,24 @@ class AccountingController {
                 $quote['quote_status'] .= ' & Expired';
             }
 
-            $data['table']['body_rows'][] = [
-                $quote_number_display,
-                $client_name_display,
-                $quote['quote_scope'],
-                $quote['quote_amount'],
-                $quote['quote_date'],
-                $quote['quote_status']
-            ];
+            if ($client_page) {
+                $data['table']['body_rows'][] = [
+                    $quote_number_display,
+                    $quote['quote_scope'],
+                    $quote['quote_amount'],
+                    $quote['quote_date'],
+                    $quote['quote_status']
+                ];                
+            } else {
+                $data['table']['body_rows'][] = [
+                    $quote_number_display,
+                    $client_name_display,
+                    $quote['quote_scope'],
+                    $quote['quote_amount'],
+                    $quote['quote_date'],
+                    $quote['quote_status']
+                    ];
+            }
         }
 
         $this->view->render('simpleTable', $data, $client_page);
@@ -200,12 +235,14 @@ class AccountingController {
             $client = new Client($this->pdo);
             $client_header = $client->getClientHeader($client_id);
             $data['client_header'] = $client_header['client_header'];
+            $data['table']['header_rows'] = ['Product', 'Quantity', 'Updated'];
+
         } else {
+            $data['table']['header_rows'] = ['Client', 'Product', 'Quantity', 'Updated'];
             $client_page = false;
         }
 
         $data['card']['title'] = 'Subscriptions';
-        $data['table']['header_rows'] = ['ID', 'Client', 'Product', 'Quantity', 'Updated'];
 
         $subscriptions = $this->accounting->getSubscriptions($client_id);
         foreach ($subscriptions as $subscription) {
@@ -213,17 +250,23 @@ class AccountingController {
             $client_name = $client->getClient($subscription['subscription_client_id'])['client_name'];
             
             $product_name = $this->accounting->getProduct($subscription['subscription_product_id'])['product_name'];
-            $data['table']['body_rows'][] = [
-                $subscription['subscription_id'],
-                $client_name,
-                $product_name,
-                $subscription['subscription_product_quantity'],
-                $subscription['subscription_updated']
-            ];
+            if ($client_page) {
+                $data['table']['body_rows'][] = [
+                    '<a href="?page=product&product_id='.$subscription['subscription_product_id'].'">'.$product_name.'</a>',
+                    $subscription['subscription_product_quantity'],
+                    $subscription['subscription_updated']
+                ];
+            } else {
+                $data['table']['body_rows'][] = [
+                    '<a href="?page=client&client_id='.$subscription['subscription_client_id'].'">'.$client_name.'</a>',
+                    '<a href="?page=product&product_id='.$subscription['subscription_product_id'].'">'.$product_name.'</a>',
+                    $subscription['subscription_product_quantity'],
+                    $subscription['subscription_updated']
+                ];
+            }
         }
         $data['action'] = [
             'title' => 'Add Subscription',
-            'button' => 'Add',
             'modal' => 'subscription_add_modal.php?client_id=' . $client_id
         ];
         $this->view->render('simpleTable', $data, $client_page);
@@ -255,13 +298,26 @@ class AccountingController {
         }
 
         $data['card']['title'] = 'Payments';
-        $data['table']['header_rows'] = ['Reference', 'Amount', 'Date'];
+        if ($client_page) {
+            $data['table']['header_rows'] = ['Reference', 'Amount', 'Date'];
+        } else {
+            $data['table']['header_rows'] = ['Client', 'Reference', 'Amount', 'Date'];
+        }
         foreach ($payments as $payment) {
-            $data['table']['body_rows'][] = [
-                "<a href='?page=payment&payment_reference=$payment[payment_reference]'>$payment[payment_reference]</a>",
-                $payment['payment_amount'],
-                $payment['payment_date'],
-            ];
+            if ($client_page) {
+                $data['table']['body_rows'][] = [
+                    "<a href='?page=payment&payment_reference=$payment[payment_reference]'>$payment[payment_reference]</a>",
+                    $payment['payment_amount'],
+                    $payment['payment_date'],
+                ];
+            } else {
+                $data['table']['body_rows'][] = [
+                    "<a href='?page=client&client_id=$payment[client_id]'>$payment[client_name]</a>",   
+                    $payment['payment_reference'],
+                    $payment['payment_amount'],
+                    $payment['payment_date'],
+                ];
+            }
         }
         $this->view->render('simpleTable', $data, $client_page);
     }
@@ -292,4 +348,41 @@ class AccountingController {
         }
         $this->view->render('simpleTable', $data, $client_page);
     }
+    public function makePayment() {
+        $clients = $this->client->getClients();
+        $categories = $this->accounting->getPaymentCategories();
+        $accounts = $this->accounting->getPaymentAccounts();
+        $data = [
+            'clients' => $clients,
+            'categories' => $categories,
+            'accounts' => $accounts
+        ];
+
+        $this->view->render('makePayment', $data);
+    }
+    public function showProducts() {
+        $products = $this->accounting->getProducts();
+        $data['card']['title'] = 'Products';
+        $data['table']['header_rows'] = ['Name', 'Description', 'Price'];
+        foreach ($products as $product) {
+            $data['table']['body_rows'][] = [
+                '<a href="?page=product&product_id='.$product['product_id'].'">'.$product['product_name'].'</a>',
+                $product['product_description'],
+                $product['product_price'],
+            ];
+        }
+        $this->view->render('simpleTable', $data);
+    }
+    public function showProduct($product_id) {
+        $product = $this->accounting->getProduct($product_id);
+        $taxes = $this->accounting->getTaxes();
+        $categories = $this->accounting->getCategories();
+        $data = [
+            'product' => $product,
+            'taxes' => $taxes,
+            'categories' => $categories
+        ];
+        $this->view->render('editProduct', $data);
+    }
+
 }

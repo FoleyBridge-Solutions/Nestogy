@@ -28,13 +28,29 @@ if (isset($_POST['login'])) {
         if (isset($user['user_token'])) {
             $token_field = '<div class="form-group mb-4"><label for="token">Token</label><input type="text" class="form-control" placeholder="2FA Token" name="token" required></div>';
         } else {
-            $auth->login($user['user_id'], $user['user_role'], $user['user_avatar'], $remember_me);
+            $userLogin = [
+                'user_id' => $user['user_id'],
+                'user_role' => $user['user_role'],
+                'user_avatar' => $user['user_avatar'],
+                'remember_me' => $remember_me,
+                'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'],
+                'user_password' => $password
+            ];
+            $auth->login($userLogin);
             exit;
         }
 
         if (isset($_POST['token'])) {
             if (TokenAuth6238::verify($user['user_token'], $_POST['token'])) {
-                $auth->login($user['user_id'], $user['user_role'], $user['user_avatar'], $remember_me);
+                $userLogin = [
+                    'user_id' => $user['user_id'],
+                    'user_role' => $user['user_role'],
+                    'user_avatar' => $user['user_avatar'],
+                    'remember_me' => $remember_me,
+                    'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'],
+                    'user_password' => $password
+                ];
+                $auth->login($userLogin);
                 exit;
             } else {
                 $response = 'Invalid token.';

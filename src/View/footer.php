@@ -90,12 +90,13 @@
 
 
 <script src="/includes/assets/vendor/js/menu.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCa21nqFlNCdPX3TXhaEyyJ_vk9Icpqhu0&libraries=places"></script>
 
 <!-- endbuild -->
 
 <!-- Vendors JS -->
 
-
+<script src="/includes/assets/vendor/libs/plyr/plyr.js"></script>
 <script src="/includes/assets/vendor/libs/block-ui/block-ui.js"></script>
 <script src="/includes/assets/vendor/libs/sortablejs/sortable.js"></script>
 <script src="/includes/assets/vendor/libs/toastr/toastr.js"></script>
@@ -107,7 +108,6 @@
 <script src="/includes/assets/vendor/libs/cleavejs/cleave-phone.js"></script>
 <script src="/includes/assets/vendor/libs/jquery-repeater/jquery-repeater.js"></script>
 <script src="/includes/js/header_timers.js"></script>
-
 <script src="/includes/js/reformat_datetime.js"></script>
 <script src="/includes/plugins/select2/js/select2.min.js"></script>
 
@@ -152,10 +152,6 @@ document.querySelectorAll('.textarea').forEach(function(textarea) {
         }
     }, { once: true });
 });
-</script>
-
-<script>
-
 
 $(function () {
     var datatable = $('.datatables-basic').DataTable({
@@ -170,9 +166,40 @@ $(function () {
     });
 
     $(".select2").select2();
+
+    // video
+    const videoPlayer = new Plyr('#plyr-video-player');
+    document.getElementsByClassName('plyr')[0].style.borderRadius = '7px';
+    document.getElementsByClassName('plyr__poster')[0].style.display = 'none';
+
+    // content sticky
+
+    const htmlElement = document.getElementsByTagName('html')[0];
+    const stick = document.querySelector('.stick-top');
+
+    function TopSticky() {
+        if (htmlElement.classList.contains('layout-navbar-fixed')) {
+            stick.classList.add('course-content-fixed');
+        } else {
+            stick.classList.remove('course-content-fixed');
+        }
+    }
+
+    TopSticky();
+    window.onscroll = function() {
+        TopSticky();
+    }
+    ;
 });
 
 </script>
+
+<style>
+/* Ensure this CSS is loaded after the Google Maps API CSS */
+.pac-container {
+    z-index: 99999 !important; /* Adjust this value as needed */
+}
+</style>
 
 <script src="/includes/assets/js/cards-actions.js"></script>
 </body>

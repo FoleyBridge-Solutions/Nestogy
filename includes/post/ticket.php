@@ -203,6 +203,26 @@ if (isset($_POST['assign_ticket'])) {
     $ticket_id = intval($_POST['ticket_id']);
     $assigned_to = intval($_POST['assigned_to']);
 
+    // Notify the user
+    $data = [
+        [//Agent Email Notification
+            'from' => $config_ticket_from_email,
+            'from_name' => $config_ticket_from_name,
+            'recipient' => $agent_email,
+            'recipient_name' => $agent_name,
+            'subject' => "Ticket $ticket_number assigned to you",
+            'body' => "Ticket $ticket_number has been assigned to you. Please login to view the ticket.",
+        ],
+        [//End user Notification
+            'from' => $config_ticket_from_email,
+            'from_name' => $config_ticket_from_name,
+            'recipient' => $client_email,
+            'recipient_name' => $client_name,
+            'subject' => $subject,
+            'body' => $body,
+        ]
+    ];
+
     // Update ticket
     $return_data = updateTicket(['ticket_id' => $ticket_id, 'ticket_assigned_to' => $assigned_to]);
     referWithAlert($return_data['message'], $return_data['status']);
@@ -211,10 +231,10 @@ if (isset($_POST['assign_ticket'])) {
 }
 
 if (isset($_GET['delete_ticket'])) {
-    validateAdminRole();
+    validateTechRole();
     $ticket_id = intval($_GET['delete_ticket']);
     $return_data = deleteTicket(['ticket_id' => $ticket_id]);
-    referWithAlert($return_data['message'], $return_data['alert_type'], "/pages/tickets.php");
+    referWithAlert($return_data['message'], $return_data['alert_type'], "/public/?page=tickets");
 }
 
 if (isset($_POST['bulk_assign_ticket'])) {
