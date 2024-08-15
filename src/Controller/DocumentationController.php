@@ -64,6 +64,10 @@ class DocumentationController {
             $client = new Client($this->pdo);
             $client_header = $client->getClientHeader($client_id);
             $data['client_header'] = $client_header['client_header'];
+            $data['return_page'] = [
+                'name' => 'Clients',
+                'link' => 'clients'
+            ];
         }
         switch ($documentation_type) {
             case 'asset': {

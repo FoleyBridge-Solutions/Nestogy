@@ -129,7 +129,7 @@ if (mysqli_num_rows($result) > 0) {
 
         echo "<tr>
             <td>$item_id</td>
-            <td><a href='/pages/invoice.php?invoice_id=$invoice_id'>$invoice_id</a></td>
+            <td><a href='/old_pages/invoice.php?invoice_id=$invoice_id'>$invoice_id</a></td>
             <td>$payment_id</td>
             <td>$tax_display</td>
             <td>" . numfmt_format_currency($currency_format, $invoice_amount, $company_currency) . "</td>
@@ -171,7 +171,7 @@ if (mysqli_num_rows($result) > 0) {
         
         if (abs($combined_total - $payment_total) > 1) {
             $errors[] = "Discrepancy for 
-            Invoice ID = <a href='/pages/invoice.php?invoice_id=$invoice_id'>$invoice_id</a>,
+            Invoice ID = <a href='/old_pages/invoice.php?invoice_id=$invoice_id'>$invoice_id</a>,
             Payments Total = " . numfmt_format_currency($currency_format, $payment_total, $company_currency) . ", Fractional Total + Tax Total = " . numfmt_format_currency($currency_format, $combined_total, $company_currency);
         }
     }

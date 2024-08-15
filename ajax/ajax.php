@@ -685,67 +685,83 @@ if (isset($_GET['search'])) {
 
     $category = isset($_GET['category']) ? sanitizeInput($_GET['category']) : null;
     $search = sanitizeInput($_GET['search']);
+    if ($category == 'pages') {
+        $pages = ['clients', 'contacts', 'tickets', 'documents', 'logins', 'ticket_replies', 'assets', 'invoices'];
+        $response = [];
+        foreach ($pages as $page) {
+            $response[] = [
+                'name' => ucfirst($page),
+                'url' => '/public/?page=' . $page
+            ];
+        }
+    } else {
 
-    $sql = "SELECT * FROM";
-    $client_sql = "clients WHERE client_name LIKE '%$search%' OR client_type LIKE '%$search%' OR client_notes LIKE '%$search%'";
-    $contact_sql = "contacts, clients WHERE (contact_name LIKE '%$search%' OR contact_email LIKE '%$search%' OR contact_phone LIKE '%$search%' OR contact_mobile LIKE '%$search%' OR contact_notes LIKE '%$search%') AND contacts.contact_client_id = clients.client_id";
-    $ticket_sql = "tickets WHERE ticket_subject LIKE '%$search%' OR ticket_number LIKE '%$search%' OR ticket_details LIKE '%$search%'";
-    $document_sql = "documents WHERE document_name LIKE '%$search%'";
-    $login_sql = "logins WHERE login_name LIKE '%$search%' or login_uri LIKE '%$search%'";
-    $ticket_reply_sql = "ticket_replies WHERE reply_content LIKE '%$search%'";
-    $asset_sql = "assets WHERE asset_name LIKE '%$search%' or asset_notes LIKE '%$search%' or asset_description LIKE '%$search%' OR asset_serial LIKE '%$search%' OR asset_mac LIKE '%$search%' or asset_make LIKE '%$search%' or asset_model LIKE '%$search%'";
-    $invoice_sql = "invoices WHERE invoice_number LIKE '%$search%' OR invoice_description LIKE '%$search%'";
+        $sql = "SELECT * FROM";
+        $client_sql = "clients WHERE (client_name LIKE '%$search%' OR client_type LIKE '%$search%' OR client_notes LIKE '%$search%') AND client_archived_at IS NULL ";
+        $contact_sql = "contacts, clients WHERE (contact_name LIKE '%$search%' OR contact_email LIKE '%$search%' OR contact_phone LIKE '%$search%' OR contact_mobile LIKE '%$search%' OR contact_notes LIKE '%$search%') AND contacts.contact_client_id = clients.client_id AND contacts.contact_archived_at IS NULL";
+        $ticket_sql = "tickets WHERE ticket_subject LIKE '%$search%' OR ticket_number LIKE '%$search%' OR ticket_details LIKE '%$search%'";
+        $document_sql = "documents WHERE document_name LIKE '%$search%'";
+        $login_sql = "logins WHERE (login_name LIKE '%$search%' or login_uri LIKE '%$search%') AND login_archived_at IS NULL";
+        $ticket_reply_sql = "ticket_replies WHERE reply_content LIKE '%$search%'";
+        $asset_sql = "assets WHERE asset_name LIKE '%$search%' or asset_notes LIKE '%$search%' or asset_description LIKE '%$search%' OR asset_serial LIKE '%$search%' OR asset_mac LIKE '%$search%' or asset_make LIKE '%$search%' or asset_model LIKE '%$search%'";
+        $invoice_sql = "invoices WHERE invoice_number LIKE '%$search%' OR invoice_description LIKE '%$search%'";
+        $location_sql = "locations LEFT JOIN clients ON location_client_id = client_id WHERE location_name LIKE '%$search%' OR location_address LIKE '%$search%' OR location_city LIKE '%$search%' OR location_state LIKE '%$search%' OR location_zip LIKE '%$search%' OR client_name LIKE '%$search%'";
 
-    switch ($category) {
-        case "clients":
-            $sql = $sql . " $client_sql";
-            $url = "/public/?page=client&action=show&client_id=";
-            break;
-        case "contacts":
-            $sql = $sql . " $contact_sql";
-            $url = "/public/?page=contact&client_id=";
-            break;
-        case "tickets":
-            $sql = $sql . " $ticket_sql";
-            $url = "/public/?page=ticket&action=show&ticket_id=";
-            break;
-        case "documents":
-            $sql = $sql . " $document_sql";
-            $url = "/public/?page=documentaion&documentation_type=document&client_id=";
-            break;
-        case "logins":
-            $sql = $sql . " $login_sql";
-            $url = "/public/?page=documentation&documentation_type=login&client_id=";
-            break;
-        case "ticket_replies":
-            $sql = $sql . " $ticket_reply_sql";
-            $url = "/public/?page=ticket&action=show&ticket_id=";
-            break;
-        case "assets":
-            $sql = $sql . " $asset_sql";
-            $url = "/public/?page=documentation&documentation_type=asset&client_id=";
-            break;
-        case "invoices":
-            $sql = $sql . " $invoice_sql";
-            $url = "/public/?page=invoice&action=show&invoice_id=";
-            break;
-        default:
-            $sql = $sql . " $client_sql UNION $contact_sql UNION $ticket_sql UNION $document_sql UNION $login_sql UNION $ticket_reply_sql UNION $asset_sql";
-    }
+        switch ($category) {
+            case "clients":
+                $sql = $sql . " $client_sql";
+                $url = "/public/?page=client&action=show&client_id=";
+                break;
+            case "contacts":
+                $sql = $sql . " $contact_sql";
+                $url = "/public/?page=contact&client_id=";
+                break;
+            case "tickets":
+                $sql = $sql . " $ticket_sql";
+                $url = "/public/?page=ticket&action=show&ticket_id=";
+                break;
+            case "documents":
+                $sql = $sql . " $document_sql";
+                $url = "/public/?page=documentaion&documentation_type=document&client_id=";
+                break;
+            case "logins":
+                $sql = $sql . " $login_sql";
+                $url = "/public/?page=documentation&documentation_type=login&client_id=";
+                break;
+            case "ticket_replies":
+                $sql = $sql . " $ticket_reply_sql";
+                $url = "/public/?page=ticket&action=show&ticket_id=";
+                break;
+            case "assets":
+                $sql = $sql . " $asset_sql";
+                $url = "/public/?page=documentation&documentation_type=asset&client_id=";
+                break;
+            case "invoices":
+                $sql = $sql . " $invoice_sql";
+                $url = "/public/?page=invoice&action=show&invoice_id=";
+                break;
+            case "locations":
+                $sql = $sql . " $location_sql";
+                $url = "/public/?page=location&action=show&location_id=";
+                break;
+            default:
+                $sql = $sql . " $client_sql UNION $contact_sql UNION $ticket_sql UNION $document_sql UNION $login_sql UNION $ticket_reply_sql UNION $asset_sql";
+        }
 
-    $result = mysqli_query($mysqli, $sql);
+        $result = mysqli_query($mysqli, $sql);
 
-    // build an array of onjects, each object is a row from the query
-    $response = [];
-    while ($row = mysqli_fetch_array($result)) {
-        $url_id = $row['client_id'] ?? $row['contact_id'] ?? $row['ticket_id'] ?? $row['document_id'] ?? $row['login_id'] ?? $row['reply_id'] ?? $row['asset_id'];
-        error_log($url_id);
-        $response[] = [
-            'name' => $row['contact_name'] ?? $row['ticket_subject'] ?? $row['document_name'] ?? $row['login_name'] ?? $row['reply_content'] ?? $row['asset_name'] ?? $row['client_name'],
-            'id' => $row['client_id'] ?? $row['client_id'] ?? $row['ticket_id'] ?? $row['document_id'] ?? $row['login_id'] ?? $row['reply_id'] ?? $row['asset_id'],
-            'url' => $url . $url_id
-            
-        ];
+        // build an array of onjects, each object is a row from the query
+        $response = [];
+        while ($row = mysqli_fetch_array($result)) {
+            $url_id = $row['client_id'] ?? $row['contact_id'] ?? $row['ticket_id'] ?? $row['document_id'] ?? $row['login_id'] ?? $row['reply_id'] ?? $row['asset_id'];
+            error_log($url_id);
+            $response[] = [
+                'name' => $row['contact_name'] ?? $row['ticket_subject'] ?? $row['document_name'] ?? $row['login_name'] ?? $row['reply_content'] ?? $row['asset_name'] ?? $row['client_name'],
+                'id' => $row['client_id'] ?? $row['client_id'] ?? $row['ticket_id'] ?? $row['document_id'] ?? $row['login_id'] ?? $row['reply_id'] ?? $row['asset_id'],
+                'url' => $url . $url_id
+                
+            ];
+        }
     }
 
     echo json_encode($response);

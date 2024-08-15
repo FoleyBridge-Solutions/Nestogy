@@ -22,13 +22,8 @@ class Auth {
         $user_encryption_ciphertext = $user['user_specific_encryption_ciphertext'];
         $user_password = $user['user_password'];
 
-        error_log("User password: " . $user_password);
-        error_log("User encryption ciphertext: " . $user_encryption_ciphertext);
-
-
         // Decrypt the master key using the user's password
         $site_encryption_master_key = $this->decryptUserSpecificKey($user_encryption_ciphertext, $user_password);
-        error_log("Decrypted master key: " . $site_encryption_master_key);
 
         // Generate a session key and store it
         generateUserSessionKey($site_encryption_master_key);
@@ -48,6 +43,11 @@ class Auth {
 
             // Set a cookie with the token
             setcookie('remember_me', "$user_id:$token", time() + $this->cookieDuration, '/', '', true, true);
+
+            // Extend session duration
+            ini_set('session.gc_maxlifetime', $this->cookieDuration);
+            session_set_cookie_params($this->cookieDuration);
+            session_regenerate_id(true); // Regenerate session ID to prevent fixation
         }
 
         header('Location: /public/');
@@ -101,7 +101,6 @@ class Auth {
         exit;
     }
     
-
     public function checkRememberMe() {
         if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
             list($user_id, $token) = explode(':', $_COOKIE['remember_me']);
@@ -114,8 +113,21 @@ class Auth {
             if ($stored_token_hash && password_verify($token, $stored_token_hash)) {
                 // Token is valid, log in the user
                 $user = $this->getUser($user_id);
-                $this->login($user);
+                if ($user) {
+                    // Extend session duration
+                    ini_set('session.gc_maxlifetime', $this->cookieDuration);
+                    session_set_cookie_params($this->cookieDuration);
+                    session_regenerate_id(true); // Regenerate session ID to prevent fixation
+
+                    $this->login($user);
+                } else {
+                    error_log("User not found for user_id: $user_id");
+                }
+            } else {
+                error_log("Token verification failed for user_id: $user_id");
             }
+        } else {
+            error_log("No remember_me cookie set or user already logged in.");
         }
     }
 

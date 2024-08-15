@@ -27,7 +27,6 @@ class SupportController {
     public function index($client_id = null, $status = null, $user_id = null) {
 
         $supportModel = new Support($this->pdo);
-
         // Check if user has access to the support class
         if (!$this->auth->checkClassAccess($_SESSION['user_id'], 'support', 'view')) {
             $this->view->error([
@@ -60,7 +59,11 @@ class SupportController {
                 'client' => $client,
                 'client_header' => $client_header['client_header'], // Ensure correct structure
                 'client_page' => true,
-                'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
+                'support_header_numbers' => $supportModel->getSupportHeaderNumbers($client_id),
+                'return_page' => [
+                    'name' => ' All Tickets',
+                    'link' => 'tickets'
+                ]
             ];
             $this->view->render('tickets', $data, true);
         } else {
@@ -91,7 +94,8 @@ class SupportController {
         $data = [
             'ticket' => $ticket,
             'ticket_replies' => $supportModel->getTicketReplies($ticket_id),
-            'ticket_collaborators' => $supportModel->getTicketCollaborators($ticket_id)
+            'ticket_collaborators' => $supportModel->getTicketCollaborators($ticket_id),
+            'ticket_total_reply_time' => $supportModel->getTicketTotalReplyTime($ticket_id)
         ];
 
         if (!empty($ticket['ticket_client_id'])) {

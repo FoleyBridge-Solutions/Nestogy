@@ -25,7 +25,7 @@
         <h3 class="card-title mt-2"><i class="fas fa-fw fa-balance-scale mr-2"></i>Collections</h3>
         <div class="card-tools">
             <button type="button" class="btn btn-label-primary d-print-none" onclick="window.print();"><i class="fas fa-fw fa-print mr-2"></i>Print</button>
-            <form class="d-inline d-print-none" action="/pages/report/report_collections.php" method="get">
+            <form class="d-inline d-print-none" action="/old_pages/report/report_collections.php" method="get">
                 <div class="input-group">
                     <label for="past_due_filter" class="d-inline">Past Due Filter:</label>
                     <select name="past_due_filter" id="past_due_filter" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -92,7 +92,7 @@
                         ?>
                         <tr>
                             <td>
-                                <a href="/pages/client/client_statement.php?client_id=<?= $client_id; ?>">
+                                <a href="/old_pages/client/client_statement.php?client_id=<?= $client_id; ?>">
                                     <?= $client_name; ?>
                                 </a>
                             </td>

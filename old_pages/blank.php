@@ -82,13 +82,13 @@ foreach ($invoices as $row) {
     if ($amount_remaining > 0) {
         echo "<tr>";
         echo "<td>" . $client_name . "</td>";
-        echo "<td><a href='/pages/invoice.php?invoice_id=" . $invoice_id . "'>" . $invoice_id . "</a></td>";
+        echo "<td><a href='/old_pages/invoice.php?invoice_id=" . $invoice_id . "'>" . $invoice_id . "</a></td>";
         echo "<td>" . $amount . "</td>";
         echo "<td>" . $amount_paid . "</td>";
         echo "<td>" . $amount_remaining . "</td>";
         echo "<td>" . $invoice_date . "</td>";
         echo "<td>" . $most_recent_payment_date . "</td>";
-        echo "<td><a href='/pages/blank.php?create_credit=true&invoice_id=" . $invoice_id . "&amount=" . $amount_remaining . "'>Create Credit</a></td>";
+        echo "<td><a href='/old_pages/blank.php?create_credit=true&invoice_id=" . $invoice_id . "&amount=" . $amount_remaining . "'>Create Credit</a></td>";
         echo "</tr>";
     } else {
         //echo "No partial payments found";

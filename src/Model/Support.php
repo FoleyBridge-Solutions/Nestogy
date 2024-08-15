@@ -56,6 +56,7 @@ class Support {
                 ');
                 $stmt->execute(['user_id' => $user_id]);
             } else {
+                error_log('Getting all open tickets');
                 $stmt = $this->pdo->prepare(
                     'SELECT * FROM tickets
                     LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
@@ -93,12 +94,14 @@ class Support {
                 $stmt = $this->pdo->prepare(
                     'SELECT * FROM tickets
                     LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
                     LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
                     LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
                     WHERE ticket_status = 5
+                    AND ticket_client_id = :client_id
                     ORDER BY ticket_created_at DESC
                 ');
-                $stmt->execute();
+                $stmt->execute(['client_id' => $client_id]);
             }
             $tickets = $stmt->fetchAll();
             foreach ($tickets as $key => $ticket) {
@@ -122,6 +125,7 @@ class Support {
                 $stmt = $this->pdo->prepare(
                     'SELECT * FROM tickets
                     LEFT JOIN clients ON tickets.ticket_client_id = clients.client_id
+                    LEFT JOIN users ON tickets.ticket_assigned_to = users.user_id
                     LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
                     LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
                     WHERE ticket_status = 5
@@ -230,5 +234,10 @@ class Support {
             }
         }
         return $collaborators;
+    }
+    public function getTicketTotalReplyTime($ticket_id) {
+        $stmt = $this->pdo->prepare('SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(ticket_reply_time_worked))) AS ticket_total_reply_time FROM ticket_replies WHERE ticket_reply_archived_at IS NULL AND ticket_reply_ticket_id = :ticket_id');
+        $stmt->execute(['ticket_id' => $ticket_id]);
+        return $stmt->fetch()['ticket_total_reply_time'];
     }
 }

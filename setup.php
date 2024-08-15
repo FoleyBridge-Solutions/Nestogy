@@ -22,7 +22,7 @@ if ($config_enable_setup == 0) {
 
 
 if (isset($ip)) {
-	header('Location: /pages/dashboard.php');
+	header('Location: /old_pages/dashboard.php');
 	exit();
 }
 */

@@ -8,11 +8,11 @@ if (isset($_GET['sync_transactions'])) {
 
     if($result === "no_access_token") {
         error_log("Post: No access token found");
-        referWithAlert("Please link your bank account to sync transactions", "warning", "/pages/admin/plaid.php");
+        referWithAlert("Please link your bank account to sync transactions", "warning", "/old_pages/admin/plaid.php");
     } elseif($result === "failed") {
-        referWithAlert("Failed to sync transactions", "warning", "/pages/reconcile.php");
+        referWithAlert("Failed to sync transactions", "warning", "/old_pages/reconcile.php");
     } else {
-        referWithAlert("Transactions synced successfully", "success", "/pages/reconcile.php");
+        referWithAlert("Transactions synced successfully", "success", "/old_pages/reconcile.php");
     }
 
 }

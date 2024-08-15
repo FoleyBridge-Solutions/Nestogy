@@ -61,6 +61,10 @@ class AccountingController {
                 'title' => 'Create Invoice',
                 'modal' => 'invoice_add_modal.php?client_id='.$client_id
             ];
+            $data['return_page'] = [
+                'name' => 'Invoices',
+                'link' => 'invoices'
+            ];
         } else {
             $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount','Balance', 'Date', 'Status'];
             $data['action'] = [
@@ -129,6 +133,12 @@ class AccountingController {
             'tickets' => $invoice_tickets,
             'unbilled_tickets' => $unbilled_tickets,
             'company' => $this->auth->getCompany(),
+            'all_products' => $this->accounting->getProductsAutocomplete(),
+            'all_taxes' => $this->accounting->getTaxes(),
+            'return_page' => [
+                'name' => 'Invoices',
+                'link' => 'invoices'
+            ]
         ];
 
         $this->view->render('invoice', $data, true);
@@ -155,6 +165,10 @@ class AccountingController {
                 'modal' => 'quote_add_modal.php?client_id='.$client_id
             ];
             $data['table']['header_rows'] = ['Number','Scope', 'Amount', 'Date', 'Status'];
+            $data['return_page'] = [
+                'name' => 'Quotes',
+                'link' => 'quotes'
+            ];
 
         } else {
             $client_page = false;
@@ -164,7 +178,6 @@ class AccountingController {
             ];
             $data['table']['header_rows'] = ['Number','Client Name','Scope','Amount','Date','Status'];
         }
-
 
         $data['card']['title'] = 'Quotes';
 
@@ -214,7 +227,12 @@ class AccountingController {
         $data = [
             'client' => $client,
             'client_header' => $client->getClientHeader($client_id)['client_header'],
-            'quote' => $quote
+            'quote' => $quote,
+            'company' => $this->auth->getCompany(),
+            'return_page' => [
+                'name' => 'Quotes',
+                'link' => 'quotes'
+            ]
         ];
         $this->view->render('invoice', $data, true);
     }
@@ -235,10 +253,10 @@ class AccountingController {
             $client = new Client($this->pdo);
             $client_header = $client->getClientHeader($client_id);
             $data['client_header'] = $client_header['client_header'];
-            $data['table']['header_rows'] = ['Product', 'Quantity', 'Updated'];
+            $data['table']['header_rows'] = ['Product', 'Quantity','Total Price', 'Updated'];
 
         } else {
-            $data['table']['header_rows'] = ['Client', 'Product', 'Quantity', 'Updated'];
+            $data['table']['header_rows'] = ['Client', 'Product', 'Quantity','Total Price', 'Updated'];
             $client_page = false;
         }
 
@@ -248,19 +266,26 @@ class AccountingController {
         foreach ($subscriptions as $subscription) {
             $client = new Client($this->pdo);
             $client_name = $client->getClient($subscription['subscription_client_id'])['client_name'];
-            
+            $total_product_price = $subscription['product_price'] * $subscription['subscription_product_quantity'];
             $product_name = $this->accounting->getProduct($subscription['subscription_product_id'])['product_name'];
+
             if ($client_page) {
                 $data['table']['body_rows'][] = [
                     '<a href="?page=product&product_id='.$subscription['subscription_product_id'].'">'.$product_name.'</a>',
                     $subscription['subscription_product_quantity'],
+                    $total_product_price,
                     $subscription['subscription_updated']
+                ];
+                $data['return_page'] = [
+                    'name' => 'Subscriptions',
+                    'link' => 'subscriptions'
                 ];
             } else {
                 $data['table']['body_rows'][] = [
-                    '<a href="?page=client&client_id='.$subscription['subscription_client_id'].'">'.$client_name.'</a>',
+                    '<a href="?page=subscriptions&client_id='.$subscription['subscription_client_id'].'">'.$client_name.'</a>',
                     '<a href="?page=product&product_id='.$subscription['subscription_product_id'].'">'.$product_name.'</a>',
                     $subscription['subscription_product_quantity'],
+                    $total_product_price,
                     $subscription['subscription_updated']
                 ];
             }
@@ -300,20 +325,24 @@ class AccountingController {
         $data['card']['title'] = 'Payments';
         if ($client_page) {
             $data['table']['header_rows'] = ['Reference', 'Amount', 'Date'];
+            $data['return_page'] = [
+                'name' => 'Payments',
+                'link' => 'payments'
+            ];
         } else {
             $data['table']['header_rows'] = ['Client', 'Reference', 'Amount', 'Date'];
         }
         foreach ($payments as $payment) {
-            if ($client_page) {
+            if ($client_page) {//if client page is true, dont show client name row
                 $data['table']['body_rows'][] = [
                     "<a href='?page=payment&payment_reference=$payment[payment_reference]'>$payment[payment_reference]</a>",
                     $payment['payment_amount'],
                     $payment['payment_date'],
                 ];
-            } else {
+            } else {//if client page is false, show client name row
                 $data['table']['body_rows'][] = [
-                    "<a href='?page=client&client_id=$payment[client_id]'>$payment[client_name]</a>",   
-                    $payment['payment_reference'],
+                    "<a href='?page=payments&client_id=" . $payment['client_id'] . "'>" . $payment['client_name'] . "</a>",
+                    "<a href='?page=payment&payment_reference=" . $payment['payment_reference'] . "'>" . $payment['payment_reference'] . "</a>",
                     $payment['payment_amount'],
                     $payment['payment_date'],
                 ];
@@ -335,7 +364,6 @@ class AccountingController {
         }
 
         $client_page = FALSE;
-        
         $data['card']['title'] = 'Payment';
         $data['table']['header_rows'] = ['Payment ID', 'Invoice ID', 'Amount', 'Date'];
         foreach ($payment as $payment) {

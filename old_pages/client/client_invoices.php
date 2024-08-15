@@ -132,7 +132,7 @@ $recurring_invoice_count = $row['num'];
 
                     ?>
                         <tr>
-                            <td class="text-bold"><a href="/pages/invoice.php?invoice_id=<?= $invoice_id; ?>"><?= "$invoice_prefix$invoice_number"; ?></a></td>
+                            <td class="text-bold"><a href="/old_pages/invoice.php?invoice_id=<?= $invoice_id; ?>"><?= "$invoice_prefix$invoice_number"; ?></a></td>
                             <td><?= $invoice_scope_display; ?></td>
                             <td class="text-bold text-right"><?= numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code); ?></td>
                             <td>

@@ -15,6 +15,25 @@
             return urlParams.get('ticket_id');
         }
 
+        function cleanupStorage() {
+            // Find all keys that start with ticket_timer_running_ and use the ID to find the startTime.
+            // If the startTime is not found, or is older than 5 days, delete the key.
+
+
+            let keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith("ticket_timer_running_")) {
+                    let startTime = localStorage.getItem(key);
+                    if (!startTime) {
+                        localStorage.removeItem(key);
+                    }
+                    if (Date.now() - startTime > 5 * 24 * 60 * 60 * 1000) {
+                        localStorage.removeItem(key);
+                    }
+                }
+            });
+        }
+
         function getLocalStorageKey(suffix) {
             return ticketID + "-" + suffix;
         }

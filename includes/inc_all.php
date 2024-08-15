@@ -13,8 +13,8 @@ require_once "/var/www/portal.twe.tech/includes/header.php";
 require_once "/var/www/portal.twe.tech/includes/inc_alert_feedback.php";
 
 $page_name = $_SERVER['REQUEST_URI'];
-//remove /pages/ from the page name
-$page_name = str_replace('/pages/', '', $page_name);
+//remove /old_pages/ from the page name
+$page_name = str_replace('/old_pages/', '', $page_name);
 //remove .php and anything after it from the page name, and save in new variable
 $page_name_exploded = explode('.php', $page_name);
 $page_name_no_ext = $page_name_exploded[0];

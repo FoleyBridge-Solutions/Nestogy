@@ -32,7 +32,7 @@
                             <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="dropdown-item loadModalContentBtn" data-modal-file="client_archive_modal.php?client_id=<?= $client_id; ?>">
                                 <i class="fas fa-fw fa-archive mr-2"></i>Archive Client
                             </a>
-                            <?php if ($user_role == 3) { ?>
+                            <?php if ($user_role == "admin") { ?>
                                 <div class="dropdown-divider"></div>
                                 <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="dropdown-item loadModalContentBtn" data-modal-file="client_delete_modal.php?client_id=<?= $client_id; ?>">
                                     <i class="fas fa-fw fa-trash mr-2"></i>Delete Client
@@ -172,3 +172,21 @@
         </div>
     </div>
 </div>
+<div class="nav-align-top">
+    <span class="text-secondary">
+        <a href="/public/?page=<?= $data['return_page']['link']; ?>">
+            <?= $data['return_page']['name']; ?>
+        </a>
+        <span class="text-secondary">
+            /
+        </span>
+        <a href="/public/?page=client&client_id=<?= $client_id; ?>">
+            <?= $client_name; ?>
+        </a>
+        <span class="text-secondary">
+            /
+        </span>
+        <?= ucwords($template); ?>
+    </span>
+</div>
+<!-- End of Client Header -->

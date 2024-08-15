@@ -1,6 +1,6 @@
 <?php
 
-$page_css = '<link rel="stylesheet" href="/includes/assets/vendor/css/pages/app-invoice.css" />';
+$page_css = '<link rel="stylesheet" href="/includes/assets/vendor/css/old_pages/app-invoice.css" />';
 
 $invoice_id = intval($_GET['invoice_id']);
 
@@ -598,7 +598,7 @@ if (isset($_GET['invoice_id'])) {
                             ?>
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <a href="/pages/ticket.php?ticket_id=<?=$ticket_id?>"><?=$ticket_subject?></a>
+                                    <a href="/old_pages/ticket.php?ticket_id=<?=$ticket_id?>"><?=$ticket_subject?></a>
                                     <p class="mb-0"><?=$ticket_status?> | <?=$ticket_priority?> | <?=$ticket_assigned_to?> | <?=$ticket_total_time_worked?></p>
                                 </div>
                             </div>

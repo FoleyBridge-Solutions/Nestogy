@@ -38,7 +38,7 @@ while ($row = mysqli_fetch_array($invoices)) {
     $overpayment = round($payment_amount - $invoice_amount, 2);
 ?>
     <tr>
-        <td><a href="/pages/invoice.php?invoice_id=<?php echo $row['invoice_id']; ?>"><?php echo $row['invoice_id']; ?></a></td>
+        <td><a href="/old_pages/invoice.php?invoice_id=<?php echo $row['invoice_id']; ?>"><?php echo $row['invoice_id']; ?></a></td>
         <td><?php echo $row['invoice_amount']; ?></td>
         <td><?php echo $row['payment_amount']; ?></td>
         <td><?php echo $row['client_name']; ?></td>

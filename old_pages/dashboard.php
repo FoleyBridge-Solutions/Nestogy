@@ -80,10 +80,6 @@ $sql_years_select = mysqli_query(
 
 if ($user_config_dashboard_financial_enable == 1) {
 
-    // Enforce accountant / admin role for the financial dashboard
-    if ($_SESSION['user_role'] != 3 && $_SESSION['user_role'] != 1) {
-        exit('<script type="text/javascript">window.location.href = \'dashboard_technical.php\';</script>');
-    }
 
 
     //Define var so it doesnt throw errors in logs

@@ -57,7 +57,7 @@ if (isset($_POST['add_client'])) {
     );
     $client_id = $return_data['client_id'];
     referWithAlert(
-        'Client <strong>' . $name . '</strong> added', 'success', '/pages/client/client_overview.php?client_id=' . $client_id
+        'Client <strong>' . $name . '</strong> added', 'success', '/old_pages/client/client_overview.php?client_id=' . $client_id
     );
 }
 

@@ -31,6 +31,12 @@ class ReportsController{
             case 'tax_summary':
                 $this->taxReport();
                 break;
+            case 'collections':
+                $this->collectionsReport();
+                break;
+            default:
+                header('Location: /');
+                exit;
         }
     }
 
@@ -41,4 +47,10 @@ class ReportsController{
         ];
         $this->view->render('reports/tax', $data);
     }
+
+    private function collectionsReport(){
+        $collections_report = $this->accounting->getCollectionsReport();
+        $this->view->render('reports/collections', $collections_report);
+    }
+
 }

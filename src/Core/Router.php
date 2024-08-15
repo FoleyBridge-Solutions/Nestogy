@@ -65,7 +65,7 @@ class Router {
         $this->add('product', 'AccountingController', 'showProduct', ['product_id']);
         
         // Reports routes
-        $this->add('report', 'ReportController', 'index', ['report']);
+        $this->add('report', 'ReportsController', 'index', ['report']);
 
         // Administration routes
         $this->add('admin', 'AdministrationController', 'index', ['admin_page']);

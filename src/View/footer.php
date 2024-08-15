@@ -1,4 +1,3 @@
-
 <?php
     require_once "/var/www/portal.twe.tech/includes/inc_confirm_modal.php";
     require_once "/var/www/portal.twe.tech/includes/inc_dynamic_modal.php";
@@ -110,6 +109,7 @@
 <script src="/includes/js/header_timers.js"></script>
 <script src="/includes/js/reformat_datetime.js"></script>
 <script src="/includes/plugins/select2/js/select2.min.js"></script>
+<script src="/includes/js/ticket_time_tracking.js"></script>
 
 
 
@@ -125,29 +125,17 @@ document.querySelectorAll('textarea').forEach(function(textarea) {
     textarea.addEventListener('click', function initTinyMCE() {
         // This check ensures that TinyMCE is initialized only once for each textarea
         if (!tinymce.get(this.id)) {
+            console.log('Initializing TinyMCE for:', this.id); // Debug log
             tinymce.init({
                 selector: '#' + this.id,
-                plugins: 'autosave markdown link image media table',
+                plugins: 'autosave link image media table',
                 toolbar: 'undo redo | restoredraft | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
                 promotion: false,
                 newline_behavior: 'block',
-                autosave_prefix: 'tinymce-autosave-{path}{query}-{id}-',
-            });
-        }
-    }, { once: true });
-});
-
-document.querySelectorAll('.textarea').forEach(function(textarea) {
-    textarea.addEventListener('click', function initTinyMCE() {
-        // This check ensures that TinyMCE is initialized only once for each textarea
-        if (!tinymce.get(this.id)) {
-            tinymce.init({
-                selector: '#' + this.id,
-                plugins: 'autosave markdown link image media table',
-                toolbar: 'undo redo | restoredraft | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-                promotion: false,
-                newline_behavior: 'block',
-                autosave_prefix: 'tinymce-autosave-{path}{query}-{id}-',
+                autosave_retention: '480m',
+                autosave_prefix: 'tinymce-autosave-' + this.id + '-',
+                autosave_restore_when_empty: true,
+                autosave_interval: '5s'
             });
         }
     }, { once: true });
@@ -158,11 +146,6 @@ $(function () {
         responsive: true,
         order: <?= $datatable_order ?>
         <?= $datatable_settings ?>
-    });
-
-    datatable.on('init.dt', function () {
-        $(document).trigger('updateDateTime');
-        // start any select2
     });
 
     $(".select2").select2();

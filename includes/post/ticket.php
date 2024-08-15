@@ -28,7 +28,7 @@ if (isset($_POST['add_ticket'])) {
 
     $return_data = createTicket($parameters);
     $ticket_id = $return_data['ticket_id'];
-    referWithAlert($return_data['message'], $return_data['status'], "/pages/ticket.php?ticket_id=$ticket_id");
+    referWithAlert($return_data['message'], $return_data['status'], "/public/?page=ticket&ticket_id=$ticket_id");
 }
 
 if (isset($_POST['edit_ticket'])) {
@@ -1098,7 +1098,7 @@ if (isset($_POST['add_invoice_from_ticket'])) {
 
     $_SESSION['alert_message'] = "Invoice created from ticket";
 
-    header("Location: /pages/invoice.php?invoice_id=$invoice_id");
+    header("Location: /old_pages/invoice.php?invoice_id=$invoice_id");
 }
 
 if (isset($_POST['export_client_tickets_csv'])) {

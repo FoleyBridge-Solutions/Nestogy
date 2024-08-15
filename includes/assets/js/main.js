@@ -496,6 +496,7 @@ function setupSearch() {
         var ticketRepliesEngine = initializeBloodhound('ticketReplies');
         var assetsEngine = initializeBloodhound('assets');
         var invoicesEngine = initializeBloodhound('invoices');
+        var locationsEngine = initializeBloodhound('locations');
 
         // Create a single card container outside the typeahead logic with added styling
         const resultsCard = $('<div class="card mt-3 search-results-card"><div class="card-body"><div class="search-results"></div></div></div>');
@@ -516,12 +517,13 @@ function setupSearch() {
             const icons = {
                 clients: 'bx bx-user',
                 contacts: 'bx bx-phone',
-                tickets: 'bx bx-ticket',
+                tickets: 'bx bx-first-aid',
                 documents: 'bx bx-file',
                 logins: 'bx bx-lock',
                 ticketReplies: 'bx bx-chat',
                 assets: 'bx bx-box',
-                invoices: 'bx bx-receipt'
+                invoices: 'bx bx-receipt',
+                locations: 'bx bx-map'
             };
         
             // Get the appropriate icon for the current category
@@ -534,11 +536,13 @@ function setupSearch() {
                 templates: {
                     header: `<h6 class="suggestions-header text-primary mb-0 mx-3 mt-3 pb-2">${categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}</h6>`,
                     suggestion: function(data) {
-                        return `
+                        let suggestionHTML = `
                             <div class="search-result-item">
                                 <i class="${iconClass} me-2"></i>
                                 <a href="${data.url}" class="align-middle">${data.name}</a>
                             </div>`;
+                        
+                        return suggestionHTML;
                     }
                 }
             };
@@ -556,7 +560,8 @@ function setupSearch() {
         categoryTemplate('logins', loginsEngine),
         categoryTemplate('ticketReplies', ticketRepliesEngine),
         categoryTemplate('assets', assetsEngine),
-        categoryTemplate('invoices', invoicesEngine)
+        categoryTemplate('invoices', invoicesEngine),
+        categoryTemplate('locations', locationsEngine)
         ).on('typeahead:select', function(e, suggestion) {
             // Redirect to the selected item's URL
             window.location.href = suggestion.url;

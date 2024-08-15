@@ -40,8 +40,6 @@ class Client {
         $stmt->execute(['client_id' => $client_id]);
         return $stmt->fetch();
     }
-
-
     public function getClientHeader($client_id) {
         $client_id = intval($client_id);
 
@@ -80,9 +78,23 @@ class Client {
         $stmt->execute(['client_id' => $client_id]);
         return $stmt->fetchAll();
     }
-    
     public function clientAccessed($client_id) {
         $stmt = $this->pdo->prepare("UPDATE clients SET client_accessed_at = NOW() WHERE client_id = :client_id");
         $stmt->execute(['client_id' => $client_id]);
+    }
+    public function getClientContact($client_id, $contact_type = 'primary') {
+        switch ($contact_type) {
+            case 'billing':
+                $stmt = $this->pdo->prepare("SELECT * FROM contacts WHERE contact_client_id = :client_id AND contact_billing = 1");
+                break;
+            case 'primary':
+                $stmt = $this->pdo->prepare("SELECT * FROM contacts WHERE contact_client_id = :client_id AND contact_primary = 1");
+                break;
+            default:
+                $stmt = $this->pdo->prepare("SELECT * FROM contacts WHERE contact_client_id = :client_id");
+                break;
+        }
+        $stmt->execute(['client_id' => $client_id]);
+        return $stmt->fetch();
     }
 }

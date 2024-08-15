@@ -106,7 +106,7 @@
                                 <td>
                                         <div class="row">
                                             <div class="col-6 col-md-12">
-                                                <a href="/pages/ticket.php?ticket_id=<?= $prev_ticket_id; ?>" title="View Ticket #<?= $prev_ticket_id; ?>">
+                                                <a href="/public/?page=ticket&ticket_id=<?= $prev_ticket_id; ?>" title="View Ticket #<?= $prev_ticket_id; ?>">
                                                     <?= $prev_ticket_subject; ?>
                                                 </a>
                                             </div>
@@ -138,11 +138,11 @@
                             <tbody>
                                 <tr>
                                     <td>Priority:</td>
-                                    <td><?= $ticket_priority; ?></td>
+                                    <td><span class="badge rounded-pill bg-label-secondary"><?= $ticket_priority; ?></span></td>
                                 </tr>
                                 <tr>
                                     <td>Status:</td>
-                                    <td><?= $ticket_status; ?></td>
+                                    <td><span class="badge rounded-pill bg-label-secondary"><?= $ticket_status; ?></span></td>
                                 </tr>
                                 <tr>
                                     <td>Billable:</td>
@@ -158,7 +158,7 @@
                                 </tr>
                                 <tr>
                                     <td>Time Tracked:</td>
-                                    <td><?= $ticket_total_reply_time; ?></td>
+                                    <td><span class="badge rounded-pill bg-label-secondary"><?= $ticket_total_reply_time; ?></span></td>
                                     
                                 </tr>
                                 <tr>
@@ -187,8 +187,9 @@
                                 <tr>
                                     <td>Trips:</td>
                                     <td>
+                                        
                                         <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="trip_add_modal.php?client_id=<?= $client_id; ?>">
-                                            Add a Trip
+                                            <span class="badge rounded-pill bg-label-secondary">Add a Trip</span>
                                         </a>
                                     </td>
                                 </tr>
@@ -201,13 +202,19 @@
                                         if (empty($ticket_collaborators)) {
                                             ?>
                                             <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_collaborator_modal.php?ticket_id=<?= $ticket_id; ?>">
-                                                Add a Collaborator
+                                                <span class="badge rounded-pill bg-label-secondary">Add a Collaborator</span>
                                             </a>
                                             <?php
                                         } else {
+                                            ?>
+                                            <span class="badge rounded-pill bg-label-secondary">
+                                            <?php
                                             foreach ($ticket_collaborators as $collaborator) {
                                                 echo $collaborator;
                                             }
+                                            ?>
+                                            </span>
+                                            <?php
                                         }
                                         ?>
 
@@ -215,29 +222,33 @@
                                     </td>
                                 <tr>
                                     <td>Created:</td>
-                                    <td><?= $ticket_created_at; ?></td>
+                                    <td><span class="badge rounded-pill bg-label-secondary"><?= $ticket_created_at; ?></span></td>
                                 </tr>
                                 <tr>
                                     <td>Updated:</td>
-                                    <td><strong><?= $ticket_updated_at; ?></strong></td>
+                                    <td><span class="badge rounded-pill bg-label-secondary"><?= $ticket_updated_at; ?></span></td>
                                 </tr>
                                 <tr>
                                     <td>Scheduled:</td>
                                     <td>
                                         <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_schedule_modal.php?ticket_id=<?= $ticket_id; ?>">
-                                            <?= $ticket_schedule ? $ticket_schedule : 'Add Schedule'; ?>
+                                            <span class="badge rounded-pill bg-label-secondary"><?= $ticket_schedule ? $ticket_schedule : 'Add Schedule'; ?></span>
                                         </a>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>Assigned to:</td>
-                                    <td><a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_assign_modal.php?ticket_id=<?= $ticket_id; ?>"><?= $ticket_assigned_to; ?></a></td>
+                                    <td><a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_assign_modal.php?ticket_id=<?= $ticket_id; ?>">
+                                        <span class="badge rounded-pill bg-label-secondary"><?= $ticket_assigned_to; ?></span></a>
+                                    </td>
                                 </tr>
                                 <?php if (empty($contact_id)) { ?> 
                                     <tr>
                                         <td>Contact:</td>
                                         <td>
-                                            <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_contact_modal.php?ticket_id=<?= $ticket_id; ?>">Add Contact</a>
+                                            <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_contact_modal.php?ticket_id=<?= $ticket_id; ?>">
+                                                <span class="badge rounded-pill bg-label-secondary">Add Contact</span>
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php } ?>
@@ -250,7 +261,7 @@
                                     {
                                         ?>
                                         <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_watcher_modal.php?ticket_id=<?= $ticket_id; ?>">
-                                            Add a Watcher
+                                            <span class="badge rounded-pill bg-label-secondary">Add a Watcher</span>
                                         </a>
                                         <?php
                                     }
@@ -268,7 +279,7 @@
                                     {
                                         ?>
                                         <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_asset_modal.php?ticket_id=<?= $ticket_id; ?>">
-                                            Add an Asset
+                                            <span class="badge rounded-pill bg-label-secondary">Add an Asset</span>
                                         </a>
                                         <?php
                                     }
@@ -286,7 +297,7 @@
                                     {
                                         ?>
                                         <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_vendor_modal.php?ticket_id=<?= $ticket_id; ?>">
-                                            Add a Vendor
+                                            <span class="badge rounded-pill bg-label-secondary">Add a Vendor</span>
                                         </a>
                                         <?php
                                     }
@@ -304,7 +315,7 @@
                                     {
                                         ?>
                                         <a class="loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_product_modal.php?ticket_id=<?= $ticket_id; ?>">
-                                            Manage Products
+                                            <span class="badge rounded-pill bg-label-secondary">Manage Products</span>
                                         </a>
                                         <?php
                                     }

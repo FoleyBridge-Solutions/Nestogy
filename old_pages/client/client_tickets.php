@@ -165,9 +165,9 @@ $total_scheduled_tickets = intval($row['total_scheduled_tickets']);
                     ?>
 
                     <tr class="<?php if(empty($ticket_updated_at)) { echo "text-bold"; }?>">
-                        <td><a href="/pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><span class="badge rounded-pill bg-label-secondary p-3"><?= "$ticket_prefix$ticket_number"; ?></span></a></td>
+                        <td><a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><span class="badge rounded-pill bg-label-secondary p-3"><?= "$ticket_prefix$ticket_number"; ?></span></a></td>
                         <td>
-                            <a href="/pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a>
+                            <a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a>
                         </td>
                         <td><a href="#" data-bs-toggle="modal" data-bs-target="#editTicketContactModal<?= $ticket_id; ?>"><?= $contact_display; ?></a></td>
 

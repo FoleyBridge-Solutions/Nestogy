@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="/includes/assets/vendor/css/rtl/core.css" class="template-customizer-core-css" />
     <link rel="stylesheet" href="/includes/assets/vendor/css/rtl/theme-default.css" class="template-customizer-theme-css" />
     <link rel="stylesheet" href="/includes/assets/css/demo.css" />
-    <link rel="stylesheet" href="/includes/assets/vendor/css/pages/front-page.css" />
+    <link rel="stylesheet" href="/includes/assets/vendor/css/old_pages/front-page.css" />
     <!-- Vendors CSS -->
 
     <link rel="stylesheet" href="/includes/assets/vendor/libs/nouislider/nouislider.css" />
@@ -34,7 +34,7 @@
 
     <!-- Page CSS -->
 
-    <link rel="stylesheet" href="/includes/assets/vendor/css/pages/front-page-landing.css" />
+    <link rel="stylesheet" href="/includes/assets/vendor/css/old_pages/front-page-landing.css" />
 
     <!-- Helpers -->
     <script src="/includes/assets/vendor/js/helpers.js"></script>

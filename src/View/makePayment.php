@@ -7,7 +7,7 @@
             </div>
 
             <div class="card-body">
-                <form action="/pages/payment_add.php" method="post">
+                <form action="/old_pages/payment_add.php" method="post">
                     <div class="row">
                         <div class="col-5">
                             <div class="form-group">
@@ -24,9 +24,9 @@
                         </div>
                         <div class="col-3">
                             <div class="form-group">
-                                <a class="btn btn-primary" href="/pages/client_add.php">Add by Invoice Numbers</a>
+                                <a class="btn btn-primary" href="/old_pages/client_add.php">Add by Invoice Numbers</a>
                                 <p>
-                                    <small>No Invoice? <a href="/pages/invoice_add.php">Create Invoice</a></small>
+                                    <small>No Invoice? <a href="/old_pages/invoice_add.php">Create Invoice</a></small>
                                 </p>
                             </div>
                         </div>

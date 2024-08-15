@@ -18,7 +18,7 @@ if (isset($_POST['add_invoice'])) {
 
     $return_data = createInvoice($parameters);
     $invoice_id = $return_data['invoice_id'];
-    referWithAlert("Invoice added", "success", "/pages/invoice.php?invoice_id=$invoice_id");
+    referWithAlert("Invoice added", "success", "/public/?page=invoice&invoice_id=$invoice_id");
 }
 
 if (isset($_POST['edit_invoice'])) {
@@ -168,7 +168,7 @@ if (isset($_GET['delete_invoice'])) {
     $invoice['invoice_id'] = intval($_GET['delete_invoice']);
 
     deleteInvoice($invoice);
-    referWithAlert("Invoice deleted", "success", "/pages/invoices.php");
+    referWithAlert("Invoice deleted", "success", "/public/?page=invoices");
 }
 
 if (isset($_POST['add_invoice_item'])) {

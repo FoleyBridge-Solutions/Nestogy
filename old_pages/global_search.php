@@ -148,7 +148,7 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                     <td><?= $location_phone; ?></td>
                                 </tr>
 
@@ -199,13 +199,13 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/client/client_contact_details.php?client_id=<?= $client_id; ?>&contact_id=<?= $contact_id; ?>"><?= $contact_name; ?></a>
+                                    <td><a href="/old_pages/client/client_contact_details.php?client_id=<?= $client_id; ?>&contact_id=<?= $contact_id; ?>"><?= $contact_name; ?></a>
                                         <br><small class="text-secondary"><?= $contact_title; ?></small>
                                     </td>
                                     <td><?= $contact_email; ?></td>
                                     <td><?= "$contact_phone $contact_extension"; ?></td>
                                     <td><?= $contact_mobile; ?></td>
-                                    <td><a href="/pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                 </tr>
 
                             <?php } ?>
@@ -249,10 +249,10 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/vendors.php?q=<?= $q ?>"><?= $vendor_name; ?></a></td>
+                                    <td><a href="/old_pages/vendors.php?q=<?= $q ?>"><?= $vendor_name; ?></a></td>
                                     <td><?= $vendor_description; ?></td>
                                     <td><?= $vendor_phone; ?></td>
-                                    <td><a href="/pages/client/client_vendors.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_vendors.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                 </tr>
 
                             <?php } ?>
@@ -292,9 +292,9 @@ if (isset($_GET['query'])) {
                                     $client_name = nullable_htmlentities($row['client_name']);  
                                 ?>
                                     <tr>
-                                        <td><a href="/pages/client/client_domains.php?client_id=<?= $client_id; ?>&domain_id=<?= $domain_id; ?>"><?= $domain_name; ?></a>
+                                        <td><a href="/old_pages/client/client_domains.php?client_id=<?= $client_id; ?>&domain_id=<?= $domain_id; ?>"><?= $domain_name; ?></a>
                                         <td><?= $domain_expiry; ?></td>
-                                        <td><a href="/pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                        <td><a href="/old_pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                     </tr>
                                 <?php } ?>
                             </tbody>
@@ -329,7 +329,7 @@ if (isset($_GET['query'])) {
                                 $product_description = nullable_htmlentities($row['product_description']);
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/products.php?q=<?= $q ?>"><?= $product_name; ?></a></td>
+                                    <td><a href="/old_pages/products.php?q=<?= $q ?>"><?= $product_name; ?></a></td>
                                     <td><?= $product_description; ?></td>
                                 </tr>
 
@@ -371,9 +371,9 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/client/client_document_details.php?client_id=<?= $client_id ?>&document_id=<?= $document_id; ?>"><?= $document_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_document_details.php?client_id=<?= $client_id ?>&document_id=<?= $document_id; ?>"><?= $document_name; ?></a></td>
                                     <td>
-                                        <a href="/pages/client/client_documents.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a>
+                                        <a href="/old_pages/client/client_documents.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a>
                                     </td>
                                 </tr>
 
@@ -420,10 +420,10 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/ticket.php?ticket_id=<?= $ticket_id ?>"><?= $ticket_prefix . $ticket_number; ?></a></td>
+                                    <td><a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>"><?= $ticket_prefix . $ticket_number; ?></a></td>
                                     <td><?= $ticket_subject; ?></td>
                                     <td><?= $ticket_status; ?></td>
-                                    <td><a href="/pages/client/client_tickets.php?client_id=<?= $client_id ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_tickets.php?client_id=<?= $client_id ?>"><?= $client_name; ?></a></td>
                                 </tr>
 
                             <?php } ?>
@@ -470,12 +470,12 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/client/client_logins.php?client_id=<?= $login_client_id ?>&q=<?= $q ?>"><?= $login_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_logins.php?client_id=<?= $login_client_id ?>&q=<?= $q ?>"><?= $login_name; ?></a></td>
                                     <td><?= $login_description; ?></td>
                                     <td><?= $login_username; ?></td>
                                     <td><a tabindex="0" class="btn btn-sm" data-bs-toggle="popover" data-trigger="focus" data-placement="left" data-content="<?= $login_password; ?>"><i class="far fa-eye text-secondary"></i></a><button class="btn btn-sm clipboardjs" data-clipboard-text="<?= $login_password; ?>"><i class="far fa-copy text-secondary"></i></button>
                                     </td>
-                                    <td><a href="/pages/client/client_logins.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_logins.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                 </tr>
 
                             <?php } ?>
@@ -523,10 +523,10 @@ if (isset($_GET['query'])) {
 
                                 ?>
                                 <tr>
-                                    <td><a href="/pages/invoice.php?invoice_id=<?= $invoice_id; ?>"><?= "$invoice_prefix$invoice_number"; ?></a></td>
+                                    <td><a href="/old_pages/invoice.php?invoice_id=<?= $invoice_id; ?>"><?= "$invoice_prefix$invoice_number"; ?></a></td>
                                     <td><?= $invoice_status; ?></td>
                                     <td><?= numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code); ?></td>
-                                    <td><a href="/pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_overview.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                 </tr>
 
                             <?php } ?>
@@ -594,7 +594,7 @@ if (isset($_GET['query'])) {
                                 if (empty($contact_name)) {
                                     $contact_name_display = "-";
                                 }else{
-                                    $contact_name_display = "<a href='/pages/client/client_contact_details.php?client_id=$client_id&contact_id=$contact_id'>$contact_name</a>"; 
+                                    $contact_name_display = "<a href='/old_pages/client/client_contact_details.php?client_id=$client_id&contact_id=$contact_id'>$contact_name</a>"; 
                                 }
                                 $contact_archived_at = nullable_htmlentities($row['contact_archived_at']);
                                 if (empty($contact_archived_at)) {
@@ -616,7 +616,7 @@ if (isset($_GET['query'])) {
                                     </td>
                                     <td><?= $asset_type; ?></td>
                                     <td><?= $asset_serial_display; ?></td>
-                                    <td><a href="/pages/client/client_assets.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                                    <td><a href="/old_pages/client/client_assets.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                                     <td><?= $contact_name_display; ?></td>
                                 </tr>
 
@@ -670,7 +670,7 @@ if (isset($_GET['query'])) {
                                         <?= "$client_name - $ticket_prefix$ticket_number - $ticket_subject"; ?>
                                     </h3>
                                     <div class="card-tools">
-                                        <a href="/pages/ticket.php?ticket_id=<?= $ticket_id; ?>" target="_blank">Open <i class="fa fa-fw fa-external-link-alt"></i></a>
+                                        <a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id; ?>" target="_blank">Open <i class="fa fa-fw fa-external-link-alt"></i></a>
                                     </div>
                                 </div>
                                 <div class="card-body prettyContent">
@@ -717,7 +717,7 @@ if (isset($_GET['query'])) {
 
     <div class="row">
         <div class="col-sm-12">
-            <form method="get" action="/pages/global_search.php">
+            <form method="get" action="/old_pages/global_search.php">
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" name="query" placeholder="Search..." required>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-fw fa-search"></i></button>

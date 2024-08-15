@@ -123,7 +123,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <h3><?= numfmt_format_currency($currency_format, $total_unpaid_amount, $company_currency); ?></h3>
                                     <a><?= $unpaid_count; ?> Unpaid</a>
                                 </div>
-                                <a href="/pages/invoices.php?status=Unpaid" class="badge bg-label-secondary rounded p-2 me-sm-4">
+                                <a href="/old_pages/invoices.php?status=Unpaid" class="badge bg-label-secondary rounded p-2 me-sm-4">
                                     <i class="bx bx-dollar
                                     bx-sm"></i>
                                 </a>
@@ -136,7 +136,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <h3><?= numfmt_format_currency($currency_format, $total_overdue_amount, $company_currency); ?></h3>
                                     <p><?= $overdue_count; ?> Overdue</p>
                                 </div>
-                                <a href="/pages/invoices.php?status=Overdue" class="badge bg-label-secondary rounded p-2 me-sm-4">
+                                <a href="/old_pages/invoices.php?status=Overdue" class="badge bg-label-secondary rounded p-2 me-sm-4">
                                     <i class="bx bx-time
                                      bx-sm"></i>
                                 </a>
@@ -149,7 +149,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <h3><?= numfmt_format_currency($currency_format, $total_draft_amount, $company_currency); ?></h3>
                                     <p><?= $draft_count; ?> Draft</p>
                                 </div>
-                                <a href="/pages/invoices.php?status=Draft" class="badge bg-label-secondary rounded p-2 me-sm-4">
+                                <a href="/old_pages/invoices.php?status=Draft" class="badge bg-label-secondary rounded p-2 me-sm-4">
                                     <i class="bx bx-pencil
                                     bx-sm"></i>
                                 </a>
@@ -231,7 +231,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <tr>
                             <td class="text-bold"><a href="invoice.php?invoice_id=<?= $invoice_id; ?>"><?= "$invoice_number"; ?></a></td>
                             <td><?= $invoice_scope_display; ?></td>
-                            <td class="text-bold"><a href="/pages/client/client_invoices.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
+                            <td class="text-bold"><a href="/old_pages/client/client_invoices.php?client_id=<?= $client_id; ?>"><?= $client_name; ?></a></td>
                             <td class="text-bold text-right"><?= numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code); ?></td>
                             <td class="text-bold text-right"><?= numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code); ?></td>
                             <td><?= $invoice_date; ?></td>

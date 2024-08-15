@@ -32,7 +32,7 @@ $datatable_settings = ",
                         <th data-priority="1">Name</th>
                         <th data-priority="2">Primary Location</th>
                         <th>Primary Contact</th>
-                        <th class="text-right " data-priority="3">Billing</th>
+                        <th class="text-right " data-priority="3">Billing (Balance)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,7 +63,7 @@ $datatable_settings = ",
                         $contact_email = sanitizeInput($client['contact_email']);
                         $balance = floatval($client['client_balance']);
                         $amount_paid = floatval($client['client_payments']);
-                        $recurring_monthly = 0;
+                        $recurring_monthly = floatval($client['client_recurring_monthly']);
                         $client_rate = floatval($client['client_rate']);
                         $balance_text_color = '';
                         if ($balance > 0) {
@@ -74,8 +74,10 @@ $datatable_settings = ",
 
                     ?>
                         <tr>
-                            <td style="display: none;"><?= $client_accessed_at; ?></td>
-                            <td>
+                            <td style="display: none;" data-order="<?= $client_accessed_at; ?>">
+                                <?= $client_accessed_at; ?>
+                            </td>
+                            <td data-order="<?= $client_name; ?>">
                                 <a href="/public/?page=client&action=show&client_id=<?= $client_id; ?>">
                                     <h4><i class="bx bx-right-arrow me-1"></i><?= $client_name; ?></h4>
                                 </a>
@@ -98,12 +100,12 @@ $datatable_settings = ",
                                 </div>
 
                             </td>
-                            <td>
+                            <td data-order="<?= $location_address_display; ?>">
                                 <a href="//maps.google.com/?q=<?= urlencode($location_address . ' ' . $location_zip) ?>" target="_blank">
                                     <?= $location_address_display; ?>
                                 </a>
                             </td>
-                            <td>
+                            <td data-order="<?= $contact_name; ?>">
                                 <?php
                                 if (empty($contact_name) && empty($contact_phone) && empty($contact_mobile) && empty($client_email)) {
                                     echo "-";
@@ -141,7 +143,7 @@ $datatable_settings = ",
                             </td>
 
                             <!-- Show Billing for Admin/Accountant roles only and if accounting module is enabled -->
-                            <td class="text-right">
+                            <td class="text-right" data-order="<?= $balance; ?>">
                                 <div class="mt-1">
                                     <span class="text-secondary">Balance: </span> <span class="<?= $balance_text_color; ?>"><?= numfmt_format_currency($GLOBALS['currency_format'], $balance, "USD"); ?></span>
                                 </div>

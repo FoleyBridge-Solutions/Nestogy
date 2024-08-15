@@ -46,7 +46,7 @@ if (isset($_POST['add_quote'])) {
 
     $_SESSION['alert_message'] = "Quote added";
 
-    header("Location: /pages/quote.php?quote_id=$quote_id");
+    header("Location: /old_pages/quote.php?quote_id=$quote_id");
 
 }
 
@@ -161,7 +161,7 @@ if (isset($_POST['add_quote_to_invoice'])) {
 
     $_SESSION['alert_message'] = "Quote copied to Invoice";
 
-    header("Location: /pages/invoice.php?invoice_id=$new_invoice_id");
+    header("Location: /old_pages/invoice.php?invoice_id=$new_invoice_id");
 
 }
 
@@ -435,7 +435,7 @@ if (isset($_GET['email_quote'])) {
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Sent', history_description = 'Email Quote Queued', history_quote_id = $quote_id");
     mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Quote', log_action = 'Email', log_description = '$name emailed Quote $quote_prefix$quote_number to $contact_email Email ID: ', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $quote_id");
 
-    $_SESSION['alert_message'] = "Quote has been queued successfully! <a class='text-bold text-light' href='/pages/admin/admin_mail_queue.php'>Check Admin > Mail queue</a>";
+    $_SESSION['alert_message'] = "Quote has been queued successfully! <a class='text-bold text-light' href='/old_pages/admin/admin_mail_queue.php'>Check Admin > Mail queue</a>";
 
     //Don't change the status to sent if the status is anything but draft
     if ($quote_status == 'Draft') {

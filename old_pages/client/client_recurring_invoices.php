@@ -108,7 +108,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     ?>
 
                     <tr>
-                        <td class="text-bold"><a href="/pages/recurring_invoice.php?recurring_id=<?= $recurring_id; ?>"><?=$recurring_prefix.$recurring_number?></a></td>
+                        <td class="text-bold"><a href="/old_pages/recurring_invoice.php?recurring_id=<?= $recurring_id; ?>"><?=$recurring_prefix.$recurring_number?></a></td>
                         <td><?= $recurring_scope; ?></td>
                         <td class="text-bold text-right"><?= numfmt_format_currency($currency_format, $recurring_amount, $recurring_currency_code); ?></td>
                         <td><?= ucwords($recurring_frequency); ?>ly</td>

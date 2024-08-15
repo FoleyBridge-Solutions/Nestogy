@@ -43,7 +43,7 @@
 
     <!-- Page CSS -->
     <!-- Page -->
-    <link rel="stylesheet" href="/includes/assets/vendor/css/pages/page-misc.css" />
+    <link rel="stylesheet" href="/includes/assets/vendor/css/old_pages/page-misc.css" />
 
     <!-- Helpers -->
     <script src="/includes/assets/vendor/js/helpers.js"></script>

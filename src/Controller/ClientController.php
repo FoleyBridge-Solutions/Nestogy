@@ -11,9 +11,14 @@ use Twetech\Nestogy\Auth\Auth;
 
 class ClientController {
     private $pdo;
+    private $clientModel;
+    private $accountingModel;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
+        
+        $this->clientModel = new Client($this->pdo);
+        $this->accountingModel = new Accounting($this->pdo);
 
         if (!Auth::check()) {
             // Redirect to login page or handle unauthorized access
@@ -34,14 +39,12 @@ class ClientController {
             ]);
             return;
         }
-        $clientModel = new Client($this->pdo);
-        $accountingModel = new Accounting($this->pdo);
-        $clients = $clientModel->getClients(true);
-
+        $clients = $this->clientModel->getClients(true);
         // Add Additional Data for Each Client
         foreach ($clients as &$client) {
-            $client['client_balance'] = $accountingModel->getClientBalance($client['client_id']);
-            $client['client_payments'] = $accountingModel->getClientPaidAmount($client['client_id']);
+            $client['client_balance'] = $this->accountingModel->getClientBalance($client['client_id']);
+            $client['client_payments'] = $this->accountingModel->getClientPaidAmount($client['client_id']);
+            $client['client_recurring_monthly'] = $this->accountingModel->getMonthlySubscriptionAmount($client['client_id']);
         }
         $view->render('clients', ['clients' => $clients]);
     }
@@ -79,6 +82,10 @@ class ClientController {
         $data = [
             'client' => $client,
             'client_header' => $clientModel->getClientHeader($client_id)['client_header'],
+            'return_page' => [
+                'name' => 'Clients',
+                'link' => 'clients'
+            ]
         ];
 
         $view->render('client', $data, true);
@@ -118,7 +125,8 @@ class ClientController {
                 </a>',
                 $contact['contact_email'],
                 $contact['contact_phone'],
-                $contact['contact_mobile']
+                $contact['contact_mobile'],
+                $contact['contact_primary'] ? 'Yes' : 'No'
             ];
         }
         $data = [
@@ -127,8 +135,12 @@ class ClientController {
             ],
             'client_header' => $clientModel->getClientHeader($client_id)['client_header'],
             'table' => [
-                'header_rows' => ['Name', 'Email', 'Phone', 'Mobile'],
+                'header_rows' => ['Name', 'Email', 'Phone', 'Mobile', 'Primary'],
                 'body_rows' => $contacts
+            ],
+            'return_page' => [
+                'name' => 'Clients',
+                'link' => 'clients'
             ]
         ];
         $view->render('simpleTable', $data, true);
@@ -177,6 +189,10 @@ class ClientController {
             'table' => [
                 'header_rows' => ['Location Name', 'Address', 'Phone', 'Hours'],
                 'body_rows' => $locations
+            ],
+            'return_page' => [
+                'name' => 'Clients',
+                'link' => 'clients'
             ]
         ];
 

@@ -2,6 +2,7 @@
 // src/View/View.php
 
 namespace Twetech\Nestogy\View;
+use NumberFormatter;
 
 class View {
     public function render($template, $data = [], $client_page = false) {
@@ -14,6 +15,7 @@ class View {
         }
         extract($_SESSION);
         extract($data);
+        $currency_format = numfmt_create('en_US', NumberFormatter::CURRENCY);
         require "../src/View/header.php";
         require "../src/View/navbar.php";
         if ($client_page) {
@@ -22,6 +24,7 @@ class View {
         require "../src/View/$template.php";
         require "../src/View/footer.php";
     }
+
     public function error($message) {
         extract($message);
         require "../src/View/error.php";

@@ -16,7 +16,7 @@ if (!isset($_SESSION)) {
 }
 
 if (!isset($_SESSION['client_logged_in']) || !$_SESSION['client_logged_in']) {
-    header("Location: /pages/login.php");
+    header("Location: /old_pages/login.php");
     die;
 }
 

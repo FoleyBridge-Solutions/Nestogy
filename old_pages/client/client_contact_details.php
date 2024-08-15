@@ -527,8 +527,8 @@ if (isset($_GET['contact_id'])) {
                                 ?>
 
                                 <tr>
-                                    <td><a href="/pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><span class="badge rounded-pill bg-label-secondary p-3"><?= "$ticket_prefix$ticket_number"; ?></span></a></td>
-                                    <td><a href="/pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a></td>
+                                    <td><a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><span class="badge rounded-pill bg-label-secondary p-3"><?= "$ticket_prefix$ticket_number"; ?></span></a></td>
+                                    <td><a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a></td>
                                     <td><?= $ticket_priority_display; ?></td>
                                     <td><?= $ticket_status_display; ?></td>
                                     <td><?= $ticket_assigned_to_display; ?></td>

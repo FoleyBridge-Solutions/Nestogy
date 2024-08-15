@@ -163,7 +163,7 @@ if (isset($_GET['client_id'])) {
                                     }
 
                                     $transaction_date = nullable_htmlentities($row['invoice_date']);
-                                    $transaction_type = "Invoice" . "<a href='/pages/invoice.php?invoice_id=" . $row['invoice_id'] . "'> " . $row['invoice_prefix'] . $row['invoice_number'] . "</a>";
+                                    $transaction_type = "Invoice" . "<a href='/old_pages/invoice.php?invoice_id=" . $row['invoice_id'] . "'> " . $row['invoice_prefix'] . $row['invoice_number'] . "</a>";
                                     $transaction_amount = floatval($row['invoice_amount']);
                                     $transaction_balance = getInvoiceBalance($row['invoice_id']);
                                     $transaction_due_date = sanitizeInput($row['invoice_due']);
@@ -217,7 +217,7 @@ if (isset($_GET['client_id'])) {
                                             <td><?= $transaction_date; ?></td>
                                             <td>
                                                 <i class="bx bx-credit-card"></i>
-                                                <a href="/pages/report/payments_report.php?client_id=<?= $client_id; ?>&payment_reference=<?= $payment['payment_reference']; ?>&year=<?= date("Y", strtotime($transaction_date)); ?>">
+                                                <a href="/old_pages/report/payments_report.php?client_id=<?= $client_id; ?>&payment_reference=<?= $payment['payment_reference']; ?>&year=<?= date("Y", strtotime($transaction_date)); ?>">
                                                     <?= $transaction_type; ?>
                                                 </a>
                                             </td>

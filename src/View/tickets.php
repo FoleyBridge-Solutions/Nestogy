@@ -7,6 +7,46 @@ $total_scheduled_tickets = $support_header_numbers['scheduled_tickets'];
 
 $mobile = false;
 
+function time_elapsed_string($datetime, $full = false) {
+
+    if ($datetime == 'N/A') {
+        return $datetime;
+    }
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    error_log($datetime);
+    error_log($now->format('Y-m-d H:i:s') . "\n");
+    error_log($ago->format('Y-m-d H:i:s') . "\n");
+
+    $units = [
+        'y' => 'year',
+        'm' => 'month',
+        'w' => 'week',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
+    ];
+
+    // Calculate weeks manually
+    $weeks = floor($diff->d / 7);
+    $diff->d -= $weeks * 7;
+
+    $string = [];
+    foreach ($units as $k => $v) {
+        if ($k == 'w' && $weeks) {
+            $string[] = $weeks . ' ' . $v . ($weeks > 1 ? 's' : '');
+        } elseif ($k != 'w' && $diff->$k) {
+            $string[] = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        }
+    }
+
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
+
 ?>
 
 <div class="card">
@@ -17,10 +57,10 @@ $mobile = false;
         </h3>
         <div class="card-header-elements">
             <span class="badge rounded-pill bg-label-secondary p-2">Total: <?=$total_tickets_open + $total_tickets_closed?></span> |
-            <a href="/public/?page=tickets" class="badge rounded-pill bg-label-primary p-2">
+            <a href="/public/?page=tickets<?php if($client_id) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-primary p-2">
                 Open: <?=$total_tickets_open?>
             </a> |
-            <a href="/public/?page=tickets&status=5" class="badge rounded-pill bg-label-danger p-2">
+            <a href="/public/?page=tickets&status=5<?php if($client_id) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-danger p-2">
                 Closed: <?=$total_tickets_closed?>
             </a>
         </div>
@@ -38,15 +78,15 @@ $mobile = false;
                 </div>
                 <?php if (!isset($_GET['client_id'])) { ?>
                     <a href="?assigned=unassigned" class="btn btn-label-danger">
-                        <strong><?=$mobile ? "" : "Unassigned:"?> <?= " ".$total_tickets_unassigned; ?></strong>
+                        <strong><?=$mobile ? "" : "Unassigned:"?></strong>
                         <span class="tf-icons fa fa-fw fa-exclamation-triangle mr-2"></span>
                     </a>
                 <?php } ?>
-                <a href="<?=isset($_GET['client_id']) ? "/pages/client/client_" : '/pages/'?>recurring_tickets.php" class="btn btn-label-info">
+                <a href="<?=isset($_GET['client_id']) ? "/old_pages/client/client_" : '/old_pages/'?>recurring_tickets.php" class="btn btn-label-info">
                 <strong><?=$mobile ? "" : "Recurring:"?> <?= $total_scheduled_tickets; ?> </strong>
                     <span class="tf-icons fa fa-fw fa-redo-alt mr-2"></span>
                 </a>
-                <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php">
+                <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php<?php if($client_id) echo "?client_id=$client_id"; ?>">
                     <?=$mobile ? "Add Ticket" : ""?>
                     <i class="fa fa-fw fa-plus mr-2"></i>
                 </a>
@@ -112,6 +152,7 @@ $mobile = false;
                             $priority = $ticket['ticket_priority'];
                             $ticket_status = $ticket['ticket_status_name'];
                             $status_color = $ticket['ticket_status_color'];
+                            $assigned_id = $ticket['ticket_assigned_to'];
                             $assigned = $ticket['user_name'];
                             $created = $ticket['ticket_created_at'];
                             $billable = $ticket['ticket_billable'];
@@ -120,12 +161,10 @@ $mobile = false;
                             if ($billable == 1) {
                                 $billable = "<a href='/post.php?ticket_unbillable=$ticket_id' class='badge rounded-pill bg-label-success' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as unbillable'>$</a>";
                             } else {
-                                $billable = "<a href='/post.php?ticket_billable=$ticket_id' class='badge rounded-pill bg-label-secondary' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as billable'>X</a>";
+                                $billable = "<a href='/post.php?ticket_billable=$ticket_id' class='badge rounded-pill bg-label-danger' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as billable'>X</a>";
                             }
                             $ticket_priority = $priority == 1 ? 'High' : ($priority == 2 ? 'Medium' : 'Low');
                             $ticket_priority_color = $priority == 1 ? 'danger' : ($priority == 2 ? 'warning' : 'success');
-
-                            $ticket_assigned = $assigned == 0 ? 'Unassigned' : $assigned;
 
                             $ticket_last_response = $last_response ? date('Y-m-d H:i', strtotime($last_response)) : 'N/A';
                             $ticket_created = date('Y-m-d H:i', strtotime($created));
@@ -133,6 +172,9 @@ $mobile = false;
                             $ticket_subject = $subject;
 
                             $ticket_number = $ticket['ticket_number'];
+
+                            $ticket_assigned = $assigned_id == 0 ? 'Unassigned' : $assigned;
+                            $ticket_assigned_color = $assigned_id == 0 ? 'secondary' : 'primary';
 
                             $ticket_actions = [
                                 'View' => [
@@ -160,61 +202,83 @@ $mobile = false;
                         ?>
 
                             <tr class="<?= empty($ticket_updated_at) ? "text-bold" : "" ?>">
-                                <td>
+                                <td data-order="<?= $ticket_number; ?>">
                                     <small>
                                         <a href="/public/?page=ticket&action=show&ticket_id=<?=$ticket_id?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View ticket">
                                             <span class="badge rounded-pill bg-label-secondary p-3"><?=$ticket_number?></span>
                                         </a>
                                     </small>
                                 </td>
-                                <td>
+                                <td data-order="<?= $ticket_subject; ?>">
                                     <a href="/public/?page=ticket&action=show&ticket_id=<?=$ticket_id?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View ticket">
                                         <?=$ticket_subject?>
                                     </a>
                                 </td>
-                                <td>
+                                <td data-order="<?= $client_name; ?>">
                                     <a href="/public/?page=tickets&client_id=<?=$ticket['client_id']?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View client tickets">
                                         <?=$client_name?>
                                     </a>
                                     <br>
                                     <small>
                                         <a href="/public/?page=contact&action=show&contact_id=<?=$ticket['client_id']?>" data-bs-toggle="tooltip" data-bs-placement="top" title="View contact">
-                                            <?=$contact_name?>
+                                            <?php if (isset($contact_name)) {
+                                                echo "<span class='small badge rounded-pill bg-label-secondary'>";
+                                                echo $contact_name;
+                                                echo "</span>";
+                                            } ?>
                                         </a>
                                     </small>
                                 </td>
-                                <td>
+                                <td data-order="<?= $ticket_priority; ?>">
                                     <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_priority_modal.php?ticket_id=<?= $ticket_id; ?>&client_id=<?= $ticket['client_id']; ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit ticket priority">
                                         <span class='p-2 badge rounded-pill bg-label-<?= $ticket_priority_color; ?>'>
                                             <?= $ticket_priority; ?>
                                         </span>
                                     </a>
                                 </td>
-                                <td>
+                                <td data-order="<?= $ticket_status; ?>">
                                     <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_status_modal.php?ticket_id=<?= $ticket_id; ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit ticket status">
                                         <span class='p-2 badge rounded-pill bg-label-<?= $status_color; ?>'>
                                             <?= $ticket_status; ?>
                                         </span>
                                     </a>
                                 </td>
-                                <td>
+                                <td data-order="<?= $ticket_assigned; ?>">
                                     <a href="#" class="loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_assign_modal.php?ticket_id=<?= $ticket_id; ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit ticket assigned">
-                                        <?= $ticket_assigned; ?>
+                                        <span class='p-2 badge rounded-pill bg-label-<?= $ticket_assigned_color; ?>'>
+                                            <?= $ticket_assigned; ?>
+                                        </span>
                                     </a>
                                 </td>
-                                <td>
-                                    <?= $ticket_last_response; ?>
+                                <td data-order="<?= $ticket_last_response; ?>">
+                                    <span class="badge rounded-pill bg-label-secondary">
+                                        <?= time_elapsed_string($ticket_last_response); ?>
+                                    </span>
+                                    <br>
+                                    <small>
+                                        <span class="badge rounded-pill bg-secondary">
+                                            <?= date('Y-m-d H:i', strtotime($ticket_last_response)); ?>
+                                        </span>
+                                    </small>
                                 </td>
-                                <td>
-                                    <?= $ticket_created; ?>
+                                <td data-order="<?= $ticket_created; ?>">
+                                    <span class="badge rounded-pill bg-label-secondary">
+                                        <?= time_elapsed_string($ticket_created); ?>
+                                    </span>
+                                    <br>
+                                    <small>
+                                        <span class="badge rounded-pill bg-secondary">
+                                            <?= date('Y-m-d H:i', strtotime($ticket_created)); ?>
+                                        </span>
+                                    </small>
                                 </td>
-                                <td>
+                                <td data-order="<?= $billable; ?>">
                                     <?= $billable; ?>
                                 </td>
-                                <td>
+                                <td data-order="<?= $ticket_id; ?>">
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-label-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            Actions
+                                        <button type="button" class=" btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="small fa fa-fw fa-ellipsis-v"></i>
                                         </button>
                                         <div class="dropdown-menu">
                                             <?php

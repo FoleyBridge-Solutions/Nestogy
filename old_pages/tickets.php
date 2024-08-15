@@ -225,18 +225,18 @@ $user_active_assigned_tickets = intval($row['total_tickets_assigned']);
 
                                     <td>
                                         <small>
-                                            <a href="/pages/ticket.php?ticket_id=<?= $ticket_id ?>">
+                                            <a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>">
                                                 <span class="badge rounded-pill bg-label-secondary p-3"><?=$ticket_number?></span>
                                             </a>
                                         </small>
                                     </td>
                                     <td>
                                         <small>
-                                            <a href="/pages/ticket.php?ticket_id=<?= $ticket_id ?>"><?= $ticket_subject ?></a>
+                                            <a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>"><?= $ticket_subject ?></a>
                                         </small>
                                     </td>
                                     <td>
-                                        <a href="/pages/client/client_tickets.php?client_id=<?= $client_id ?>"><strong><?= $client_name ?></strong></a>
+                                        <a href="/old_pages/client/client_tickets.php?client_id=<?= $client_id ?>"><strong><?= $client_name ?></strong></a>
 
                                         <div class="mt-1"><?= $contact_display ?></div>
                                     </td>
@@ -268,7 +268,7 @@ $user_active_assigned_tickets = intval($row['total_tickets_assigned']);
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li>
-                                                    <a class="dropdown-item" href="/pages/ticket.php?ticket_id=<?= $ticket_id ?>">
+                                                    <a class="dropdown-item" href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>">
                                                         <i class="fas fa-fw fa-eye mr-2"></i>
                                                         View
                                                     </a>
@@ -305,14 +305,14 @@ $user_active_assigned_tickets = intval($row['total_tickets_assigned']);
                                     </td>
                                     <td>
                                         <!-- client -->
-                                        <a href="/pages/client/client_tickets.php?client_id=<?= $client_id ?>">
+                                        <a href="/old_pages/client/client_tickets.php?client_id=<?= $client_id ?>">
                                             <strong><?= $client_name ?></strong>
                                         </a>
                                     </td>
                                     <td data-priority="2">
                                         <!-- ticket number -->
                                         <small>
-                                            <a href="/pages/ticket.php?ticket_id=<?= $ticket_id ?>">
+                                            <a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>">
                                                 <span class="badge rounded-pill bg-label-secondary p-3"><?=$ticket_prefix . $ticket_number?></span>
                                             </a>
                                         </small>
@@ -354,7 +354,7 @@ $user_active_assigned_tickets = intval($row['total_tickets_assigned']);
                                                 Actions
                                             </button>
                                             <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="/pages/ticket.php?ticket_id=<?= $ticket_id ?>">View</a></li>
+                                                <li><a class="dropdown-item" href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>">View</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_edit_modal.php?ticket_id=<?= $ticket_id; ?>">Edit</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_delete_modal.php?ticket_id=<?= $ticket_id; ?>">Delete</a></li>
                                             </ul>

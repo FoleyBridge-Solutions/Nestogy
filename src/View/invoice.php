@@ -15,18 +15,24 @@ if (isset($invoice)) {
     $invoice_prefix = $invoice['invoice_prefix'];
     $invoice_currency_code = $invoice['invoice_currency_code'];
     $invoice_url_key = $invoice['invoice_url_key'];
+    $invoice_add_item_modal = 'invoice_add_item_modal.php?invoice_id=' . $invoice_id;
 } else if (isset($quote)) {
     $wording = 'Quote';
-    $quote_items = $quote['items'];
-    $quote_number = $quote['quote_number'];
-    $quote_date = $quote['quote_date'];
-    $quote_due = $quote['quote_due'];
-    $quote_status = $quote['quote_status'];
-    $quote_id = $quote['quote_id'];
-    $quote_prefix = $quote['quote_prefix'];
-    $quote_currency_code = $quote['quote_currency_code'];
-    $quote_url_key = $quote['quote_url_key'];
+    $invoice_items = $quote['items'];
+    $invoice_number = $quote['quote_number'];
+    $invoice_date = $quote['quote_date'];
+    $invoice_due = $quote['quote_due'];
+    $invoice_status = $quote['quote_status'];
+    $invoice_id = $quote['quote_id'];
+    $invoice_prefix = $quote['quote_prefix'];
+    $invoice_currency_code = $quote['quote_currency_code'];
+    $invoice_url_key = $quote['quote_url_key'];
+    $invoice_add_item_modal = 'quote_add_item_modal.php?quote_id=' . $quote_id;
 }
+
+$subtotal = 0;
+$discount_total = 0;
+$tax_total = 0;
 
 $company_name = $company['company_name'];
 $company_address = $company['company_address'];
@@ -40,7 +46,7 @@ $company_website = $company['company_website'];
 
 <div class="row invoice-edit">
         <!-- Invoice Edit-->
-        <div class="col-lg-9 col-12 mb-lg-0 mb-4">
+        <div class="col-md-12 col-lg-9 mb-4">
         <div class="card invoice-preview-card">
                 <div class="card-body">
                     <div class="row p-sm-3 p-0">
@@ -154,7 +160,10 @@ $company_website = $company['company_website'];
                                 $item_discount_percent = 0;
                             }
 
+                            $item_tax_percent = round($item_tax / $item_subtotal * 100, 2);
+
                             $profit = 0;
+                            $total += $item_total;
                         ?>
 
                         <hr class="mx-n4" />
@@ -163,6 +172,9 @@ $company_website = $company['company_website'];
                                 <input type="hidden" name="invoice_id" value="<?=$invoice_id?>" />
                                 <input type="hidden" name="item_id" value="<?=$item_id?>" />
                                 <div class="d-flex border rounded position-relative pe-0">
+                                    <div class="d-flex flex-column align-items-center justify-content-between border-start p-2">
+                                        <i class="fas fa-arrows-alt drag-handle cursor-pointer cursor-handle"></i> <!-- Drag handle icon -->
+                                    </div>
                                     <div class="row w-100 m-0 p-3">
                                         <div class="col-md-7 col-12 mb-md-0 mb-3 ps-md-0">
                                             <p class="mb-2 repeater-title">Item</p>
@@ -173,10 +185,10 @@ $company_website = $company['company_website'];
                                         </div>
                                         <div class="col-md-2 col-12 mb-md-0 mb-3">
                                             <p class="mb-2 repeater-title">Unit Price</p>
-                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="" placeholder=""/>
+                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="<?=numfmt_format_currency($currency_format, $item_price, $invoice_currency_code)?>" placeholder=""/>
                                             <div class="d-flex me-1">
-                                                <span class="discount me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: ">%</span>
-                                                <span class="tax me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tax: ">%</span>
+                                                <span class="discount me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: <?=$item_discount_percent?>%"> <?php echo $item_discount_percent?>%</span>
+                                                <span class="tax me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tax: <?=$item_tax_percent?>%"> <?php echo $item_tax_percent?>%</span>
                                             </div>
                                             <div class="d-flex me-1">
                                             </div>
@@ -187,7 +199,7 @@ $company_website = $company['company_website'];
                                         </div>
                                         <div class="col-md-2 col-12 pe-0">
                                             <p class="mb-2 repeater-title">Line Total</p>
-                                            <p class="mb-0"><?=$item_total?></p>
+                                            <p class="mb-0"><?=numfmt_format_currency($currency_format, $item_total, $invoice_currency_code)?></p>
                                         </div>
                                     </div>
                                     <div class="d-flex flex-column align-items-center justify-content-between border-start p-2">
@@ -229,7 +241,6 @@ $company_website = $company['company_website'];
                                                 </div>
                                             </div>
                                         </div>
-                                        <i class="fas fa-arrows-alt drag-handle"></i> <!-- Drag handle icon -->
                                     </div>
                                 </div>
                             </form>
@@ -240,7 +251,7 @@ $company_website = $company['company_website'];
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
-                        <button type="button" class="btn btn-primary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="invoice_add_item_modal.php?invoice_id=<?=$invoice_id?>">
+                        <button type="button" class="btn btn-primary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="<?php echo $invoice_add_item_modal; ?>">
                             <i class="bx bx-plus me-1"></i>Add Item
                         </button>
                     </div>
@@ -268,24 +279,20 @@ $company_website = $company['company_website'];
                             <div class="invoice-calculations">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="w-px-100">Subtotal:</span>
-                                    <span class="fw-medium"></span>
+                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $subtotal, $invoice_currency_code)?></span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="w-px-100">Discount:</span>
-                                    <span class="fw-medium"></span>
+                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $discount_total, $invoice_currency_code)?></span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="w-px-100">Tax:</span>
-                                    <span class="fw-medium"</span>
+                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $tax_total, $invoice_currency_code)?></span>
                                 </div>
                                 <hr />
                                 <div class="d-flex justify-content-between">
                                     <span class="w-px-100">Total:</span>
-                                    <span class="fw-medium"></span>
-                                    <?php
-
-
-                                    ?>
+                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $total, $invoice_currency_code)?></span>
                                 </div>
                             </div>
                         </div>
@@ -297,7 +304,7 @@ $company_website = $company['company_website'];
         <!-- /Invoice Edit-->
 
         <!-- Invoice Actions -->
-        <div class="col-lg-3 col-12 invoice-actions">
+        <div class="col-md-12 col-lg-3 invoice-actions">
             <div class="card mb-4">
                 <?php if (isset($invoice)) { ?>
                 <div class="card-body">
@@ -339,15 +346,19 @@ $company_website = $company['company_website'];
                             <i class="bx bx-dollar me-2"></i>
                             <span class="fw-medium">Amount Due:</span>
                         </div>
-                        <span class="fw-medium"></span>
+                        <span class="fw-medium"><?=numfmt_format_currency($currency_format, $balance, $invoice_currency_code)?></span>
                     </div>
+                    <?php if ($amount_paid > 0) { ?>
                     <div class="d-flex justify-content-between mt-3">
                         <div class="d-flex align-items-center">
                             <i class="bx bx-credit-card me-2"></i>
                             <span class="fw-medium">Amount Paid:</span>
                         </div>
-                        <span class="fw-medium"></span>
+                        <span class="fw-medium"><?=numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code)?></span>
                     </div>
+                    <?php } ?>
+                        
+                        
                     <div class="d-flex justify-content-between mt-3">
                         <div class="d-flex align-items-center">
                             <i class="bx bx-dollar me-2"></i>
@@ -393,8 +404,8 @@ $company_website = $company['company_website'];
                 </div>
 
                 <div class="card-body">
-                    <?php
-                        foreach ($data['tickets'] as $ticket) {
+                    <?php if (isset($tickets)) {
+                        foreach ($tickets as $ticket) {
                             $ticket_id = intval($ticket['ticket_id']);
                             $ticket_created_at = nullable_htmlentities($ticket['ticket_created_at']);
                             $ticket_subject = nullable_htmlentities($ticket['ticket_subject']);
@@ -406,7 +417,7 @@ $company_website = $company['company_website'];
                             ?>
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <a href="/pages/ticket.php?ticket_id=<?=$ticket_id?>"><?=$ticket_subject?></a>
+                                    <a href="/old_pages/ticket.php?ticket_id=<?=$ticket_id?>"><?=$ticket_subject?></a>
                                     <p class="mb-0"><?=$ticket_status?> | <?=$ticket_priority?> | <?=$ticket_assigned_to?> | <?=$ticket_total_time_worked?></p>
                                 </div>
                             </div>
@@ -414,6 +425,7 @@ $company_website = $company['company_website'];
 
                             <?php
                         }
+                    }
                     ?>
                 </div>
         </div>
@@ -428,8 +440,9 @@ $(document).ready(function() {
     $(document).on('modalContentLoaded', function() {
         // Bind event handlers to the inputs after the modal content has been loaded
         // Get the description of the selected product
+
         $(function() {
-            var availableProducts = <?= $json_products?>;
+            var availableProducts = <?=json_encode($all_products)?>;
             var zIndex = $('#name').css('z-index');
 
             $("#name").autocomplete({

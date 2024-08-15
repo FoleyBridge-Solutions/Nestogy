@@ -508,7 +508,7 @@ $nav_title_link = '/public/';
                                         </ul>
                                     </li>
                                     <li class="dropdown-menu-footer border-top p-3">
-                                        <a class="btn btn-primary text-uppercase w-100" href="/pages/notifications.php">view all
+                                        <a class="btn btn-primary text-uppercase w-100" href="/old_pages/notifications.php">view all
                                             notifications</a>
                                     </li>
                                 </ul>
@@ -552,7 +552,7 @@ $nav_title_link = '/public/';
                                         <div class="dropdown-divider"></div>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="/pages/user/user_details.php">
+                                        <a class="dropdown-item" href="/old_pages/user/user_details.php">
                                             <i class="bx bx-user me-2"></i>
                                             <span class="align-middle">My Profile</span>
                                         </a>
@@ -567,7 +567,7 @@ $nav_title_link = '/public/';
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="/pages/user/user_preferences.php">
+                                        <a class="dropdown-item" href="/old_pages/user/user_preferences.php">
                                             <i class="bx bx-cog me-2"></i>
                                             <span class="align-middle">Settings</span>
                                         </a>

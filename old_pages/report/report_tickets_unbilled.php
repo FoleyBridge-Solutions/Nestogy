@@ -152,7 +152,7 @@ $rows = 0;
 
                             <tr>
                                 <td>
-                                    <a href="/pages/client/client_tickets.php?client_id=<?= $client_id; ?>&billable=1&unbilled"><?= $client_name; ?></a>
+                                    <a href="/old_pages/client/client_tickets.php?client_id=<?= $client_id; ?>&billable=1&unbilled"><?= $client_name; ?></a>
                                 </td>
                                 <td class="text-right"><?= $ticket_raised_count; ?></td>
                                 <td class="text-right"><?= $ticket_closed_count; ?></td>

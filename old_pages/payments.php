@@ -34,7 +34,7 @@ $credits_num_rows = mysqli_num_rows($sql_credits);
     <div class="card-header py-3">
         <h3 class="card-title"><i class="fas fa-fw fa-credit-card mr-2"></i>Payments</h3>
         <div class="card-actions">
-            <a href="/pages/payment_add.php" class="btn btn-primary btn-sm">
+            <a href="/old_pages/payment_add.php" class="btn btn-primary btn-sm">
                 <i class="fas fa-fw fa-plus mr-2"></i>Add Payment
             </a>
         </div> 
@@ -92,12 +92,12 @@ $credits_num_rows = mysqli_num_rows($sql_credits);
                         <td><?= $payment_date; ?></td>
                         <td><?= $invoice_date; ?></td>
                         <td>
-                            <a href="/pages/invoice.php?invoice_id=<?= $invoice_id; ?>">
+                            <a href="/old_pages/invoice.php?invoice_id=<?= $invoice_id; ?>">
                                 <?= "$invoice_prefix$invoice_number"; ?>
                             </a>
                         </td>
                         <td>
-                            <a href="/pages/client/client_payments.php?client_id=<?= $client_id; ?>">
+                            <a href="/old_pages/client/client_payments.php?client_id=<?= $client_id; ?>">
                                 <?= $client_name; ?>
                             </a>
                         </td>

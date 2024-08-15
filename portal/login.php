@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
 
 
     <!-- Page CSS -->
-    <link rel="stylesheet" href="/includes/assets/vendor/css/pages/page-auth.css" />
+    <link rel="stylesheet" href="/includes/assets/vendor/css/old_pages/page-auth.css" />
 
 
     <!-- Helpers -->

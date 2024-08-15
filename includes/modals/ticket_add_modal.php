@@ -53,20 +53,10 @@ $client_id = intval($_GET['client_id']);
                                 </div>
                             </div>
 
-                            <?php if($config_ai_enable) { ?>
-                            <div class="form-group">
-                                <textarea class="form-control tinymceai" id="textInput" name="details"></textarea>
-                            </div>
 
-                            <div class="mb-3">
-                                <button id="rewordButton" class="btn btn-label-primary" type="button"><i class="fas fa-fw fa-robot mr-2"></i>Reword</button>
-                                <button id="undoButton" class="btn btn-light" type="button" style="display:none;"><i class="fas fa-fw fa-redo-alt mr-2"></i>Undo</button>
-                            </div>
-                            <?php } else { ?>
                             <div class="form-group">
-                                <textarea  class="form-control" rows="5" name="details"></textarea>
+                                <textarea  class="form-control tinymce" rows="5" name="details" placeholder="Enter problem description here..."></textarea>
                             </div>
-                            <?php } ?>
 
                             <?php if (empty($_GET['client_id'])) { ?>
 
@@ -98,6 +88,10 @@ $client_id = intval($_GET['client_id']);
                                     </div>
                                 </div>
 
+                            <?php } else { ?>
+
+                                <input type="hidden" name="client_id" value="<?= $client_id; ?>">
+
                             <?php } ?>
 
                             <div class="form-group">
@@ -128,7 +122,7 @@ $client_id = intval($_GET['client_id']);
                                             $mysqli,
                                             "SELECT users.user_id, user_name FROM users
                                             LEFT JOIN user_settings on users.user_id = user_settings.user_id
-                                            WHERE user_role > 1 AND user_status = 1 AND user_archived_at IS NULL ORDER BY user_name ASC"
+                                            WHERE user_status = 1 AND user_archived_at IS NULL ORDER BY user_name ASC"
                                         );
                                         while ($row = mysqli_fetch_array($sql)) {
                                             $user_id = intval($row['user_id']);
@@ -181,7 +175,6 @@ $client_id = intval($_GET['client_id']);
 
                                                 ?>
                                                 <option value="<?= $contact_id; ?>" <?php if ($contact_primary == 1) { echo "selected"; } ?>><?= "$contact_name$contact_title_display$contact_primary_display$contact_technical_display"; ?></option>
-
                                             <?php } ?>
                                         </select>
                                     </div>

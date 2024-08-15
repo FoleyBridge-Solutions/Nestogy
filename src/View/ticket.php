@@ -11,7 +11,6 @@ $ticket_status_id = $ticket['ticket_status_id'];
 $ticket_id = $ticket['ticket_id'];
 $ticket_priority = $ticket['ticket_priority'];
 $ticket_billable = $ticket['ticket_billable'];
-$ticket_total_reply_time = 0; // TODO: Implement total reply time
 $ticket_replies = $data['ticket_replies'];
 $ticket_reply_num = count($ticket_replies);
 $ticket_created_at = $ticket['ticket_created_at'];
@@ -151,7 +150,7 @@ $task_count = 0; // TODO: Implement task count
                                     <div class="form-group">
                                         <?php if($config_ai_enable) { ?>
                                         <div class="form-group">
-                                            <textarea class="form-control " id="response" name="ticket_reply" placeholder="Type a response"></textarea>
+                                            <textarea class="form-control" id="response" name="ticket_reply" placeholder="Type a response"></textarea>
                                         </div>
                                         <div class="mb-3">
                                             <button id="rewordButton" class="btn btn-label-primary" type="button">
@@ -163,7 +162,7 @@ $task_count = 0; // TODO: Implement task count
                                         </div>
                                         <?php } else { ?>
                                         <div class="form-group">
-                                            <textarea id="" class="form-control" name="ticket_reply"
+                                            <textarea id="ticket_reply_<?= $ticket_id; ?>" class="form-control tinymce" name="ticket_reply"
                                                 placeholder="Type a response"></textarea>
                                         </div>
                                         <?php } ?>
