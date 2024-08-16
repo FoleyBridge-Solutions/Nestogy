@@ -25,4 +25,5 @@ plugins/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer/CSS/*
 !plugins/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer/CSS/.gitkeep
 .vscode/settings.json
 cron/*.log
-/vendor/
+vendor/
+.cursorignore

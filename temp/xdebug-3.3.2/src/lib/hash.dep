@@ -1,0 +1,4 @@
+src/lib/hash.lo: \
+ /var/www/portal.twe.tech/temp/xdebug-3.3.2/src/lib/hash.c \
+ /var/www/portal.twe.tech/temp/xdebug-3.3.2/src/lib/hash.h \
+ /var/www/portal.twe.tech/temp/xdebug-3.3.2/src/lib/llist.h

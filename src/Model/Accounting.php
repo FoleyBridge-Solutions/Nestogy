@@ -284,4 +284,22 @@ class Accounting {
         }
         return $past_due_amount;
     }
+    public function getAllClientData() {
+        $sql = "
+            SELECT 
+                clients.client_id,
+                clients.client_name,
+                COALESCE(SUM(invoices.invoice_amount), 0) AS client_balance,
+                COALESCE(SUM(payments.payment_amount), 0) AS client_payments,
+                COALESCE(SUM(subscriptions.subscription_product_quantity * products.product_price), 0) AS client_recurring_monthly
+            FROM clients
+            LEFT JOIN invoices ON clients.client_id = invoices.invoice_client_id
+            LEFT JOIN payments ON invoices.invoice_id = payments.payment_invoice_id
+            LEFT JOIN subscriptions ON clients.client_id = subscriptions.subscription_client_id
+            LEFT JOIN products ON subscriptions.subscription_product_id = products.product_id
+            GROUP BY clients.client_id
+        ";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

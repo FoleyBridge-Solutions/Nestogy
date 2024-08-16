@@ -6,16 +6,22 @@
             "src": "icon/lowres.webp",
             "sizes": "48x48",
             "type": "image/webp"
-        },
-        {
-            "src": "icon/hd_hi.ico",
-            "sizes": "72x72 96x96 128x128 256x256",
-            "type": "image/x-icon"
         }
     ],
     "start_url": "/public/login.php",
     "background_color": "#FFFFFF",
     "display": "standalone",
     "scope": "/",
-    "theme_color": "#FFFFFF"
+    "theme_color": "#FFFFFF",
+    "description": "Next generation IT management tool.",
+    "lang": "en-US",
+    "orientation": "portrait",
+    "categories": ["productivity", "utilities"],
+    "screenshots": [
+
+    ],
+    "related_applications": [
+
+    ],
+    "prefer_related_applications": false
 }
