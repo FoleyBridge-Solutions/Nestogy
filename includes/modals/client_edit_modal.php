@@ -1,7 +1,7 @@
 <?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
 $client_id = $_GET['client_id'];
 
-$sql = mysqli_query($mysqli, "SELECT * FROM clients WHERE client_id = $client_id");
+$sql = mysqli_query($mysqli, "SELECT * FROM clients LEFT JOIN client_tags ON client_id = client_tag_client_id WHERE client_id = $client_id");
 $row = mysqli_fetch_array($sql);
 
 $client_id = intval($row['client_id']);
@@ -218,17 +218,18 @@ $client_created_at = $row['client_created_at'];
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-tags"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="tags[]" data-placeholder="Add some tags" multiple>
+                                    <pre>
+                                    <?php print_r($client_tag_id_array); ?>
+                                    </pre>
+                                    <select class="form-control" name="tags[]" data-placeholder="Add some tags" multiple>
                                         <?php
-
                                         $sql_tags_select = mysqli_query($mysqli, "SELECT * FROM tags WHERE tag_type = 1 ORDER BY tag_name ASC");
                                         while ($row = mysqli_fetch_array($sql_tags_select)) {
-                                            $tag_id_select = intval($row['tag_id']);
-                                            $tag_name_select = nullable_htmlentities($row['tag_name']);
+                                            $tag_name = nullable_htmlentities($row['tag_name']);
+                                            $tag_id = intval($row['tag_id']);
                                             ?>
-                                            <option value="<?= $tag_id_select; ?>" <?php if (in_array($tag_id_select, $client_tag_id_array)) { echo "selected"; } ?>><?= $tag_name_select; ?></option>
+                                            <option value="<?= $tag_id; ?>" <?php if (in_array($tag_id, $client_tag_id_array)) { echo "selected"; } ?>><?= $tag_name; ?></option>
                                         <?php } ?>
-
                                     </select>
                                 </div>
                             </div>

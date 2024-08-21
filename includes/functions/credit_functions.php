@@ -42,11 +42,12 @@ function applyCredit(
     $credit_currency_code = sanitizeInput($credit_row['credit_currency_code']);
 
     $client_balance = getClientBalance( $client_id);
+    $date = date('m/d/Y');
 
     if ($client_balance < $credit_amount) {
         //create a new credit for the remaining amount
         $new_credit_amount = $credit_amount - $client_balance;
-        $new_credit_query = "INSERT INTO credits SET credit_date = CURDATE(), credit_amount = $new_credit_amount, credit_client_id = $client_id, credit_currency_code = '$credit_currency_code', credit_reference = 'Credit Applied'";
+        $new_credit_query = "INSERT INTO credits SET credit_date = CURDATE(), credit_amount = $new_credit_amount, credit_client_id = $client_id, credit_currency_code = '$credit_currency_code', credit_reference = 'Credit $credit_id applied to $client_id on $date'";
         mysqli_query($mysqli, $new_credit_query);
         $new_credit_id = mysqli_insert_id($mysqli);
     } 

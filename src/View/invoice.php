@@ -42,6 +42,9 @@ $company_zip = $company['company_zip'];
 $company_phone = $company['company_phone'];
 $company_email = $company['company_email'];
 $company_website = $company['company_website'];
+
+$taxes = $all_taxes;
+$products = $all_products
 ?>
 
 <div class="row invoice-edit">
@@ -135,32 +138,33 @@ $company_website = $company['company_website'];
                             $item_id = $item['item_id'];
                             $item_name = $item['item_name'];
                             $item_description = $item['item_description'];
+
                             $item_price = $item['item_price'];
                             $item_qty = $item['item_quantity'];
                             $item_discount = $item['item_discount'];
+                            $item_subtotal = ($item_price * $item_qty) - $item_discount;
+                            $subtotal += $item_subtotal;
+                            
                             $item_tax_id = $item['item_tax_id'];
-                            $item_tax = $item['item_tax'];
-                            $item_subtotal = $item_price * $item_qty;
-                            $tax_percent = $item['tax_percent'];
-                            $tax_name = $item['tax_name'];
                             $item_product_id = $item['item_product_id'];
+                            $item_tax_percent = $item['tax_percent'];
+                            $item_tax = $item_subtotal * ($item_tax_percent / 100);
 
                             $tax_total += $item_tax;
                             $item_total = $item_subtotal + $item_tax;
-                            $subtotal += $item_subtotal;
-                            $discount_total += $item_discount;
 
+                            
+                            $item_tax_percent = $item['tax_percent'];
+                            $item_discount = $item['item_discount'];
                             if ($item_discount > 0) {
-                                if ($item_subtotal) {
-                                    $item_discount_percent = ($item_discount / $item_subtotal) * 100;
+                                if ($item_price > 0) {
+                                    $item_discount_percent = (($item_total / $item_price) * 100) - 1;
                                 } else {
                                     $item_discount_percent = 0;
                                 }
                             } else {
                                 $item_discount_percent = 0;
                             }
-
-                            $item_tax_percent = round($item_tax / $item_subtotal * 100, 2);
 
                             $profit = 0;
                             $total += $item_total;
@@ -185,7 +189,7 @@ $company_website = $company['company_website'];
                                         </div>
                                         <div class="col-md-2 col-12 mb-md-0 mb-3">
                                             <p class="mb-2 repeater-title">Unit Price</p>
-                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="<?=numfmt_format_currency($currency_format, $item_price, $invoice_currency_code)?>" placeholder=""/>
+                                            <input name="price" pattern="-?[0-9]*\.?[0-9]{0,2}" class="form-control invoice-item-price mb-2" value="<?=$item_price?>" placeholder=""/>
                                             <div class="d-flex me-1">
                                                 <span class="discount me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Discount: <?=$item_discount_percent?>%"> <?php echo $item_discount_percent?>%</span>
                                                 <span class="tax me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Tax: <?=$item_tax_percent?>%"> <?php echo $item_tax_percent?>%</span>
@@ -221,6 +225,9 @@ $company_website = $company['company_website'];
                                                         <label for="taxInput1" class="form-label">Tax</label>
                                                         <select class="form-select select2 invoice-item-tax mb-2" name="tax_id" id="tax" style="width: 100%;">
                                                             <option value="0">No Tax</option>
+                                                            <?php foreach ($taxes as $tax) { ?>
+                                                                <option value="<?=$tax['tax_id']?>"><?=$tax['tax_name']?></option>
+                                                            <?php } ?>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -230,7 +237,17 @@ $company_website = $company['company_website'];
                                                         <label for="product_id" class="form-label">Product</label>
                                                         <div class="input-group">
                                                             <select class="form-select select2" name="product_id" id="product_id">
-
+                                                                <option> No Product </option>
+                                                                <?php foreach ($products as $product_id => $product) { ?>
+                                                                    <option
+                                                                        <?php if ($product_id === $item_product_id) {
+                                                                            echo "selected";
+                                                                        } ?>
+                                                                        value="<?= $product_id ?>"
+                                                                        >
+                                                                        <?=$product['label']?>
+                                                                    </option>
+                                                                <?php } ?>
                                                             </select>
                                                                 
                                                             <button type="submit" name="add_item_product" class="btn btn-primary mt-2">
@@ -292,7 +309,7 @@ $company_website = $company['company_website'];
                                 <hr />
                                 <div class="d-flex justify-content-between">
                                     <span class="w-px-100">Total:</span>
-                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $total, $invoice_currency_code)?></span>
+                                    <span class="fw-medium"><?=numfmt_format_currency($currency_format, $total-$discount_total, $invoice_currency_code)?></span>
                                 </div>
                             </div>
                         </div>

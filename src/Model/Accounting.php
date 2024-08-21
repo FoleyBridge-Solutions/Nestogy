@@ -14,42 +14,102 @@ class Accounting {
         $this->pdo = $pdo;
         $this->client = new Client($pdo);
     }
+
     public function getInvoices($client_id = false) {
         if ($client_id) {
-            $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_client_id = :client_id ORDER BY invoice_date DESC");
+            $stmt = $this->pdo->prepare("SELECT * FROM invoices LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id WHERE invoice_client_id = :client_id ORDER BY invoice_date DESC");
             $stmt->execute(['client_id' => $client_id]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
-            $stmt = $this->pdo->query("SELECT * FROM invoices ORDER BY invoice_date DESC");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $this->pdo->query("SELECT * FROM invoices LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id ORDER BY invoice_date DESC");
+            $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+        return $invoices;
     }
-    public function getPayments($client_id = false) {
+
+    public function getInvoiceTotal($invoice_id) {
+        return round($this->getInvoiceAmount($invoice_id), 2);
+    }
+
+    public function getLineItemTotal($item_id) { // Adds up the total for item
+        $stmt = $this->pdo->prepare("SELECT * FROM invoice_items WHERE item_id = :item_id");
+        $stmt->execute(['item_id' => $item_id]);
+        $item = $stmt->fetch(PDO::FETCH_ASSOC);
+        $subtotal = $item['item_price'] * $item['item_quantity'] - $item['item_discount'];
+
+        $stmt = $this->pdo->prepare("SELECT * FROM taxes WHERE tax_id = :tax_id");
+        $stmt->execute(['tax_id' => $item['item_tax_id']]);
+        $tax = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total = $subtotal + round($subtotal * $tax['tax_percent'] / 100, 2);
+        return $total;
+    }
+    public function getPayments($client_id = false, $sum = false) {
         if ($client_id) {
-            $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_invoice_id IN (SELECT invoice_id FROM invoices WHERE invoice_client_id = :client_id)");
-            $stmt->execute(['client_id' => $client_id]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($sum) {
+                $stmt = $this->pdo->prepare("SELECT SUM(payment_amount) AS payment_amount FROM payments WHERE payment_invoice_id IN (SELECT invoice_id FROM invoices WHERE invoice_client_id = :client_id)");
+                $stmt->execute(['client_id' => $client_id]);
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_invoice_id IN (SELECT invoice_id FROM invoices WHERE invoice_client_id = :client_id)");
+                $stmt->execute(['client_id' => $client_id]);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         } else {
-            $stmt = $this->pdo->query(
-                "SELECT * FROM payments 
-                LEFT JOIN invoices ON payments.payment_invoice_id = invoices.invoice_id
-                LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id
-                ORDER BY payment_date DESC");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($sum) {
+                $stmt = $this->pdo->query("SELECT SUM(payment_amount) AS payment_amount FROM payments
+                    LEFT JOIN invoices ON payments.payment_invoice_id = invoices.invoice_id
+                    LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id");
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                $stmt = $this->pdo->query(
+                    "SELECT * FROM payments 
+                    LEFT JOIN invoices ON payments.payment_invoice_id = invoices.invoice_id
+                    LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id
+                    ORDER BY payment_date DESC");
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         }
     }
     public function getClientBalance($client_id) {
-        $invoices = $this->getInvoices($client_id);
-        $payments = $this->getPayments($client_id);
-
-        $balance = 0;
-        foreach ($invoices as $invoice) {
-            $balance += $invoice['invoice_amount'];
-        }
-        foreach ($payments as $payment) {
-            $balance -= $payment['payment_amount'];
-        }
-        return $balance;
+        $stmt = $this->pdo->prepare(
+            "
+            SELECT SQL_CACHE
+                i.invoice_client_id AS client_id,
+                SUM(
+                    (ii.item_quantity * ii.item_price - ii.item_discount) * (1 + IFNULL(t.tax_percent, 0)/100)
+                ) AS total_invoiced,
+                IFNULL(total_payments.total_paid, 0) AS total_paid,
+                IFNULL(total_payments.total_paid, 0) - SUM(
+                    (ii.item_quantity * ii.item_price - ii.item_discount) * (1 + IFNULL(t.tax_percent, 0)/100)
+                ) AS client_balance
+            FROM 
+                invoices i
+            LEFT JOIN 
+                invoice_items ii ON i.invoice_id = ii.item_invoice_id
+            LEFT JOIN 
+                taxes t ON ii.item_tax_id = t.tax_id
+            LEFT JOIN 
+                (
+                    SELECT 
+                        i2.invoice_client_id,
+                        SUM(p.payment_amount) AS total_paid
+                    FROM 
+                        invoices i2
+                    LEFT JOIN 
+                        payments p ON i2.invoice_id = p.payment_invoice_id
+                    WHERE
+                        i2.invoice_client_id = :client_id
+                    GROUP BY 
+                        i2.invoice_client_id
+                ) total_payments ON i.invoice_client_id = total_payments.invoice_client_id
+            WHERE
+                i.invoice_client_id = :client_id2
+            GROUP BY 
+                i.invoice_client_id;
+            "
+        );
+        $stmt->execute(['client_id' => $client_id, 'client_id2' => $client_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC)['client_balance']*-1;
     }
     public function getClientPaidAmount($client_id) {
         // Get the total amount paid by the client during the year
@@ -66,16 +126,30 @@ class Accounting {
         return $amount_paid['amount_paid'];
     }
     public function getInvoice($invoice_id) {
+        if (!isset($invoice_id)) {
+            return false;
+        }
         $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_id = :invoice_id");
         $stmt->execute(['invoice_id' => $invoice_id]);
         $invoice_details = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        $stmt = $this->pdo->prepare("SELECT * FROM invoice_items WHERE item_invoice_id = :invoice_id");
+    
+        $stmt = $this->pdo->prepare("SELECT * FROM invoice_items
+        LEFT JOIN taxes ON invoice_items.item_tax_id = taxes.tax_id
+        WHERE item_invoice_id = :invoice_id");
         $stmt->execute(['invoice_id' => $invoice_id]);
         $invoice_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
         $invoice_details['items'] = $invoice_items;
-    
+
+        $invoice_amount = 0;
+        foreach ($invoice_items as $item) {
+            $invoice_amount += $item['item_price'] * $item['item_quantity'];
+        }
+        $invoice_details['invoice_amount'] = $invoice_amount;
+        $invoice_details['invoice_balance'] = $invoice_amount - $this->getPayments($invoice_id, true)['payment_amount'];
+        if ($invoice_details['invoice_balance'] < 0.02) {
+            $invoice_details['invoice_balance'] = 0;
+        }
         return $invoice_details;
     }
     public function getUnbilledTickets($invoice_id) {
@@ -168,20 +242,40 @@ class Accounting {
         $stmt->execute(['category_type' => $type]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public function getInvoiceBalance($invoice_id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_id = :invoice_id");
-        $stmt->execute(['invoice_id' => $invoice_id]);
-        $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
-        $invoice_amount = $invoice['invoice_amount'];
-
-        $payments = $this->getPaymentsByInvoice($invoice_id);
-        $payments_amount = array_sum(array_column($payments, 'payment_amount'));
-        return $invoice_amount - $payments_amount;
+    public function getInvoiceAmount($invoice_id) {
+        $stmt = $this->pdo->prepare("SELECT SQL_CACHE
+            i.invoice_client_id AS client_id,
+            SUM(
+                (ii.item_quantity * ii.item_price - ii.item_discount) * (1 + IFNULL(t.tax_percent, 0)/100)
+            ) AS total_invoiced,
+            IFNULL(total_payments.total_paid, 0) AS total_paid
+        FROM invoices i
+        LEFT JOIN invoice_items ii ON i.invoice_id = ii.item_invoice_id
+        LEFT JOIN taxes t ON ii.item_tax_id = t.tax_id
+        LEFT JOIN (
+            SELECT i2.invoice_client_id, SUM(p.payment_amount) AS total_paid
+            FROM invoices i2
+            LEFT JOIN payments p ON i2.invoice_id = p.payment_invoice_id
+            WHERE i2.invoice_id = :invoice_id2
+        ) total_payments ON i.invoice_client_id = total_payments.invoice_client_id
+        WHERE i.invoice_id = :invoice_id");
+        $stmt->execute(['invoice_id' => $invoice_id, 'invoice_id2' => $invoice_id]);
+        return round($stmt->fetch(PDO::FETCH_ASSOC)['total_invoiced'], 2);
     }
-    public function getPaymentsByInvoice($invoice_id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE payment_invoice_id = :invoice_id");
-        $stmt->execute(['invoice_id' => $invoice_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function getPaymentsByInvoice($invoice_id, $sum = false) {
+        if ($sum) {
+            $stmt = $this->pdo->prepare("SELECT SQL_CACHE SUM(payment_amount) AS total_paid FROM payments WHERE payment_invoice_id = :invoice_id");
+            $stmt->execute(['invoice_id' => $invoice_id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC)['total_paid'];
+        } else {
+            $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM payments WHERE payment_invoice_id = :invoice_id");
+            $stmt->execute(['invoice_id' => $invoice_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+    }
+    public function getInvoiceBalance($invoice_id) {
+        return $this->getInvoiceAmount($invoice_id) - $this->getPaymentsByInvoice($invoice_id, true);
     }
     private function calculateTaxOwed($result) {
         $monthly_fractional_payment = array_fill(1, 12, []);
@@ -258,31 +352,18 @@ class Accounting {
         return $data;
     }
     public function getMonthlySubscriptionAmount($client_id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM subscriptions LEFT JOIN products ON subscriptions.subscription_product_id = products.product_id WHERE subscription_client_id = :client_id");
+        $stmt = $this->pdo->prepare("
+            SELECT SQL_CACHE SUM(products.product_price * subscriptions.subscription_product_quantity) AS monthly_amount
+            FROM subscriptions
+            LEFT JOIN products ON subscriptions.subscription_product_id = products.product_id
+            WHERE subscription_client_id = :client_id
+        ");
         $stmt->execute(['client_id' => $client_id]);
-        $subscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $monthly_amount = 0;
-        foreach ($subscriptions as $subscription) {
-            $product_price = $subscription['product_price'];
-            $subscription_product_quantity = $subscription['subscription_product_quantity'];
-            $monthly_amount += $product_price * $subscription_product_quantity;
-        }
-        return $monthly_amount;       
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['monthly_amount'] ?? 0;
     }
     public function getPastDueAmount($client_id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_client_id = :client_id AND invoice_due < NOW()");
-        $stmt->execute(['client_id' => $client_id]);
-        $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $past_due_amount = 0;
-        foreach ($invoices as $invoice) {
-            $invoice_amount = $invoice['invoice_amount'];
-            $payments = $this->getPaymentsByInvoice($invoice['invoice_id']);
-            $payments_amount = array_sum(array_column($payments, 'payment_amount'));
-            $past_due_amount += $invoice_amount - $payments_amount;
-        }
-        return $past_due_amount;
+        return 0;
     }
     public function getAllClientData() {
         $sql = "
@@ -301,5 +382,115 @@ class Accounting {
         ";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getStatement($client_id) {
+
+        $client_id = intval($_GET['client_id']);
+
+        $sql_client_details = "
+        SELECT
+            client_name,
+            client_type,
+            client_website,
+            client_net_terms
+        FROM
+            clients
+        WHERE
+            client_id = :client_id
+        ";
+
+        $stmt = $this->pdo->prepare($sql_client_details);
+        $stmt->execute(['client_id' => $client_id]);
+        $row_client_details = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        $client_name = nullable_htmlentities($row_client_details['client_name']);
+        $client_type = nullable_htmlentities($row_client_details['client_type']);
+        $client_website = nullable_htmlentities($row_client_details['client_website']);
+        $client_net_terms = intval($row_client_details['client_net_terms']);
+    
+        $client_invoices = $this->getInvoices($client_id);
+
+        if (isset($_GET['max_rows'])) {
+            $outstanding_wording = strval($_GET['max_rows']) . " Most Recent";
+        } else {
+            $outstanding_wording = "Outstanding";
+        }
+
+        $sql_client_transactions = "SELECT * FROM invoices 
+                                    WHERE invoices.invoice_client_id = :client_id
+                                    AND invoices.invoice_status NOT LIKE 'Draft'
+                                    AND invoices.invoice_status NOT LIKE 'Cancelled'
+                                    ORDER BY invoices.invoice_date DESC
+                                    LIMIT 50
+                                    ";
+
+        $stmt = $this->pdo->prepare($sql_client_transactions);
+        $stmt->execute(['client_id' => $client_id]);
+        $result_client_transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($result_client_transactions as $key => $row) {
+            $result_client_transactions[$key]['invoice_amount'] = $this->getInvoiceAmount($row['invoice_id'])['invoice_amount'];
+            $result_client_transactions[$key]['invoice_balance'] = $this->getInvoiceBalance($row['invoice_id']);
+            $result_client_transactions[$key]['payments'] = $this->getPaymentsByInvoice($row['invoice_id']);
+        }
+
+        return [
+            'client_name' => $client_name,
+            'client_id' => $client_id,
+            'client_type' => $client_type,
+            'client_website' => $client_website,
+            'client_net_terms' => $client_net_terms,
+            'client_balance' => $this->getClientBalance($client_id),
+            'client_past_due_amount' => $this->getPastDueAmount($client_id),
+            'outstanding_wording' => $outstanding_wording,
+            'transactions' => $result_client_transactions,
+            'unpaid_invoices' => $client_invoices,
+            'ageing_balance' => $this->getClientAgeingBalance($client_id, 0, 30),
+            'ageing_balance_30' => $this->getClientAgeingBalance($client_id, 30, 60),
+            'ageing_balance_60' => $this->getClientAgeingBalance($client_id, 60, 90),
+            'ageing_balance_90' => $this->getClientAgeingBalance($client_id, 90, null),
+        ];
+
+
+    }
+    public function getClientAgeingBalance($client_id, $from, $to) {
+        $client_id = intval($client_id);
+        $from = intval($from);
+        $to = intval($to);
+
+        if ($to == null) {
+            //If to is null, set it to the first day in the database
+            $to = date('Y-m-d', strtotime('2000-01-01'));
+        }
+
+        // Get from and to dates for the ageing balance by subtracting the number of days from the current date
+        $from_date = date('Y-m-d', strtotime('-' . $from . ' days'));
+        $to_date = date('Y-m-d', strtotime('-' . $to . ' days'));
+    
+        //Get all invoice ids that are not draft or cancelled from the date range
+        $sql = "SELECT invoice_id FROM invoices
+        WHERE invoice_client_id = $client_id
+        AND invoice_status NOT LIKE 'Draft'
+        AND invoice_status NOT LIKE 'Cancelled'
+        AND invoice_date <= :from_date
+        AND invoice_date >= :to_date";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['from_date' => $from_date, 'to_date' => $to_date]);
+        $result_invoice_ids = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $invoice_ids = [];
+        foreach ($result_invoice_ids as $row) {
+            $invoice_ids[] = $row['invoice_id'];
+        }
+    
+        // Get Balance for the invoices in the date range
+        $balance = 0;
+        foreach ($invoice_ids as $invoice_id) {
+            $balance += $this->getInvoiceBalance($invoice_id);
+            error_log("Balance for invoice_id " . $invoice_id . " is " . $this->getInvoiceBalance($invoice_id));
+        }
+        error_log("Balance for client_id " . $client_id . " from " . $from_date . " to " . $to_date . " is " . $balance);
+        return $balance;
     }
 }

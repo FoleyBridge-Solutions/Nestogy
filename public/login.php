@@ -30,6 +30,7 @@ if (isset($_POST['login'])) {
         } else {
             $userLogin = [
                 'user_id' => $user['user_id'],
+                'user_name' => $user['user_name'],
                 'user_role' => $user['user_role'],
                 'user_avatar' => $user['user_avatar'],
                 'remember_me' => $remember_me,
@@ -44,6 +45,7 @@ if (isset($_POST['login'])) {
             if (TokenAuth6238::verify($user['user_token'], $_POST['token'])) {
                 $userLogin = [
                     'user_id' => $user['user_id'],
+                    'user_name' => $user['user_name'],
                     'user_role' => $user['user_role'],
                     'user_avatar' => $user['user_avatar'],
                     'remember_me' => $remember_me,

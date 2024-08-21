@@ -40,7 +40,7 @@ $config_currency_code = 'USD'; #TODO: Get from config
                         ?>
                         <tr>
                             <td data-order="<?= $client_name; ?>">
-                                <a href="/public/?page=client&client_id=<?= $client_id; ?>"><?php # TODO: Have this go to client statement page ?>
+                                <a href="/public/?page=statement&client_id=<?= $client_id; ?>">
                                     <?= $client_name; ?>
                                 </a>
                             </td>

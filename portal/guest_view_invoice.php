@@ -1,8 +1,19 @@
 <?php
 
+require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
+require_once "/var/www/portal.twe.tech/src/Model/Client.php";
+require_once "/var/www/portal.twe.tech/src/Database.php";
 require_once "/var/www/portal.twe.tech/portal/guest_header.php";
-
 require_once "/var/www/portal.twe.tech/portal/portal_header.php";
+
+
+use Twetech\Nestogy\Database;
+use Twetech\Nestogy\Model\Accounting;
+
+$config = require __DIR__ . '/../config.php';
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
+
 
 if (!isset($_GET['invoice_id'], $_GET['url_key'])) {
     echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
@@ -14,56 +25,45 @@ if (!isset($_GET['invoice_id'], $_GET['url_key'])) {
 $url_key = sanitizeInput($_GET['url_key']);
 $invoice_id = intval($_GET['invoice_id']);
 
-$sql = mysqli_query(
-    $mysqli,
-    "SELECT * FROM invoices
-    LEFT JOIN clients ON invoice_client_id = client_id
-    LEFT JOIN locations ON clients.client_id = locations.location_client_id AND location_primary = 1
-    LEFT JOIN contacts ON clients.client_id = contacts.contact_client_id AND contact_primary = 1
-    WHERE invoice_id = $invoice_id
-    AND invoice_url_key = '$url_key'"
-);
+$sql = "SELECT * FROM invoices
+    WHERE invoice_id = :invoice_id
+    AND invoice_url_key = :url_key";
+$stmt = $pdo->prepare($sql);
+$stmt->bindParam(':invoice_id', $invoice_id, PDO::PARAM_INT);
+$stmt->bindParam(':url_key', $url_key, PDO::PARAM_STR);
+$stmt->execute();
 
-if (mysqli_num_rows($sql) !== 1) {
-    // Invalid invoice/key
-    echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
-    require_once "portal/guest_footer.php";
+$accounting = new Accounting($pdo);
+$invoice = $accounting->getInvoice($invoice_id);
 
-    exit();
-}
-
-$row = mysqli_fetch_array($sql);
-
-$invoice_id = intval($row['invoice_id']);
-$invoice_prefix = nullable_htmlentities($row['invoice_prefix']);
-$invoice_number = intval($row['invoice_number']);
-$invoice_status = nullable_htmlentities($row['invoice_status']);
-$invoice_date = nullable_htmlentities($row['invoice_date']);
-$invoice_due = nullable_htmlentities($row['invoice_due']);
-$invoice_discount = floatval($row['invoice_discount_amount']);
-$invoice_amount = floatval($row['invoice_amount']);
-$invoice_currency_code = nullable_htmlentities($row['invoice_currency_code']);
-$invoice_note = nullable_htmlentities($row['invoice_note']);
-$invoice_category_id = intval($row['invoice_category_id']);
-$client_id = intval($row['client_id']);
-$client_name = nullable_htmlentities($row['client_name']);
-$client_name_escaped = sanitizeInput($row['client_name']);
-$location_address = nullable_htmlentities($row['location_address']);
-$location_city = nullable_htmlentities($row['location_city']);
-$location_state = nullable_htmlentities($row['location_state']);
-$location_zip = nullable_htmlentities($row['location_zip']);
-$contact_email = nullable_htmlentities($row['contact_email']);
-$contact_phone = formatPhoneNumber($row['contact_phone']);
-$contact_extension = nullable_htmlentities($row['contact_extension']);
-$contact_mobile = formatPhoneNumber($row['contact_mobile']);
-$client_website = nullable_htmlentities($row['client_website']);
-$client_currency_code = nullable_htmlentities($row['client_currency_code']);
-$client_net_terms = intval($row['client_net_terms']);
+$invoice_prefix = $invoice['invoice_prefix'];
+$invoice_number = intval($invoice['invoice_number']);
+$invoice_status = nullable_htmlentities($invoice['invoice_status']);
+$invoice_date = nullable_htmlentities($invoice['invoice_date']);
+$invoice_due = nullable_htmlentities($invoice['invoice_due']);
+$invoice_discount = floatval($invoice['invoice_discount_amount']);
+$invoice_currency_code = nullable_htmlentities($invoice['invoice_currency_code']);
+$invoice_note = nullable_htmlentities($invoice['invoice_note']);
+$invoice_category_id = intval($invoice['invoice_category_id']);
+$client_id = intval($invoice['client_id']);
+$client_name = nullable_htmlentities($invoice['client_name']);
+$client_name_escaped = sanitizeInput($invoice['client_name']);
+$location_address = nullable_htmlentities($invoice['location_address']);
+$location_city = nullable_htmlentities($invoice['location_city']);
+$location_state = nullable_htmlentities($invoice['location_state']);
+$location_zip = nullable_htmlentities($invoice['location_zip']);
+$contact_email = nullable_htmlentities($invoice['contact_email']);
+$contact_phone = formatPhoneNumber($invoice['contact_phone']);
+$contact_extension = nullable_htmlentities($invoice['contact_extension']);
+$contact_mobile = formatPhoneNumber($invoice['contact_mobile']);
+$client_website = nullable_htmlentities($invoice['client_website']);
+$client_currency_code = nullable_htmlentities($invoice['client_currency_code']);
+$client_net_terms = intval($invoice['client_net_terms']);
 if ($client_net_terms == 0) {
-    $client_net_terms = intval($row['config_default_net_terms']);
+    $client_net_terms = intval($invoice['config_default_net_terms']);
 }
 
-$sql = mysqli_query($mysqli, "SELECT * FROM companies, settings WHERE companies.company_id = settings.company_id AND companies.company_id = 1");
+$sql = mysqli_query($mysqli, "SELECT SQL_CACHE * FROM companies, settings WHERE companies.company_id = settings.company_id AND companies.company_id = 1");
 $row = mysqli_fetch_array($sql);
 
 $company_name = nullable_htmlentities($row['company_name']);
@@ -102,15 +102,15 @@ if ($invoice_status == 'Sent') {
 //Mark viewed in history
 mysqli_query($mysqli, "INSERT INTO history SET history_status = '$invoice_status', history_description = 'Invoice viewed', history_invoice_id = $invoice_id");
 
-$sql_payments = mysqli_query($mysqli, "SELECT * FROM payments, accounts WHERE payment_account_id = account_id AND payment_invoice_id = $invoice_id ORDER BY payments.payment_id DESC");
+$sql_payments = mysqli_query($mysqli, "SELECT SQL_CACHE * FROM payments, accounts WHERE payment_account_id = account_id AND payment_invoice_id = $invoice_id ORDER BY payments.payment_id DESC");
 
 //Add up all the payments for the invoice and get the total amount paid to the invoice
-$sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
+$sql_amount_paid = mysqli_query($mysqli, "SELECT SQL_CACHE SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
 $row = mysqli_fetch_array($sql_amount_paid);
 $amount_paid = floatval($row['amount_paid']);
 
 // Calculate the balance owed
-$balance = $invoice_amount - $amount_paid;
+$balance = $invoice['invoice_balance'];
 
 // Calculate Gateway Fee
 if ($config_stripe_client_pays_fees == 1) {
@@ -130,9 +130,6 @@ if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status
         $invoice_color = "text-danger";
     }
 }
-
-// Invoice individual items
-$sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id ORDER BY item_order ASC");
 ?>
 
 
@@ -237,19 +234,29 @@ $sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE it
                             <tbody>
                                 <?php
 
-                                $total_tax = 0.00;
-                                $sub_total = 0.00 - $invoice_discount;
+                                $invoice_sub_total = 0.00 - $invoice_discount;
+                                $invoice_tax = 0.00;
+                                $invoice_total = 0.00;
 
-                                while ($row = mysqli_fetch_array($sql_invoice_items)) {
-                                    $item_id = intval($row['item_id']);
-                                    $item_name = nullable_htmlentities($row['item_name']);
-                                    $item_description = $row['item_description'];
-                                    $item_quantity = floatval($row['item_quantity']);
-                                    $item_price = floatval($row['item_price']);
-                                    $item_tax = floatval($row['item_tax']);
-                                    $item_total = floatval($row['item_total']);
-                                    $total_tax = $item_tax + $total_tax;
-                                    $sub_total = $item_price * $item_quantity + $sub_total;
+                                foreach ($invoice['items'] as $item) {
+                                    $item_id = intval($item['item_id']);
+                                    $item_name = nullable_htmlentities($item['item_name']);
+                                    $item_description = $item['item_description'];
+                                    $item_quantity = floatval($item['item_quantity']);
+                                    $item_price = floatval($item['item_price']);
+                                    $item_discount = floatval($item['item_discount']);
+                                    $item_tax_id = intval($item['item_tax_id']);
+                                    $item_tax_rate = floatval($item['tax_percent']);
+
+                                    $sub_total = ($item_price * $item_quantity) - $item_discount;
+                                    $invoice_sub_total += $sub_total;
+                                    
+                                    $item_tax = $sub_total * ($item_tax_rate / 100);
+                                    $invoice_tax += $item_tax;
+                                    
+                                    $item_total = $sub_total + $item_tax;
+                                    $invoice_total += $item_total;
+
                                 ?>
 
                                     <tr>
@@ -303,10 +310,10 @@ $sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE it
                         <?php } ?>
                     </td>
                     <td class="px-4 py-5">
-                        <p class="fw-medium mb-2"><?= numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code); ?></p>
+                        <p class="fw-medium mb-2"><?= numfmt_format_currency($currency_format, $invoice_sub_total, $invoice_currency_code); ?></p>
                         <p class="fw-medium mb-2"><?= numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code); ?></p>
-                        <p class="fw-medium mb-2"><?= numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code); ?></p>
-                        <p class="fw-medium mb-<?= $amount_paid > 0 ? 4 : 0 ?>"><?= numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code); ?></p>
+                        <p class="fw-medium mb-2"><?= numfmt_format_currency($currency_format, $invoice_tax, $invoice_currency_code); ?></p>
+                        <p class="fw-medium mb-<?= $amount_paid > 0 ? 4 : 0 ?>"><?= numfmt_format_currency($currency_format, $invoice_total, $invoice_currency_code); ?></p>
                         <?php
                         if ($amount_paid > 0) { ?>
                             <p class="fw-medium mb-2"><?= numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code); ?></p>

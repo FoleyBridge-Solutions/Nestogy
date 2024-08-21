@@ -85,7 +85,10 @@ class DocumentationController {
                     'Location',
                     'Status',
                 ];
-                    
+                $data['action'] = [
+                    'title' => 'Add Asset',
+                    'modal' => 'client_asset_add_modal.php?client_id='.$client_id
+                ];
                 $data['table']['body_rows'] = [];
 
                 foreach ($assets as $asset) {
@@ -115,7 +118,10 @@ class DocumentationController {
                     'Seats'
                 ];
                 $data['table']['body_rows'] = [];
-
+                $data['action'] = [
+                    'title' => 'Add License',
+                    'modal' => 'client_license_add_modal.php?client_id='.$client_id
+                ];
                 foreach ($licenses as $license) {
                     $data['table']['body_rows'][] = [
                         $license['software_name'],
@@ -136,8 +142,11 @@ class DocumentationController {
                     'OTP',
                     'URL'
                 ];
+                $data['action'] = [
+                    'title' => 'Add Login',
+                    'modal' => 'client_login_add_modal.php?client_id='.$client_id
+                ];
                 $data['table']['body_rows'] = [];
-
                 foreach ($logins as $login) {
                     $data['table']['body_rows'][] = [
                         $login['login_name'],
@@ -148,6 +157,7 @@ class DocumentationController {
                     ];
                 }
                 break;
+
             }
             case 'network': {
                 $networks = $documentationModel->getNetworks($client_id);
@@ -161,7 +171,10 @@ class DocumentationController {
                     'Location'
                 ];
                 $data['table']['body_rows'] = [];
-
+                $data['action'] = [
+                    'title' => 'Add Network',
+                    'modal' => 'client_network_add_modal.php?client_id='.$client_id
+                ];
                 foreach ($networks as $network) {
                     $data['table']['body_rows'][] = [
                         $network['network_name'],
@@ -184,7 +197,10 @@ class DocumentationController {
                     'Updated'
                 ];
                 $data['table']['body_rows'] = [];
-
+                $data['action'] = [
+                    'title' => 'Add Service',
+                    'modal' => 'client_service_add_modal.php?client_id='.$client_id
+                ];
                 foreach ($services as $service) {
                     $data['table']['body_rows'][] = [
                         $service['service_name'],
@@ -205,7 +221,6 @@ class DocumentationController {
                     'Notes'
                 ];
                 $data['table']['body_rows'] = [];
-
                 foreach ($vendors as $vendor) {
                     $data['table']['body_rows'][] = [
                         $vendor['vendor_name'],

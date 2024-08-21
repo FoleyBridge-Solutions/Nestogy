@@ -19,19 +19,20 @@ class Client {
 
         if ($home) {
             $stmt = $this->pdo->query(
-                "SELECT SQL_CALC_FOUND_ROWS clients.*, contacts.*, locations.*, GROUP_CONCAT(tags.tag_name) AS tag_names
+                "SELECT SQL_CACHE clients.*, contacts.*, locations.*, GROUP_CONCAT(tags.tag_name) AS tag_names
                 FROM clients
                 LEFT JOIN contacts ON clients.client_id = contacts.contact_client_id AND contact_primary = 1
                 LEFT JOIN locations ON clients.client_id = locations.location_client_id AND location_primary = 1
                 LEFT JOIN client_tags ON client_tags.client_tag_client_id = clients.client_id
                 LEFT JOIN tags ON tags.tag_id = client_tags.client_tag_tag_id
                 WHERE clients.client_archived_at IS NULL
+                AND clients.client_lead = 0
                 GROUP BY clients.client_id
                 ORDER BY clients.client_accessed_at DESC
             ");
             return $stmt->fetchAll();
         } else {
-            $stmt = $this->pdo->query("SELECT * FROM clients");
+            $stmt = $this->pdo->query("SELECT SQL_CACHE * FROM clients");
             return $stmt->fetchAll();
         }
     }
@@ -85,13 +86,13 @@ class Client {
     public function getClientContact($client_id, $contact_type = 'primary') {
         switch ($contact_type) {
             case 'billing':
-                $stmt = $this->pdo->prepare("SELECT * FROM contacts WHERE contact_client_id = :client_id AND contact_billing = 1");
+                $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM contacts WHERE contact_client_id = :client_id AND contact_billing = 1");
                 break;
             case 'primary':
-                $stmt = $this->pdo->prepare("SELECT * FROM contacts WHERE contact_client_id = :client_id AND contact_primary = 1");
+                $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM contacts WHERE contact_client_id = :client_id AND contact_primary = 1");
                 break;
             default:
-                $stmt = $this->pdo->prepare("SELECT * FROM contacts WHERE contact_client_id = :client_id");
+                $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM contacts WHERE contact_client_id = :client_id");
                 break;
         }
         $stmt->execute(['client_id' => $client_id]);

@@ -174,6 +174,8 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
         ];
     }
 
+    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'New Ticket', notification = 'Email parser created a new ticket', notification_action = 'public/?page=tickets', notification_client_id = $client_id, notification_is_webpush = 1");
+
     addToMailQueue($mysqli, $data);
 
     return true;
@@ -213,7 +215,7 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
             $ticket_id_esc = intval($ticket_id);
             $client_id_esc = intval($client_id);
 
-            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = 'Email parser: $from_email attempted to re-open ticket $config_ticket_prefix_esc$ticket_number_esc (ID $ticket_id_esc) - check inbox manually to see email', notification_action = 'ticket.php?ticket_id=$ticket_id_esc', notification_client_id = $client_id_esc");
+            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = 'Email parser: $from_email attempted to re-open ticket $config_ticket_prefix_esc$ticket_number_esc (ID $ticket_id_esc) - check inbox manually to see email', notification_action = 'ticket.php?ticket_id=$ticket_id_esc', notification_client_id = $client_id_esc, notification_is_webpush = 1");
 
             $email_subject = "Action required: This ticket is already closed";
             $email_body = "Hi there, <br><br>You've tried to reply to a ticket that is closed - we won't see your response. <br><br>Please raise a new ticket by sending a fresh e-mail to our support address below. <br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
@@ -308,6 +310,7 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
 
         echo "\nUpdated existing ticket.<br>";
         mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Update', log_description = 'Email parser: Client contact $from_email_esc updated ticket $config_ticket_prefix$ticket_number_esc ($subject)', log_client_id = $client_id");
+        mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket Updated', notification = 'Email parser: $from_email replied to ticket', notification_action = 'public/?page=tickets', notification_client_id = $client_id, notification_is_webpush = 1");
 
         return true;
     } else {
@@ -447,6 +450,7 @@ if ($messages->count() > 0) {
                     }
                 } else {
                     echo "\nFailed to process email - domain not found. \n" . $message->getFrom() . "\n";
+                    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Email', notification = 'Email parser: Failed to process email from $from_email - domain not found', notification_action = 'email.php', notification_client_id = 0, notification_is_webpush = 1");
                 }
             }
         }
@@ -459,7 +463,7 @@ if ($messages->count() > 0) {
             echo "\nFailed to process email - flagging for manual review. \n" . $message->getSubject() . "\n";
             $message->setFlag(['Seen']);
             // Create a notification for manual review
-            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Email', notification = 'Email parser: Failed to process email from $from_email', notification_action = 'email.php', notification_client_id = 0");
+            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Email', notification = 'Email parser: Failed to process email from $from_email', notification_action = 'email.php', notification_client_id = 0, notification_is_webpush = 1");
         }
         // Delete the original message file
         if (file_exists("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}")) {

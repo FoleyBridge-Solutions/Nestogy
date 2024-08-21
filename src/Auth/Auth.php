@@ -16,6 +16,7 @@ class Auth {
 
     public function login($user) {
         $user_id = $user['user_id'];
+        $user_name = $user['user_name'];
         $user_role = $user['user_role'];
         $user_avatar = $user['user_avatar'];
         $remember_me = $user['remember_me'];
@@ -29,6 +30,7 @@ class Auth {
         generateUserSessionKey($site_encryption_master_key);
 
         $_SESSION['user_id'] = $user_id;
+        $_SESSION['user_name'] = $user_name;
         $_SESSION['user_role'] = $user_role;
         $_SESSION['logged'] = true;
         $_SESSION['user_avatar'] = $user_avatar;
@@ -85,6 +87,8 @@ class Auth {
         unset($_SESSION['user_encryption_session_ciphertext']);
         unset($_SESSION['user_encryption_session_iv']);
         session_destroy();
+
+        error_log("User logged out");
     
         // Clear the remember me cookie
         setcookie('remember_me', '', time() - 3600, '/', '', true, true);

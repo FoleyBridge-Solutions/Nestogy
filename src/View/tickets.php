@@ -47,13 +47,28 @@ function time_elapsed_string($datetime, $full = false) {
     return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
 
+$ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
+
 ?>
 
 <div class="card">
     <div class="card-header header-elements">
         <h3 class="me-2">
-            <i class="bx bx-support"></i>
-            Support Tickets
+            <form method="get">
+                <?php
+                foreach ($_GET as $key => $value) {
+                    if ($key != 'ticket_type') {
+                        echo '<input type="hidden" name="' . htmlspecialchars($key) . '" value="' . htmlspecialchars($value) . '">';
+                    }
+                }
+                ?>
+                <select name="ticket_type" onchange="this.form.submit()">
+                    <option <?= $ticket_type == 'support' ? 'selected' : '' ?> value="support">Support</option>
+                    <option <?= $ticket_type == 'alert' ? 'selected' : '' ?> value="alert">Alert</option>
+                    <option <?= $ticket_type == 'accounting' ? 'selected' : '' ?> value="accounting">Accounting</option>
+                </select>
+                Tickets
+            </form>
         </h3>
         <div class="card-header-elements">
             <span class="badge rounded-pill bg-label-secondary p-2">Total: <?=$total_tickets_open + $total_tickets_closed?></span> |
@@ -78,16 +93,12 @@ function time_elapsed_string($datetime, $full = false) {
                 </div>
                 <?php if (!isset($_GET['client_id'])) { ?>
                     <a href="?assigned=unassigned" class="btn btn-label-danger">
-                        <strong><?=$mobile ? "" : "Unassigned:"?></strong>
+                        <strong>Unassigned:</strong>
                         <span class="tf-icons fa fa-fw fa-exclamation-triangle mr-2"></span>
                     </a>
                 <?php } ?>
-                <a href="<?=isset($_GET['client_id']) ? "/old_pages/client/client_" : '/old_pages/'?>recurring_tickets.php" class="btn btn-label-info">
-                <strong><?=$mobile ? "" : "Recurring:"?> <?= $total_scheduled_tickets; ?> </strong>
-                    <span class="tf-icons fa fa-fw fa-redo-alt mr-2"></span>
-                </a>
                 <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php<?php if($client_id) echo "?client_id=$client_id"; ?>">
-                    <?=$mobile ? "Add Ticket" : ""?>
+                    Add Ticket
                     <i class="fa fa-fw fa-plus mr-2"></i>
                 </a>
 
@@ -257,7 +268,7 @@ function time_elapsed_string($datetime, $full = false) {
                                     <br>
                                     <small>
                                         <span class="badge rounded-pill bg-secondary">
-                                            <?= date('Y-m-d H:i', strtotime($ticket_last_response)); ?>
+                                            <?= $ticket_last_response; ?>
                                         </span>
                                     </small>
                                 </td>

@@ -32,35 +32,54 @@ if (isset($_POST['add_ticket'])) {
 }
 
 if (isset($_POST['edit_ticket'])) {
+    $ticket = mysqli_query($mysqli, "SELECT * FROM tickets WHERE ticket_id = " . intval($_POST['ticket_id']));
+    $row = mysqli_fetch_array($ticket);
 
     validateTechRole();
 
-    $ticket_id = intval($_POST['ticket_id']);
-    $contact_id = intval($_POST['contact']);
-    $subject = sanitizeInput($_POST['subject']);
-    $billable = intval($_POST['billable']);
-    $priority = sanitizeInput($_POST['priority']);
-    $details = mysqli_real_escape_string($mysqli, $_POST['details']);
-    $vendor_ticket_number = sanitizeInput($_POST['vendor_ticket_number']);
-    $vendor_id = intval($_POST['vendor']);
-    $asset_id = intval($_POST['asset']);
+    $parameters = [];
+    $parameters['ticket_id'] = intval($_POST['ticket_id']);
 
-    $parameters = [
-        'ticket_id' => intval($_POST['ticket_id']),
-        'ticket_client_id' => intval($_POST['client_id']),
-        'ticket_assigned_to' => intval($_POST['assigned_to']),
-        'ticket_contact_id' => intval($_POST['contact']),
-        'ticket_subject' => sanitizeInput($_POST['subject']),
-        'ticket_priority' => sanitizeInput($_POST['priority']),
-        'ticket_details' => mysqli_real_escape_string($mysqli, $_POST['details']),
-        'ticket_vendor_ticket_number' => sanitizeInput($_POST['vendor_ticket_number']),
-        'ticket_vendor_id' => intval($_POST['vendor_id']),
-        'ticket_asset_id' => intval($_POST['asset_id']),
-        'ticket_number' => intval($_POST['ticket_number']),
-    ];
+    if (isset($_POST['type']) && $_POST['type'] != $row['ticket_type']) {
+        $parameters['ticket_type'] = sanitizeInput($_POST['type']);
+    }
+    if (isset($_POST['client_id']) && intval($_POST['client_id']) != $row['ticket_client_id']) {
+        $parameters['ticket_client_id'] = intval($_POST['client_id']);
+    }
+    if (isset($_POST['number']) && intval($_POST['number']) != $row['ticket_number']) {
+        $parameters['ticket_number'] = intval($_POST['number']);
+    }
+    if (isset($_POST['contact']) && intval($_POST['contact']) != $row['ticket_contact_id']) {
+        $parameters['ticket_contact_id'] = intval($_POST['contact']);
+    }
+    if (isset($_POST['subject']) && $_POST['subject'] != $row['ticket_subject']) {
+        $parameters['ticket_subject'] = sanitizeInput($_POST['subject']);
+    }
+    if (isset($_POST['billable']) && intval($_POST['billable']) != $row['ticket_billable']) {
+        $parameters['ticket_billable'] = intval($_POST['billable']);
+    }
+    if (isset($_POST['priority']) && $_POST['priority'] != $row['ticket_priority']) {
+        $parameters['ticket_priority'] = sanitizeInput($_POST['priority']);
+    }
+    if (isset($_POST['details']) && $_POST['details'] != $row['ticket_details']) {
+        $parameters['ticket_details'] = mysqli_real_escape_string($mysqli, $_POST['details']);
+    }
+    if (isset($_POST['vendor_ticket_number']) && $_POST['vendor_ticket_number'] != $row['ticket_vendor_ticket_number']) {
+        $parameters['ticket_vendor_ticket_number'] = sanitizeInput($_POST['vendor_ticket_number']);
+    }
+    if (isset($_POST['vendor_id']) && intval($_POST['vendor_id']) != $row['ticket_vendor_id']) {
+        $parameters['ticket_vendor_id'] = intval($_POST['vendor_id']);
+    }
+    if (isset($_POST['asset_id']) && intval($_POST['asset_id']) != $row['ticket_asset_id']) {
+        $parameters['ticket_asset_id'] = intval($_POST['asset_id']);
+    }
 
-    $return_data = updateTicket($parameters);
-    referWithAlert($return_data['message'], $return_data['status']);
+    if ($parameters) {
+        $return_data = updateTicket($parameters);
+        referWithAlert($return_data['message'], $return_data['status']);
+    } else {
+        referWithAlert("No changes were made to the ticket.", "error");
+    }
 }
 
 if (isset($_POST['edit_ticket_priority'])) {

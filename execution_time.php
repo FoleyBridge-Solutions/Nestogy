@@ -5,7 +5,6 @@ $lines = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
 $execution_times = [];
 $original_times = [];
-
 // Process each line
 foreach ($lines as $line) {
     // Extract the URL, timestamp, and execution time

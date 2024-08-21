@@ -1,13 +1,18 @@
 <?php
 
-require_once '/var/www/portal.twe.tech/portal/guest_header.php';
+require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
+require_once "/var/www/portal.twe.tech/src/Model/Client.php";
+require_once "/var/www/portal.twe.tech/src/Database.php";
+require_once "/var/www/portal.twe.tech/portal/guest_header.php";
 
-function log_to_console($message) {
-    $message = date("H:i:s") . " - $message - ".PHP_EOL;
-    print($message);
-    flush();
-    ob_flush();
-}
+
+use Twetech\Nestogy\Database;
+use Twetech\Nestogy\Model\Accounting;
+
+$config = require __DIR__ . '/../config.php';
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
+
 
 // Define wording
 DEFINE("WORDING_PAYMENT_FAILED", "<br><h2>There was an error verifying your payment. Please contact us for more information.</h2>");
@@ -39,40 +44,20 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $invoice_url_key = sanitizeInput($_GET['url_key']);
     $invoice_id = intval($_GET['invoice_id']);
 
+    $accounting = new Accounting($pdo);
     // Query invoice details
-    $sql = mysqli_query(
-        $mysqli,
-        "SELECT * FROM invoices
-        LEFT JOIN clients ON invoice_client_id = client_id
-        WHERE invoice_id = $invoice_id
-        AND invoice_url_key = '$invoice_url_key'
-        AND invoice_status != 'Draft'
-        AND invoice_status != 'Paid'
-        AND invoice_status != 'Cancelled'
-        LIMIT 1"
-    );
+    $invoice = $accounting->getInvoice($invoice_id);
+    
 
-    // Ensure we have a valid invoice
-    if (!$sql || mysqli_num_rows($sql) !== 1) {
-        echo "<br><h2>Oops, something went wrong! Please ensure you have the correct URL and have not already paid this invoice.</h2>";
-        require_once 'guest_footer.php';
-
-        exit();
-    }
-
-    // Process invoice, client and company details/settings
-    $row = mysqli_fetch_array($sql);
-    $invoice_id = intval($row['invoice_id']);
-    $invoice_prefix = nullable_htmlentities($row['invoice_prefix']);
-    $invoice_number = intval($row['invoice_number']);
-    $invoice_status = nullable_htmlentities($row['invoice_status']);
-    $invoice_date = nullable_htmlentities($row['invoice_date']);
-    $invoice_due = nullable_htmlentities($row['invoice_due']);
-    $invoice_discount = floatval($row['invoice_discount_amount']);
-    $invoice_amount = floatval($row['invoice_amount']);
-    $invoice_currency_code = nullable_htmlentities($row['invoice_currency_code']);
-    $client_id = intval($row['client_id']);
-    $client_name = nullable_htmlentities($row['client_name']);
+    $invoice_prefix = nullable_htmlentities($invoice['invoice_prefix']);
+    $invoice_number = intval($invoice['invoice_number']);
+    $invoice_status = nullable_htmlentities($invoice['invoice_status']);
+    $invoice_date = nullable_htmlentities($invoice['invoice_date']);
+    $invoice_discount = floatval($invoice['invoice_discount_amount']);
+    $invoice_amount = floatval($invoice['invoice_amount']);
+    $invoice_currency_code = nullable_htmlentities($invoice['invoice_currency_code']);
+    $client_id = intval($invoice['client_id']);
+    $client_name = nullable_htmlentities($invoice['client_name']);
     
     $sql = mysqli_query($mysqli, "SELECT * FROM companies, settings WHERE companies.company_id = settings.company_id AND companies.company_id = 1");
     $row = mysqli_fetch_array($sql);
@@ -103,6 +88,11 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     // Set Currency Formatting
     $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
 
+    $sql_taxes = mysqli_query($mysqli, "SELECT * FROM taxes");
+    $taxes = [];
+    while ($row = mysqli_fetch_array($sql_taxes)) {
+        $taxes[] = $row;
+    }
     ?>
 
     <!-- Include Stripe JS (must be Stripe-hosted, not local) -->
@@ -131,10 +121,22 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
 
                     $item_total = 0;
 
-                    while ($row = mysqli_fetch_array($sql_invoice_items)) {
-                        $item_name = nullable_htmlentities($row['item_name']);
-                        $item_quantity = floatval($row['item_quantity']);
-                        $item_total = floatval($row['item_total']);
+                    foreach ($invoice['items'] as $item) {
+                        $item_name = nullable_htmlentities($item['item_name']);
+                        $item_quantity = floatval($item['item_quantity']);
+                        $item_price = floatval($item['item_price']);
+                        $item_discount = floatval($item['item_discount']);
+                        $item_tax_id = intval($item['item_tax_id']);
+                        $item_tax_rate = floatval($item['tax_percent']);
+
+                        $sub_total = ($item_price * $item_quantity) - $item_discount;
+                        $invoice_sub_total += $sub_total;
+                        
+                        $item_tax = $sub_total * ($item_tax_rate / 100);
+                        $invoice_tax += $item_tax;
+                        
+                        $item_total = $sub_total + $item_tax;
+                        $invoice_total += $item_total;
                         ?>
 
                         <tr>

@@ -930,3 +930,26 @@ if (isset($_GET['create_credit'])) {
         echo json_encode("No input data");
     }
 }
+
+if (isset($_GET['save_subscription'])) {
+    //get the data from the request
+    $data = file_get_contents('php://input');
+    $data = json_decode($data, true);
+    $endpoint = $data['endpoint'];
+    $public_key = $data['keys']['p256dh'];
+    $auth_key = $data['keys']['auth'];
+    error_log("Received data: " . print_r($data, true)); // Log the received data
+
+    $sql = mysqli_query($mysqli,
+        "INSERT INTO notification_subscriptions SET
+            notification_subscription_user_id = $user_id,
+            notification_subscription_endpoint = '$endpoint',
+            notification_subscription_public_key = '$public_key',
+            notification_subscription_auth_key = '$auth_key'
+        "
+    );
+    
+    //return http status 200
+    http_response_code(200);
+    echo json_encode(['success' => true]);
+}

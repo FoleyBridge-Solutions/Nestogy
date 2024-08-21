@@ -102,19 +102,19 @@ if ($user_config_dashboard_financial_enable == 1) {
     $row = mysqli_fetch_array($sql_total_expenses);
     $total_expenses = floatval($row['total_expenses']);
 
-    //Total up all the Invoices that are not draft or cancelled
-    $sql_invoice_totals = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals FROM invoices WHERE invoice_status NOT LIKE 'Draft' AND invoice_status NOT LIKE 'Cancelled' AND YEAR(invoice_date) = $year");
-    $row = mysqli_fetch_array($sql_invoice_totals);
-    $invoice_totals = floatval($row['invoice_totals']);
+    // //Total up all the Invoices that are not draft or cancelled
+    // $sql_invoice_totals = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals FROM invoices WHERE invoice_status NOT LIKE 'Draft' AND invoice_status NOT LIKE 'Cancelled' AND YEAR(invoice_date) = $year");
+    // $row = mysqli_fetch_array($sql_invoice_totals);
+    // $invoice_totals = floatval($row['invoice_totals']);
 
     //Quaeries from Receivables
     $sql_total_payments_to_invoices_all_years = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS total_payments_to_invoices_all_years FROM payments");
     $row = mysqli_fetch_array($sql_total_payments_to_invoices_all_years);
     $total_payments_to_invoices_all_years = floatval($row['total_payments_to_invoices_all_years']);
 
-    $sql_invoice_totals_all_years = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals_all_years FROM invoices WHERE invoice_status NOT LIKE 'Draft' AND invoice_status NOT LIKE 'Cancelled'");
-    $row = mysqli_fetch_array($sql_invoice_totals_all_years);
-    $invoice_totals_all_years = floatval($row['invoice_totals_all_years']);
+    // $sql_invoice_totals_all_years = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals_all_years FROM invoices WHERE invoice_status NOT LIKE 'Draft' AND invoice_status NOT LIKE 'Cancelled'");
+    // $row = mysqli_fetch_array($sql_invoice_totals_all_years);
+    // $invoice_totals_all_years = floatval($row['invoice_totals_all_years']);
 
     $receivables = $invoice_totals_all_years - $total_payments_to_invoices_all_years;
 
@@ -888,10 +888,6 @@ require_once '/var/www/portal.twe.tech/includes/footer.php';
 
                             $income_for_month = $payments_for_month + $revenues_for_month;
 
-                            if ($income_for_month > 0 && $income_for_month > $largest_income_month) {
-                                $largest_income_month = $income_for_month;
-                            }
-
 
                         ?>
                             <?= "$income_for_month,"; ?>
@@ -904,117 +900,7 @@ require_once '/var/www/portal.twe.tech/includes/footer.php';
 
                     ],
                 },
-                {
-                    label: "LY Income",
-                    fill: false,
-                    borderColor: "#9932CC",
-                    pointBackgroundColor: "#9932CC",
-                    pointBorderColor: "#9932CC",
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: "#9932CC",
-                    pointHitRadius: 50,
-                    pointBorderWidth: 2,
-                    data: [
-                        <?php
-                        for ($month = 1; $month <= 12; $month++) {
-                            $sql_payments = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS payment_amount_for_month FROM payments, invoices WHERE payment_invoice_id = invoice_id AND YEAR(payment_date) = $year-1 AND MONTH(payment_date) = $month");
-                            $row = mysqli_fetch_array($sql_payments);
-                            $payments_for_month = floatval($row['payment_amount_for_month']);
 
-                            $sql_revenues = mysqli_query($mysqli, "SELECT SUM(revenue_amount) AS revenue_amount_for_month FROM revenues WHERE revenue_category_id > 0 AND YEAR(revenue_date) = $year-1 AND MONTH(revenue_date) = $month");
-                            $row = mysqli_fetch_array($sql_revenues);
-                            $revenues_for_month = floatval($row['revenue_amount_for_month']);
-
-                            $income_for_month = $payments_for_month + $revenues_for_month;
-
-                            if ($income_for_month > 0 && $income_for_month > $largest_income_month) {
-                                $largest_income_month = $income_for_month;
-                            }
-
-
-                        ?>
-                            <?= "$income_for_month,"; ?>
-
-                        <?php
-
-                        }
-
-                        ?>
-
-                    ],
-                },
-                {
-                    label: "Projected",
-                    fill: false,
-                    borderColor: "black",
-                    pointBackgroundColor: "black",
-                    pointBorderColor: "black",
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: "black",
-                    pointHitRadius: 50,
-                    pointBorderWidth: 2,
-                    data: [
-                        <?php
-
-                        $largest_invoice_month = 0;
-
-                        for ($month = 1; $month <= 12; $month++) {
-                            $sql_projected = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amount_for_month FROM invoices WHERE YEAR(invoice_due) = $year AND MONTH(invoice_due) = $month AND invoice_status NOT LIKE 'Cancelled' AND invoice_status NOT LIKE 'Draft'");
-                            $row = mysqli_fetch_array($sql_projected);
-                            $invoice_for_month = floatval($row['invoice_amount_for_month']);
-
-                            if ($invoice_for_month > 0 && $invoice_for_month > $largest_invoice_month) {
-                                $largest_invoice_month = $invoice_for_month;
-                            }
-
-                        ?>
-                            <?= "$invoice_for_month,"; ?>
-
-                        <?php
-
-                        }
-
-                        ?>
-
-                    ],
-                },
-                {
-                    label: "Expense",
-                    lineTension: 0.3,
-                    fill: false,
-                    borderColor: "#dc3545",
-                    pointBackgroundColor: "#dc3545",
-                    pointBorderColor: "#dc3545",
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: "#dc3545",
-                    pointHitRadius: 50,
-                    pointBorderWidth: 2,
-                    data: [
-                        <?php
-
-                        $largest_expense_month = 0;
-
-                        for ($month = 1; $month <= 12; $month++) {
-                            $sql_expenses = mysqli_query($mysqli, "SELECT SUM(expense_amount) AS expense_amount_for_month FROM expenses WHERE YEAR(expense_date) = $year AND MONTH(expense_date) = $month AND expense_vendor_id > 0");
-                            $row = mysqli_fetch_array($sql_expenses);
-                            $expenses_for_month = floatval($row['expense_amount_for_month']);
-
-                            if ($expenses_for_month > 0 && $expenses_for_month > $largest_expense_month) {
-                                $largest_expense_month = $expenses_for_month;
-                            }
-
-
-                        ?>
-                            <?= "$expenses_for_month,"; ?>
-
-                        <?php
-
-                        }
-
-                        ?>
-
-                    ],
-                }
             ],
         },
         options: {
@@ -1033,8 +919,7 @@ require_once '/var/www/portal.twe.tech/includes/footer.php';
                 yAxes: [{
                     ticks: {
                         min: 0,
-                        max: <?php $max = max(1000, $largest_expense_month, $largest_income_month, $largest_invoice_month);
-                                echo roundUpToNearestMultiple($max); ?>,
+                        max: 100000,
                         maxTicksLimit: 5
                     },
                     gridLines: {
@@ -1136,48 +1021,15 @@ require_once '/var/www/portal.twe.tech/includes/footer.php';
         type: 'doughnut',
         data: {
             labels: [
-                <?php
-                mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopCategories SELECT category_name, category_id, SUM(invoice_amount) AS total_income FROM categories, invoices WHERE invoice_category_id = category_id AND invoice_status = 'Paid' AND YEAR(invoice_date) = $year GROUP BY category_name, category_id ORDER BY total_income DESC LIMIT 5");
-                $sql_categories = mysqli_query($mysqli, "SELECT category_name FROM TopCategories");
-                while ($row = mysqli_fetch_array($sql_categories)) {
-                    $category_name = json_encode($row['category_name']);
-                    echo "$category_name,";
-                }
-
-                $sql_other_categories = mysqli_query($mysqli, "SELECT SUM(invoices.invoice_amount) AS other_income FROM categories LEFT JOIN TopCategories ON categories.category_id = TopCategories.category_id INNER JOIN invoices ON categories.category_id = invoices.invoice_category_id WHERE TopCategories.category_id IS NULL AND invoice_status = 'Paid' AND YEAR(invoice_date) = $year");
-                $row = mysqli_fetch_array($sql_other_categories);
-                $other_income = floatval($row['other_income']);
-                if ($other_income > 0) {
-                    echo "'Others',";
-                }
-                ?>
 
             ],
             datasets: [{
                 data: [
-                    <?php
-                    $sql_categories = mysqli_query($mysqli, "SELECT total_income FROM TopCategories");
-                    while ($row = mysqli_fetch_array($sql_categories)) {
-                        $total_income = floatval($row['total_income']);
-                        echo "$total_income,";
-                    }
-                    if ($other_income > 0) {
-                        echo "$other_income,";
-                    }
-                    ?>
+
 
                 ],
                 backgroundColor: [
-                    <?php
-                    $sql_categories = mysqli_query($mysqli, "SELECT category_color FROM TopCategories JOIN categories ON TopCategories.category_id = categories.category_id");
-                    while ($row = mysqli_fetch_array($sql_categories)) {
-                        $category_color = json_encode($row['category_color']);
-                        echo "$category_color,";
-                    }
-                    if ($other_income > 0) {
-                        echo "'#999999',"; // color for 'Others' category
-                    }
-                    ?>
+
 
                 ],
             }],

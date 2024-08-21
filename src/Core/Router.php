@@ -38,7 +38,7 @@ class Router {
         $this->add('location', 'ClientController', 'showLocations', ['client_id']);
 
         // Support routes
-        $this->add('tickets', 'SupportController', 'index', ['client_id', 'status', 'user_id']);
+        $this->add('tickets', 'SupportController', 'index', ['client_id', 'status', 'user_id', 'ticket_type']);
         $this->add('ticket', 'SupportController', 'show', ['ticket_id']);
 
         // Documentation routes
@@ -63,6 +63,7 @@ class Router {
         $this->add('contract', 'AccountingController', 'showContract', ['contract_id']);
         $this->add('products', 'AccountingController', 'showProducts');
         $this->add('product', 'AccountingController', 'showProduct', ['product_id']);
+        $this->add('statement', 'AccountingController', 'showStatement', ['client_id']);
         
         // Reports routes
         $this->add('report', 'ReportsController', 'index', ['report']);

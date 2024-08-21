@@ -8,7 +8,6 @@ $table_body_rows = $table['body_rows'];
 
 if (isset($action)) {
     $action_title = $action['title'];
-    $action_button = $action['button'];
     $action_modal = $action['modal'];
 }
 

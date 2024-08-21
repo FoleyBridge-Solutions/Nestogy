@@ -14,6 +14,17 @@ require_once "/var/www/portal.twe.tech/includes/functions/functions.php";
 
 require_once "/var/www/portal.twe.tech/includes/rfc6238.php";
 
+require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
+require_once "/var/www/portal.twe.tech/src/Model/Client.php";
+require_once "/var/www/portal.twe.tech/src/Database.php";
+
+
+use Twetech\Nestogy\Database;
+use Twetech\Nestogy\Model\Accounting;
+
+$config = require __DIR__ . '/../config.php';
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
 
 /*
  * Creates & Returns a Stripe Payment Intent for a particular invoice ID
@@ -30,30 +41,17 @@ if (isset($_GET['stripe_create_pi'])) {
     $invoice_id = intval($jsonObj['invoice_id']);
     $url_key = sanitizeInput($jsonObj['url_key']);
 
+    $accounting = new Accounting($pdo);
     // Query invoice details
-    $invoice_sql = mysqli_query(
-        $mysqli,
-        "SELECT * FROM invoices
-        LEFT JOIN clients ON invoice_client_id = client_id
-        WHERE invoice_id = $invoice_id
-        AND invoice_url_key = '$url_key'
-        AND invoice_status != 'Draft'
-        AND invoice_status != 'Paid'
-        AND invoice_status != 'Cancelled'
-        LIMIT 1"
-    );
-    if (!$invoice_sql || mysqli_num_rows($invoice_sql) !== 1) {
-        exit("Invalid Invoice ID/SQL query");
-    }
+    $invoice = $accounting->getInvoice($invoice_id);
 
     // Invoice exists - get details for payment
-    $row = mysqli_fetch_array($invoice_sql);
-    $invoice_prefix = nullable_htmlentities($row['invoice_prefix']);
-    $invoice_number = intval($row['invoice_number']);
-    $invoice_amount = floatval($row['invoice_amount']);
-    $invoice_currency_code = nullable_htmlentities($row['invoice_currency_code']);
-    $client_id = intval($row['client_id']);
-    $client_name = nullable_htmlentities($row['client_name']);
+    $invoice_prefix = nullable_htmlentities($invoice['invoice_prefix']);
+    $invoice_number = intval($invoice['invoice_number']);
+    $invoice_amount = floatval($invoice['invoice_amount']);
+    $invoice_currency_code = nullable_htmlentities($invoice['invoice_currency_code']);
+    $client_id = intval($invoice['client_id']);
+    $client_name = nullable_htmlentities($invoice['client_name']);
 
     $config_sql = mysqli_query($mysqli, "SELECT * FROM settings WHERE company_id = 1");
     $config_row = mysqli_fetch_array($config_sql);
@@ -61,19 +59,13 @@ if (isset($_GET['stripe_create_pi'])) {
     $config_stripe_percentage_fee = floatval($config_row['config_stripe_percentage_fee']);
     $config_stripe_flat_fee = floatval($config_row['config_stripe_flat_fee']);
 
-    // Add up all the payments for the invoice and get the total amount paid to the invoice
-    $sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
-    $row = mysqli_fetch_array($sql_amount_paid);
-    $amount_paid = floatval($row['amount_paid']);
-    $balance_to_pay = $invoice_amount - $amount_paid;
-
     // Check config to see if client pays fees is enabled
     if ($config_stripe_client_pays_fees == 1) {
         // Calculate the amount to charge the client
         $balance_to_pay = ($balance_to_pay + $config_stripe_flat_fee) / (1 - $config_stripe_percentage_fee);
     }
 
-    $balance_to_pay = round($balance_to_pay, 2);
+    $balance_to_pay = $invoice['invoice_balance'];
 
 
     if (intval($balance_to_pay) == 0) {

@@ -178,21 +178,21 @@
         }
 
         function updateTotalAmount() {
-            var total = $('input[name^="invoice_payment_amount"]').toArray().reduce((sum, input) => sum + (parseFloat($(input).val()) || 0), 0);
-            var currencySymbol = $('#inputted_amount').data('currency-symbol'); // Assuming the currency symbol is stored as a data attribute
+            const total = $('input[name^="invoice_payment_amount"]').toArray().reduce((sum, input) => sum + (parseFloat($(input).val()) || 0), 0);
+            const currencySymbol = $('#inputted_amount').data('currency-symbol');
             $('#inputted_amount').text(currencySymbol + total.toFixed(2));
         }
 
         function updateAmountToApply(checkbox) {
-            var balance = $(checkbox).closest('tr').find('.balance').text().replace(/[^0-9.-]+/g, '');
-            var amount = $(checkbox).prop('checked') ? balance : '';
+            const balance = $(checkbox).closest('tr').find('.balance').text().replace(/[^0-9.-]+/g, '');
+            const amount = $(checkbox).prop('checked') ? balance : '';
             $(checkbox).closest('tr').find('input[type="numeric"]').val(amount);
             updateTotalAmount();
         }
 
         function autoPopulateAmounts() {
-            var paymentAmount = parseFloat($('#payment_amount').val()) || 0;
-            var remainingAmount = paymentAmount;
+            let paymentAmount = parseFloat($('#payment_amount').val()) || 0;
+            let remainingAmount = paymentAmount;
 
             $('input[type="checkbox"]').prop('checked', false);
             $('input[name^="invoice_payment_amount"]').val('');
@@ -200,9 +200,9 @@
             $('tbody tr').each(function() {
                 if (remainingAmount <= 0) return false;
 
-                var $row = $(this);
-                var balance = parseFloat($row.find('.balance').text().replace(/[^0-9.-]+/g, ''));
-                var amountToApply = Math.min(balance, remainingAmount);
+                const $row = $(this);
+                const balance = parseFloat($row.find('.balance').text().replace(/[^0-9.-]+/g, ''));
+                const amountToApply = Math.min(balance, remainingAmount);
 
                 $row.find('input[type="checkbox"]').prop('checked', true);
                 $row.find('input[name^="invoice_payment_amount"]').val(amountToApply.toFixed(2));
@@ -217,58 +217,54 @@
             console.log(xhr.responseText);
         }
 
-        $('#Client').select2().on('change', function() {
-            //Get invoices for client
+        function fetchClientInvoices(clientId) {
             $.ajax({
-                url: `/ajax/ajax.php?client_invoices=${$(this).val()}`,
+                url: `/ajax/ajax.php?client_invoices=${clientId}`,
                 type: 'GET',
                 success: function(response) {
-                    var data = JSON.parse(response);
-                    var table = $('.table tbody').empty();
+                    const data = JSON.parse(response);
+                    const table = $('.table tbody').empty();
                     data.forEach(invoice => table.append(handleInvoiceSelection(invoice)));
-                    $('input[name^="invoice_payment_amount"]').on('input', function() {
-                        var amount = parseFloat($(this).val()) || 0;
-                        $(this).closest('tr').find('input[type="checkbox"]').prop('checked', amount > 0);
-                        updateTotalAmount();
-                    });
-                    $('input[type="checkbox"]').on('change', function() {
-                        updateAmountToApply(this);
-                    });
+                    attachInvoiceEventHandlers();
                 },
                 error: handleError
             });
-            //Get Credits for client
+        }
+
+        function fetchClientCredits(clientId) {
             $.ajax({
-                url: `/ajax/ajax.php?client_credits=${$(this).val()}`,
+                url: `/ajax/ajax.php?client_credits=${clientId}`,
                 type: 'GET',
                 success: function(response) {
-                    //Create an alert if credits are available
                     if (response.length > 0) {
-                        alert('Credits available for client. [${response[0].credit_amount}]');
+                        alert(`Credits available for client. [${response[0].credit_amount}]`);
                     }
                 },
                 error: handleError
             });
-            //Log url for error logging
-            console.log(`/ajax/ajax.php?client_credits=${$(this).val()}`);
-        });
+        }
 
-        $('#check_all').on('change', function() {
-            var isChecked = $(this).prop('checked');
-            $('input[type="checkbox"]').prop('checked', isChecked).each(function() {
+        function attachInvoiceEventHandlers() {
+            $('input[name^="invoice_payment_amount"]').on('input', function() {
+                const amount = parseFloat($(this).val()) || 0;
+                $(this).closest('tr').find('input[type="checkbox"]').prop('checked', amount > 0);
+                updateTotalAmount();
+            });
+
+            $('input[type="checkbox"]').on('change', function() {
                 updateAmountToApply(this);
             });
-        });
+        }
 
-        $('#apply_payment').on('click', function() {
-            var invoices = $('input[type="checkbox"]:checked').map(function() {
+        function applyPayment() {
+            const invoices = $('input[type="checkbox"]:checked').map(function() {
                 return {
                     invoice_id: $(this).val(),
                     invoice_payment_amount: $(`input[name="invoice_payment_amount[${$(this).val()}]"]`).val()
                 };
             }).get();
 
-            var data = {
+            const data = {
                 invoices: invoices,
                 payment_amount: $('#payment_amount').val(),
                 payment_date: $('#payment_date').val(),
@@ -277,8 +273,6 @@
                 payment_account: $('#payment_account').val(),
                 client: $('#Client').val()
             };
-
-            var inputtedAmount = parseFloat($('#inputted_amount').text().replace(/[^0-9.-]+/g, ''));
 
             if (!data.payment_date) return alert('Payment date is required');
             if (!data.payment_method) return alert('Payment method is required');
@@ -291,7 +285,7 @@
                 type: 'POST',
                 data: JSON.stringify(data),
                 success: function(response) {
-                    var data = JSON.parse(response);
+                    const data = JSON.parse(response);
                     if (data.success) {
                         alert('Payment applied successfully');
                         location.reload();
@@ -301,18 +295,28 @@
                 },
                 error: handleError
             });
+        }
+
+        $('#Client').select2().on('change', function() {
+            const clientId = $(this).val();
+            fetchClientInvoices(clientId);
+            fetchClientCredits(clientId);
         });
 
-        $('#payment_amount').on('input', function() {
-            autoPopulateAmounts();
+        $('#check_all').on('change', function() {
+            const isChecked = $(this).prop('checked');
+            $('input[type="checkbox"]').prop('checked', isChecked).each(function() {
+                updateAmountToApply(this);
+            });
         });
 
-        $('input[type="checkbox"]').on('change', function() {
-            updateAmountToApply(this);
-        });
+        $('#apply_payment').on('click', applyPayment);
 
-        // Initialize the currency symbol on document ready
-        var initialCurrencySymbol = $('#inputted_amount').text().replace(/[0-9.,]/g, '').trim();
+        $('#payment_amount').on('input', autoPopulateAmounts);
+
+        attachInvoiceEventHandlers();
+
+        const initialCurrencySymbol = $('#inputted_amount').text().replace(/[0-9.,]/g, '').trim();
         $('#inputted_amount').data('currency-symbol', initialCurrencySymbol);
     });
 </script>

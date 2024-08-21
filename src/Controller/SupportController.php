@@ -24,7 +24,7 @@ class SupportController {
         $clientModel->clientAccessed($client_id);
     }
 
-    public function index($client_id = null, $status = null, $user_id = null) {
+    public function index($client_id = null, $status = null, $user_id = null, $ticket_type = null) {
 
         $supportModel = new Support($this->pdo);
         // Check if user has access to the support class
@@ -35,10 +35,12 @@ class SupportController {
             ]);
             return;
         }
+        if ($ticket_type === null) {
+            $ticket_type = 'support';
+        }
 
         if ($client_id !== null) {
             $this->clientAccessed($client_id);
-            // Check if user has access to client
             if (!$this->auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
                 $this->view->error([
                     'title' => 'Access Denied',
@@ -46,18 +48,13 @@ class SupportController {
                 ]);
                 return;
             }
-
-            // Get client details
             $clientModel = new Client($this->pdo);
             $client = $clientModel->getClient($client_id);
             $client_header = $clientModel->getClientHeader($client_id);
-
-
-            // View tickets for that client
             $data = [
-                'tickets' => $status == 5 ? $supportModel->getClosedTickets($client_id, $user_id) : $supportModel->getOpenTickets($client_id, $user_id),
+                'tickets' => $status == 5 ? $supportModel->getTickets("closed", $client_id, $user_id, $ticket_type) : $supportModel->getTickets("open", $client_id, $user_id, $ticket_type),
                 'client' => $client,
-                'client_header' => $client_header['client_header'], // Ensure correct structure
+                'client_header' => $client_header['client_header'],
                 'client_page' => true,
                 'support_header_numbers' => $supportModel->getSupportHeaderNumbers($client_id),
                 'return_page' => [
@@ -69,9 +66,13 @@ class SupportController {
         } else {
             // View all tickets
             $data = [
-                'tickets' => $status == 5 ? $supportModel->getClosedTickets($client_id, $user_id) : $supportModel->getOpenTickets($client_id, $user_id),
+                'tickets' => $status == 5 ? $supportModel->getTickets("closed", null, $user_id, $ticket_type) : $supportModel->getTickets("open", null, $user_id, $ticket_type),
                 'client_page' => false,
-                'support_header_numbers' => $supportModel->getSupportHeaderNumbers()
+                'support_header_numbers' => $supportModel->getSupportHeaderNumbers(),
+                'return_page' => [
+                    'name' => ' All Tickets',
+                    'link' => 'tickets'
+                ]
             ];
             $this->view->render('tickets', $data);
         }

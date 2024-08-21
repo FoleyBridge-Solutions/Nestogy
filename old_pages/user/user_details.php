@@ -8,6 +8,7 @@ require_once "/var/www/portal.twe.tech/includes/inc_all.php";
         <h3 class="card-title"><i class="fas fa-fw fa-user mr-2"></i>Your User Details</h3>
     </div>
     <div class="card-body">
+        <a type="button" href="/public/subscribe.php" class="btn btn-label-primary btn-block mt-3"><i class="fas fa-check mr-2"></i>Subscribe to notifications on this device</a>
 
         <form action="/post.php" method="post" enctype="multipart/form-data" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">

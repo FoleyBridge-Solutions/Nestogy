@@ -1,4 +1,12 @@
 <?php
+
+    if (!isset($datatable_order)) {
+        $datatable_order = '[]';
+    }
+    if (!isset($datatable_settings)) {
+        $datatable_settings = '';
+    }
+
     require_once "/var/www/portal.twe.tech/includes/inc_confirm_modal.php";
     require_once "/var/www/portal.twe.tech/includes/inc_dynamic_modal.php";
     function renderMenuItems($items, $level = 0) {

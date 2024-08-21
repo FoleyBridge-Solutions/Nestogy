@@ -53,7 +53,7 @@
                     <h5 class="text-secondary mt-1">Primary Location</h5>
                     <?php if (!empty($location_address)) { ?>
                         <div>
-                            <a href="//maps.<?= $map_source; ?>.com/?q=<?= "$location_address $location_zip"; ?>" target="_blank">
+                            <a href="//maps.google.com/?q=<?= "$location_address $location_zip"; ?>" target="_blank">
                                 <i class="fa fa-fw fa-map-marker-alt text-secondary ml-1 mr-2"></i><?= $location_address; ?>
                                 <div><i class="fa fa-fw ml-1 mr-2"></i><?= "$location_city $location_state $location_zip"; ?></div>
                             </a>

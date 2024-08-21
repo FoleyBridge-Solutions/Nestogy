@@ -7,6 +7,8 @@ use Twetech\Nestogy\View\View;
 use Twetech\Nestogy\Auth\Auth;
 use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\Model\Client;
+use NumberFormatter;
+
 
 class AccountingController {
     private $pdo;
@@ -14,6 +16,7 @@ class AccountingController {
     private $auth;
     private $accounting;
     private $client;
+    private $currency_format;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -21,7 +24,7 @@ class AccountingController {
         $this->auth = new Auth($pdo);
         $this->accounting = new Accounting($pdo);
         $this->client = new Client($pdo);
-
+        $this->currency_format = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
         if (!$this->auth->check()) {
             // Redirect to login page or handle unauthorized access
             header('Location: login.php');
@@ -73,14 +76,11 @@ class AccountingController {
             ];
         }
 
-
-
         $invoices = $this->accounting->getInvoices($client_id);
         foreach ($invoices as $invoice) {
             // Get the client name
             $client_id = $invoice['invoice_client_id'];
-            $client = new Client($this->pdo);
-            $client_name = $client->getClient($client_id)['client_name'];
+            $client_name = $invoice['client_name'];
             $client_name_display = "<a class='btn btn-label-primary btn-sm' data-bs-toggle='tooltip' data-bs-placement='top' title='View Invoices for $client_name' href='?page=invoices&client_id=$client_id'>$client_name</a>";
             
             // Get the invoice number to display with a link to the invoice
@@ -93,15 +93,13 @@ class AccountingController {
             if ($invoice['invoice_status'] == 'Sent' && $invoice['invoice_due_date'] < date('Y-m-d')) {
                 $invoice['invoice_status'] .= ' & Overdue';
             }
-
-            $invoice_balance = $this->accounting->getInvoiceBalance($invoice_id);
         
             if ($client_page) {
                 $data['table']['body_rows'][] = [
                     $invoice_number_display,    
                     $invoice['invoice_scope'],
-                    $invoice['invoice_amount'],
-                    $invoice_balance,
+                    numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceTotal($invoice_id), 'USD'),
+                    numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceBalance($invoice_id), 'USD'),
                     $invoice['invoice_date'],
                     $invoice['invoice_status']
                 ];
@@ -110,8 +108,8 @@ class AccountingController {
                     $invoice_number_display,
                     $client_name_display,
                     $invoice['invoice_scope'],
-                    $invoice['invoice_amount'],
-                    $invoice_balance,
+                    numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceTotal($invoice_id), 'USD'),
+                    numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceBalance($invoice_id), 'USD'),
                     $invoice['invoice_date'],
                     $invoice['invoice_status']
                 ];
@@ -202,7 +200,7 @@ class AccountingController {
                 $data['table']['body_rows'][] = [
                     $quote_number_display,
                     $quote['quote_scope'],
-                    $quote['quote_amount'],
+                    numfmt_format_currency($this->currency_format, $quote['quote_amount'], 'USD'),
                     $quote['quote_date'],
                     $quote['quote_status']
                 ];                
@@ -211,7 +209,7 @@ class AccountingController {
                     $quote_number_display,
                     $client_name_display,
                     $quote['quote_scope'],
-                    $quote['quote_amount'],
+                    numfmt_format_currency($this->currency_format, $quote['quote_amount'], 'USD'),
                     $quote['quote_date'],
                     $quote['quote_status']
                     ];
@@ -229,6 +227,8 @@ class AccountingController {
             'client_header' => $client->getClientHeader($client_id)['client_header'],
             'quote' => $quote,
             'company' => $this->auth->getCompany(),
+            'all_products' => $this->accounting->getProductsAutocomplete(),
+            'all_taxes' => $this->accounting->getTaxes(),
             'return_page' => [
                 'name' => 'Quotes',
                 'link' => 'quotes'
@@ -411,6 +411,18 @@ class AccountingController {
             'categories' => $categories
         ];
         $this->view->render('editProduct', $data);
+    }
+    public function showStatement($client_id) {
+        $data = [
+            'statement' => $this->accounting->getStatement($client_id),
+            'all_clients' => $this->client->getClients(),
+            'client_header' => $this->client->getClientHeader($client_id)['client_header'],
+            'return_page' => [
+                'name' => 'Collections',
+                'link' => 'report&report=collections'
+            ]
+        ];
+        $this->view->render('statement', $data, true);
     }
 
 }

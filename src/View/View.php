@@ -21,7 +21,7 @@ class View {
         if ($client_page) {
             require "../src/View/client_navbar.php";
         }
-        require "../src/View/$template.php";
+                 require "../src/View/$template.php";
         require "../src/View/footer.php";
     }
 

@@ -1,7 +1,7 @@
 /*!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.6.18-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: itflow
+-- Host: 127.0.0.1    Database: itflow
 -- ------------------------------------------------------
 -- Server version	10.6.18-MariaDB-0ubuntu0.22.04.1
 
@@ -474,7 +474,7 @@ CREATE TABLE `credits` (
   `credit_payment_id` int(11) NOT NULL DEFAULT 0,
   `credit_account_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`credit_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=174 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=177 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -603,7 +603,7 @@ CREATE TABLE `email_queue` (
   `email_attempts` tinyint(1) NOT NULL DEFAULT 0,
   `email_sent_at` datetime DEFAULT NULL,
   PRIMARY KEY (`email_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7919 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8091 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -625,7 +625,7 @@ CREATE TABLE `employee_time_breaks` (
   `employee_break_time_approved_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Employee Time Break Approved At',
   `employee_time_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`employee_time_break_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -647,7 +647,7 @@ CREATE TABLE `employee_times` (
   `employee_time_approved_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'Employee Time Approved At',
   `employee_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`employee_time_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -781,7 +781,7 @@ CREATE TABLE `history` (
   `history_recurring_id` int(11) NOT NULL DEFAULT 0,
   `history_quote_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`history_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12534 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12838 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -869,9 +869,7 @@ CREATE TABLE `invoice_items` (
   `item_quantity` decimal(15,2) NOT NULL DEFAULT 0.00,
   `item_price` decimal(15,2) NOT NULL DEFAULT 0.00,
   `item_discount` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `item_subtotal` decimal(15,2) NOT NULL DEFAULT 0.00,
   `item_tax` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `item_total` decimal(15,2) NOT NULL DEFAULT 0.00,
   `item_order` int(11) NOT NULL DEFAULT 0,
   `item_created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `item_updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
@@ -883,7 +881,7 @@ CREATE TABLE `invoice_items` (
   `item_category_id` int(11) NOT NULL DEFAULT 0,
   `item_product_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`item_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5767 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6036 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -902,7 +900,6 @@ CREATE TABLE `invoices` (
   `invoice_date` date NOT NULL,
   `invoice_due` date NOT NULL,
   `invoice_discount_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `invoice_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
   `invoice_currency_code` varchar(200) NOT NULL,
   `invoice_note` text DEFAULT NULL,
   `invoice_url_key` varchar(200) DEFAULT NULL,
@@ -912,7 +909,7 @@ CREATE TABLE `invoices` (
   `invoice_category_id` int(11) NOT NULL,
   `invoice_client_id` int(11) NOT NULL,
   PRIMARY KEY (`invoice_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1664 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1758 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1020,7 +1017,7 @@ CREATE TABLE `logs` (
   `log_user_id` int(11) NOT NULL DEFAULT 0,
   `log_entity_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`log_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=195744 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=195873 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1059,13 +1056,13 @@ DROP TABLE IF EXISTS `notification_subscriptions`;
 CREATE TABLE `notification_subscriptions` (
   `notification_subscription_id` int(11) NOT NULL AUTO_INCREMENT,
   `notification_subscription_user_id` int(11) NOT NULL COMMENT 'User ID',
-  `notification_subscription_endpoint` varchar(255) NOT NULL COMMENT 'Endpoint',
+  `notification_subscription_endpoint` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'Endpoint',
   `notification_subscription_public_key` varchar(255) NOT NULL COMMENT 'Public Key',
   `notification_subscription_auth_key` varchar(255) NOT NULL COMMENT 'Auth Key',
   `notification_subscription_created` datetime DEFAULT current_timestamp(),
   `notification_subscription_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`notification_subscription_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1088,8 +1085,9 @@ CREATE TABLE `notifications` (
   `notification_entity_id` int(11) DEFAULT NULL,
   `notification_sent` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Notification Sent',
   `notification_is_webpush` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Notification is webpush',
-  PRIMARY KEY (`notification_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8873 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  PRIMARY KEY (`notification_id`),
+  KEY `notification_sent` (`notification_sent`,`notification_is_webpush`)
+) ENGINE=InnoDB AUTO_INCREMENT=8900 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1113,7 +1111,7 @@ CREATE TABLE `payments` (
   `payment_invoice_id` int(11) NOT NULL DEFAULT 0,
   `plaid_transaction_id` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`payment_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1892 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1911 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1376,7 +1374,7 @@ CREATE TABLE `remember_tokens` (
   `remember_token_user_id` int(11) NOT NULL,
   `remember_token_created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`remember_token_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=323 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=346 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1860,7 +1858,7 @@ CREATE TABLE `ticket_attachments` (
   `ticket_attachment_ticket_id` int(11) NOT NULL,
   `ticket_attachment_reply_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`ticket_attachment_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3461 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3474 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1897,7 +1895,7 @@ CREATE TABLE `ticket_replies` (
   `ticket_reply_by` int(11) NOT NULL,
   `ticket_reply_ticket_id` int(11) NOT NULL,
   PRIMARY KEY (`ticket_reply_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7308 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7356 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1987,8 +1985,9 @@ CREATE TABLE `tickets` (
   `ticket_asset_id` int(11) NOT NULL DEFAULT 0,
   `ticket_invoice_id` int(11) NOT NULL DEFAULT 0,
   `ticket_project_id` int(11) NOT NULL DEFAULT 0,
+  `ticket_type` varchar(255) NOT NULL DEFAULT 'support',
   PRIMARY KEY (`ticket_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3174 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3189 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2034,7 +2033,7 @@ CREATE TABLE `trips` (
   `trip_user_id` int(11) NOT NULL DEFAULT 0,
   `trip_client_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`trip_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2225,6 +2224,10 @@ CREATE TABLE `vendors` (
   PRIMARY KEY (`vendor_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping routines for database 'itflow'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -2235,4 +2238,4 @@ CREATE TABLE `vendors` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-08-17  1:16:05
+-- Dump completed on 2024-08-20 14:38:16

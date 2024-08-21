@@ -7,10 +7,12 @@ $sql_ticket_select = mysqli_query($mysqli,
     "SELECT * FROM tickets
     LEFT JOIN clients ON client_id = ticket_client_id
     WHERE ticket_id = $ticket_id");
+    
 $row = mysqli_fetch_array($sql_ticket_select);
 $ticket_id = intval($row['ticket_id']);
 $ticket_number = intval($row['ticket_number']);
 $ticket_prefix = nullable_htmlentities($row['ticket_prefix']);
+$ticket_type = nullable_htmlentities($row['ticket_type']);
 $client_name = nullable_htmlentities($row['client_name']);
 $client_id = intval($row['client_id']);
 $ticket_subject = nullable_htmlentities($row['ticket_subject']);
@@ -38,7 +40,7 @@ $ticket_vendor_ticket_number = nullable_htmlentities($row['ticket_vendor_ticket_
                 <div class="modal-body bg-white">
                 <input type="hidden" name="ticket_id" value="<?= $ticket_id; ?>">
                 <input type="hidden" name="client_id" value="<?= $client_id; ?>">
-                <input type="hidden" name="ticket_number" value="<?= "$ticket_prefix$ticket_number"; ?>">
+                <input type="hidden" name="ticket_number" value="<?= "$ticket_number"; ?>">
                     <ul class="nav nav-pills  mb-3">
                         <li class="nav-item">
                             <a class="nav-link active" role="tab" data-bs-toggle="tab" href="#pills-details<?= $ticket_id; ?>"><i class="fa fa-fw fa-life-ring mr-2"></i>Details</a>
@@ -87,6 +89,20 @@ $ticket_vendor_ticket_number = nullable_htmlentities($row['ticket_vendor_ticket_
                                         <option <?php if ($ticket_priority == 'Low') { echo "selected"; } ?> >Low</option>
                                         <option <?php if ($ticket_priority == 'Medium') { echo "selected"; } ?> >Medium</option>
                                         <option <?php if ($ticket_priority == 'High') { echo "selected"; } ?> >High</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Type <strong class="text-danger">*</strong></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
+                                    </div>
+                                    <select class="form-control select2" id='select2' name="type" required>
+                                        <option <?php if ($ticket_type == 'support') { echo "selected"; } ?> >Support</option>
+                                        <option <?php if ($ticket_type == 'alert') { echo "selected"; } ?> >Alert</option>
+                                        <option <?php if ($ticket_type == 'accounting') { echo "selected"; } ?> >Accounting</option>
                                     </select>
                                 </div>
                             </div>

@@ -14,6 +14,7 @@
     ],
     "require": {
         "predis/predis": "^2.2",
-        "tomorrow-ideas/plaid-sdk-php": "^1.0"
+        "tomorrow-ideas/plaid-sdk-php": "^1.0",
+        "minishlink/web-push": "^9.0"
     }
 }

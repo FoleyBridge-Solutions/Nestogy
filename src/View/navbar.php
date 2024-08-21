@@ -383,8 +383,8 @@ $nav_title_link = '/public/';
 <div class="layout-wrapper layout-content-navbar">
     <div class="layout-container">
 
-        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-            <div class="app-brand demo">
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme d-print-none">
+            <div class="app-brand demo d-print-none">
                 <a href="<?= $nav_title_link ?>" class="app-brand-link gap-2">
                     <span class="app-brand-text demo menu-text fw-bold"><?= $nav_title ?></span>
                 </a>
@@ -393,14 +393,12 @@ $nav_title_link = '/public/';
                 </a>
             </div>
 
-            <div class="menu-inner-shadow"></div>
+            <div class="menu-inner-shadow d-print-none"></div>
 
-            <div class="menu-inner py-1">
+            <div class="menu-inner py-1 d-print-none">
                 <?php if ($client_page) {
-                    error_log("user role: " . $_SESSION['user_role']);
                     renderMenu($clientMenuItems, [$_SESSION['user_role']]);
                 } else {
-                    error_log("user role: " . $_SESSION['user_role']);
                     renderMenu($menuItems, [$_SESSION['user_role']]);
                 } ?>
             </div>
@@ -423,7 +421,7 @@ $nav_title_link = '/public/';
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
 
                         <!-- Search -->
-                        <div class="navbar-nav align-items-center">
+                        <div class="navbar-nav align-items-center ">
                             <div class="nav-item navbar-search-wrapper mb-0">
                                 <a
                                     class="nav-item nav-link search-toggler px-0"
@@ -541,9 +539,9 @@ $nav_title_link = '/public/';
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <span
-                                                        class="fw-medium d-block"><?= stripslashes(nullable_htmlentities($name)); ?></span>
+                                                        class="fw-medium d-block"><?= stripslashes(nullable_htmlentities($user_name)); ?></span>
                                                     <small
-                                                        class="text-muted"><?= nullable_htmlentities($user_role_display); ?></small>
+                                                        class="text-muted"><?= nullable_htmlentities(ucfirst($user_role)); ?></small>
                                                 </div>
                                             </div>
                                         </a>
