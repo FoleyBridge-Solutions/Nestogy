@@ -9,7 +9,6 @@
  */
 function verifyContactTicketAccess($requested_ticket_id, $expected_ticket_state)
 {
-
     // Access the global variables
     global $mysqli, $contact_id, $contact_primary, $contact_is_technical_contact, $client_id;
 
@@ -36,5 +35,15 @@ function verifyContactTicketAccess($requested_ticket_id, $expected_ticket_state)
 
     // Client is NOT ticket owner or primary/tech contact
     return false;
-
+}
+function sendNotification($notification_type, $notification, $action = '', $client_id = 0){
+    global $mysqli;
+    mysqli_query($mysqli,
+        "INSERT INTO notifications SET
+        notification_type = '$notification_type',
+        notification = '$notification',
+        notification_action = '$action',
+        notification_client_id = $client_id,
+        notification_is_webpush = 1"
+);
 }

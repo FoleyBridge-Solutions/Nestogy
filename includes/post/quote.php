@@ -168,15 +168,15 @@ if (isset($_POST['add_quote_to_invoice'])) {
 if (isset($_POST['add_quote_item'])) {
 
     $quote_id = intval($_POST['quote_id']);
-    $name = sanitizeInput($_POST['name']);
-    $description = sanitizeInput($_POST['description']);
-    $qty = floatval($_POST['qty']);
-    $price = floatval($_POST['price']);
-    $tax_id = intval($_POST['tax_id']);
-    $item_order = intval($_POST['item_order']);
-    $item_discount = floatval($_POST['item_discount']);
-    $item_category_id = intval($_POST['item_category_id']);
-    $item_product_id = intval($_POST['item_product_id']);
+    $name = sanitizeInput($_POST['name']) ?? '';
+    $description = sanitizeInput($_POST['description']) ?? '';
+    $qty = floatval($_POST['qty']) ?? 1;
+    $price = floatval($_POST['price']) ?? 0;
+    $tax_id = intval($_POST['tax_id']) ?? 0;
+    $item_order = intval($_POST['item_order']) ?? 0;
+    $item_discount = floatval($_POST['item_discount']) ?? 0;
+    $item_category_id = intval($_POST['item_category_id']) ?? 0;
+    $item_product_id = intval($_POST['item_product_id']) ?? 0;
 
     $subtotal = ($price - $item_discount) * $qty;
 
@@ -191,25 +191,7 @@ if (isset($_POST['add_quote_item'])) {
 
     $total = $subtotal + $tax_amount;
 
-    mysqli_query($mysqli,"INSERT INTO invoice_items SET item_name = '$name', item_description = '$description', item_quantity = $qty, item_price = $price, item_subtotal = $subtotal, item_tax = $tax_amount, item_total = $total, item_tax_id = $tax_id, item_order = $item_order, item_quote_id = $quote_id, item_discount = $item_discount, item_category_id = $item_category_id, item_product_id = $item_product_id");
-
-    //Get Discount
-    $sql = mysqli_query($mysqli,"SELECT * FROM quotes WHERE quote_id = $quote_id");
-    $row = mysqli_fetch_array($sql);
-
-    $quote_discount_amount = floatval($row['quote_discount_amount']);
-
-
-    //add up the total of all items
-    $sql = mysqli_query($mysqli,"SELECT * FROM invoice_items WHERE item_quote_id = $quote_id");
-    $quote_amount = 0;
-    while($row = mysqli_fetch_array($sql)) {
-        $item_total = floatval($row['item_total']);
-        $quote_amount = $quote_amount + $item_total;
-    }
-    $new_quote_amount = $quote_amount - $quote_discount_amount;
-
-    mysqli_query($mysqli,"UPDATE quotes SET quote_amount = $new_quote_amount WHERE quote_id = $quote_id");
+    mysqli_query($mysqli,"INSERT INTO invoice_items SET item_name = '$name', item_description = '$description', item_quantity = $qty, item_price = $price, item_tax_id = $tax_id, item_order = $item_order, item_quote_id = $quote_id, item_discount = $item_discount, item_category_id = $item_category_id, item_product_id = $item_product_id");
 
     $_SESSION['alert_message'] = "Item added";
 

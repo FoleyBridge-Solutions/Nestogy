@@ -4,12 +4,13 @@
 namespace Twetech\Nestogy\Model;
 
 use Twetech\Nestogy\Model\Client;
-
 use PDO;
+
 
 class Accounting {
     private $pdo;
     private $client;
+
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
         $this->client = new Client($pdo);
@@ -17,11 +18,11 @@ class Accounting {
 
     public function getInvoices($client_id = false) {
         if ($client_id) {
-            $stmt = $this->pdo->prepare("SELECT * FROM invoices LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id WHERE invoice_client_id = :client_id ORDER BY invoice_date DESC");
+            $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM invoices LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id WHERE invoice_client_id = :client_id ORDER BY invoice_date DESC");
             $stmt->execute(['client_id' => $client_id]);
             $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
-            $stmt = $this->pdo->query("SELECT * FROM invoices LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id ORDER BY invoice_date DESC");
+            $stmt = $this->pdo->query("SELECT SQL_CACHE * FROM invoices LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id ORDER BY invoice_date DESC");
             $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         return $invoices;
@@ -109,7 +110,11 @@ class Accounting {
             "
         );
         $stmt->execute(['client_id' => $client_id, 'client_id2' => $client_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC)['client_balance']*-1;
+        if ($stmt->rowCount() > 0) {
+            return $stmt->fetch(PDO::FETCH_ASSOC)['client_balance']*-1;
+        } else {
+            return 0;
+        }
     }
     public function getClientPaidAmount($client_id) {
         // Get the total amount paid by the client during the year

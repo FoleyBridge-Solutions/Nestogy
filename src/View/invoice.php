@@ -16,18 +16,20 @@ if (isset($invoice)) {
     $invoice_currency_code = $invoice['invoice_currency_code'];
     $invoice_url_key = $invoice['invoice_url_key'];
     $invoice_add_item_modal = 'invoice_add_item_modal.php?invoice_id=' . $invoice_id;
+    $invoice_note = $invoice['invoice_note'];
 } else if (isset($quote)) {
     $wording = 'Quote';
     $invoice_items = $quote['items'];
     $invoice_number = $quote['quote_number'];
     $invoice_date = $quote['quote_date'];
-    $invoice_due = $quote['quote_due'];
+    $invoice_due = $wording;
     $invoice_status = $quote['quote_status'];
     $invoice_id = $quote['quote_id'];
     $invoice_prefix = $quote['quote_prefix'];
     $invoice_currency_code = $quote['quote_currency_code'];
     $invoice_url_key = $quote['quote_url_key'];
     $invoice_add_item_modal = 'quote_add_item_modal.php?quote_id=' . $quote_id;
+    $invoice_note = $quote['quote_note'];
 }
 
 $subtotal = 0;
@@ -173,7 +175,12 @@ $products = $all_products
                         <hr class="mx-n4" />
                         <div class="pt-0 pt-md-4 mb-4 item-container" id="item<?=$item_id?>">
                             <form action="/post.php" method="post" autocomplete="off" enctype="multipart/form-data">
-                                <input type="hidden" name="invoice_id" value="<?=$invoice_id?>" />
+                                <?php if ($wording === 'Invoice') { ?>
+                                    <input type="hidden" name="invoice_id" value="<?=$invoice_id?>" />
+                                <?php } ?>
+                                <?php if ($wording === 'Quote') { ?>
+                                    <input type="hidden" name="quote_id" value="<?=$invoice_id?>" />
+                                <?php } ?>
                                 <input type="hidden" name="item_id" value="<?=$item_id?>" />
                                 <div class="d-flex border rounded position-relative pe-0">
                                     <div class="d-flex flex-column align-items-center justify-content-between border-start p-2">
@@ -331,12 +338,10 @@ $products = $all_products
                                 <i class="fas fa-fw fa-paper-plane me-1"></i>Send
                             </button>
                             <div class="dropdown-menu">
-                                <?php if (!empty($config_smtp_host) && !empty($contact_email)) { ?>
-                                    <a class="dropdown-item" href="/post.php?email_invoice=<?= $invoice_id; ?>">
-                                        <i class="fas fa-fw fa-paper-plane mr-2"></i>Send Email
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                <?php } ?>
+                                <a class="dropdown-item" href="/post.php?email_invoice=<?= $invoice_id; ?>">
+                                    <i class="fas fa-fw fa-paper-plane mr-2"></i>Send Email
+                                </a>
+                                <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="/post.php?mark_invoice_sent=<?= $invoice_id; ?>">
                                     <i class="fas fa-fw fa-check mr-2"></i>Mark Sent
                                 </a>

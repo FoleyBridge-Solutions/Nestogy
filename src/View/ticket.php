@@ -8,6 +8,7 @@ $ticket_status_id = $ticket['ticket_status_id'];
 $ticket_id = $ticket['ticket_id'];
 $ticket_priority = $ticket['ticket_priority'];
 $ticket_billable = $ticket['ticket_billable'];
+$ticket_invoice_id = $ticket['ticket_invoice_id'];
 $ticket_replies = $data['ticket_replies'];
 $ticket_reply_num = count($ticket_replies);
 $ticket_created_at = $ticket['ticket_created_at'];
@@ -623,6 +624,9 @@ $task_count = 0; // TODO: Implement task count
                             }
                             if ($ticket_billable) {
                                 $invoice_ticket_button = true;
+                            }
+                            if ($ticket_invoice_id > 0) {
+                                $invoice_ticket_button = false;
                             }
 
                             if ($close_ticket_button || $invoice_ticket_button) {

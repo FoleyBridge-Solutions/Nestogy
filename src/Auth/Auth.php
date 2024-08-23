@@ -35,21 +35,25 @@ class Auth {
         $_SESSION['logged'] = true;
         $_SESSION['user_avatar'] = $user_avatar;
 
-        if ($remember_me) {
-            $token = bin2hex(random_bytes(16));
-            $token_hash = password_hash($token, PASSWORD_DEFAULT);
+        if (isset($user['user_config_remember_me'])) {
+            if ($remember_me) {
+                $token = bin2hex(random_bytes(16));
+                $token_hash = password_hash($token, PASSWORD_DEFAULT);
 
-            // Store the token in the remember_tokens table
-            $stmt = $this->pdo->prepare('INSERT INTO remember_tokens (remember_token_token, remember_token_user_id, remember_token_created_at) VALUES (:token, :user_id, NOW())');
-            $stmt->execute(['token' => $token_hash, 'user_id' => $user_id]);
+                // Store the token in the remember_tokens table
+                $stmt = $this->pdo->prepare('INSERT INTO remember_tokens (remember_token_token, remember_token_user_id, remember_token_created_at) VALUES (:token, :user_id, NOW())');
+                $stmt->execute(['token' => $token_hash, 'user_id' => $user_id]);
 
-            // Set a cookie with the token
-            setcookie('remember_me', "$user_id:$token", time() + $this->cookieDuration, '/', '', true, true);
+                // Set a cookie with the token
+                setcookie('remember_me', "$user_id:$token", time() + $this->cookieDuration, '/', '', true, true);
 
-            // Extend session duration
-            ini_set('session.gc_maxlifetime', $this->cookieDuration);
-            session_set_cookie_params($this->cookieDuration);
-            session_regenerate_id(true); // Regenerate session ID to prevent fixation
+                // Extend session duration
+                ini_set('session.gc_maxlifetime', $this->cookieDuration);
+                session_set_cookie_params($this->cookieDuration);
+                session_regenerate_id(true); // Regenerate session ID to prevent fixation
+            }
+        } else {
+            error_log("User config remember me not set");
         }
 
         header('Location: /public/');
@@ -100,8 +104,10 @@ class Auth {
             $stmt = $pdo->prepare('DELETE FROM remember_tokens WHERE remember_token_user_id = :user_id');
             $stmt->execute(['user_id' => $user_id]);
         }
+
+        session_unset();
     
-        header('Location: login.php');
+        header('Location: /');
         exit;
     }
     
@@ -122,6 +128,7 @@ class Auth {
                     ini_set('session.gc_maxlifetime', $this->cookieDuration);
                     session_set_cookie_params($this->cookieDuration);
                     session_regenerate_id(true); // Regenerate session ID to prevent fixation
+                    $user['remember_me'] = $user['user_config_remember_me'];
 
                     $this->login($user);
                 } else {
@@ -131,7 +138,7 @@ class Auth {
                 error_log("Token verification failed for user_id: $user_id");
             }
         } else {
-            error_log("No remember_me cookie set or user already logged in.");
+            error_log("No remember_me cookie set");
         }
     }
 

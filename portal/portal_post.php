@@ -65,7 +65,14 @@ if (isset($_POST['add_ticket'])) {
             ]
         ];
         addToMailQueue($mysqli, $data);
-        }
+    }
+
+    sendNotification(
+        'New Ticket',
+        'New Ticket created by ' .  $contact_name . ' for ' . $subject,
+        'public/?page=ticket&action=show&ticket_id=' . $id,
+        $client_id
+    );
 
     // Logging
     mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Create', log_description = 'Client contact $contact_name created ticket $subject', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id");
@@ -105,6 +112,7 @@ if (isset($_POST['add_ticket_comment'])) {
         $ticket_assigned_to = intval($ticket_details['ticket_assigned_to']);
         $ticket_subject = sanitizeInput($ticket_details['ticket_subject']);
         $client_name = sanitizeInput($ticket_details['client_name']);
+        $client_id = intval($ticket_details['ticket_client_id']);
 
         if ($ticket_details && $ticket_assigned_to !== 0) {
 
@@ -127,9 +135,16 @@ if (isset($_POST['add_ticket_comment'])) {
                 ]
             ];
 
-            addToMailQueue($mysqli, $data);
+            addToMailQueue($mysqli, $data);              
 
         }
+
+        echo "Sending Notification" . sendNotification(
+            'Ticket '. $config_ticket_prefix . $ticket_number .' Updated',
+            'Ticket updated by ' . $contact_name . ' for ' . $ticket_subject,
+            'public/?page=ticket&action=show&ticket_id=' . $ticket_id,
+            $client_id
+        );
 
         // Store any attached any files
         if (!empty($_FILES)) {
@@ -252,3 +267,5 @@ if (isset($_POST['edit_profile'])) {
     header('Location: index.php');
     exit;
 }
+
+

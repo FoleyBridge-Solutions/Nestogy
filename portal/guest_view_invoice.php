@@ -241,7 +241,8 @@ if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status
                                 foreach ($invoice['items'] as $item) {
                                     $item_id = intval($item['item_id']);
                                     $item_name = nullable_htmlentities($item['item_name']);
-                                    $item_description = $item['item_description'];
+                                    $item_description = html_entity_decode($item['item_description']); // Decode HTML entities
+                                    $item_description = strip_tags($item_description); // Remove HTML tags
                                     $item_quantity = floatval($item['item_quantity']);
                                     $item_price = floatval($item['item_price']);
                                     $item_discount = floatval($item['item_discount']);
@@ -261,7 +262,7 @@ if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status
 
                                     <tr>
                                         <td><?= $item_name; ?></td>
-                                        <td><?= nl2br($item_description); ?></td>
+                                        <td><?= $item_description; ?></td>
                                         <td class="text-center"><?= $item_quantity; ?></td>
                                         <td class="text-right"><?= numfmt_format_currency($currency_format, $item_price, $invoice_currency_code); ?></td>
                                         <td class="text-right"><?= numfmt_format_currency($currency_format, $item_tax, $invoice_currency_code); ?></td>
@@ -358,5 +359,5 @@ if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status
 
 
     <?php
-    require_once "portal/guest_footer.php";
+    require_once "guest_footer.php";
     ?>

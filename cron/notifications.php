@@ -12,7 +12,7 @@ $start_time = microtime(true);
 function checkTime() {
     global $start_time;
     if (microtime(true) - $start_time > 59) {
-        echo("Time limit exceeded mid-function");
+        echo("Time limit exceeded mid-function". PHP_EOL);
         exit;
     }
 }
@@ -36,7 +36,7 @@ function sendNotifications() {
     $notificationsSql = "SELECT * FROM notifications WHERE notification_sent = 0 AND notification_is_webpush = 1";
     $notificationsResult = mysqli_query($mysqli, $notificationsSql);
     if (!$notificationsResult) {
-        echo("Error fetching notifications: " . mysqli_error($mysqli));
+        echo("Error fetching notifications: " . mysqli_error($mysqli) . PHP_EOL);
         exit;
     }
 
@@ -45,11 +45,12 @@ function sendNotifications() {
     while ($row = mysqli_fetch_assoc($notificationsResult)) {
         $user_id = $row['notification_user_id'] ?? 0;
         $notification_id = $row['notification_id'];
+        $notification_action = $row['notification_action'];
         $sentNotifications[] = $notification_id;
         $notification_payload = json_encode([
             'title' => $row['notification_type'],
             'body' => $row['notification'],
-            'url' => "https://portal.twe.tech/" . $row['notification_id']
+            'url' => "https://portal.twe.tech/".$notification_action
         ]);
 
         if ($user_id == 0) {
@@ -60,7 +61,7 @@ function sendNotifications() {
         echo("Subscriptions SQL: " . $subscriptionsSql);
         $subscriptionsResult = mysqli_query($mysqli, $subscriptionsSql);
         if (!$subscriptionsResult) {
-            echo("Error fetching subscriptions for user $user_id: " . mysqli_error($mysqli));
+            echo("Error fetching subscriptions for user $user_id: " . mysqli_error($mysqli) . PHP_EOL);
             continue;
         }
         while ($row = mysqli_fetch_assoc($subscriptionsResult)) {
@@ -84,14 +85,13 @@ function sendNotifications() {
                 ];
             
             } catch (Exception $e) {
-                echo("Error creating subscription: " . $e->getMessage());
+                echo("Error creating subscription: " . $e->getMessage() . PHP_EOL);
             }
             checkTime();
         }
     }
 
     $webPush = new WebPush(['VAPID' => $vapid]);
-    echo("Notifications: " . json_encode($notifications)."\n\n");
 
     foreach ($notifications as $notification) {
         try {
@@ -100,7 +100,7 @@ function sendNotifications() {
                 $notification['payload']
             );
         } catch (Exception $e) {
-            echo("Error queuing notification: " . $e->getMessage());
+            echo("Error queuing notification: " . $e->getMessage() . PHP_EOL);
             echo("Notification details: " . json_encode($notification));
         }
     }
@@ -112,46 +112,35 @@ function sendNotifications() {
                 markNotificationsAsSent($sentNotifications);
             } else {
                 echo("Notification failed to " . $report->getEndpoint() . ": " . $report->getReason());
+                handleNotificationFailure($report);
             }
         }
     } catch (Exception $e) {
-        echo("Error flushing notifications: " . $e->getMessage());
+        echo("Error flushing notifications: " . $e->getMessage() . PHP_EOL);
     }
 }
 
-function monitorResources($parentPid) {
-    while (true) {
-        // Check if the parent process is still running
-        if (!posix_kill($parentPid, 0)) {
-            echo "Parent process has terminated. Exiting child process.\n";
-            exit;
-        }
+function handleNotificationFailure($report) {
+    global $mysqli;
 
-        $memoryUsage = memory_get_usage(true);
-        echo "Memory Usage: " . $memoryUsage . " bytes\n";
-        sleep(5); // Adjust the interval as needed
+    $endpoint = $report->getEndpoint();
+    $reason = $report->getReason();
+    if (strpos($reason, 'Gone') !== false) {
+        // Handle expired or unsubscribed endpoints
+        echo("Removing expired or unsubscribed endpoint: $endpoint". PHP_EOL);
+        mysqli_query($mysqli, "DELETE FROM subscriptions WHERE endpoint = '$endpoint'");
+    } else {
+        echo("Unhandled notification failure reason: $reason". PHP_EOL);
     }
 }
 
-$pid = pcntl_fork();
+$nextMinute = strtotime('+1 minute -1 second', strtotime(date('Y-m-d H:i:00')));
 
-if ($pid == -1) {
-    die('Could not fork');
-} else if ($pid) {
-    // Parent process
-    $nextMinute = strtotime('+1 minute -1 second', strtotime(date('Y-m-d H:i:00')));
-
-    while (microtime(true) < $nextMinute) {
-        $nextSecond = ceil(microtime(true));
-        while (microtime(true) < $nextSecond) {
-            usleep(100);
-        }
-        $second_decimal = round(microtime(true) - $nextSecond, 3);
-        echo date("Y-m-d H:i:s") . "." . $second_decimal . "\n";
-        sendNotifications();
+while (microtime(true) < $nextMinute) {
+    $nextSecond = ceil(microtime(true));
+    while (microtime(true) < $nextSecond) {
+        usleep(100);
     }
-} else {
-    // Child process
-    $parentPid = posix_getppid();
-    monitorResources($parentPid);
+    $second_decimal = round(microtime(true) - $nextSecond, 3);
+    sendNotifications();
 }

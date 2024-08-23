@@ -83,8 +83,30 @@ $allowed_extensions = array('jpg', 'jpeg', 'gif', 'png', 'webp', 'pdf', 'txt', '
 
 // Function to raise a new ticket for a given contact and email them confirmation (if configured)
 function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date, $subject, $message, $attachments, $original_message_file)  {
-    echo $original_message_file;
     global $mysqli, $config_app_name, $company_name, $company_phone, $config_ticket_prefix, $config_ticket_client_general_notifications, $config_ticket_new_ticket_notification_email, $config_base_url, $config_ticket_from_name, $config_ticket_from_email, $config_smtp_host, $config_smtp_port, $config_smtp_encryption, $config_smtp_username, $config_smtp_password, $allowed_extensions;
+
+    $original_client_id = $client_id;
+    //Check if ticket starts with "Alert" or "Activity"
+    if (strpos($subject, "Alert") === 0 || strpos($subject, "Activity") === 0) {
+        $ticket_type = "alert";
+    } else {
+        $ticket_type = "support";
+    }
+    //Check if the ticket is from noreply@rmmservice.com and is a support ticket
+    if (strpos($contact_email, "noreply@rmmservice.com") === 0 && $ticket_type == "support") {
+        // subject = Help request from Healing Hands Veterinary Services / Virus Warning
+        $client_name = str_replace("Help request from ", "", $subject);
+        // remove anything after the /
+        $client_name = explode("/", $client_name)[0];
+        // remove any whitespace
+        $client_name = trim($client_name);
+        $client_id = mysqli_fetch_array(mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_name LIKE '%$client_name%'"));
+        if ($client_id) {
+            $client_id = $client_id['client_id'];
+        } else {
+            $client_id = $original_client_id;
+        }
+    }
 
     $ticket_number_sql = mysqli_fetch_array(mysqli_query($mysqli, "SELECT config_ticket_next_number FROM settings WHERE company_id = 1"));
     $ticket_number = intval($ticket_number_sql['config_ticket_next_number']);
@@ -99,7 +121,7 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     $contact_email_esc = mysqli_real_escape_string($mysqli, $contact_email);
     $client_id_esc = intval($client_id);
 
-    mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$ticket_prefix_esc', ticket_number = $ticket_number, ticket_subject = '$subject_esc', ticket_details = '$message_esc', ticket_priority = 'Low', ticket_status = 1, ticket_created_by = 0, ticket_contact_id = $contact_id, ticket_client_id = $client_id_esc");
+    mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '$ticket_prefix_esc', ticket_number = $ticket_number, ticket_subject = '$subject_esc', ticket_details = '$message_esc', ticket_priority = 'Low', ticket_status = 1, ticket_created_by = 0, ticket_contact_id = $contact_id, ticket_client_id = $client_id_esc, ticket_type = '$ticket_type'");
     $id = mysqli_insert_id($mysqli);
 
     echo "\nCreated new ticket.<br>";
@@ -162,7 +184,16 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
         $client_name = sanitizeInput($client_row['client_name']);
 
         $email_subject = "$config_app_name - New Ticket - $client_name: $subject";
-        $email_body = "Hello, <br><br>This is a notification that a new ticket has been raised in ITFlow. <br>Client: $client_name<br>Priority: Low (email parsed)<br>Link: https://$config_base_url/ticket.php?ticket_id=$id <br><br>--------------------------------<br><br><b>$subject</b>";
+        $email_body = "Hello, <br>
+        <br>
+        This is a notification that a new ticket has been raised in ITFlow. <br>
+        Client: $client_name<br>
+        Priority: Low (email parsed)<br>
+        Link: https://$config_base_url/ticket.php?ticket_id=$id <br>
+        <br>
+        --------------------------------<br>
+        <br>
+        <b>$subject</b>";
 
         $data[] = [
             'from' => $config_ticket_from_email,
@@ -174,7 +205,12 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
         ];
     }
 
-    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'New Ticket', notification = 'Email parser created a new ticket', notification_action = 'public/?page=tickets', notification_client_id = $client_id, notification_is_webpush = 1");
+    sendNotification(
+        'New Ticket',
+        'New Ticket created by ' .  $contact_name . ' for ' . $subject,
+        'public/?page=ticket&action=show&ticket_id='.$id,
+        $client_id
+    );
 
     addToMailQueue($mysqli, $data);
 
@@ -183,7 +219,15 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
 
 // Add Reply Function
 function addReply($from_email, $date, $subject, $ticket_number, $message, $attachments) {
-    global $mysqli, $config_app_name, $company_name, $company_phone, $config_ticket_prefix, $config_base_url, $config_ticket_from_name, $config_ticket_from_email, $config_smtp_host, $config_smtp_port, $config_smtp_encryption, $config_smtp_username, $config_smtp_password, $allowed_extensions;
+    global $mysqli,
+        $config_app_name,
+        $company_name,
+        $company_phone,
+        $config_ticket_prefix,
+        $config_base_url,
+        $config_ticket_from_name,
+        $config_ticket_from_email,
+        $allowed_extensions;
 
     $ticket_reply_type = 'Client';
     $message = explode("##- Please type your reply above this line -##", $message);
@@ -310,13 +354,30 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
 
         echo "\nUpdated existing ticket.<br>";
         mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Update', log_description = 'Email parser: Client contact $from_email_esc updated ticket $config_ticket_prefix$ticket_number_esc ($subject)', log_client_id = $client_id");
-        mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket Updated', notification = 'Email parser: $from_email replied to ticket', notification_action = 'public/?page=tickets', notification_client_id = $client_id, notification_is_webpush = 1");
-
+        sendNotification(
+            'Ticket Updated',
+             'Ticket updated by ' . $from_email . ' for ' . $subject,
+             'public/?page=ticket&action=show&ticket_id='.$ticket_id,
+             $client_id
+        );
         return true;
     } else {
         return false;
     }
 }
+
+function sendNotification($notification_type, $notification, $action = '', $client_id = 0){
+    global $mysqli;
+    mysqli_query($mysqli,
+        "INSERT INTO notifications SET
+        notification_type = '$notification_type',
+        notification = '$notification',
+        notification_action = '$action',
+        notification_client_id = $client_id,
+        notification_is_webpush = 1"
+);
+}
+
 
 // Initialize the client manager and create the client
 $clientManager = new ClientManager();
@@ -463,7 +524,7 @@ if ($messages->count() > 0) {
             echo "\nFailed to process email - flagging for manual review. \n" . $message->getSubject() . "\n";
             $message->setFlag(['Seen']);
             // Create a notification for manual review
-            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Email', notification = 'Email parser: Failed to process email from $from_email', notification_action = 'email.php', notification_client_id = 0, notification_is_webpush = 1");
+            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket Creation Failed', notification = 'Email parser: Failed to process email from $from_email', notification_action = 'email.php', notification_client_id = 0, notification_is_webpush = 1");
         }
         // Delete the original message file
         if (file_exists("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}")) {

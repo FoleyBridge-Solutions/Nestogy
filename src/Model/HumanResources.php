@@ -56,30 +56,19 @@ class HumanResources {
             'end' => $pay_period_end
         ];
     }
-    public function getPayroll($pay_period) {
-        $start_date = $pay_period['start_date'];
-        $end_date = $pay_period['end_date'];
-
-        $employees = $this->getEmployees();
-        
-        $payroll = [];
-        foreach ($employees as $employee) {
-            $hours_worked = 0;
-            $total_pay = 0;
-            $break_time = 0;
-        }   
-    }
     public function getHoursWorked($employee_id, $pay_period) {
         $hours_worked = 0;
         
         $pay_period = $this->getPayPeriod($pay_period);
         $pay_period['end'] = $pay_period['end']." 23:59:59";
 
+        // Fetch times that have ended within the pay period
         $times = $this->pdo->prepare(
             'SELECT * FROM employee_times
             WHERE employee_id = :employee_id
             AND employee_time_start >= :start_date
-            AND employee_time_end <= :end_date');
+            AND employee_time_end <= :end_date
+            AND employee_time_end != "0000-00-00 00:00:00"');
         $times->bindParam(':employee_id', $employee_id, PDO::PARAM_INT);
         $times->bindParam(':start_date', $pay_period['start'], PDO::PARAM_STR);
         $times->bindParam(':end_date', $pay_period['end'], PDO::PARAM_STR);
@@ -89,39 +78,54 @@ class HumanResources {
         foreach ($times as $time) {
             $hours_worked += $this->getHoursWorkedForTime($time);
         }
-        if ($hours_worked > 0) {
-            return $hours_worked;
-        } else {
-            return 0;
+
+        // Handle ongoing times separately
+        $ongoing_times = $this->pdo->prepare(
+            'SELECT * FROM employee_times
+            WHERE employee_id = :employee_id
+            AND employee_time_start >= :start_date
+            AND employee_time_start <= :end_date
+            AND employee_time_end = "0000-00-00 00:00:00"');
+        $ongoing_times->bindParam(':employee_id', $employee_id, PDO::PARAM_INT);
+        $ongoing_times->bindParam(':start_date', $pay_period['start'], PDO::PARAM_STR);
+        $ongoing_times->bindParam(':end_date', $pay_period['end'], PDO::PARAM_STR);
+        $ongoing_times->execute();
+        $ongoing_times = $ongoing_times->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($ongoing_times as $time) {
+            $hours_worked += $this->getHoursWorkedForTime($time);
         }
+
+        return $hours_worked > 0 ? $hours_worked : 0;
     }
     public function getBillableHours($employee_id, $pay_period) {
         return 10;
     }
     private function getHoursWorkedForTime($time) {
-        $hours_worked = 0;
         $time_start = strtotime($time['employee_time_start']);
-        $time_end = strtotime($time['employee_time_end']);
-        $hours_worked += ($time_end - $time_start) / 3600;
-
+        
         // Check if the time is running
         if ($time['employee_time_end'] == '0000-00-00 00:00:00') {
-            $time_end = date('Y-m-d H:i:s');
+            $time_end = time(); // Use current time if the employee is still clocked in
         } else {
             $time_end = strtotime($time['employee_time_end']);
         }
-        $time_diff = $time_end - $time_start;
-        $hours_worked += $time_diff;
 
+        // Calculate the total time worked in seconds
+        $time_diff = $time_end - $time_start;
+
+        // Calculate the total break time in seconds
         $breaks = $this->getBreaks($time['employee_time_id']);
         $break_time = 0;
         foreach ($breaks as $break) {
             $break_time += $this->getBreakTime($break);           
         }
 
-        $hours_worked -= $break_time;
+        // Subtract break time from total time worked
+        $total_worked_time = $time_diff - $break_time;
 
-        $hours_worked = round($hours_worked / 3600, 2);
+        // Convert to hours and round to two decimal places
+        $hours_worked = round($total_worked_time / 3600, 2);
 
         return $hours_worked;
     }

@@ -168,7 +168,6 @@ function emailInvoice(
     $invoice_status = sanitizeInput($row['invoice_status']);
     $invoice_date = sanitizeInput($row['invoice_date']);
     $invoice_due = sanitizeInput($row['invoice_due']);
-    $invoice_amount = floatval($row['invoice_amount']);
     $invoice_url_key = sanitizeInput($row['invoice_url_key']);
     $invoice_currency_code = sanitizeInput($row['invoice_currency_code']);
     $client_id = intval($row['client_id']);
@@ -187,19 +186,12 @@ function emailInvoice(
     $config_invoice_from_name = sanitizeInput($config_invoice_from_name);
     $config_invoice_from_email = sanitizeInput($config_invoice_from_email);
 
-    // Add up all the payments for the invoice and get the total amount paid to the invoice
-    $sql_amount_paid = mysqli_query($mysqli,"SELECT SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
-    $row = mysqli_fetch_array($sql_amount_paid);
-    $amount_paid = floatval($row['amount_paid']);
-
-    $balance = $invoice_amount - $amount_paid;
-
     if ($invoice_status == 'Paid') {
         $subject = "$company_name Invoice $invoice_prefix$invoice_number Receipt";
         $body = "Hello $contact_name,<br><br>Please click on the link below to see your invoice regarding \"$invoice_scope\" marked <b>paid</b>.<br><br><a href=\'https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>Invoice Link</a><br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
     } else {
         $subject = "$company_name Invoice $invoice_prefix$invoice_number";
-        $body = "Hello $contact_name,<br><br>Please view the details of your invoice regarding \"$invoice_scope\" below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>Balance Due: " . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . "<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+        $body = "Hello $contact_name,<br><br>Please view the details of your invoice regarding \"$invoice_scope\" below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
     }
 
     // Queue Mail
@@ -262,4 +254,6 @@ function emailInvoice(
     }
 
     addToMailQueue($mysqli, $data);
+
+    return true;
 }

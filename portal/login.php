@@ -14,6 +14,22 @@ require_once '/var/www/portal.twe.tech/includes/get_settings.php';
 require_once '/var/www/portal.twe.tech/includes/functions/functions.php';
 
 
+require '../bootstrap.php';
+
+use Twetech\Nestogy\Auth\Auth;
+
+$auth = new Auth($pdo);
+
+// Check if the user has a valid "Remember Me" cookie
+$auth->checkRememberMe();
+
+if (Auth::check()) {
+    // User is already logged in, redirect them to the dashboard
+    header('Location: /public/');
+    exit;
+} 
+
+
 if (!isset($_SESSION)) {
     // HTTP Only cookies
     ini_set("session.cookie_httponly", true);

@@ -32,7 +32,7 @@ class Client {
             ");
             return $stmt->fetchAll();
         } else {
-            $stmt = $this->pdo->query("SELECT SQL_CACHE * FROM clients");
+            $stmt = $this->pdo->query("SELECT SQL_CACHE * FROM clients WHERE client_archived_at IS NULL ORDER BY client_name ASC");
             return $stmt->fetchAll();
         }
     }

@@ -16,10 +16,6 @@ function time_elapsed_string($datetime, $full = false) {
     $ago = new DateTime($datetime);
     $diff = $now->diff($ago);
 
-    error_log($datetime);
-    error_log($now->format('Y-m-d H:i:s') . "\n");
-    error_log($ago->format('Y-m-d H:i:s') . "\n");
-
     $units = [
         'y' => 'year',
         'm' => 'month',
@@ -46,7 +42,6 @@ function time_elapsed_string($datetime, $full = false) {
     if (!$full) $string = array_slice($string, 0, 1);
     return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
-
 $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
 
 ?>
@@ -72,10 +67,10 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
         </h3>
         <div class="card-header-elements">
             <span class="badge rounded-pill bg-label-secondary p-2">Total: <?=$total_tickets_open + $total_tickets_closed?></span> |
-            <a href="/public/?page=tickets<?php if($client_id) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-primary p-2">
+            <a href="/public/?page=tickets<?php if(isset($client_id)) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-primary p-2">
                 Open: <?=$total_tickets_open?>
             </a> |
-            <a href="/public/?page=tickets&status=5<?php if($client_id) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-danger p-2">
+            <a href="/public/?page=tickets&status=5<?php if(isset($client_id)) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-danger p-2">
                 Closed: <?=$total_tickets_closed?>
             </a>
         </div>
@@ -87,7 +82,7 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                         <i class="fa fa-fw fa-envelope m-2"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="?page=tickets&user_id=<?= $user_id ?>">Active tickets (<?= $user_active_assigned_tickets ?>)</a>
+                        <a class="dropdown-item" href="?page=tickets&user_id=<?= $user_id ?>">Active tickets</a>
                         <a class="dropdown-item " href="?page=tickets&status=5&user_id=<?= $user_id ?>">Closed tickets</a>
                     </div>
                 </div>
@@ -97,7 +92,7 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                         <span class="tf-icons fa fa-fw fa-exclamation-triangle mr-2"></span>
                     </a>
                 <?php } ?>
-                <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php<?php if($client_id) echo "?client_id=$client_id"; ?>">
+                <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php<?php if(isset($client_id)) echo "?client_id=$client_id"; ?>">
                     Add Ticket
                     <i class="fa fa-fw fa-plus mr-2"></i>
                 </a>
@@ -294,10 +289,13 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                                         <div class="dropdown-menu">
                                             <?php
                                                 foreach ($ticket_actions as $action => $data) {
-                                                    if ($data['modal']) {
-                                                        echo "<a class='dropdown-item loadModalContentBtn' href='" . $data['url'] . "' data-bs-toggle='modal' data-bs-target='#dynamicModal' data-modal-file='" . $data['modal_file'] . "'>" . $action . "</a>";
-                                                    } else {
-                                                        echo "<a class='dropdown-item' href='" . $data['url'] . "'>" . $action . "</a>";
+                                                    if (isset($data['url']) && isset($action)) {
+
+                                                        if ($data['modal']) {
+                                                            echo "<a class='dropdown-item loadModalContentBtn' href='" . $data['url'] . "' data-bs-toggle='modal' data-bs-target='#dynamicModal' data-modal-file='" . $data['modal_file'] . "'>" . $action . "</a>";
+                                                        } else {
+                                                            echo "<a class='dropdown-item' href='" . $data['url'] . "'>" . $action . "</a>";
+                                                        }
                                                     }
                                                 }
                                             ?>

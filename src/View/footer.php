@@ -149,6 +149,32 @@ document.querySelectorAll('textarea').forEach(function(textarea) {
     }, { once: true });
 });
 
+// Send Invoice Email
+$('.sendInvoiceEmailBtn').click(function() {
+    var invoice_id = $(this).data('invoice-id');
+    // Make AJAX call to send email
+    var url = '/ajax/ajax.php?send_invoice_email=' + invoice_id;
+    $.ajax({
+        type: 'POST',
+        url: url,
+        success: function(response) {
+            alert('Email sent successfully');
+            // hide the send email button and show the Add Payment and Cancel buttons
+            $('.sendInvoiceEmailBtn[data-invoice-id="' + invoice_id + '"]').hide();
+
+            $('.addPaymentBtn[data-invoice-id="' + invoice_id + '"]').show();
+            $('.cancelInvoiceBtn[data-invoice-id="' + invoice_id + '"]').show();
+
+            //update the status of the invoice
+            $('.invoiceStatus[data-invoice-id="' + invoice_id + '"]').text('Sent');
+        },
+        error: function() {
+            alert('Error sending email');
+        }
+    });
+});
+
+
 $(function () {
     var datatable = $('.datatables-basic').DataTable({
         responsive: true,

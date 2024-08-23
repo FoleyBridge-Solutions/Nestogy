@@ -1,5 +1,9 @@
 <?php
 
+require 'bootstrap.php';
+
+use Twetech\Nestogy\Auth\Auth;
+
 global $mysqli, $name, $ip, $user_agent, $user_id;
 
 
@@ -278,6 +282,20 @@ if (isset($_GET['logout'])) {
 
     setcookie("user_extension_key", '', time() - 3600, "/");
     unset($_COOKIE['user_extension_key']);
+
+            // Clear the session
+    unset($_SESSION['user_id']);
+    unset($_SESSION['user_encryption_session_ciphertext']);
+    unset($_SESSION['user_encryption_session_iv']);
+
+    // Clear the remember me cookie
+    setcookie('remember_me', '', time() - 3600, '/', '', true, true);
+    setcookie('user_encryption_session_key', '', time() - 3600, '/', '', true, true);
+
+
+    $auth = new Auth($pdo);
+
+    $auth->logout($pdo);
 
     session_unset();
     session_destroy();

@@ -1057,7 +1057,7 @@ if (isset($_POST['add_invoice_from_ticket'])) {
 
     $total = $subtotal + $tax_amount;
 
-    mysqli_query($mysqli, "INSERT INTO invoice_items SET item_name = '$item_name', item_description = '$item_description', item_quantity = $qty, item_price = $price, item_subtotal = $subtotal, item_tax = $tax_amount, item_total = $total, item_order = 1, item_tax_id = $tax_id, item_invoice_id = $invoice_id, item_discount = 0, item_product_id = 0, item_category_id = 0");
+    mysqli_query($mysqli, "INSERT INTO invoice_items SET item_name = '$item_name', item_description = '$item_description', item_quantity = $qty, item_price = $price, item_order = 1, item_tax_id = $tax_id, item_invoice_id = $invoice_id, item_discount = 0, item_product_id = 0, item_category_id = 0");
 
 
     // Check for products in db and add to invoice
@@ -1094,17 +1094,6 @@ if (isset($_POST['add_invoice_from_ticket'])) {
         $product_ticket_note .= ".<br>$product_qty x $product_name added to invoice";
     }
 
-
-
-    //Update Invoice Balances
-
-    $sql = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_id = $invoice_id");
-    $row = mysqli_fetch_array($sql);
-
-    $new_invoice_amount = floatval($row['invoice_amount']) + $total;
-
-    mysqli_query($mysqli, "UPDATE invoices SET invoice_amount = $new_invoice_amount WHERE invoice_id = $invoice_id");
-
     mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Draft', history_description = 'Invoice created from Ticket $ticket_prefix$ticket_number', history_invoice_id = $invoice_id");
 
     // Add internal note to ticket, and link to invoice in database
@@ -1117,7 +1106,7 @@ if (isset($_POST['add_invoice_from_ticket'])) {
 
     $_SESSION['alert_message'] = "Invoice created from ticket";
 
-    header("Location: /old_pages/invoice.php?invoice_id=$invoice_id");
+    referWithAlert("Invoice created from ticket", "success");
 }
 
 if (isset($_POST['export_client_tickets_csv'])) {

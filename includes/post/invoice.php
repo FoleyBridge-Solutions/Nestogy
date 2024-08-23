@@ -211,32 +211,40 @@ if (isset($_POST['invoice_note'])) {
 
 if (isset($_POST['edit_item'])) {
 
-    $invoice_id = intval($_POST['invoice_id']);
-    $quote_id = intval($_POST['quote_id']);
-    $recurring_id = intval($_POST['recurring_id']);
+    $invoice_id = intval($_POST['invoice_id'] ?? 0);
+    $quote_id = intval($_POST['quote_id'] ?? 0);
+    $recurring_id = intval($_POST['recurring_id'] ?? 0);
     $item_id = intval($_POST['item_id']);
-    $name = sanitizeInput($_POST['name']);
-    $description = ($_POST['description']);
-    $qty = floatval($_POST['qty']);
-    $price = floatval($_POST['price']);
-    $discount = sanitizeInput($_POST['discount']);
-    $tax_id = intval($_POST['tax_id']);
-    $categery_id = intval($_POST['category']);
-    $product_id = intval($_POST['product_id']);
+    $name = sanitizeInput($_POST['name'] ?? '');
+    $description = ($_POST['description'] ?? '');
+    $qty = floatval($_POST['qty'] ?? 1);
+    $price = floatval($_POST['price'] ?? 0);
+    $discount = sanitizeInput($_POST['discount'] ?? 0);
+    $tax_id = intval($_POST['tax_id'] ?? 0);
+    $categery_id = intval($_POST['category'] ?? 0);
+    $product_id = intval($_POST['product_id'] ?? 0);
 
     $item = [];
+    
     $item['name'] = $name;
     $item['description'] = $description;
     $item['qty'] = $qty;
     $item['price'] = $price;
     $item['tax_id'] = $tax_id;
     $item['item_id'] = $item_id;
-    $item['invoice_id'] = $invoice_id;
-    $item['quote_id'] = $quote_id;
-    $item['recurring_id'] = $recurring_id;
     $item['discount'] = $discount;
     $item['category_id'] = $categery_id;
     $item['product_id'] = $product_id;
+
+    if ($recurring_id > 0) {
+        $item['recurring_id'] = $recurring_id;
+    }
+    if ($quote_id > 0) {
+        $item['quote_id'] = $quote_id;
+    }
+    if ($invoice_id > 0) {
+        $item['invoice_id'] = $invoice_id;
+    }
 
     updateInvoiceItem($item);
     referWithAlert("Item edited", "success");

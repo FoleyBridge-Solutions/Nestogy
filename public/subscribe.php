@@ -30,7 +30,7 @@ require_once '/var/www/portal.twe.tech/includes/check_login.php';
                 navigator.serviceWorker.register('/service-worker.js')
                 .then(function(registration) {
                     console.log('Service Worker registered with scope:', registration.scope);
-                    status.textContent = 'Service Worker registered. Click the button to subscribe.';
+                    checkSubscription(registration);
                 })
                 .catch(function(error) {
                     console.error('Service Worker registration failed:', error);
@@ -41,6 +41,23 @@ require_once '/var/www/portal.twe.tech/includes/check_login.php';
                 status.textContent = 'Push messaging is not supported in your browser.';
                 subscribeButton.disabled = true;
             }
+        }
+
+        function checkSubscription(registration) {
+            registration.pushManager.getSubscription()
+            .then(function(subscription) {
+                if (subscription) {
+                    console.log('User is already subscribed:', subscription);
+                    status.textContent = 'You are already subscribed to push notifications.';
+                    subscribeButton.disabled = true;
+                } else {
+                    status.textContent = 'Service Worker registered. Click the button to subscribe.';
+                }
+            })
+            .catch(function(error) {
+                console.error('Failed to get subscription:', error);
+                status.textContent = 'Failed to get subscription status.';
+            });
         }
 
         function subscribeUser() {

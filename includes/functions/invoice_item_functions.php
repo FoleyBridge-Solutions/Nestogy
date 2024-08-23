@@ -94,19 +94,7 @@ function createInvoiceItem(
 
         $total = $subtotal + $tax_amount;
 
-        mysqli_query($mysqli,"INSERT INTO invoice_items SET item_name = '$name', item_description = '$description', item_quantity = $qty, item_product_id = $product_id, item_price = $price, item_subtotal = $subtotal, item_tax = $tax_amount, item_total = $total, item_discount = $discount, item_order = $item_order, item_tax_id = $tax_id, item_invoice_id = $invoice_id, item_category_id = $category_id");
-
-
-        //add up all line items
-        $sql = mysqli_query($mysqli,"SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id");
-        $invoice_total = 0;
-        while($row = mysqli_fetch_array($sql)) {
-            $item_total = floatval($row['item_total']);
-            $invoice_total += $item_total;
-        }
-        $new_invoice_amount = $invoice_total;
-
-        mysqli_query($mysqli,"UPDATE invoices SET invoice_amount = $new_invoice_amount WHERE invoice_id = $invoice_id");
+        mysqli_query($mysqli,"INSERT INTO invoice_items SET item_name = '$name', item_description = '$description', item_quantity = $qty, item_product_id = $product_id, item_price = $price, item_discount = $discount, item_order = $item_order, item_tax_id = $tax_id, item_invoice_id = $invoice_id, item_category_id = $category_id");
     }
 }
 
@@ -138,18 +126,18 @@ function updateInvoiceItem(
     // Access global variables
     global $mysqli;
 
-    $item_id = $item['item_id'];
-    $name = $item['name'];
-    $description = $item['description'];
-    $qty = $item['qty'];
-    $price = $item['price'];
-    $tax_id = $item['tax_id'];
-    $invoice_id = $item['invoice_id'];
-    $recurring_id = $item['recurring_id'];
-    $discount = $item['discount'];
-    $quote_id = $item['quote_id'];
-    $category_id = $item['category_id'];
-    $product_id = $item['product_id'];
+    $item_id = intval($item['item_id']);
+    $name = sanitizeInput($item['name']);
+    $description = sanitizeInput($item['description']);
+    $qty = floatval($item['qty']);
+    $price = floatval($item['price']);
+    $tax_id = intval($item['tax_id']);
+    $invoice_id = intval($item['invoice_id'] ?? 0);
+    $recurring_id = intval($item['recurring_id'] ?? 0);
+    $discount = floatval($item['discount']);
+    $quote_id = intval($item['quote_id']);
+    $category_id = intval($item['category_id']);
+    $product_id = intval($item['product_id']);
 
     $subtotal = $price * $qty;
 
@@ -163,61 +151,7 @@ function updateInvoiceItem(
         $discount = floatval($discount);
     }
 
-    $subtotal = $price * $qty - $discount;
-
-    if ($tax_id > 0) {
-        $sql = mysqli_query($mysqli,"SELECT * FROM taxes WHERE tax_id = $tax_id");
-        $row = mysqli_fetch_array($sql);
-        $tax_percent = floatval($row['tax_percent']);
-        $tax_amount = $subtotal * $tax_percent / 100;
-    } else {
-        $tax_amount = 0;
-    }
-
-    $total = $subtotal + $tax_amount - $discount;
-
-    mysqli_query($mysqli,"UPDATE invoice_items SET item_name = '$name', item_category_id = $category_id, item_product_id = $product_id, item_description = '$description', item_quantity = $qty, item_price = $price, item_subtotal = $subtotal, item_tax = $tax_amount, item_total = $total, item_tax_id = $tax_id, item_discount = $discount WHERE item_id = $item_id");
-
-    if ($invoice_id > 0) {
-        //Get Discount Amount
-        $sql = mysqli_query($mysqli,"SELECT * FROM invoices WHERE invoice_id = $invoice_id");
-        $row = mysqli_fetch_array($sql);
-        $invoice_discount = floatval($row['invoice_discount_amount']);
-
-        //Update Invoice Balances by tallying up invoice items
-        $sql_invoice_total = mysqli_query($mysqli,"SELECT SUM(item_total) AS invoice_total FROM invoice_items WHERE item_invoice_id = $invoice_id");
-        $row = mysqli_fetch_array($sql_invoice_total);
-        $new_invoice_amount = floatval($row['invoice_total']) - $invoice_discount;
-
-        mysqli_query($mysqli,"UPDATE invoices SET invoice_amount = $new_invoice_amount WHERE invoice_id = $invoice_id");
-
-    }elseif ($quote_id > 0) {
-        //Get Discount Amount
-        $sql = mysqli_query($mysqli,"SELECT * FROM quotes WHERE quote_id = $quote_id");
-        $row = mysqli_fetch_array($sql);
-        $quote_discount = floatval($row['quote_discount_amount']);
-
-        //Update Quote Balances by tallying up items
-        $sql_quote_total = mysqli_query($mysqli,"SELECT SUM(item_total) AS quote_total FROM invoice_items WHERE item_quote_id = $quote_id");
-        $row = mysqli_fetch_array($sql_quote_total);
-        $new_quote_amount = floatval($row['quote_total']) - $quote_discount;
-
-        mysqli_query($mysqli,"UPDATE quotes SET quote_amount = $new_quote_amount WHERE quote_id = $quote_id");
-
-    } else {
-        //Get Discount Amount
-        $sql = mysqli_query($mysqli,"SELECT * FROM recurring WHERE recurring_id = $recurring_id");
-        $row = mysqli_fetch_array($sql);
-        $recurring_discount = floatval($row['recurring_discount_amount']);
-
-        //Update Invoice Balances by tallying up invoice items
-        $sql_recurring_total = mysqli_query($mysqli,"SELECT SUM(item_total) AS recurring_total FROM invoice_items WHERE item_recurring_id = $recurring_id");
-        $row = mysqli_fetch_array($sql_recurring_total);
-        $new_recurring_amount = floatval($row['recurring_total']) - $recurring_discount;
-
-        mysqli_query($mysqli,"UPDATE recurring SET recurring_amount = $new_recurring_amount WHERE recurring_id = $recurring_id");
-
-    }
+    mysqli_query($mysqli,"UPDATE invoice_items SET item_name = '$name', item_category_id = $category_id, item_product_id = $product_id, item_description = '$description', item_quantity = $qty, item_price = $price, item_tax_id = $tax_id, item_discount = $discount WHERE item_id = $item_id");
 }
 
 function deleteInvoiceItem(
@@ -233,13 +167,7 @@ function deleteInvoiceItem(
             $row = mysqli_fetch_array($sql);
             $invoice_id = intval($row['item_invoice_id']);
             $item_total = floatval($row['item_total']);
-        
-            $sql = mysqli_query($mysqli,"SELECT * FROM invoices WHERE invoice_id = $invoice_id");
-            $row = mysqli_fetch_array($sql);
-        
-            $new_invoice_amount = floatval($row['invoice_amount']) - $item_total;
-        
-            mysqli_query($mysqli,"UPDATE invoices SET invoice_amount = $new_invoice_amount WHERE invoice_id = $invoice_id");
+                
         
             mysqli_query($mysqli,"DELETE FROM invoice_items WHERE item_id = $item_id");
         

@@ -696,7 +696,7 @@ if (isset($_GET['search'])) {
         }
     } else {
 
-        $sql = "SELECT * FROM";
+        $sql = "SELECT SQL_NO_CACHE * FROM";
         $client_sql = "clients WHERE (client_name LIKE '%$search%' OR client_type LIKE '%$search%' OR client_notes LIKE '%$search%') AND client_archived_at IS NULL ";
         $contact_sql = "contacts, clients WHERE (contact_name LIKE '%$search%' OR contact_email LIKE '%$search%' OR contact_phone LIKE '%$search%' OR contact_mobile LIKE '%$search%' OR contact_notes LIKE '%$search%') AND contacts.contact_client_id = clients.client_id AND contacts.contact_archived_at IS NULL";
         $ticket_sql = "tickets WHERE ticket_subject LIKE '%$search%' OR ticket_number LIKE '%$search%' OR ticket_details LIKE '%$search%'";
@@ -951,5 +951,17 @@ if (isset($_GET['save_subscription'])) {
     
     //return http status 200
     http_response_code(200);
+    echo json_encode(['success' => true]);
+}
+
+if (isset($_GET['send_invoice_email'])) {
+    $invoice_id = intval($_GET['send_invoice_email']);
+    emailInvoice($invoice_id);
+    echo json_encode(['success' => true]);
+}
+
+if (isset($_GET['cancel_invoice'])) {
+    $invoice_id = intval($_GET['cancel_invoice']);
+    updateInvoiceStatus($invoice_id, "Cancelled");
     echo json_encode(['success' => true]);
 }

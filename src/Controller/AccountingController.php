@@ -59,7 +59,7 @@ class AccountingController {
 
         $data['card']['title'] = 'Invoices';
         if ($client_page) {
-            $data['table']['header_rows'] = ['Number', 'Scope', 'Amount','Balance', 'Date', 'Status'];
+            $data['table']['header_rows'] = ['Number', 'Scope', 'Amount','Balance', 'Date', 'Status','Actions'];
             $data['action'] = [
                 'title' => 'Create Invoice',
                 'modal' => 'invoice_add_modal.php?client_id='.$client_id
@@ -69,7 +69,7 @@ class AccountingController {
                 'link' => 'invoices'
             ];
         } else {
-            $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount','Balance', 'Date', 'Status'];
+            $data['table']['header_rows'] = ['Number', 'Client Name', 'Scope', 'Amount','Balance', 'Date', 'Status','Actions'];
             $data['action'] = [
                 'title' => 'Create Invoice',
                 'modal' => 'invoice_add_modal.php'
@@ -93,6 +93,17 @@ class AccountingController {
             if ($invoice['invoice_status'] == 'Sent' && $invoice['invoice_due_date'] < date('Y-m-d')) {
                 $invoice['invoice_status'] .= ' & Overdue';
             }
+            $actions = [];
+            if ($invoice['invoice_status'] == 'Draft') {
+                $actions[] = '<button class="btn btn-label-warning btn-sm sendInvoiceEmailBtn" data-invoice-id="'.$invoice_id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="Send Invoice Email"><i class="fas fa-fw fa-envelope mr-2"></i>Send Email</button>';
+                $actions[] = '<button class="btn btn-label-danger btn-sm cancelInvoiceBtn" data-invoice-id="'.$invoice_id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="Cancel Invoice" style="display: none;"><i class="fas fa-fw fa-times mr-2"></i>Cancel</button>';
+                $actions[] = '<button class="btn btn-label-success btn-sm loadModalContentBtn addPaymentBtn" data-modal-file="invoice_payment_add_modal.php?invoice_id='.$invoice_id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="Add Payment Manually" style="display: none;"><i class="fas fa-fw fa-money-bill-alt mr-2"></i>Add Payment</button>';
+            }
+            if ($invoice['invoice_status'] != 'Draft') {
+                $actions[] = '<button class="btn btn-label-success btn-sm loadModalContentBtn addPaymentBtn" data-modal-file="invoice_payment_add_modal.php?invoice_id='.$invoice_id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="Add Payment Manually"><i class="fas fa-fw fa-money-bill-alt mr-2"></i>Add Payment</button>';
+                $actions[] = '<button class="btn btn-label-danger btn-sm cancelInvoiceBtn" data-invoice-id="'.$invoice_id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="Cancel Invoice"><i class="fas fa-fw fa-times mr-2"></i>Cancel</button>';
+            }
+            $actions_string = implode(' ', $actions);
         
             if ($client_page) {
                 $data['table']['body_rows'][] = [
@@ -101,7 +112,8 @@ class AccountingController {
                     numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceTotal($invoice_id), 'USD'),
                     numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceBalance($invoice_id), 'USD'),
                     $invoice['invoice_date'],
-                    $invoice['invoice_status']
+                    $invoice['invoice_status'],
+                    $actions_string
                 ];
             } else {
                 $data['table']['body_rows'][] = [
@@ -111,11 +123,11 @@ class AccountingController {
                     numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceTotal($invoice_id), 'USD'),
                     numfmt_format_currency($this->currency_format, $this->accounting->getInvoiceBalance($invoice_id), 'USD'),
                     $invoice['invoice_date'],
-                    $invoice['invoice_status']
+                    $invoice['invoice_status'],
+                    $actions_string
                 ];
             }
         }
-
         $this->view->render('simpleTable', $data, $client_page);
     }
     public function showInvoice($invoice_id) {

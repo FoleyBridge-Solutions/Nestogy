@@ -93,7 +93,6 @@
                         </a>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="invoices.php">Invoices</a>
-                            <a class="dropdown-item" href="guest_view_statement.php">Statement</a>
                             <a class="dropdown-item" href="quotes.php">Quotes</a>
                 <?php } ?>
             </ul>

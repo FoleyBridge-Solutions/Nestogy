@@ -12,11 +12,13 @@ self.addEventListener('push', function(event) {
     event.waitUntil(
         self.registration.showNotification(data.title, options)
     );
-});
 
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
+    // Keep the service worker alive
     event.waitUntil(
-        clients.openWindow(event.notification.data.url)
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            for (let client of windowClients) {
+                client.postMessage('keepalive');
+            }
+        })
     );
 });

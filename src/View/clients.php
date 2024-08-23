@@ -10,7 +10,7 @@ $datatable_settings = ",
         <h3 class="card-title mt-2"><i class="fa fa-fw fa-user-friends mr-2"></i>Client Management</h3>
         <ul class="list-inline ml-auto mb0">
             <li class="list-inline-item mr3">
-                <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="text-dark loadModalContentBtn" data-modal-file="client_add_modal.php?leads=<?= $leads; ?>">
+                <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="text-dark loadModalContentBtn" data-modal-file="client_add_modal.php?leads=0">
                     <i class="fa fa-fw fa-plus mr-2"></i><!-- Add Client -->
                 </a>
             </li>

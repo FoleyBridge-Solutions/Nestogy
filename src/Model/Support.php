@@ -11,15 +11,12 @@ class Support {
     }
     public function getTickets($status = "open", $client_id = false, $user_id = false, $ticket_type = 'support') {
         error_log('Ticket Type: ' . $ticket_type);
-        switch ($status) {
-            case "closed":
-                $status = 5;
-                $status_snippet = "AND ticket_status = 5";
-                break;
-            default:
-                $status = 1;
-                $status_snippet = "AND ticket_status != 5";
-                break;
+        if ($status == "closed") {
+            $status = 5;
+            $status_snippet = "AND ticket_status = 5";
+        } else {
+            $status = 1;
+            $status_snippet = "AND ticket_status != 5";
         }
         if ($client_id) {
             if ($user_id) {
@@ -30,7 +27,7 @@ class Support {
                     LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
                     LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
                     WHERE ticket_client_id = :client_id
-                    AND ticket_status != 5
+                    '.$status_snippet.'
                     AND ticket_assigned_to = :user_id
                     AND ticket_type = :ticket_type
                     ORDER BY ticket_created_at DESC
@@ -44,7 +41,7 @@ class Support {
                     LEFT JOIN ticket_statuses ON tickets.ticket_status = ticket_statuses.ticket_status_id
                     LEFT JOIN contacts ON tickets.ticket_contact_id = contacts.contact_id
                     WHERE ticket_client_id = :client_id
-                    AND ticket_status != 5
+                    '.$status_snippet.'
                     AND ticket_type = :ticket_type
                     ORDER BY ticket_created_at DESC
                 ');
