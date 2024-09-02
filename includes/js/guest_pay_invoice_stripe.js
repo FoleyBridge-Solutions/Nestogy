@@ -9,10 +9,8 @@ document
   .querySelector("#payment-form")
   .addEventListener("submit", handleSubmit);
 
-let emailAddress = '';
-// Fetches a payment intent and captures the client secret
 async function initialize() {
-  const { clientSecret } = await fetch("guest_ajax.php?stripe_create_pi=true", {
+  const { clientSecret } = await fetch("guest_ajax.php?stripe_create_pi=true&payment_method=", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

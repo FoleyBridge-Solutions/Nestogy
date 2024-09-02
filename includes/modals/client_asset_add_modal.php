@@ -78,7 +78,7 @@ if (isset($_GET['client_id'])) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-tags"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="type" required>
+                                    <select class="form-control select2"  name="type" required>
                                         <option value="">- Type -</option>
                                         <?php foreach($asset_types_array as $asset_type => $asset_icon) { ?>
                                             <option><?= $asset_type; ?></option>
@@ -142,7 +142,7 @@ if (isset($_GET['client_id'])) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-network-wired"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="network">
+                                    <select class="form-control select2"  name="network">
                                         <option value="">- Network -</option>
                                         <?php
 
@@ -225,7 +225,7 @@ if (isset($_GET['client_id'])) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-map-marker-alt"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="location">
+                                    <select class="form-control select2"  name="location">
                                         <option value="">- Location -</option>
                                         <?php
 
@@ -247,7 +247,7 @@ if (isset($_GET['client_id'])) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="contact">
+                                    <select class="form-control select2"  name="contact">
                                         <option value="">- Contact -</option>
                                         <?php
 
@@ -270,7 +270,7 @@ if (isset($_GET['client_id'])) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-info"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="status">
+                                    <select class="form-control select2"  name="status">
                                         <option value="">- Status -</option>
                                         <?php foreach($asset_status_array as $asset_status) { ?>
                                             <option><?= $asset_status; ?></option>
@@ -289,7 +289,7 @@ if (isset($_GET['client_id'])) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-building"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="vendor">
+                                    <select class="form-control select2"  name="vendor">
                                         <option value="">- Vendor -</option>
                                         <?php
 

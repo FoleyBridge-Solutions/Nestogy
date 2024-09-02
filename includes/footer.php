@@ -197,10 +197,20 @@ $(function () {
         // start any select2
     });
 
-    $(".select2").select2();
+    $(".select2").select2(
+        {
+            width: '100%'
+        }
+    );
 });
 
 </script>
+
+<style>
+    .select2 {
+        width: 100% !important;
+    }
+</style>
 
 <script src="/includes/assets/js/cards-actions.js"></script>
 </body>

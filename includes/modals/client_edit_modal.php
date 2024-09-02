@@ -91,7 +91,7 @@ $client_created_at = $row['client_created_at'];
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-smile-wink"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' data-tags="true" name="referral">
+                                    <select class="form-control select2"  data-tags="true" name="referral">
                                         <option value="">N/A</option>
                                         <?php
 
@@ -158,7 +158,7 @@ $client_created_at = $row['client_created_at'];
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-money-bill"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="currency_code" required>
+                                    <select class="form-control select2"  name="currency_code" required>
                                         <option value="">- Currency -</option>
                                         <?php foreach ($currencies_array as $currency_code => $currency_name) { ?>
                                             <option <?php if ($client_currency_code == $currency_code) {
@@ -177,7 +177,7 @@ $client_created_at = $row['client_created_at'];
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-calendar"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="net_terms">
+                                    <select class="form-control select2"  name="net_terms">
                                         <option value="">- Net Terms -</option>
                                         <?php foreach ($net_terms_array as $net_term_value => $net_term_name) { ?>
                                             <option <?php if ($net_term_value == $client_net_terms) {

@@ -6,7 +6,6 @@ namespace Twetech\Nestogy\Model;
 use Twetech\Nestogy\Model\Client;
 use PDO;
 
-
 class Accounting {
     private $pdo;
     private $client;
@@ -30,6 +29,9 @@ class Accounting {
 
     public function getInvoiceTotal($invoice_id) {
         return round($this->getInvoiceAmount($invoice_id), 2);
+    }
+    public function getQuoteTotal($quote_id) {
+        return round($this->getQuoteAmount($quote_id), 2);
     }
 
     public function getLineItemTotal($item_id) { // Adds up the total for item
@@ -116,6 +118,52 @@ class Accounting {
             return 0;
         }
     }
+    public function getClientPastDueBalance($client_id) {
+        $stmt = $this->pdo->prepare(
+            "
+            SELECT SQL_CACHE
+                i.invoice_client_id AS client_id,
+                SUM(
+                    (ii.item_quantity * ii.item_price - ii.item_discount) * (1 + IFNULL(t.tax_percent, 0)/100)
+                ) AS total_invoiced,
+                IFNULL(total_payments.total_paid, 0) AS total_paid,
+                IFNULL(total_payments.total_paid, 0) - SUM(
+                    (ii.item_quantity * ii.item_price - ii.item_discount) * (1 + IFNULL(t.tax_percent, 0)/100)
+                ) AS client_balance
+            FROM 
+                invoices i
+            LEFT JOIN 
+                invoice_items ii ON i.invoice_id = ii.item_invoice_id
+            LEFT JOIN 
+                taxes t ON ii.item_tax_id = t.tax_id
+            LEFT JOIN 
+                (
+                    SELECT 
+                        i2.invoice_client_id,
+                        SUM(p.payment_amount) AS total_paid
+                    FROM 
+                        invoices i2
+                    LEFT JOIN 
+                        payments p ON i2.invoice_id = p.payment_invoice_id
+                    WHERE
+                        i2.invoice_client_id = :client_id
+                    GROUP BY 
+                        i2.invoice_client_id
+                ) total_payments ON i.invoice_client_id = total_payments.invoice_client_id
+            WHERE
+                i.invoice_client_id = :client_id2
+                AND invoice_due <= NOW()
+            GROUP BY 
+                i.invoice_client_id;
+            "
+        );
+        $stmt->execute(['client_id' => $client_id, 'client_id2' => $client_id]);
+        if ($stmt->rowCount() > 0) {
+            return $stmt->fetch(PDO::FETCH_ASSOC)['client_balance']*-1;
+        } else {
+            return 0;
+        }
+    }
     public function getClientPaidAmount($client_id) {
         // Get the total amount paid by the client during the year
         $stmt = $this->pdo->prepare(
@@ -134,24 +182,24 @@ class Accounting {
         if (!isset($invoice_id)) {
             return false;
         }
-        $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE invoice_id = :invoice_id");
+        $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM invoices
+        LEFT JOIN clients ON invoices.invoice_client_id = clients.client_id
+        LEFT JOIN contacts ON clients.client_id = contacts.contact_client_id AND contact_primary = 1
+        LEFT JOIN locations ON clients.client_id = locations.location_client_id AND location_primary = 1
+        WHERE invoice_id = :invoice_id");
         $stmt->execute(['invoice_id' => $invoice_id]);
         $invoice_details = $stmt->fetch(PDO::FETCH_ASSOC);
     
-        $stmt = $this->pdo->prepare("SELECT * FROM invoice_items
+        $stmt = $this->pdo->prepare("SELECT SQL_CACHE * FROM invoice_items
         LEFT JOIN taxes ON invoice_items.item_tax_id = taxes.tax_id
         WHERE item_invoice_id = :invoice_id");
         $stmt->execute(['invoice_id' => $invoice_id]);
         $invoice_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-        $invoice_details['items'] = $invoice_items;
 
-        $invoice_amount = 0;
-        foreach ($invoice_items as $item) {
-            $invoice_amount += $item['item_price'] * $item['item_quantity'];
-        }
-        $invoice_details['invoice_amount'] = $invoice_amount;
-        $invoice_details['invoice_balance'] = $invoice_amount - $this->getPayments($invoice_id, true)['payment_amount'];
+        $invoice_details['items'] = $invoice_items;
+        $invoice_details['invoice_amount'] = $this->getInvoiceAmount($invoice_id);
+        $invoice_details['invoice_balance'] = $this->getInvoiceBalance($invoice_id);
+        
         if ($invoice_details['invoice_balance'] < 0.02) {
             $invoice_details['invoice_balance'] = 0;
         }
@@ -266,6 +314,18 @@ class Accounting {
         WHERE i.invoice_id = :invoice_id");
         $stmt->execute(['invoice_id' => $invoice_id, 'invoice_id2' => $invoice_id]);
         return round($stmt->fetch(PDO::FETCH_ASSOC)['total_invoiced'], 2);
+    }
+    public function getQuoteAmount($quote_id) {
+        $stmt = $this->pdo->prepare("SELECT SQL_CACHE
+            SUM(
+                (ii.item_quantity * ii.item_price - ii.item_discount) * (1 + IFNULL(t.tax_percent, 0)/100)
+            ) AS total_quoted
+        FROM quotes q
+        LEFT JOIN invoice_items ii ON q.quote_id = ii.item_quote_id
+        LEFT JOIN taxes t ON ii.item_tax_id = t.tax_id
+        WHERE q.quote_id = :quote_id");
+        $stmt->execute(['quote_id' => $quote_id]);
+        return round($stmt->fetch(PDO::FETCH_ASSOC)['total_quoted'], 2);
     }
     public function getPaymentsByInvoice($invoice_id, $sum = false) {
         if ($sum) {
@@ -497,5 +557,211 @@ class Accounting {
         }
         error_log("Balance for client_id " . $client_id . " from " . $from_date . " to " . $to_date . " is " . $balance);
         return $balance;
+    }
+    public function getRecievables($month, $year) {
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $stmt = $this->pdo->prepare("SELECT invoice_id FROM invoices WHERE invoice_created_at >= :start_day AND invoice_created_at <= :end_day");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day]);
+        $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $total_invoices = 0;
+
+        foreach ($invoices as $invoice) {
+            $total_invoices += $this->getInvoiceBalance($invoice['invoice_id']);
+        }
+
+        return $total_invoices;
+    }
+    public function getIncome($month, $year) {
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $stmt = $this->pdo->prepare("SELECT payment_amount FROM payments WHERE payment_created_at >= :start_day AND payment_created_at <= :end_day");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day]);
+        $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $total_payments = 0;
+
+        foreach ($payments as $payment) {
+            $total_payments += $payment['payment_amount'];
+        }
+
+        return $total_payments;
+    }
+    public function getExpenses($month, $year) {
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $stmt = $this->pdo->prepare("SELECT expense_amount FROM expenses WHERE expense_created_at >= :start_day AND expense_created_at <= :end_day");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day]);
+        $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $total_expenses = 0;
+
+        foreach ($expenses as $expense) {
+            $total_expenses += $expense['expense_amount'];
+        }
+
+        return $total_expenses;
+    }
+    public function getProfit($month, $year) {
+        return $this->getIncome($month, $year) - $this->getExpenses($month, $year);
+    }
+
+    public function getAllUnbilledTickets($month, $year) {
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $stmt = $this->pdo->prepare("SELECT ticket_id FROM tickets WHERE
+            ticket_created_at >= :start_day AND ticket_created_at <= :end_day
+            AND ticket_invoice_id = 0
+            AND ticket_billable = 1
+        ");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day]);
+        $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return count($tickets);
+    }
+    public function getTotalQuotes($month, $year) {
+        
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $stmt = $this->pdo->prepare("SELECT quote_id FROM quotes WHERE quote_created_at >= :start_day AND quote_created_at <= :end_day");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day]);
+        $quotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $total_quotes = 0;
+
+        foreach ($quotes as $quote) {
+            $total_quotes += $this->getQuoteAmount($quote['quote_id']);
+        }
+
+        return $total_quotes;
+    }
+    public function getTotalQuotesAccepted($month, $year) {
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+        
+        $stmt = $this->pdo->prepare("SELECT quote_id FROM quotes WHERE quote_status = 'Accepted' AND quote_created_at >= :start_day AND quote_created_at <= :end_day");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day]);
+        $quotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $total_quotes = 0;
+
+        foreach ($quotes as $quote) {
+            $total_quotes += $this->getQuoteAmount($quote['quote_id']);
+        }
+
+        return $total_quotes;
+    }
+    private function polynomialRegression(array $x, array $y, int $degree) {
+        $matrix = [];
+        $vector = [];
+
+        for ($i = 0; $i <= $degree; $i++) {
+            for ($j = 0; $j <= $degree; $j++) {
+                $matrix[$i][$j] = array_sum(array_map(function($xi) use ($i, $j) {
+                    return pow($xi, $i + $j);
+                }, $x));
+            }
+            $vector[$i] = array_sum(array_map(function($xi, $yi) use ($i) {
+                return $yi * pow($xi, $i);
+            }, $x, $y));
+        }
+
+        return $this->solveLinearSystem($matrix, $vector);
+    }
+
+    private function solveLinearSystem(array $matrix, array $vector) {
+        $n = count($vector);
+        for ($i = 0; $i < $n; $i++) {
+            $maxEl = abs($matrix[$i][$i]);
+            $maxRow = $i;
+            for ($k = $i + 1; $k < $n; $k++) {
+                if (abs($matrix[$k][$i]) > $maxEl) {
+                    $maxEl = abs($matrix[$k][$i]);
+                    $maxRow = $k;
+                }
+            }
+
+            for ($k = $i; $k < $n; $k++) {
+                $tmp = $matrix[$maxRow][$k];
+                $matrix[$maxRow][$k] = $matrix[$i][$k];
+                $matrix[$i][$k] = $tmp;
+            }
+            $tmp = $vector[$maxRow];
+            $vector[$maxRow] = $vector[$i];
+            $vector[$i] = $tmp;
+
+            for ($k = $i + 1; $k < $n; $k++) {
+                $c = -$matrix[$k][$i] / $matrix[$i][$i];
+                for ($j = $i; $j < $n; $j++) {
+                    if ($i == $j) {
+                        $matrix[$k][$j] = 0;
+                    } else {
+                        $matrix[$k][$j] += $c * $matrix[$i][$j];
+                    }
+                }
+                $vector[$k] += $c * $vector[$i];
+            }
+        }
+
+        $solution = array_fill(0, $n, 0);
+        for ($i = $n - 1; $i >= 0; $i--) {
+            $solution[$i] = $vector[$i] / $matrix[$i][$i];
+            for ($k = $i - 1; $k >= 0; $k--) {
+                $vector[$k] -= $matrix[$k][$i] * $solution[$i];
+            }
+        }
+
+        return $solution;
+    }
+
+    public function getEstimatedProfit($month, $year) {
+        // Collect data for the past 24 months
+        $data = [];
+        for ($i = 1; $i <= 24; $i++) {
+            $date = strtotime("-$i month", strtotime("$year-$month-01"));
+            $pastMonth = date('m', $date);
+            $pastYear = date('Y', $date);
+            $profit = $this->getProfit($pastMonth, $pastYear);
+            $data[] = [$i, $profit];
+        }
+
+        // Prepare data for regression
+        $samples = array_column($data, 0); // Time (months)
+        $targets = array_column($data, 1); // Profits
+
+        // Perform polynomial regression
+        $coefficients = $this->polynomialRegression($samples, $targets, 2); // Degree 2 polynomial regression
+
+        // Predict profit for the given month and year
+        $futureMonthIndex = 0; // Current month
+        $predictedProfit = 0;
+        for ($i = 0; $i < count($coefficients); $i++) {
+            $predictedProfit += $coefficients[$i] * pow($futureMonthIndex, $i);
+        }
+
+        // Adjust for seasonality using last year's profit for the same month
+        $lastYearProfit = $this->getProfit($month, $year - 1);
+        if ($lastYearProfit > 0) {
+            $predictedProfit = ($predictedProfit + $lastYearProfit) / 2;
+        }
+
+        return $predictedProfit;
+    }
+
+    public function getRecievablesByCategory($month, $year, $category) {
+        $start_day = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_day = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+
+        $stmt = $this->pdo->prepare("SELECT SUM(invoice_amount) AS total_recievables FROM invoices WHERE invoice_created_at >= :start_day AND invoice_created_at <= :end_day AND invoice_category = :category");
+        $stmt->execute(['start_day' => $start_day, 'end_day' => $end_day, 'category' => $category]);
+        $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $invoices;
     }
 }

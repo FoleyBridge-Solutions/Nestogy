@@ -42,7 +42,13 @@ $sql_total_tickets = mysqli_query($mysqli, "SELECT COUNT(ticket_id) AS total_tic
 $row = mysqli_fetch_array($sql_total_tickets);
 $total_tickets = intval($row['total_tickets']);
 
-
+$statuses = [
+    1 => 'New',
+    2 => 'Open',
+    3 => 'Waiting',
+    4 => 'Resolved',
+    5 => 'Closed'
+];
 ?>
 
 <div class="row">
@@ -75,7 +81,7 @@ $total_tickets = intval($row['total_tickets']);
                     <td>
                         <a href="ticket.php?id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a>
                     </td>
-                    <td><?= $ticket_status; ?></td>
+                    <td><?= $statuses[$ticket_status]; ?></td>
                 </tr>
             <?php
             }

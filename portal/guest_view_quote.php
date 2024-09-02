@@ -1,7 +1,24 @@
 <?php
 
-require_once "/var/www/portal.twe.tech/portal/guest_header.php";
 
+
+require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
+require_once "/var/www/portal.twe.tech/src/Model/Client.php";
+require_once "/var/www/portal.twe.tech/src/Database.php";
+require_once "/var/www/portal.twe.tech/portal/guest_header.php";
+require_once "/var/www/portal.twe.tech/portal/portal_header.php";
+
+
+use Twetech\Nestogy\Database;
+use Twetech\Nestogy\Model\Accounting;
+
+$config = require __DIR__ . '/../config.php';
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
+
+$url_key = sanitizeInput($_GET['url_key']);
+$quote_id = intval($_GET['quote_id']);
+$accounting = new Accounting($pdo);
 
 if (!isset($_GET['quote_id'], $_GET['url_key'])) {
     echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
@@ -41,7 +58,7 @@ $quote_status = nullable_htmlentities($row['quote_status']);
 $quote_date = nullable_htmlentities($row['quote_date']);
 $quote_expire = nullable_htmlentities($row['quote_expire']);
 $quote_discount = floatval($row['quote_discount_amount']);
-$quote_amount = floatval($row['quote_amount']);
+$quote_amount = $accounting->getQuoteTotal($quote_id);
 $quote_currency_code = nullable_htmlentities($row['quote_currency_code']);
 $quote_note = nullable_htmlentities($row['quote_note']);
 $category_id = intval($row['category_id']);
@@ -112,7 +129,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                     <img class="img-fluid" src="<?= "/uploads/settings/$company_logo"; ?>">
                 </div>
                 <div class="col-sm-10">
-                    <h3 class="text-right"><strong>Quote</strong><br><small class="text-secondary"><?= "$quote_prefix$quote_number"; ?></small></h3>
+                    <h3 class="text-right"><strong>Estimate</strong><br><small class="text-secondary"><?= "$quote_prefix$quote_number"; ?></small></h3>
                 </div>
             </div>
 
@@ -187,8 +204,9 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                                     $item_description = nullable_htmlentities($row['item_description']);
                                     $item_quantity = floatval($row['item_quantity']);
                                     $item_price = floatval($row['item_price']);
-                                    $item_tax = floatval($row['item_tax']);
-                                    $item_total = floatval($row['item_total']);
+                                    $item_subtotal = $item_price * $item_quantity;
+                                    $item_total = $accounting->getLineItemTotal($item_id);
+                                    $item_tax = $item_total - $item_subtotal;
                                     $total_tax = $item_tax + $total_tax;
                                     $sub_total = $item_price * $item_quantity + $sub_total;
 
@@ -280,7 +298,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
 
         var docDefinition = {
             info: {
-                title: <?= json_encode(html_entity_decode($company_name) . "- Quote") ?>,
+                title: <?= json_encode(html_entity_decode($company_name) . "- Estimate") ?>,
                 author: <?= json_encode(html_entity_decode($company_name)) ?>
             },
 
@@ -299,7 +317,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
 
                         [
                             {
-                                text: 'Quote',
+                                text: 'Estimate',
                                 style: 'invoiceTitle',
                                 width: '*'
                             },

@@ -73,7 +73,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-network-wired"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="interface_network">
+                                    <select class="form-control select2"  name="interface_network">
                                         <option value="">- None -</option>
                                         <?php
 

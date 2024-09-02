@@ -64,7 +64,7 @@ $client_id = intval($row['client_id']);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="calendar" required>
+                                    <select class="form-control select2"  name="calendar" required>
                                         <?php
 
                                         $sql_calendars_select = mysqli_query($mysqli, "SELECT * FROM calendars ORDER BY calendar_name ASC");
@@ -105,7 +105,7 @@ $client_id = intval($row['client_id']);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-recycle"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="repeat">
+                                    <select class="form-control select2"  name="repeat">
                                         <option <?php if (empty($event_repeat)) { echo "selected"; } ?> value="">Never</option>
                                         <option <?php if ($event_repeat == "Day") { echo "selected"; } ?>>Day</option>
                                         <option <?php if ($event_repeat == "Week") { echo "selected"; } ?>>Week</option>
@@ -148,7 +148,7 @@ $client_id = intval($row['client_id']);
                                         <div class="input-group-prepend">
                                             <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
                                         </div>
-                                        <select class="form-control select2" id='select2' name="client">
+                                        <select class="form-control select2"  name="client">
                                             <option value="">- Client -</option>
                                             <?php
 

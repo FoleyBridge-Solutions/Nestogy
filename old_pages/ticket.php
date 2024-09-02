@@ -506,7 +506,7 @@ if (isset($_GET['ticket_id'])) {
                                         <div class="input-group-prepend">
                                             <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
                                         </div>
-                                        <select class="form-control select2" id='select2' name="status" required>
+                                        <select class="form-control select2"  name="status" required>
                                             <?php 
                                             
                                             $sql_ticket_statuses = mysqli_query($mysqli, "SELECT * FROM ticket_statuses WHERE ticket_status_active = 1 AND ticket_status_visible = 1

@@ -69,7 +69,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-user-check"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="assigned_to" id="editTicketAgent">
+                                    <select class="form-control select2"  name="assigned_to" id="editTicketAgent">
                                         <option value="0">- Not Assigned -</option>
                                     </select>
                                 </div>
@@ -85,7 +85,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="contact" id="editTicketContact" required>
+                                    <select class="form-control select2"  name="contact" id="editTicketContact" required>
                                         <option value="">- Contact -</option>
                                     </select>
                                 </div>
@@ -132,7 +132,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-desktop"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="asset" id="editTicketAssetId">
+                                    <select class="form-control select2"  name="asset" id="editTicketAssetId">
                                         <option value="0">- None -</option>
                                     </select>
                                 </div>

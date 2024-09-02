@@ -108,7 +108,6 @@
 <script src="/includes/assets/vendor/libs/sortablejs/sortable.js"></script>
 <script src="/includes/assets/vendor/libs/toastr/toastr.js"></script>
 <script src="/includes/plugins/moment/moment.min.js"></script>
-<script src="/includes/assets/vendor/libs/apex-charts/apexcharts.js"></script>
 <script src="/includes/plugins/chart.js/Chart.min.js"></script>
 <script src="/includes/assets/vendor/libs/flatpickr/flatpickr.js"></script>
 <script src="/includes/assets/vendor/libs/cleavejs/cleave.js"></script>
@@ -178,6 +177,7 @@ $('.sendInvoiceEmailBtn').click(function() {
 $(function () {
     var datatable = $('.datatables-basic').DataTable({
         responsive: true,
+        stateSave: true,
         order: <?= $datatable_order ?>
         <?= $datatable_settings ?>
     });
@@ -211,11 +211,22 @@ $(function () {
 
 </script>
 
+
+
 <style>
 /* Ensure this CSS is loaded after the Google Maps API CSS */
-.pac-container {
-    z-index: 99999 !important; /* Adjust this value as needed */
-}
+    .pac-container {
+        z-index: 99999 !important; 
+    }
+    .select2-container {
+        width: 80% !important; 
+    }
+    .select2-selection__rendered {
+        width: 100% !important; 
+    }
+    .select2-selection {
+        width: 100% !important; 
+    }
 </style>
 
 <script src="/includes/assets/js/cards-actions.js"></script>

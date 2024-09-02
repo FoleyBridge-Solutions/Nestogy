@@ -2,6 +2,10 @@
 
 // Accounting related functions
 
+include '/var/www/portal.twe.tech/bootstrap.php';
+
+use Twetech\Nestogy\Model\Accounting;
+
 function getPlaidLinkToken($client_user_id = 1) {
     global $config_plaid_client_id, $config_plaid_secret, $mysqli;
 
@@ -593,42 +597,17 @@ function getClientRecurringInvoicesTotal($client_id)
     return $monthly_total;
 }
 
-function getClientBalance($client_id, $credits = false) {
-
-    global $mysqli;
-
-    $client_id = intval($client_id);
-
-    //Add up all the payments for the invoice and get the total amount paid to the invoice
-    $sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $client_id AND invoice_status NOT LIKE 'Draft' AND invoice_status NOT LIKE 'Cancelled'");
-    $row = mysqli_fetch_array($sql_invoice_amounts);
-
-    $invoice_amounts = floatval($row['invoice_amounts']);
-
-    $sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments, invoices WHERE payment_invoice_id = invoice_id AND invoice_client_id = $client_id");
-    $row = mysqli_fetch_array($sql_amount_paid);
-
-    $amount_paid = floatval($row['amount_paid']);
-
-    if ($credits) {
-        $sql_credits = mysqli_query($mysqli, "SELECT SUM(credit_amount) AS credit_amounts FROM credits WHERE credit_client_id = $client_id");
-        $row = mysqli_fetch_array($sql_credits);
-        $credit_amounts = floatval($row['credit_amounts']);
-
-        $balance = $invoice_amounts - ($amount_paid + $credit_amounts);
-
-        if ($balance < 0) {
-            $balance = 0;
-        }
-        return $balance;
-    } else {
-        $balance = $invoice_amounts - $amount_paid;
-
-        if ($balance < 0) {
-            $balance = 0;
-        }
-        return $balance;
+function getClientBalance($client_id) {
+    global $pdo;
+    if (!$pdo) {
+        // Initialize $pdo if not already done
+        $config = require "/var/www/portal.twe.tech/config.php";
+        $database = new Twetech\Nestogy\Database($config['db']);
+        $pdo = $database->getConnection();
     }
+    $accounting_model = new Accounting($pdo);
+
+    return $accounting_model->getClientBalance($client_id);
 }
 
 function getClientAgeingBalance($client_id, $from, $to) {
@@ -667,46 +646,15 @@ function getClientAgeingBalance($client_id, $from, $to) {
 }
 
 function getClientPastDueBalance($client_id, $credits = false) {
-
-    $client_id = intval($client_id);
-    $credits = boolval($credits);
-
-    global $mysqli;
-
-     // Add up all the invoices that are past due and get the total amount due
-    $sql_invoice_amounts = mysqli_query($mysqli,
-        "SELECT SUM(invoice_amount) AS invoice_amounts
-        FROM invoices
-        WHERE invoice_client_id = $client_id
-        AND invoice_status NOT LIKE 'Draft'
-        AND invoice_status NOT LIKE 'Cancelled'
-        AND invoice_due < CURDATE()
-    ");
-    $row = mysqli_fetch_array($sql_invoice_amounts);
-
-    $invoice_amounts = floatval($row['invoice_amounts']);
-
-    $sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments, invoices WHERE payment_invoice_id = invoice_id AND invoice_client_id = $client_id");
-    $row = mysqli_fetch_array($sql_amount_paid);
-
-    $amount_paid = floatval($row['amount_paid']);
-
-    if ($credits) {
-        $sql_credits = mysqli_query($mysqli, "SELECT SUM(credit_amount) AS credit_amounts FROM credits WHERE credit_client_id = $client_id");
-        $row = mysqli_fetch_array($sql_credits);
-        $credit_amounts = floatval($row['credit_amounts']);
-
-        $balance = $invoice_amounts - ($amount_paid + $credit_amounts);
-
-    } else {
-        $balance = $invoice_amounts - $amount_paid;
+    global $pdo;
+    if (!$pdo) {
+        // Initialize $pdo if not already done
+        $config = require "/var/www/portal.twe.tech/config.php";
+        $database = new Twetech\Nestogy\Database($config['db']);
+        $pdo = $database->getConnection();
     }
-
-    if ($balance < 0) {
-        $balance = 0;
-    }
-    
-    return $balance;
+    $accounting_model = new Accounting($pdo);
+    return $accounting_model->getClientPastDueBalance($client_id);
 }
 
 function getClientPastDueMonths($client_id) {
@@ -901,34 +849,16 @@ function getPaymentForCategoryAndMonth($category_id, $month, $year)
 
 function getInvoiceBalance($invoice_id)
 {
-    global $mysqli;
-
-    $invoice_id = intval($invoice_id);
-
-    $invoice_id_int = intval($invoice_id);
-    $sql_invoice = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_id = $invoice_id_int");
-    $row = mysqli_fetch_array($sql_invoice);
-    $invoice_amount = floatval($row['invoice_amount']);
-
-    $sql_payments = mysqli_query(
-        $mysqli,
-        "SELECT SUM(payment_amount) AS total_payments FROM payments
-        WHERE payment_invoice_id = $invoice_id"
-    );
-    $row = mysqli_fetch_array($sql_payments);
-    $total_payments = floatval($row['total_payments']);
-
-    $balance = $invoice_amount - $total_payments;
-
-    if ($balance == '') {
-        $balance = 0;
+    global $pdo;
+    if (!$pdo) {
+        // Initialize $pdo if not already done
+        $config = require "/var/www/portal.twe.tech/config.php";
+        $database = new Twetech\Nestogy\Database($config['db']);
+        $pdo = $database->getConnection();
     }
+    $accounting_model = new Accounting($pdo);
 
-    if ($balance < 0) {
-        $balance = 0;
-    }
-
-    return $balance;
+    return $accounting_model->getInvoiceBalance($invoice_id);
 }
 
 function getItemTotal($item_id) {
@@ -946,18 +876,15 @@ function getItemTotal($item_id) {
 
 function getInvoiceAmount($invoice_id)
 {
-    global $mysqli;
-
-    $invoice_id = intval($invoice_id);
-
-    // get invoice item ids
-    $sql = "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id";
-    $result = mysqli_query($mysqli, $sql);
-    $invoice_amount = 0;    
-    while ($row = mysqli_fetch_assoc($result)) {
-        $invoice_amount += getItemTotal($row['item_id']);
+    global $pdo;
+    if (!$pdo) {
+        // Initialize $pdo if not already done
+        $config = require "/var/www/portal.twe.tech/config.php";
+        $database = new \Twetech\Nestogy\Database($config['db']);
+        $pdo = $database->getConnection();
     }
-    return $invoice_amount;
+    $accounting_model = new Accounting($pdo);
+    return $accounting_model->getInvoiceAmount($invoice_id);
 }
 
 function getInvoicePayments($invoice_id)

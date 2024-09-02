@@ -1,15 +1,15 @@
-
 <div class="row">
-    <div class="col">
+    <div class="col-12">
         <div class="card mb-2">
             <div class="card-header py-3">
                 <h3 class="card-title"><i class="fas fa-fw fa-credit-card mr-2"></i>Add Payments</h3>
             </div>
 
             <div class="card-body">
+                <div id="credit-notification" class="alert alert-info" style="display: none;"></div>
                 <form action="/old_pages/payment_add.php" method="post">
                     <div class="row">
-                        <div class="col-5">
+                        <div class="col-md-5 col-12">
                             <div class="form-group">
                                 <label for="Client">Client</label>
                                 <select name="Client" id="Client" class="form-control select2" required>
@@ -22,7 +22,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-3">
+                        <div class="col-md-3 col-12">
                             <div class="form-group">
                                 <a class="btn btn-primary" href="/old_pages/client_add.php">Add by Invoice Numbers</a>
                                 <p>
@@ -30,12 +30,12 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="col-2">
+                        <div class="col-md-2 col-12">
                         </div>
-                        <div class="col-2">
+                        <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <h4>
-                                    Amount Recieved
+                                    Amount Received
                                     <br>
                                     <b id="inputted_amount" class="text-success">
                                         <?= $payment_received ?>
@@ -54,7 +54,7 @@
                         <?php } ?>
                     </div>
                     <div class="row">
-                        <div class="col-4">
+                        <div class="col-md-4 col-12">
                             <div class="form-group">
                                 <label for="payment_date">Payment Date</label>
                                 <input type="date" name="payment_date" id="payment_date" class="form-control" value="<?= date('Y-m-d') ?>">
@@ -62,17 +62,16 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-2">
+                        <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_method">Payment Method</label>
                                 <select name="payment_method" id="payment_method" class="form-control">
                                     <option value="">Select Payment Method</option>
                                     <?php
-
                                     foreach ($categories as $category) {
                                         $category_name = nullable_htmlentities($category['category_name']);
                                     ?>
-                                        <option <?php if ($config_default_payment_method == $category_name) {
+                                        <option <?php if ($category_name == "Check") {
                                                     echo "selected";
                                                 } ?>><?= $category_name; ?></option>
                                     <?php
@@ -81,7 +80,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-2">
+                        <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_account">Deposit to</label>
                                 <select name="payment_account" id="payment_account" class="form-control">
@@ -91,32 +90,29 @@
                                         $account_type = nullable_htmlentities($account['account_type']);
                                         $account_id = intval($account['account_id']);
                                         $account_name = nullable_htmlentities($account['account_name']);
-
-
                                     ?>
-                                        <option <?php if ($config_default_payment_account == $account_id) {
+                                        <option <?php if ($account_id == 13) {
                                                     echo "selected";
                                                 } ?> value="<?= $account_id; ?>">
                                             <?= $account_name; ?>
                                         </option>
-
                                     <?php
                                     }
                                     ?>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-2">
+                        <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_reference">Payment Reference</label>
                                 <input type="text" name="payment_reference" id="payment_reference" class="form-control">
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-md-4 col-12">
                         </div>
-                        <div class="col-2">
+                        <div class="col-md-2 col-12">
                             <div class="form-group">
-                                <label for="payment_amount">Amount Recieved</label>
+                                <label for="payment_amount">Amount Received</label>
                                 <input type="number" name="payment_amount" id="payment_amount" class="form-control" step="0.01" min="0.01" placeholder="<?= $payment_received ?>">
                             </div>
                         </div>
@@ -128,7 +124,7 @@
 </div>
 
 <div class="row">
-    <div class="col">
+    <div class="col-12">
         <div class="card mb-2">
             <div class="card-header py-3">
                 <h3 class="card-title"><i class="fas fa-fw fa-bill mr-2"></i>Invoices</h3>
@@ -162,10 +158,12 @@
     </div>
 </div>
 
-
 <script>
     $(document).ready(function() {
         function handleInvoiceSelection(invoice) {
+            const balance = parseFloat(invoice.invoice_balance.replace(/[^0-9.-]+/g, ''));
+            if (balance < 0.01) return ''; // Skip invoices with balance less than one penny
+
             return `
             <tr>
                 <td><input type="checkbox" value="${invoice.invoice_id}" name="invoice_id[${invoice.invoice_id}]"></td>
@@ -173,7 +171,7 @@
                 <td>${invoice.invoice_number}</td>
                 <td class="balance">${invoice.invoice_balance}</td>
                 <td>${invoice.invoice_due}</td>
-                <td><input type="numeric" name="invoice_payment_amount[${invoice.invoice_id}]" class="form-control" step="0.01" min="0.01" max="${parseFloat(invoice.invoice_balance.replace(/[^0-9.-]+/g, ''))}"></td>
+                <td><input type="numeric" name="invoice_payment_amount[${invoice.invoice_id}]" class="form-control" step="0.01" min="0.01" max="${balance}"></td>
             </tr>`;
         }
 
@@ -184,9 +182,44 @@
         }
 
         function updateAmountToApply(checkbox) {
-            const balance = $(checkbox).closest('tr').find('.balance').text().replace(/[^0-9.-]+/g, '');
-            const amount = $(checkbox).prop('checked') ? balance : '';
-            $(checkbox).closest('tr').find('input[type="numeric"]').val(amount);
+            const $row = $(checkbox).closest('tr');
+            const balance = parseFloat($row.find('.balance').text().replace(/[^0-9.-]+/g, ''));
+            const amountInput = $row.find('input[type="numeric"]');
+            let remainingAmount = parseFloat($('#payment_amount').val()) || 0;
+
+            $('input[name^="invoice_payment_amount"]').each(function() {
+                remainingAmount -= parseFloat($(this).val()) || 0;
+            });
+
+            if ($(checkbox).prop('checked')) {
+                const amountToApply = Math.min(balance, remainingAmount);
+                amountInput.val(amountToApply.toFixed(2));
+            } else {
+                amountInput.val('');
+            }
+
+            recalculateAmounts(); // Recalculate amounts after updating
+        }
+
+        function recalculateAmounts() {
+            let paymentAmount = parseFloat($('#payment_amount').val()) || 0;
+            let remainingAmount = paymentAmount;
+
+            $('tbody tr').each(function() {
+                const $row = $(this);
+                const checkbox = $row.find('input[type="checkbox"]');
+                const balance = parseFloat($row.find('.balance').text().replace(/[^0-9.-]+/g, ''));
+                const amountInput = $row.find('input[type="numeric"]');
+
+                if (checkbox.prop('checked')) {
+                    const amountToApply = Math.min(balance, remainingAmount);
+                    amountInput.val(amountToApply.toFixed(2));
+                    remainingAmount -= amountToApply;
+                } else {
+                    amountInput.val('');
+                }
+            });
+
             updateTotalAmount();
         }
 
@@ -224,7 +257,10 @@
                 success: function(response) {
                     const data = JSON.parse(response);
                     const table = $('.table tbody').empty();
-                    data.forEach(invoice => table.append(handleInvoiceSelection(invoice)));
+                    data.forEach(invoice => {
+                        const invoiceRow = handleInvoiceSelection(invoice);
+                        if (invoiceRow) table.append(invoiceRow);
+                    });
                     attachInvoiceEventHandlers();
                 },
                 error: handleError
@@ -236,8 +272,11 @@
                 url: `/ajax/ajax.php?client_credits=${clientId}`,
                 type: 'GET',
                 success: function(response) {
-                    if (response.length > 0) {
-                        alert(`Credits available for client. [${response[0].credit_amount}]`);
+                    const data = JSON.parse(response);
+                    if (data.length > 0 && data[0].credit_amount !== undefined) {
+                        $('#credit-notification').text(`Credits available for client: ${data[0].credit_amount}`).show();
+                    } else {
+                        $('#credit-notification').hide();
                     }
                 },
                 error: handleError

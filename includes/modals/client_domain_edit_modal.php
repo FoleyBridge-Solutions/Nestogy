@@ -54,7 +54,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-server"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' id="editDomainRegistrarId" name="registrar">
+                                    <select class="form-control select2"  id="editDomainRegistrarId" name="registrar">
                                     </select>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-server"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' id="editDomainWebhostId" name="webhost">
+                                    <select class="form-control select2"  id="editDomainWebhostId" name="webhost">
                                     </select>
                                 </div>
                             </div>

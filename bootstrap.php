@@ -5,7 +5,7 @@ require_once 'vendor/autoload.php';
 
 
 // Load configuration settings
-$config = require_once 'config.php';
+$config = require '/var/www/portal.twe.tech/config.php';
 
 // Set up the database connection
 use Twetech\Nestogy\Database;

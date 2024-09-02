@@ -31,7 +31,7 @@ $client_name = nullable_htmlentities($row['client_name']);
                     <input type="hidden" id="current_ticket_id" name="ticket_id" value="<?= $ticket_id; ?>">
                         <div class="form-group">
                             <label for="product_id">Product</label>
-                            <select class="form-control select2" id='select2' id="product_id" name="product_id" required>
+                            <select class="form-control select2"  id="product_id" name="product_id" required>
                                 <option value="" selected disabled>Select a product</option>
                                 <?php
                                 $products = mysqli_query($mysqli, "SELECT * FROM products

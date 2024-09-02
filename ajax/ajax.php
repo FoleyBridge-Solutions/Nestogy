@@ -17,6 +17,8 @@ require_once "/var/www/portal.twe.tech/includes/check_login.php";
 require_once "/var/www/portal.twe.tech/includes/rfc6238.php";
 
 
+
+
 /*
  * Fetches SSL certificates from remote hosts & returns the relevant info (issuer, expiry, public key)
  */
@@ -805,7 +807,7 @@ if (isset($_GET['client_invoices'])) {
     $response = [];
 
     $sql = mysqli_query($mysqli,
-        "SELECT invoice_id, invoice_date, invoice_due, invoice_amount, invoice_status, invoice_number FROM invoices
+        "SELECT invoice_id, invoice_date, invoice_due, invoice_status, invoice_number FROM invoices
         WHERE invoice_client_id = $client_id AND invoice_status != 'Paid'
         ORDER BY invoice_date ASC"
     );
@@ -858,9 +860,7 @@ if (isset($_GET['apply_payment'])) {
             'account' => $payment_account,
             'balance' => $invoice['invoice_payment_amount']
         ]);
-        error_log($invoice['invoice_payment_amount']);
     }
-
     //success
     echo json_encode(['success' => true]);
 }

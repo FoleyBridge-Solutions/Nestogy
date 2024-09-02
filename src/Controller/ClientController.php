@@ -73,8 +73,9 @@ class ClientController {
             return;
         }
 
+        // Get information for client overview screen
         $clientModel = new Client($this->pdo);
-        $client = $clientModel->getClient($client_id);
+        $client = $clientModel->getClientOverview($client_id);
 
         $contactModel = new Contact($this->pdo);
         $client['client_contacts'] = $contactModel->getContacts($client_id);
@@ -141,6 +142,10 @@ class ClientController {
             'return_page' => [
                 'name' => 'Clients',
                 'link' => 'clients'
+            ],
+            'action' => [
+                'title' => 'Add Contact',
+                'modal' => 'client_contact_add_modal.php?client_id='.$client_id
             ]
         ];
         $view->render('simpleTable', $data, true);
@@ -177,7 +182,10 @@ class ClientController {
                 $location['location_name'],
                 $locationAdress,
                 $location['location_phone'],
-                $location['location_hours']
+                $location['location_hours'],
+                '<a href="#" class="dropdown-item loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="client_location_edit_modal.php?location_id=' . $location['location_id'] . '">
+                    <i class="fa fa-pencil"></i>
+                </a>'
             ];
         }
         
@@ -187,12 +195,16 @@ class ClientController {
             ],
             'client_header' => $clientModel->getClientHeader($client_id)['client_header'],
             'table' => [
-                'header_rows' => ['Location Name', 'Address', 'Phone', 'Hours'],
+                'header_rows' => ['Location Name', 'Address', 'Phone', 'Hours', 'Actions'],
                 'body_rows' => $locations
             ],
             'return_page' => [
                 'name' => 'Clients',
                 'link' => 'clients'
+            ],
+            'action' => [
+                'title' => 'Add Location',
+                'modal' => 'client_location_add_modal.php?client_id='.$client_id
             ]
         ];
 

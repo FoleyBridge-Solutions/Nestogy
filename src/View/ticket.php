@@ -158,7 +158,7 @@ $task_count = 0; // TODO: Implement task count
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
                                             </div>
-                                            <select class="form-control select2" id='select2' name="status" required>
+                                            <select class="form-control select2"  name="status" required>
                                                 <?php
                                                 $ticket_statuses = [
                                                     [

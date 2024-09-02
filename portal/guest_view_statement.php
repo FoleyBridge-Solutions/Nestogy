@@ -36,8 +36,7 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
         invoice_number,
         invoice_prefix,
         invoice_date,
-        invoice_due,
-        invoice_amount
+        invoice_due
     FROM
         invoices
     WHERE
@@ -87,7 +86,9 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                             </tr>
                             <tr>
                                 <td>Past Due:</td>
-                                <td><?= numfmt_format_currency($currency_format, getClientPastDueBalance($client_id), $currency_code); ?></td>
+                                <td class="<?php if (getClientPastDueBalance($client_id) > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, getClientPastDueBalance($client_id), $currency_code); ?>
+                                </td>
                             </tr>
                         </table>                        
                     </div>
@@ -95,24 +96,36 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                 </div>
                 <div class="col-md-6 col-12">
                     <!-- 0-30. 30-60, 60-90, 90+ -->
+                     <?php
+                       $ageing_balances = [
+                        '0-30' => getClientAgeingBalance($client_id, 0, 30),
+                        '31-60' => getClientAgeingBalance($client_id, 31, 60),
+                        '61-90' => getClientAgeingBalance($client_id, 61, 90),
+                        '90+' => getClientAgeingBalance($client_id, 91, 9999)
+                       ]                    
+                     ?>
                     <div class="me-4">
                         <h4>Ageing Summary</h4>
                         <table class="table table-sm" id="ageing_summary_table">
                             <tr>
                                 <td>0-30 Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, getClientAgeingBalance($client_id, 0, 30), $currency_code); ?></td>
+                                <td>
+                                    <?= numfmt_format_currency($currency_format, $ageing_balances['0-30'], $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>31-60 Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, getClientAgeingBalance($client_id, 31, 60), $currency_code); ?></td>
+                                <td class="<?php if ($ageing_balances['31-60'] > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $ageing_balances['31-60'], $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>61-90 Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, getClientAgeingBalance($client_id, 61, 90), $currency_code); ?></td>
+                                <td class="<?php if ($ageing_balances['61-90'] > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $ageing_balances['61-90'], $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>90+ Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, getClientAgeingBalance($client_id, 91, 9999), $currency_code); ?></td>
+                                <td class="<?php if ($ageing_balances['90+'] > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $ageing_balances['90+'], $currency_code); ?></td>
                             </tr>
                         </table>
                     </div>
@@ -120,18 +133,14 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                 <div class="coTmd-12">
                     <div class="m-3">
                         <h4>
-                            
-                            <a href="?client_id=<?= $client_id; ?>&max_rows=<?= $max_rows+10; ?>" type="button" class="text-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true" title="<i class='bx bx-bell bx-xs' ></i> <span>Click to see more transactions</span>">
-                                <?= $outstanding_wording; ?>
-                            </a>
-                            Invoices and Associated Payments
+                            Unpaid Invoices and Associated Payments
                         </h4>
                         <div class="table-responsive">
-                            <table class="table border-top" id="client_statement_table">
+                            <table class="table border-top table-sm table-hover" id="client_statement_table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
                                         <th>Transaction</th>
+                                        <th>Date</th>
                                         <th>Amount</th>
                                         <th>Balance</th>
                                     </tr>
@@ -155,8 +164,8 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                                     }
 
                                     $transaction_date = nullable_htmlentities($row['invoice_date']);
-                                    $transaction_type = "Invoice" . "<a href='/old_pages/invoice.php?invoice_id=" . $row['invoice_id'] . "'> " . $row['invoice_prefix'] . $row['invoice_number'] . "</a>";
-                                    $transaction_amount = floatval($row['invoice_amount']);
+                                    $transaction_type = "Invoice:" . "<a href='/guest_view_invoice.php?invoice_id=" . $row['invoice_id'] . "&url_key=" . $row['invoice_url_key'] . "'> " . $row['invoice_prefix'] . $row['invoice_number'] . "</a>";
+                                    $transaction_amount = getInvoiceAmount($row['invoice_id']);
                                     $transaction_balance = getInvoiceBalance($row['invoice_id']);
                                     $transaction_due_date = sanitizeInput($row['invoice_due']);
                                     $invoice_id = intval($row['invoice_id']);
@@ -167,6 +176,9 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
                                     if ($transaction_balance <= 0) {
                                         $transaction_balance = 0;
+                                    }
+                                    if ($transaction_balance < 0.02) {
+                                        continue;
                                     }
 
 
@@ -179,14 +191,40 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                                     $default_order ++;
                                     $payments = getPaymentsForInvoice($row['invoice_id']) ?? [];
 
-                                    ?>
-                                    <tr>
-                                        <td><?= $transaction_date; ?></td>
-                                        <td><?= $transaction_type; ?></td>
-                                        <td><?= numfmt_format_currency($currency_format, $transaction_amount, $currency_code); ?></td>
-                                        <td rowspan="<?= count($payments) + 1 ?>"><?= $transaction_balance ?></td>
-                                    </tr>
-                                    <?php
+                                    if (count($payments) == 0) {
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <h5>
+                                                    <?php if (strtotime($transaction_due_date) < strtotime(date("Y-m-d"))) { ?>
+                                                        <i class="bx bx-error text-danger"></i>
+                                                        <i class="bx bx-receipt"></i>
+                                                    <?php } else { ?>
+                                                        <i class="bx bx-receipt"></i>
+                                                    <?php } ?>
+                                                    <?= $transaction_type; ?>
+                                                </h5>
+                                            </td>
+                                            <td><?= $transaction_date; ?></td>
+                                            <td><?= numfmt_format_currency($currency_format, $transaction_amount, $currency_code); ?></td>
+                                            <td rowspan="2" class="align-bottom"><?= $transaction_balance ?></td>
+                                        </tr>
+                                        <?php
+                                    } else {
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <h5>
+                                                    <i class="bx bx-receipt"></i>
+                                                    <?= $transaction_type; ?>                                                    
+                                                </h5>
+</td>
+                                            <td><?= $transaction_date; ?></td>
+                                            <td><?= numfmt_format_currency($currency_format, $transaction_amount, $currency_code); ?></td>
+                                            <td rowspan="<?= count($payments) + 1 ?>" class="align-bottom"><?= $transaction_balance ?></td>
+                                        </tr>
+                                        <?php
+                                    }
                                     foreach ($payments as $payment) {
 
                                         $transaction_date = nullable_htmlentities($payment['payment_date']);
@@ -206,18 +244,33 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                                         }
                                         ?>
                                         <tr class="small">
-                                            <td><?= $transaction_date; ?></td>
-                                            <td>
+                                            <td class="text-end">
                                                 <i class="bx bx-credit-card"></i>
+                                                Payment: 
                                                 <a href="/old_pages/report/payments_report.php?client_id=<?= $client_id; ?>&payment_reference=<?= $payment['payment_reference']; ?>&year=<?= date("Y", strtotime($transaction_date)); ?>">
                                                     <?= $transaction_type; ?>
                                                 </a>
                                             </td>
+                                            <td><?= $transaction_date; ?></td>
                                             <td><?= numfmt_format_currency($currency_format, $transaction_amount, $currency_code); ?></td>
                                         </tr>
                                         <?php
                                         
                                     }
+                                    //if no payments, then add a row saying no payments found for invoice
+                                    if (count($payments) == 0) {
+                                        ?>
+                                        <tr>
+                                            <td class="text-muted small text-end">No payments found for invoice <?php echo $row['invoice_number']; ?></td>
+                                            <td colspan="3"></td>
+                                        </tr>
+                                        <?php
+                                    }
+                                    ?>
+                                    <tr class="dark-line">
+                                        <td colspan="4"></td>
+                                    </tr>
+                                    <?php
                                 }
                                 ?>
                             </table>
@@ -228,6 +281,13 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
         </div>
     </div>
 </div>
+
+<style>
+    .dark-line {
+        background-color: #999; /* Lighter shade of black */
+        height: 2px;
+    }
+</style>
 
 <?php require_once '/var/www/portal.twe.tech/includes/footer.php';
 

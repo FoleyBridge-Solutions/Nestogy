@@ -128,7 +128,7 @@ function handleNotificationFailure($report) {
     if (strpos($reason, 'Gone') !== false) {
         // Handle expired or unsubscribed endpoints
         echo("Removing expired or unsubscribed endpoint: $endpoint". PHP_EOL);
-        mysqli_query($mysqli, "DELETE FROM subscriptions WHERE endpoint = '$endpoint'");
+        mysqli_query($mysqli, "DELETE FROM notification_subscriptions WHERE notification_subscription_endpoint = '$endpoint'");
     } else {
         echo("Unhandled notification failure reason: $reason". PHP_EOL);
     }

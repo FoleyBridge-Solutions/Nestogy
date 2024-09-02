@@ -30,6 +30,13 @@ if (!isset($_GET['status'])) {
 }
 
 $all_tickets = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN contacts ON ticket_contact_id = contact_id WHERE $ticket_status_snippet AND ticket_client_id = $client_id ORDER BY ticket_id DESC");
+$statuses = [
+    1 => 'New',
+    2 => 'Open',
+    3 => 'Waiting',
+    4 => 'Resolved',
+    5 => 'Closed'
+];
 ?>
 
     <h2>All tickets</h2>
@@ -69,7 +76,7 @@ $all_tickets = mysqli_query($mysqli, "SELECT * FROM tickets LEFT JOIN contacts O
             echo "<td> <a href='ticket.php?id=$ticket_id'> $ticket_prefix$ticket_id</a></td>";
             echo "<td> <a href='ticket.php?id=$ticket_id'> $ticket_subject</a></td>";
             echo "<td>$ticket_contact_name</td>";
-            echo "<td>$ticket_status</td>";
+            echo "<td>".$statuses[$ticket_status]."</td>";
             echo "</tr>";
         }
         ?>

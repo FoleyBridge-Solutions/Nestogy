@@ -96,7 +96,7 @@ $sql_invoices = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_stat
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-list"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="category">
+                                    <select class="form-control select2"  name="category">
                                         <option value="">- Category -</option>
                                         <?php
 
@@ -234,7 +234,7 @@ $sql_invoices = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_stat
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fa fa-fw fa-piggy-bank"></i></span>
                             </div>
-                            <select class="form-control select2" id='select2' name="tax_id" required>
+                            <select class="form-control select2"  name="tax_id" required>
                                 <?php
 
                                 $taxes_sql = mysqli_query($mysqli, "SELECT * FROM taxes WHERE tax_archived_at IS NULL ORDER BY tax_name ASC");

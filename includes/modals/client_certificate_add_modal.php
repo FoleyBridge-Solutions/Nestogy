@@ -98,7 +98,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-globe"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="domain_id">
+                                    <select class="form-control select2"  name="domain_id">
                                         <option value="">- Domain -</option>
                                         <?php
                                         $domains_sql = mysqli_query($mysqli, "SELECT * FROM domains WHERE domain_archived_at IS NULL AND domain_client_id = $client_id ORDER BY domain_name ASC");

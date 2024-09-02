@@ -82,7 +82,8 @@ use Webklex\PHPIMAP\Message\Attachment;
 $allowed_extensions = array('jpg', 'jpeg', 'gif', 'png', 'webp', 'pdf', 'txt', 'md', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'xlsm', 'zip', 'tar', 'gz');
 
 // Function to raise a new ticket for a given contact and email them confirmation (if configured)
-function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date, $subject, $message, $attachments, $original_message_file)  {
+function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date, $subject, $message, $attachments, $original_message_file)
+{
     global $mysqli, $config_app_name, $company_name, $company_phone, $config_ticket_prefix, $config_ticket_client_general_notifications, $config_ticket_new_ticket_notification_email, $config_base_url, $config_ticket_from_name, $config_ticket_from_email, $config_smtp_host, $config_smtp_port, $config_smtp_encryption, $config_smtp_username, $config_smtp_password, $allowed_extensions;
 
     $original_client_id = $client_id;
@@ -94,18 +95,70 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     }
     //Check if the ticket is from noreply@rmmservice.com and is a support ticket
     if (strpos($contact_email, "noreply@rmmservice.com") === 0 && $ticket_type == "support") {
-        // subject = Help request from Healing Hands Veterinary Services / Virus Warning
-        $client_name = str_replace("Help request from ", "", $subject);
-        // remove anything after the /
-        $client_name = explode("/", $client_name)[0];
-        // remove any whitespace
-        $client_name = trim($client_name);
-        $client_id = mysqli_fetch_array(mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_name LIKE '%$client_name%'"));
+        // Extract relevant data from the email body
+        preg_match('/First Name: (.*)/', $message, $first_name_matches);
+        preg_match('/Last Name: (.*)/', $message, $last_name_matches);
+        preg_match('/Email: (.*)/', $message, $email_matches);
+        preg_match('/Phone: (.*)/', $message, $phone_matches);
+        preg_match('/Organization: (.*)/', $message, $organization_matches);
+        preg_match('/Subject: (.*)/', $message, $subject_matches);
+        preg_match('/Problem Description: (.*)/', $message, $problem_description_matches);
+        preg_match('/Device: (.*)/', $message, $device_matches);
+        preg_match('/Ninja URL: (.*)/', $message, $ninja_url_matches);
+        preg_match('/Device Role: (.*)/', $message, $device_role_matches);
+        preg_match('/Public IP: (.*)/', $message, $public_ip_matches);
+        preg_match('/Private IPs: (.*)/', $message, $private_ips_matches);
+
+        $first_name = trim($first_name_matches[1] ?? '');
+        $last_name = trim($last_name_matches[1] ?? '');
+        $contact_name = $first_name . ' ' . $last_name;
+        $contact_email = trim($email_matches[1] ?? '');
+        $phone = trim($phone_matches[1] ?? '');
+        $organization = trim($organization_matches[1] ?? '');
+        $subject = trim($subject_matches[1] ?? '');
+        $problem_description = trim($problem_description_matches[1] ?? '');
+        $device = trim($device_matches[1] ?? '');
+        $ninja_url = trim($ninja_url_matches[1] ?? '');
+        $device_role = trim($device_role_matches[1] ?? '');
+        $public_ip = trim($public_ip_matches[1] ?? '');
+        $private_ips = trim($private_ips_matches[1] ?? '');
+
+        
+        //Assign contact id based on name
+        $contact_id = mysqli_fetch_array(mysqli_query($mysqli, "SELECT contact_id FROM contacts WHERE contact_name LIKE '%$contact_name%'"));
+        if ($contact_id) {
+            $contact_id = $contact_id['contact_id'];
+        } else {
+            $contact_id = 0;
+        }
+
+        // Assign client based on organization name
+        $client_id = mysqli_fetch_array(mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_name LIKE '%$organization%'"));
         if ($client_id) {
             $client_id = $client_id['client_id'];
         } else {
             $client_id = $original_client_id;
+            echo "No client found for organization: $organization";
         }
+
+        // Redo the ticket description as a table
+        $message = "
+            <table class='table table-bordered table-striped datatables-basic'>
+                <tr><th>Field</th><th>Value</th></tr>
+                <tr><td><b>First Name</b></td><td>$first_name</td></tr>
+                <tr><td><b>Last Name</b></td><td>$last_name</td></tr>
+                <tr><td><b>Email</b></td><td>$contact_email</td></tr>
+                <tr><td><b>Phone</b></td><td>$phone</td></tr>
+                <tr><td><b>Organization</b></td><td>$organization</td></tr>
+                <tr><td><b>Subject</b></td><td>$subject</td></tr>
+                <tr><td><b>Problem Description</b></td><td>$problem_description</td></tr>
+                <tr><td><b>Device</b></td><td>$device</td></tr>
+                <tr><td><b>Ninja URL</b></td><td><a href='$ninja_url'>$ninja_url</a></td></tr>
+                <tr><td><b>Device Role</b></td><td>$device_role</td></tr>
+                <tr><td><b>Public IP</b></td><td>$public_ip</td></tr>
+                <tr><td><b>Private IPs</b></td><td>$private_ips</td></tr>
+            </table>
+        ";
     }
 
     $ticket_number_sql = mysqli_fetch_array(mysqli_query($mysqli, "SELECT config_ticket_next_number FROM settings WHERE company_id = 1"));
@@ -113,6 +166,7 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     $new_config_ticket_next_number = $ticket_number + 1;
     mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = $new_config_ticket_next_number WHERE company_id = 1");
 
+    $date = date('h:iA - F j, Y', strtotime($date));
     $message = "<i>Email from: $contact_email at $date:-</i> <br><br>$message";
 
     $ticket_prefix_esc = mysqli_real_escape_string($mysqli, $config_ticket_prefix);
@@ -131,12 +185,12 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     $att_dir = "/var/www/portal.twe.tech/uploads/tickets/" . $id;
     mkdirMissing($att_dir);
 
-    echo "\n\nATTdir". $att_dir ."";
+    echo "\n\nATTdir" . $att_dir . "";
     echo "\nOriginal message file{$original_message_file}";
     echo "Rename:" . "/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}" . "->" . "{$att_dir}{$original_message_file}";
 
     rename("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}", "{$att_dir}/{$original_message_file}");
-   
+
     $original_message_file_esc = mysqli_real_escape_string($mysqli, $original_message_file);
     mysqli_query($mysqli, "INSERT INTO ticket_attachments SET ticket_attachment_name = 'Original-parsed-email.eml', ticket_attachment_reference_name = '$original_message_file_esc', ticket_attachment_ticket_id = $id");
 
@@ -208,7 +262,7 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     sendNotification(
         'New Ticket',
         'New Ticket created by ' .  $contact_name . ' for ' . $subject,
-        'public/?page=ticket&action=show&ticket_id='.$id,
+        'public/?page=ticket&action=show&ticket_id=' . $id,
         $client_id
     );
 
@@ -218,7 +272,8 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
 }
 
 // Add Reply Function
-function addReply($from_email, $date, $subject, $ticket_number, $message, $attachments) {
+function addReply($from_email, $date, $subject, $ticket_number, $message, $attachments)
+{
     global $mysqli,
         $config_app_name,
         $company_name,
@@ -356,9 +411,9 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
         mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Update', log_description = 'Email parser: Client contact $from_email_esc updated ticket $config_ticket_prefix$ticket_number_esc ($subject)', log_client_id = $client_id");
         sendNotification(
             'Ticket Updated',
-             'Ticket updated by ' . $from_email . ' for ' . $subject,
-             'public/?page=ticket&action=show&ticket_id='.$ticket_id,
-             $client_id
+            'Ticket updated by ' . $from_email . ' for ' . $subject,
+            'public/?page=ticket&action=show&ticket_id=' . $ticket_id,
+            $client_id
         );
         return true;
     } else {
@@ -366,16 +421,18 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
     }
 }
 
-function sendNotification($notification_type, $notification, $action = '', $client_id = 0){
+function sendNotification($notification_type, $notification, $action = '', $client_id = 0)
+{
     global $mysqli;
-    mysqli_query($mysqli,
+    mysqli_query(
+        $mysqli,
         "INSERT INTO notifications SET
         notification_type = '$notification_type',
         notification = '$notification',
         notification_action = '$action',
         notification_client_id = $client_id,
         notification_is_webpush = 1"
-);
+    );
 }
 
 
@@ -414,9 +471,9 @@ if ($messages->count() > 0) {
             }
         }
 
- 
 
-        
+
+
         // Parse the raw message file
         $from_address = $message->getFrom();
         $from_name = sanitizeInput($from_address[0]->personal ?? 'Unknown');
@@ -430,36 +487,32 @@ if ($messages->count() > 0) {
             $text_body = $message->getTextBody() ?? '';
             $message_body = nl2br(htmlspecialchars($text_body));
         }
-        
-   
-            // Define the path for saving the raw message
-            $original_message_file = "processed-eml-" . randomString(200) . ".eml";
-        
-            $original_message_file_dir = $tempDir . $original_message_file;
-    
-                // Create a string from headers
-            $headers_string = '';
-            $headers = $message->getHeaders();
-            echo $headers;
+        // Define the path for saving the raw message
+        $original_message_file = "processed-eml-" . randomString(200) . ".eml";
 
-            foreach ($headers as $header => $value) {
-                if (is_array($value)) {
-                    $value = implode(', ', $value);
-                }
-                $headers_string .= "$header: $value\r\n";
+        $original_message_file_dir = $tempDir . $original_message_file;
+
+        // Create a string from headers
+        $headers_string = '';
+        $headers = $message->getHeaders();
+        echo $headers;
+
+        foreach ($headers as $header => $value) {
+            if (is_array($value)) {
+                $value = implode(', ', $value);
             }
+            $headers_string .= "$header: $value\r\n";
+        }
 
-            $raw_message = $headers_string . "\r\n" . $message_body;
-    
-            // Save the raw message to a file
-            if (file_put_contents($original_message_file_dir, $raw_message) === false) {
-                error_log("Failed to save raw message to: $original_message_file");
-                echo "\nFailed to save raw message.\n";
-            } else {
-                echo "\nRaw message saved to: $original_message_file\n";
-            }
+        $raw_message = $headers_string . "\r\n" . $message_body;
 
-
+        // Save the raw message to a file
+        if (file_put_contents($original_message_file_dir, $raw_message) === false) {
+            error_log("Failed to save raw message to: $original_message_file");
+            echo "\nFailed to save raw message.\n";
+        } else {
+            echo "\nRaw message saved to: $original_message_file\n";
+        }
         // Check if the subject contains a ticket number
         if (preg_match("/\[$config_ticket_prefix\d+\]/", $subject, $ticket_number)) {
             // Extract the ticket number from the subject
@@ -473,7 +526,7 @@ if ($messages->count() > 0) {
                 // Output that the reply was processed
                 echo "\nProcessed reply to ticket $config_ticket_prefix$ticket_number.\n";
             }
-        // Check if the email is from a known contact
+            // Check if the email is from a known contact
         } else {
             // Parse the email address and domain
             $from_email_esc = mysqli_real_escape_string($mysqli, $from_email);
@@ -489,7 +542,7 @@ if ($messages->count() > 0) {
                     $email_processed = true;
                     echo "\nProcessed new ticket from existing contact.\n";
                 }
-            // If the contact does not exist, check if the domain exists
+                // If the contact does not exist, check if the domain exists
             } else {
                 $from_domain_esc = mysqli_real_escape_string($mysqli, $from_domain);
                 $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT * FROM domains WHERE domain_name = '$from_domain_esc' LIMIT 1"));
@@ -499,10 +552,10 @@ if ($messages->count() > 0) {
                     $password = password_hash(randomString(), PASSWORD_DEFAULT);
                     $contact_name = $from_name;
                     $contact_email = $from_email;
-                    mysqli_query($mysqli, "INSERT INTO contacts SET contact_name = '".mysqli_real_escape_string($mysqli, $contact_name)."', contact_email = '".mysqli_real_escape_string($mysqli, $contact_email)."', contact_notes = 'Added automatically via email parsing.', contact_password_hash = '$password', contact_client_id = $client_id");
+                    mysqli_query($mysqli, "INSERT INTO contacts SET contact_name = '" . mysqli_real_escape_string($mysqli, $contact_name) . "', contact_email = '" . mysqli_real_escape_string($mysqli, $contact_email) . "', contact_notes = 'Added automatically via email parsing.', contact_password_hash = '$password', contact_client_id = $client_id");
                     $contact_id = mysqli_insert_id($mysqli);
                     echo "\nCreated new contact.\n";
-                    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Contact', log_action = 'Create', log_description = 'Email parser: created contact ".mysqli_real_escape_string($mysqli, $contact_name)."', log_client_id = $client_id");
+                    mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Contact', log_action = 'Create', log_description = 'Email parser: created contact " . mysqli_real_escape_string($mysqli, $contact_name) . "', log_client_id = $client_id");
                     if (addTicket($contact_id, $contact_name, $contact_email, $client_id, $date, $subject, $message_body, $message->getAttachments(), $original_message_file)) {
                         // Set email processed to true
                         $email_processed = true;
@@ -531,7 +584,7 @@ if ($messages->count() > 0) {
             // unlink("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}");
         }
     }
-// Output that no new emails were found
+    // Output that no new emails were found
 } else {
     echo "\nNo new emails found.\n";
 }
@@ -542,4 +595,3 @@ $client->disconnect();
 
 // Remove the lock file
 unlink($lock_file_path);
-?>

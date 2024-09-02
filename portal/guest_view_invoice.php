@@ -25,14 +25,6 @@ if (!isset($_GET['invoice_id'], $_GET['url_key'])) {
 $url_key = sanitizeInput($_GET['url_key']);
 $invoice_id = intval($_GET['invoice_id']);
 
-$sql = "SELECT * FROM invoices
-    WHERE invoice_id = :invoice_id
-    AND invoice_url_key = :url_key";
-$stmt = $pdo->prepare($sql);
-$stmt->bindParam(':invoice_id', $invoice_id, PDO::PARAM_INT);
-$stmt->bindParam(':url_key', $url_key, PDO::PARAM_STR);
-$stmt->execute();
-
 $accounting = new Accounting($pdo);
 $invoice = $accounting->getInvoice($invoice_id);
 
@@ -48,6 +40,7 @@ $invoice_category_id = intval($invoice['invoice_category_id']);
 $client_id = intval($invoice['client_id']);
 $client_name = nullable_htmlentities($invoice['client_name']);
 $client_name_escaped = sanitizeInput($invoice['client_name']);
+
 $location_address = nullable_htmlentities($invoice['location_address']);
 $location_city = nullable_htmlentities($invoice['location_city']);
 $location_state = nullable_htmlentities($invoice['location_state']);
@@ -340,19 +333,467 @@ if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status
                     <a class="btn btn-label-secondary d-grid w-100 mb-3" target="_blank" onclick="window.print();">Print</a>
                     <?php
                     if ($balance > 0) { ?>
-                        <a class="btn btn-primary d-grid w-100" href="/portal/guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id; ?>&url_key=<?= $url_key; ?>">
-                            <span class="d-flex align-items-center justify-content-center text-nowrap"><i class="bx bx-dollar bx-xs me-1"></i>
-                                Pay Online <?php if ($config_stripe_client_pays_fees == 1) {
-                                                echo "(Gateway Fee: " .  numfmt_format_currency($currency_format, $gateway_fee, $invoice_currency_code) . ")";
-                                            } ?>
-                            </span>
-                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-primary d-grid w-100 dropdown-toggle" type="button" id="paymentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Pay Online
+                            </button>
+                            <ul class="dropdown-menu w-100" aria-labelledby="paymentDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="/portal/guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id; ?>&url_key=<?= $url_key; ?>&payment_method=card">
+                                        <span class="d-flex align-items-center justify-content-center text-nowrap">
+                                            <i class="bx bx-credit-card bx-xs me-1"></i> Card (2.9% + 0.30¢)
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/portal/guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id; ?>&url_key=<?= $url_key; ?>&payment_method=ach">
+                                        <span class="d-flex align-items-center justify-content-center text-nowrap">
+                                            <i class="bx bxs-bank bx-xs me-1"></i> ACH (0.8%, $5 cap on fee)
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/portal/guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id; ?>&url_key=<?= $url_key; ?>&payment_method=installments">
+                                        <span class="d-flex align-items-center justify-content-center text-nowrap">
+                                            <i class="bx bx-calendar bx-xs me-1"></i> Installments (6% + 0.30¢)
+                                        </span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     <?php } ?>
                 </div>
             </div>
         </div>
         <!-- /Invoice Actions -->
 
+
+        <script src='plugins/pdfmake/pdfmake.min.js'></script>
+    <script src='plugins/pdfmake/vfs_fonts.js'></script>
+    <script>
+
+        var docDefinition = {
+            info: {
+                title: <?= json_encode(html_entity_decode($company_name) . "- Estimate") ?>,
+                author: <?= json_encode(html_entity_decode($company_name)) ?>
+            },
+
+            //watermark: {text: '<?= $invoice_status; ?>', color: 'lightgrey', opacity: 0.3, bold: true, italics: false},
+
+            content: [
+                // Header
+                {
+                    columns: [
+                        <?php if (!empty($company_logo_base64)) { ?>
+                        {
+                            image: <?= json_encode("data:image;base64,$company_logo_base64") ?>,
+                            width: 120
+                        },
+                        <?php } ?>
+
+                        [
+                            {
+                                text: 'Estimate',
+                                style: 'invoiceTitle',
+                                width: '*'
+                            },
+                            {
+                                text: <?= json_encode(html_entity_decode("$invoice_prefix$invoice_number")) ?>,
+                                style: 'invoiceNumber',
+                                width: '*'
+                            },
+                        ],
+                    ],
+                },
+                // Billing Headers
+                {
+                    columns: [
+                        {
+                            text: <?= json_encode(html_entity_decode($company_name)) ?>,
+                            style: 'invoiceBillingTitle'
+                        },
+                        {
+                            text: <?= json_encode(html_entity_decode($client_name)) ?>,
+                            style: 'invoiceBillingTitleClient'
+                        },
+                    ]
+                },
+                // Billing Address
+                {
+                    columns: [
+                        {
+                            text: <?= json_encode(html_entity_decode("$company_address \n $company_city $company_state $company_zip \n $company_phone \n $company_website")) ?>,
+                            style: 'invoiceBillingAddress'
+                        },
+                        {
+                            text: <?= json_encode(html_entity_decode("$location_address \n $location_city $location_state $location_zip \n $contact_email \n $contact_phone")) ?>,
+                            style: 'invoiceBillingAddressClient'
+                        },
+                    ]
+                },
+                //Invoice Dates Table
+                {
+                    table: {
+                        // headers are automatically repeated if the table spans over multiple pages
+                        // you can declare how many rows should be treated as headers
+                        headerRows: 0,
+                        widths: [ '*',80, 80 ],
+
+                        body: [
+                            // Total
+                            [
+                                {
+                                    text: '',
+                                    rowSpan: 3
+                                },
+                                {},
+                                {},
+                            ],
+                            [
+                                {},
+                                {
+                                    text: 'Date',
+                                    style: 'invoiceDateTitle'
+                                },
+                                {
+                                    text: <?= json_encode(html_entity_decode($invoice_date)) ?>,
+                                    style: 'invoiceDateValue'
+                                },
+                            ],
+                            [
+                                {},
+                                {
+                                    text: 'Expire',
+                                    style: 'invoiceDueDateTitle'
+                                },
+                                {
+                                    text: <?= json_encode(html_entity_decode($invoice_expire)) ?>,
+                                    style: 'invoiceDueDateValue'
+                                },
+                            ],
+                        ]
+                    }, // table
+                    layout: 'lightHorizontalLines'
+                },
+                // Line breaks
+                '\n\n',
+                // Items
+                {
+                    table: {
+                        // headers are automatically repeated if the table spans over multiple pages
+                        // you can declare how many rows should be treated as headers
+                        headerRows: 1,
+                        widths: [ '*', 40, 'auto', 'auto', 80 ],
+
+                        body: [
+                            // Table Header
+                            [
+                                {
+                                    text: 'Product',
+                                    style: [ 'itemsHeader', 'left']
+                                },
+                                {
+                                    text: 'Qty',
+                                    style: [ 'itemsHeader', 'center']
+                                },
+                                {
+                                    text: 'Price',
+                                    style: [ 'itemsHeader', 'right']
+                                },
+                                {
+                                    text: 'Tax',
+                                    style: [ 'itemsHeader', 'right']
+                                },
+                                {
+                                    text: 'Total',
+                                    style: [ 'itemsHeader', 'right']
+                                }
+                            ],
+                            // Items
+                            <?php
+                            $total_tax = 0;
+                            $sub_total = 0;
+
+                            $sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id ORDER BY item_order ASC");
+
+                            while ($row = mysqli_fetch_array($sql_invoice_items)) {
+                            $item_name = $row['item_name'];
+                            $item_description = $row['item_description'];
+                            $item_quantity = $row['item_quantity'];
+                            $item_price = $row['item_price'];
+                            $item_subtotal = $row['item_price'];
+                            $item_tax = $row['item_tax'];
+                            $item_total = $row['item_total'];
+                            $tax_id = $row['item_tax_id'];
+                            $total_tax = $item_tax + $total_tax;
+                            $sub_total = $item_price * $item_quantity + $sub_total;
+                            ?>
+
+                            // Item
+                            [
+                                [
+                                    {
+                                        text: <?= json_encode($item_name) ?>,
+                                        style: 'itemTitle'
+                                    },
+                                    {
+                                        text: <?= json_encode($item_description) ?>,
+                                        style: 'itemDescription'
+                                    }
+                                ],
+                                {
+                                    text: <?= $item_quantity ?>,
+                                    style: 'itemQty'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, $item_price, $invoice_currency_code)) ?>,
+                                    style: 'itemNumber'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, $item_tax, $invoice_currency_code)) ?>,
+                                    style: 'itemNumber'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, $item_total, $invoice_currency_code)) ?>,
+                                    style: 'itemNumber'
+                                }
+                            ],
+
+                            <?php
+                            }
+                            ?>
+                            // END Items
+                        ]
+                    }, // table
+                    layout: 'lightHorizontalLines'
+                },
+                // TOTAL
+                {
+                    table: {
+                        // headers are automatically repeated if the table spans over multiple pages
+                        // you can declare how many rows should be treated as headers
+                        headerRows: 0,
+                        widths: [ '*','auto', 80 ],
+
+                        body: [
+                            // Total
+                            [
+                                {
+                                    text: 'Notes',
+                                    style:'notesTitle'
+                                },
+                                {},
+                                {}
+                            ],
+                            [
+                                {
+                                    rowSpan: '*',
+                                    text: <?= json_encode(html_entity_decode($invoice_note)) ?>,
+                                    style: 'notesText'
+                                },
+                                {
+                                    text: 'Subtotal',
+                                    style: 'itemsFooterSubTitle'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code)) ?>,
+                                    style: 'itemsFooterSubValue'
+                                }
+                            ],
+                            <?php if ($invoice_discount > 0) { ?>
+                            [
+                                {},
+                                {
+                                    text: 'Discount',
+                                    style: 'itemsFooterSubTitle'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, -$invoice_discount, $invoice_currency_code)) ?>,
+                                    style: 'itemsFooterSubValue'
+                                }
+                            ],
+                            <?php } ?>
+                            <?php if ($total_tax > 0) { ?>
+                            [
+                                {},
+                                {
+                                    text: 'Tax',
+                                    style: 'itemsFooterSubTitle'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code)) ?>,
+                                    style: 'itemsFooterSubValue'
+                                }
+                            ],
+                            <?php } ?>
+                            [
+                                {},
+                                {
+                                    text: 'Total',
+                                    style: 'itemsFooterTotalTitle'
+                                },
+                                {
+                                    text: <?= json_encode(numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code)) ?>,
+                                    style: 'itemsFooterTotalValue'
+                                }
+                            ],
+                        ]
+                    }, // table
+                    layout: 'lightHorizontalLines'
+                },
+                // TERMS / FOOTER
+                {
+                    text: <?= json_encode("$config_invoice_footer"); ?>,
+                    style: 'documentFooterCenter'
+                }
+            ], //End Content,
+            styles: {
+                // Document Footer
+                documentFooterCenter: {
+                    fontSize: 9,
+                    margin: [10,50,10,10],
+                    alignment: 'center'
+                },
+                // Invoice Title
+                invoiceTitle: {
+                    fontSize: 18,
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0,0,0,3]
+                },
+                // Invoice Number
+                invoiceNumber: {
+                    fontSize: 14,
+                    alignment: 'right'
+                },
+                // Billing Headers
+                invoiceBillingTitle: {
+                    fontSize: 14,
+                    bold: true,
+                    alignment: 'left',
+                    margin: [0,20,0,5]
+                },
+                invoiceBillingTitleClient: {
+                    fontSize: 14,
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0,20,0,5]
+                },
+                // Billing Details
+                invoiceBillingAddress: {
+                    fontSize: 10,
+                    lineHeight: 1.2
+                },
+                invoiceBillingAddressClient: {
+                    fontSize: 10,
+                    lineHeight: 1.2,
+                    alignment: 'right',
+                    margin: [0,0,0,30]
+                },
+                // Invoice Dates
+                invoiceDateTitle: {
+                    fontSize: 10,
+                    alignment: 'left',
+                    margin: [0,5,0,5]
+                },
+                invoiceDateValue: {
+                    fontSize: 10,
+                    alignment: 'right',
+                    margin: [0,5,0,5]
+                },
+                // Invoice Due Dates
+                invoiceDueDateTitle: {
+                    fontSize: 10,
+                    bold: true,
+                    alignment: 'left',
+                    margin: [0,5,0,5]
+                },
+                invoiceDueDateValue: {
+                    fontSize: 10,
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0,5,0,5]
+                },
+                // Items Header
+                itemsHeader: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    bold: true,
+                    alignment: 'right'
+                },
+                // Item Title
+                itemTitle: {
+                    fontSize: 10,
+                    bold: true,
+                    margin: [0,5,0,3]
+                },
+                itemDescription: {
+                    italics: true,
+                    fontSize: 9,
+                    lineHeight: 1.1,
+                    margin: [0,3,0,5]
+                },
+                itemQty: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    alignment: 'center'
+                },
+                itemNumber: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    alignment: 'right'
+                },
+                itemTotal: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    bold: true,
+                    alignment: 'right'
+                },
+                // Items Footer (Subtotal, Total, Tax, etc)
+                itemsFooterSubTitle: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    alignment: 'right'
+                },
+                itemsFooterSubValue: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    bold: false,
+                    alignment: 'right'
+                },
+                itemsFooterTotalTitle: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    bold: true,
+                    alignment: 'right'
+                },
+                itemsFooterTotalValue: {
+                    fontSize: 10,
+                    margin: [0,5,0,5],
+                    bold: true,
+                    alignment: 'right'
+                },
+                notesTitle: {
+                    fontSize: 10,
+                    bold: true,
+                    margin: [0,5,0,5]
+                },
+                notesText: {
+                    fontSize: 9,
+                    margin: [0,5,50,5]
+                },
+                left: {
+                    alignment: 'left'
+                },
+                center: {
+                    alignment: 'center'
+                },
+            },
+            defaultStyle: {
+                columnGap: 20,
+            }
+        }
+    </script>
 
     </div>
 

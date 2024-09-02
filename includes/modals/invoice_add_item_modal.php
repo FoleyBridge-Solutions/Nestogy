@@ -98,7 +98,7 @@ if (mysqli_num_rows($products_sql) > 0) {
                         </div>
                         <div class="col-md-3 col-12 mb-md-0 mb-3 ps-md-0">
                             <p class="mb-2 repeater-title">Qty</p>
-                            <input type="number" pattern="[0-9]*\.?[0-9]{0,2}" class="form-control" style="text-align: center;" id="qty" name="qty" placeholder="0">
+                            <input type="number" class="form-control" style="text-align: center;" id="qty" name="qty" placeholder="0">
                         </div>
                         <div class="col-md-5 col-12 pe-0 ps-md-0">
                             <p class="mb-2 repeater-title">Line Total</p>

@@ -19,8 +19,7 @@ class Daemon
 
         $this->tasks[] = new StartupTask($pdo, $cronKey, $config['cron']['enable']);
         $this->tasks[] = new CleanUpTask($pdo);
-        $this->tasks[] = new NotificationTask($pdo);
-        $this->tasks[] = new SubscriptionTask($pdo);
+        
     }
 
     public function run(): void

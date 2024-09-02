@@ -32,7 +32,7 @@ $clients = readClients();
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fa fa-fw fa-users"></i></span>
                             </div>
-                            <select class="form-control select2" id='select2' name="new_client_id" id="changeClientSelect" required>
+                            <select class="form-control select2"  name="new_client_id" id="changeClientSelect" required>
                                 <option value="">Select Client</option>
                                 <?php foreach ($clients as $client) : ?>
                                     <option value="<?= $client['client_id']; ?>" <?= $client['client_id'] == $ticket_client_id ? 'selected' : '' ?>>

@@ -4,10 +4,7 @@
  * Invoices for PTC
  */
 
-
-
 require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
-
 
 if ($contact_primary == 0 && !$contact_is_billing_contact) {
     header("Location: portal_post.php?logout");
@@ -35,6 +32,7 @@ $invoices_sql = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_clie
             <tbody>
 
             <?php
+            
             while ($row = mysqli_fetch_array($invoices_sql)) {
                 $invoice_id = intval($row['invoice_id']);
                 $invoice_prefix = nullable_htmlentities($row['invoice_prefix']);
@@ -43,7 +41,7 @@ $invoices_sql = mysqli_query($mysqli, "SELECT * FROM invoices WHERE invoice_clie
                 $invoice_status = nullable_htmlentities($row['invoice_status']);
                 $invoice_date = nullable_htmlentities($row['invoice_date']);
                 $invoice_due = nullable_htmlentities($row['invoice_due']);
-                $invoice_amount = floatval($row['invoice_amount']);
+                $invoice_amount = getInvoiceAmount($invoice_id);
                 $invoice_url_key = nullable_htmlentities($row['invoice_url_key']);
 
                 if (empty($invoice_scope)) {

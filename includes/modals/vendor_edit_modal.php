@@ -76,7 +76,7 @@
                       <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fa fa-fw fa-puzzle-piece"></i></span>
                       </div>
-                      <select class="form-control select2" id='select2' name="vendor_template_id">
+                      <select class="form-control select2"  name="vendor_template_id">
                           <option value="0">- None -</option>
                           <?php
 

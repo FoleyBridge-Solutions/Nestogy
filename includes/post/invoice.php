@@ -267,7 +267,7 @@ if (isset($_POST['add_payment'])) {
     $currency_code = sanitizeInput($_POST['currency_code']);
     $payment_method = sanitizeInput($_POST['payment_method']);
     $reference = sanitizeInput($_POST['reference']);
-    $email_receipt = intval($_POST['email_receipt']);
+    $email_receipt = intval($_POST['email_receipt'] ?? 1);
 
     $payment = [];
     $payment['invoice_id'] = $invoice_id;

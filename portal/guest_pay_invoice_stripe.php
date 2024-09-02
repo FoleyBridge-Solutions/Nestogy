@@ -29,12 +29,10 @@ $config_stripe_percentage_fee = floatval($stripe_vars['config_stripe_percentage_
 $config_stripe_flat_fee = floatval($stripe_vars['config_stripe_flat_fee']);
 $config_stripe_client_pays_fees = intval($stripe_vars['config_stripe_client_pays_fees']);
 
-// Check Stripe is configured
-if ($config_stripe_enable == 0 || $config_stripe_account == 0 || empty($config_stripe_publishable) || empty($config_stripe_secret)) {
-    echo "<br><h2>Stripe payments not enabled/configured</h2>";
-    require_once '/var/www/portal.twe.tech/portal/guest_footer.php';
-
-    exit();
+if (isset($_GET['payment_method'])) {
+    $payment_method = $_GET['payment_method'];
+} else {
+    $payment_method = 'card';
 }
 
 // Show payment form
@@ -47,7 +45,6 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $accounting = new Accounting($pdo);
     // Query invoice details
     $invoice = $accounting->getInvoice($invoice_id);
-    
 
     $invoice_prefix = nullable_htmlentities($invoice['invoice_prefix']);
     $invoice_number = intval($invoice['invoice_number']);
@@ -56,37 +53,44 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $invoice_discount = floatval($invoice['invoice_discount_amount']);
     $invoice_amount = floatval($invoice['invoice_amount']);
     $invoice_currency_code = nullable_htmlentities($invoice['invoice_currency_code']);
-    $client_id = intval($invoice['client_id']);
-    $client_name = nullable_htmlentities($invoice['client_name']);
+    $client_id = intval($invoice['invoice_client_id']);
     
-    $sql = mysqli_query($mysqli, "SELECT * FROM companies, settings WHERE companies.company_id = settings.company_id AND companies.company_id = 1");
-    $row = mysqli_fetch_array($sql);
-    $company_locale = nullable_htmlentities($row['company_locale']);
+    $balance = $invoice['invoice_balance'];
+    $amount_paid = $invoice_amount - $balance;
 
-    // Add up all the payments for the invoice and get the total amount paid to the invoice
-    $sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
-    $row = mysqli_fetch_array($sql_amount_paid);
-    $amount_paid = floatval($row['amount_paid']);
-    $balance_to_pay = $invoice_amount - $amount_paid;
-
-    if ($config_stripe_client_pays_fees == 1) {
-        $balance_before_fees = $balance_to_pay;
-        // See here for passing costs on to client https://support.stripe.com/questions/passing-the-stripe-fee-on-to-customers
-        // Calculate the amount to charge the client
-        $balance_to_pay = ($balance_to_pay + $config_stripe_flat_fee) / (1 - $config_stripe_percentage_fee);
-        // Calculate the fee amount
-        $gateway_fee = round($balance_to_pay - $balance_before_fees, 2);
-
+    if ($payment_method == "ach") {
+        $fees = [
+            "rate" => 0.008,
+            "flat" => 0,
+            "cap" => 5
+        ];
+        if ($balance * $fees['rate'] + $fees['flat'] > $fees['cap'] ) {
+            $balance_to_pay = $fees['cap'] + $balance;
+        } else {
+            $balance_to_pay = $balance * $fees['rate'] + $fees['flat'] + $balance;
+        }
+    } elseif ($payment_method == "card") {
+        $fees = [
+            "rate" => 0.029,
+            "flat" => 0.30
+        ];
+        $balance_to_pay = ($balance + $fees['flat']) / (1 - $fees['rate']);
+    } elseif ($payment_method == "installments") {
+        $fees = [
+            "rate" => 0.06,
+            "flat" => 0.30
+        ];
+        $balance_to_pay = ($balance + $fees['flat']) / (1 - $fees['rate']);
     }
 
-    //Round balance to pay to 2 decimal places
+    $gateway_fee = round($balance_to_pay - $balance, 2);
     $balance_to_pay = round($balance_to_pay, 2);
 
     // Get invoice items
     $sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id ORDER BY item_id ASC");
 
     // Set Currency Formatting
-    $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
+    $currency_format = numfmt_create("en_US", NumberFormatter::CURRENCY);
 
     $sql_taxes = mysqli_query($mysqli, "SELECT * FROM taxes");
     $taxes = [];
@@ -130,13 +134,10 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
                         $item_tax_rate = floatval($item['tax_percent']);
 
                         $sub_total = ($item_price * $item_quantity) - $item_discount;
-                        $invoice_sub_total += $sub_total;
                         
                         $item_tax = $sub_total * ($item_tax_rate / 100);
-                        $invoice_tax += $item_tax;
                         
                         $item_total = $sub_total + $item_tax;
-                        $invoice_total += $item_total;
                         ?>
 
                         <tr>
@@ -196,7 +197,127 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     </div>
 
     <!-- Include local JS that powers stripe -->
-    <script src="/includes/js/guest_pay_invoice_stripe.js"></script>
+    <script>
+        const stripe = Stripe(document.getElementById("stripe_publishable_key").value);
+
+        let elements;
+
+        initialize();
+        checkStatus();
+
+        document
+        .querySelector("#payment-form")
+        .addEventListener("submit", handleSubmit);
+
+        async function initialize() {
+        const { clientSecret } = await fetch("guest_ajax.php?stripe_create_pi=true&payment_method=<?php echo $payment_method; ?>", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+            invoice_id: <?php echo $invoice_id; ?>,
+            url_key: "<?php echo $invoice_url_key; ?>"
+            }),
+        }).then((r) => r.json());
+
+        elements = stripe.elements({ clientSecret });
+
+        const linkAuthenticationElement = elements.create("linkAuthentication");
+        linkAuthenticationElement.mount("#link-authentication-element");
+
+        const paymentElementOptions = {
+            layout: "tabs",
+        };
+
+        const paymentElement = elements.create("payment", paymentElementOptions);
+        paymentElement.mount("#payment-element");
+
+        // Unhide the submit button once everything has loaded
+        document.getElementById("submit").hidden = false;
+        }
+
+        async function handleSubmit(e) {
+        e.preventDefault();
+        setLoading(true);
+
+        const { error } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+            return_url: window.location.href,
+            receipt_email: emailAddress,
+            },
+        });
+
+        // This point will only be reached if there is an immediate error when
+        // confirming the payment. Otherwise, your customer will be redirected to
+        // your `return_url`. For some payment methods like iDEAL, your customer will
+        // be redirected to an intermediate site first to authorize the payment, then
+        // redirected to the `return_url`.
+        if (error.type === "card_error" || error.type === "validation_error") {
+            showMessage(error.message);
+        } else {
+            showMessage("An unexpected error occurred.");
+        }
+
+        setLoading(false);
+        }
+
+        // Fetches the payment intent status after payment submission
+        async function checkStatus() {
+        const clientSecret = new URLSearchParams(window.location.search).get(
+            "payment_intent_client_secret"
+        );
+
+        if (!clientSecret) {
+            return;
+        }
+
+        const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+
+        switch (paymentIntent.status) {
+            case "succeeded":
+            showMessage("Payment succeeded!");
+            break;
+            case "processing":
+            showMessage("Your payment is processing.");
+            break;
+            case "requires_payment_method":
+            showMessage("Your payment was not successful, please try again.");
+            break;
+            default:
+            showMessage("Something went wrong.");
+            break;
+        }
+        }
+
+        // ------- UI helpers -------
+
+        function showMessage(messageText) {
+        const messageContainer = document.querySelector("#payment-message");
+
+        messageContainer.classList.remove("hidden");
+        messageContainer.textContent = messageText;
+
+        setTimeout(function () {
+            messageContainer.classList.add("hidden");
+            messageText.textContent = "";
+        }, 4000);
+        }
+
+        // Show a spinner on payment submission
+        function setLoading(isLoading) {
+        if (isLoading) {
+            // Disable the button and show a spinner
+            document.querySelector("#submit").disabled = true;
+            document.querySelector("#spinner").classList.remove("hidden");
+            document.querySelector("#button-text").classList.add("hidden");
+        } else {
+            document.querySelector("#submit").disabled = false;
+            document.querySelector("#spinner").classList.add("hidden");
+            document.querySelector("#button-text").classList.remove("hidden");
+        }
+        }
+
+    </script>
 
     <?php
 

@@ -73,7 +73,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="type" required>
+                                    <select class="form-control select2"  name="type" required>
                                         <?php foreach($software_types_array as $software_type_select) { ?>
                                             <option <?php if ($software_type == $software_type_select) { echo "selected"; } ?>><?= $software_type_select; ?></option>
                                         <?php } ?>
@@ -91,7 +91,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-cube"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="license_type">
+                                    <select class="form-control select2"  name="license_type">
                                         <option value="">- Select a License Type -</option>
                                         <?php foreach($license_types_array as $license_type_select) { ?>
                                             <option <?php if ($license_type_select == $software_license_type) { echo "selected"; } ?>><?= $license_type_select; ?></option>

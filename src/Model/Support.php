@@ -183,4 +183,25 @@ class Support {
         $stmt->execute(['ticket_id' => $ticket_id]);
         return $stmt->fetch()['ticket_total_reply_time'];
     }
+    public function getUnassignedTickets($month, $year) {
+        $stmt = $this->pdo->prepare('SELECT SQL_CACHE COUNT(ticket_id) AS unassigned_tickets FROM tickets WHERE ticket_status != :status AND ticket_assigned_to = 0 AND MONTH(ticket_created_at) = :month AND YEAR(ticket_created_at) = :year');
+        $stmt->execute(['status' => 5, 'month' => $month, 'year' => $year]);
+        return $stmt->fetch()['unassigned_tickets'];
+    }
+    public function getAssignedTickets($month, $year, $user_id = null) {
+        if ($user_id == null) {
+            $user_id = $_SESSION['user_id'];    
+        }
+        $stmt = $this->pdo->prepare('SELECT SQL_CACHE COUNT(ticket_id) AS assigned_tickets FROM tickets WHERE ticket_status != :status AND ticket_assigned_to = :user_id AND MONTH(ticket_created_at) = :month AND YEAR(ticket_created_at) = :year');
+        $stmt->execute(['status' => 5, 'user_id' => $user_id, 'month' => $month, 'year' => $year]);
+        return $stmt->fetch()['assigned_tickets'];
+    }
+    public function getResolvedTickets($month, $year, $user_id = null) {
+        if ($user_id == null) {
+            $user_id = $_SESSION['user_id'];    
+        }
+        $stmt = $this->pdo->prepare('SELECT SQL_CACHE COUNT(ticket_id) AS resolved_tickets FROM tickets WHERE ticket_status = :status AND ticket_assigned_to = :user_id AND MONTH(ticket_created_at) = :month AND YEAR(ticket_created_at) = :year');
+        $stmt->execute(['status' => 5, 'user_id' => $user_id, 'month' => $month, 'year' => $year]);
+        return $stmt->fetch()['resolved_tickets'];
+    }
 }

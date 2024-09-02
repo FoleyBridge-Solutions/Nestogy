@@ -59,18 +59,43 @@ if (isset($_GET['stripe_create_pi'])) {
     $config_stripe_percentage_fee = floatval($config_row['config_stripe_percentage_fee']);
     $config_stripe_flat_fee = floatval($config_row['config_stripe_flat_fee']);
 
-    // Check config to see if client pays fees is enabled
-    if ($config_stripe_client_pays_fees == 1) {
-        // Calculate the amount to charge the client
-        $balance_to_pay = ($balance_to_pay + $config_stripe_flat_fee) / (1 - $config_stripe_percentage_fee);
+    $payment_method = $_GET['payment_method'] ?? 'card';
+
+    $balance = $invoice['invoice_balance'];
+
+    if ($payment_method == "ach") {
+        $fees = [
+                "rate" => 0.008,
+            "flat" => 0,
+            "cap" => 5
+        ];
+        //Check if gateway fee would be bigger than $5
+        if ($balance * $fees['rate'] + $fees['flat'] > $fees['cap'] ) {
+            $balance_to_pay = $fees['cap'] + $balance;
+        } else {
+            $balance_to_pay = $balance * $fees['rate'] + $fees['flat'] + $balance;
+        }
+        $payment_method_configuration_id = "pmc_1PsuAxG9XK7TyuXbpmnlc9rt";
+    } else if ($payment_method == "card") {
+            $fees = [
+                "rate" => 0.029,
+                "flat" => 0.30
+            ];
+            $balance_to_pay = ($balance + $fees['flat']) / (1 - $fees['rate']);
+            $payment_method_configuration_id = "pmc_1PsuBGG9XK7TyuXbasfu88V5";
+    } else if ($payment_method == "installments") {
+            $fees = [
+                "rate" => 0.06,
+                "flat" => 0.30
+            ];
+            $balance_to_pay = ($balance + $fees['flat']) / (1 - $fees['rate']);
+            $payment_method_configuration_id = "pmc_1PsuBTG9XK7TyuXbtroUGja2";
+    } else {
+        exit("Invalid payment method");
     }
 
-    $balance_to_pay = $invoice['invoice_balance'];
-
-
-    if (intval($balance_to_pay) == 0) {
-        exit("No balance outstanding");
-    }
+    $gateway_fee = round($balance_to_pay - $balance, 2);
+    $balance_to_pay = round($balance_to_pay, 2);
 
     // Setup Stripe
     require_once '/var/www/portal.twe.tech/includes/vendor/stripe-php-10.5.0/init.php';
@@ -101,6 +126,7 @@ if (isset($_GET['stripe_create_pi'])) {
             'automatic_payment_methods' => [
                 'enabled' => true,
             ],
+            'payment_method_configuration' => $payment_method_configuration_id
         ]);
 
         $output = [

@@ -1,4 +1,27 @@
 <?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
+<?php
+include '/var/www/portal.twe.tech/bootstrap.php';
+
+$login_id = $_GET['login_id'];
+
+use Twetech\Nestogy\Model\Documentation;
+
+$documentation = new Documentation($pdo);
+$login = $documentation->getLogin($login_id);
+
+$login_name = $login['login_name'];
+$login_description = $login['login_description'];
+$login_username = $documentation->decryptLoginPassword($login['login_username']);
+$login_password = $documentation->decryptLoginPassword($login['login_password']);
+$login_otp_secret = $login['login_otp_secret'];
+$login_uri = $login['login_uri'];
+$login_uri_2 = $login['login_uri_2'];
+$login_contact_id = $login['login_contact_id'];
+$login_vendor_id = $login['login_vendor_id'];
+$login_asset_id = $login['login_asset_id'];
+$client_id = $login['login_client_id'];
+?>
+
 <div class="modal" id="editLoginModal<?= $login_id; ?>" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content bg-dark">
@@ -72,10 +95,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                                     </div>
-                                    <input type="password" class="form-control" data-bs-toggle="password" name="password" placeholder="Password" value="<?= $login_password; ?>" required autocomplete="new-password">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text"><i class="fa fa-fw fa-eye"></i></span>
-                                    </div>
+                                    <input class="form-control" data-bs-toggle="password" name="password" placeholder="Password" value="<?= $login_password; ?>" required autocomplete="new-password">
                                     <div class="input-group-append">
                                         <button class="btn btn-default clipboardjs" type="button" data-clipboard-text="<?= $login_password; ?>"><i class="fa fa-fw fa-copy"></i></button>
                                     </div>
@@ -88,7 +108,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-key"></i></span>
                                     </div>
-                                    <input type="password" class="form-control" data-bs-toggle="password" name="otp_secret" value="<?= $login_otp_secret; ?>" placeholder="Insert secret key">
+                                    <input class="form-control" data-bs-toggle="password" name="otp_secret" value="<?= $login_otp_secret; ?>" placeholder="Insert secret key">
                                     <div class="input-group-append">
                                         <span class="input-group-text"><i class="fa fa-fw fa-eye"></i></span>
                                     </div>
@@ -138,12 +158,12 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="contact">
+                                    <select class="form-control select2"  name="contact">
                                         <option value="">- Contact -</option>
                                         <?php
 
-                                        $sql_contacts = mysqli_query($mysqli, "SELECT * FROM contacts WHERE contact_client_id = $client_id ORDER BY contact_name ASC");
-                                        while ($row = mysqli_fetch_array($sql_contacts)) {
+                                        $sql_contacts = $pdo->query("SELECT * FROM contacts WHERE contact_client_id = $client_id ORDER BY contact_name ASC");
+                                        while ($row = $sql_contacts->fetch()) {
                                             $contact_id_select = intval($row['contact_id']);
                                             $contact_name_select = nullable_htmlentities($row['contact_name']);
                                             ?>
@@ -159,12 +179,12 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-building"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="vendor">
+                                    <select class="form-control select2"  name="vendor">
                                         <option value="0">- None -</option>
                                         <?php
 
-                                        $sql_vendors = mysqli_query($mysqli, "SELECT * FROM vendors WHERE vendor_client_id = $client_id ORDER BY vendor_name ASC");
-                                        while ($row = mysqli_fetch_array($sql_vendors)) {
+                                        $sql_vendors = $pdo->query("SELECT * FROM vendors WHERE vendor_client_id = $client_id ORDER BY vendor_name ASC");
+                                        while ($row = $sql_vendors->fetch()) {
                                             $vendor_id_select = intval($row['vendor_id']);
                                             $vendor_name_select = nullable_htmlentities($row['vendor_name']);
                                             ?>
@@ -181,12 +201,12 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="asset">
+                                    <select class="form-control select2"  name="asset">
                                         <option value="0">- None -</option>
                                         <?php
 
-                                        $sql_assets = mysqli_query($mysqli, "SELECT * FROM assets LEFT JOIN locations on asset_location_id = location_id WHERE asset_client_id = $client_id AND asset_archived_at IS NULL ORDER BY asset_name ASC");
-                                        while ($row = mysqli_fetch_array($sql_assets)) {
+                                        $sql_assets = $pdo->query("SELECT * FROM assets LEFT JOIN locations on asset_location_id = location_id WHERE asset_client_id = $client_id AND asset_archived_at IS NULL ORDER BY asset_name ASC");
+                                        while ($row = $sql_assets->fetch()) {
                                             $asset_id_select = intval($row['asset_id']);
                                             $asset_name_select = nullable_htmlentities($row['asset_name']);
                                             $asset_location_select = nullable_htmlentities($row['location_name']);
@@ -210,12 +230,12 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-box"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="software">
+                                    <select class="form-control select2"  name="software">
                                         <option value="0">- None -</option>
                                         <?php
 
-                                        $sql_software = mysqli_query($mysqli, "SELECT * FROM software WHERE software_client_id = $client_id ORDER BY software_name ASC");
-                                        while ($row = mysqli_fetch_array($sql_software)) {
+                                        $sql_software = $pdo->query("SELECT * FROM software WHERE software_client_id = $client_id ORDER BY software_name ASC");
+                                        while ($row = $sql_software->fetch()) {
                                             $software_id_select = intval($row['software_id']);
                                             $software_name_select = nullable_htmlentities($row['software_name']);
                                             ?>

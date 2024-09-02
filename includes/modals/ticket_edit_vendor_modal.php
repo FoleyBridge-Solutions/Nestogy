@@ -45,7 +45,7 @@ $vendor_name = nullable_htmlentities($row['vendor_name']);
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fa fa-fw fa-building"></i></span>
                             </div>
-                            <select class="form-control select2" id='select2' name="vendor">
+                            <select class="form-control select2"  name="vendor">
                                 <option value="0">- None -</option>
                                 <?php
 

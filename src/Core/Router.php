@@ -8,8 +8,7 @@ use Twetech\Nestogy\Database;
 class Router {
     private $routes = [];
     private $middlewares = [];
-    private $defaultController = 'HomeController';
-    private $defaultAction = 'index';
+    private $defaultPage = 'dashboard';
     private $pdo;
 
     public function __construct()
@@ -23,14 +22,17 @@ class Router {
     public function add($route, $controller, $action, $middlewares = [])
     {
         $this->routes[$route] = [
-            'controller' => $controller ?: $this->defaultController,
-            'action' => $action ?: $this->defaultAction,
+            'controller' => $controller,
+            'action' => $action,
             'middlewares' => $middlewares
         ];
     }
 
     public function registerRoutes()
     {
+        // Dashboard routes
+        $this->add('dashboard', 'DashboardController', 'index', ['month', 'year']);
+
         // Client routes
         $this->add('clients', 'ClientController', 'index');
         $this->add('client', 'ClientController', 'show', ['client_id']);
@@ -69,7 +71,7 @@ class Router {
         $this->add('report', 'ReportsController', 'index', ['report']);
 
         // Administration routes
-        $this->add('admin', 'AdministrationController', 'index', ['admin_page']);
+        $this->add('admin', 'AdministrationController', 'index', ['admin_page', 'sent']);
 
         // Human Resources routes
         $this->add('hr', 'HumanResourcesController', 'index', ['hr_page', 'pay_period']);
@@ -81,7 +83,7 @@ class Router {
     public function dispatch()
     {
         // Get the page from the URL
-        $page = $_GET['page'] ?? 'clients'; #TODO: Change this to the default page
+        $page = $_GET['page'] ?? $this->defaultPage;
         $route = $this->routes[$page] ?? null;
 
         // If the page is not found, handle the error

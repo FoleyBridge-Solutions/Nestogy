@@ -65,7 +65,7 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                 Tickets
             </form>
         </h3>
-        <div class="card-header-elements">
+        <div class="card-header-elements ms-auto">
             <span class="badge rounded-pill bg-label-secondary p-2">Total: <?=$total_tickets_open + $total_tickets_closed?></span> |
             <a href="/public/?page=tickets<?php if(isset($client_id)) echo "&client_id=$client_id"; ?>" class="badge rounded-pill bg-label-primary p-2">
                 Open: <?=$total_tickets_open?>

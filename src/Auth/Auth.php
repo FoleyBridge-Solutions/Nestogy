@@ -167,19 +167,28 @@ class Auth {
         }
     }
 
-    protected function getUserRole($user_id) {
+    public function getUserRole($user_id = null) {
+        if ($user_id === null) {
+            $user_id = $_SESSION['user_id'];
+        }
         $stmt = $this->pdo->prepare('SELECT user_role FROM user_settings WHERE user_id = :user_id');
         $stmt->execute(['user_id' => $user_id]);
         return $stmt->fetchColumn();
     }
 
-    public function getUser($user_id) {
+    public function getUser($user_id = null) {
+        if ($user_id === null) {
+            $user_id = $_SESSION['user_id'];
+        }
         $stmt = $this->pdo->prepare('SELECT * FROM users LEFT JOIN user_settings ON user_settings.user_id = users.user_id WHERE users.user_id = :user_id');
         $stmt->execute(['user_id' => $user_id]);
         return $stmt->fetch();
     }
     
-    public function getUsername($user_id) {
+    public function getUsername($user_id = null) {
+        if ($user_id === null) {
+            $user_id = $_SESSION['user_id'];
+        }
         return $this->getUser($user_id)['user_name'];
     }
 
@@ -219,5 +228,31 @@ class Auth {
         $stmt = $this->pdo->prepare('SELECT * FROM companies WHERE company_id = :company_id');
         $stmt->execute(['company_id' => $company_id]);
         return $stmt->fetch();
+    }
+
+    public function getRecentActivitiesByUser($user_id = null) {
+        if ($user_id === null) {
+            $user_id = $_SESSION['user_id'];
+        }
+        $stmt = $this->pdo->prepare('SELECT * FROM logs
+        LEFT JOIN users ON users.user_id = logs.log_user_id
+        WHERE log_user_id = :user_id
+        ORDER BY log_created_at DESC LIMIT 10');
+        $stmt->execute(['user_id' => $user_id]);
+        return $stmt->fetchAll($this->pdo::FETCH_ASSOC);
+    }
+
+    public function getAllRecentActivities() {
+        $stmt = $this->pdo->prepare('SELECT * FROM logs
+        LEFT JOIN users ON users.user_id = logs.log_user_id
+        ORDER BY log_created_at DESC LIMIT 10');
+        $stmt->execute();
+        return $stmt->fetchAll($this->pdo::FETCH_ASSOC);
+    }
+
+    public function getMailQueue($sent = false) {
+        $stmt = $this->pdo->prepare('SELECT * FROM email_queue WHERE email_status = :status ORDER BY email_queued_at DESC');
+        $stmt->execute(['status' => $sent ? 3 : 0]);
+        return $stmt->fetchAll($this->pdo::FETCH_ASSOC);
     }
 }

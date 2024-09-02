@@ -9,15 +9,11 @@ $max_rows = 10;
             <input type="hidden" name="page" value="statement">
             <h3 class="card-title mt-2"><i class="fas fa-fw fa-balance-scale mr-2"></i>Statement for 
             <select name="client_id" id="client_id" class="form-control form-control-sm select2" onchange="this.form.submit()">
-            <?php
-            foreach ($all_clients as $client) {
-                ?>
-                <option value="<?= $client['client_id'] ?>" <?php if ($client['client_id'] == $client_id) {
-                                                                echo "selected";
-                                                            } ?>><?= $client['client_name'] ?></option>
-            <?php
-            }
-            ?>
+            <?php foreach ($all_clients as $client) { ?>
+                <option value="<?= $client['client_id'] ?>" <?php if ($client['client_id'] == $client_id) { echo "selected"; } ?>>
+                    <?= $client['client_name'] ?>
+                </option>
+            <?php } ?>
             </select>
         </form>
         </h3>

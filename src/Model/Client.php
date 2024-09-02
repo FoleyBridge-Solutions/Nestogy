@@ -8,6 +8,7 @@ use Twetech\Nestogy\Model\Support;
 use Twetech\Nestogy\Model\Contact;
 use Twetech\Nestogy\Model\Location;
 use Twetech\Nestogy\Model\Accounting;
+use Twetech\Nestogy\Controller\ClientController;
 
 
 class Client {
@@ -41,6 +42,24 @@ class Client {
         $stmt->execute(['client_id' => $client_id]);
         return $stmt->fetch();
     }
+    public function getClientOverview($client_id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM clients WHERE client_id = :client_id");
+        $stmt->execute(['client_id' => $client_id]);
+        $client = $stmt->fetch();
+
+        $data = [];
+        $data['client'] = $client;
+
+        $support = new Support($this->pdo);
+        $documentation = new Documentation($this->pdo);
+        $data['tickets'] = $support->getTickets('open', $client_id);
+
+        $data['expirations'] = $documentation->getExpirations($client_id);
+
+        $data['recent_activities'] = $this->getClientRecentActivities($client_id);
+
+        return $data;
+    }
     public function getClientHeader($client_id) {
         $client_id = intval($client_id);
 
@@ -52,6 +71,8 @@ class Client {
 
         $location = new Location($this->pdo);
         $client_header_location = $location->getPrimaryLocation($client_id);
+
+        $this->clientAccessed($client_id);
 
         $accounting = new Accounting($this->pdo);
         $client_header_balance = $accounting->getClientBalance($client_id);
@@ -97,5 +118,26 @@ class Client {
         }
         $stmt->execute(['client_id' => $client_id]);
         return $stmt->fetch();
+    }
+    public function getClientRecentActivities($client_id) {
+        $stmt = $this->pdo->prepare("
+        SELECT * FROM logs
+        WHERE log_client_id = :client_id
+        ORDER BY log_created_at DESC
+        LIMIT 10
+        ");
+        $stmt->execute(['client_id' => $client_id]);
+        return $stmt->fetchAll();
+    }
+    public function getNewClients($month, $year) {
+        $start_date = date('Y-m-01', strtotime($year . '-' . $month . '-01'));
+        $end_date = date('Y-m-t', strtotime($year . '-' . $month . '-01'));
+        
+        $stmt = $this->pdo->prepare("
+        SELECT * FROM clients
+        WHERE client_created_at >= :start_date AND client_created_at <= :end_date
+        ");
+        $stmt->execute(['start_date' => $start_date, 'end_date' => $end_date]);
+        return $stmt->fetchAll();
     }
 }

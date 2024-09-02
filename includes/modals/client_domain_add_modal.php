@@ -58,7 +58,7 @@ $client_id = intval($_GET['client_id']);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-server"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="registrar">
+                                    <select class="form-control select2"  name="registrar">
                                         <option value="">- Vendor -</option>
                                         <?php
 
@@ -79,7 +79,7 @@ $client_id = intval($_GET['client_id']);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-server"></i></span>
                                     </div>
-                                    <select class="form-control select2" id='select2' name="webhost">
+                                    <select class="form-control select2"  name="webhost">
                                         <option value="">- Vendor -</option>
                                         <?php
 

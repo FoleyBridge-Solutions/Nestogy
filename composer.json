@@ -15,6 +15,8 @@
     "require": {
         "predis/predis": "^2.2",
         "tomorrow-ideas/plaid-sdk-php": "^1.0",
-        "minishlink/web-push": "^9.0"
+        "minishlink/web-push": "^9.0",
+        "markrogoyski/math-php": "^2.10",
+        "php-ai/php-ml": "^0.10.0"
     }
 }
