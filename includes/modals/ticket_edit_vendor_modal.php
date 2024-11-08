@@ -49,13 +49,12 @@ $vendor_name = nullable_htmlentities($row['vendor_name']);
                                 <option value="0">- None -</option>
                                 <?php
 
-                                $sql_vendors = mysqli_query($mysqli, "SELECT * FROM vendors WHERE vendor_client_id = $client_id AND vendor_template = 0 AND vendor_archived_at IS NULL ORDER BY vendor_name ASC");
+                                $sql_vendors = mysqli_query($mysqli, "SELECT * FROM vendors WHERE (vendor_client_id = $client_id OR vendor_client_id = 0) AND vendor_template = 0 AND vendor_archived_at IS NULL ORDER BY vendor_name ASC");
                                 while ($row = mysqli_fetch_array($sql_vendors)) {
                                     $vendor_id_select = intval($row['vendor_id']);
                                     $vendor_name_select = nullable_htmlentities($row['vendor_name']);
                                     ?>
                                     <option <?php if ($vendor_id == $vendor_id_select) { echo "selected"; } ?> value="<?= $vendor_id_select; ?>"><?= $vendor_name_select; ?></option>
-
                                     <?php
                                 }
                                 ?>

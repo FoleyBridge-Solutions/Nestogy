@@ -9,33 +9,52 @@ use Twetech\Nestogy\View\View;
 use Twetech\Nestogy\Model\Trip;
 use Twetech\Nestogy\Model\Client;
 
+/**
+ * Trip Controller
+ * 
+ * Handles all trip-related operations and views
+ */
 class TripController {
+    /** @var \PDO */
     private $pdo;
+    
+    /** @var \Twetech\Nestogy\View\View */
     private $view;
+    
+    /** @var \Twetech\Nestogy\Auth\Auth */
     private $auth;
+    
+    /** @var \Twetech\Nestogy\Model\Trip */
     private $trip;
 
+    /**
+     * Initialize TripController with database connection
+     *
+     * @param \PDO $pdo Database connection
+     */
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->auth = new Auth($this->pdo);
         $this->view = new View();
         $this->trip = new Trip($this->pdo);
+        if (!Auth::check()) {
+            // Redirect to login page or handle unauthorized access
+            header('Location: login.php');
+            exit;
+        }
     }
 
+    /**
+     * Display list of trips, optionally filtered by client
+     *
+     * @param int|null $client_id Optional client ID to filter trips
+     * @return void
+     */
     public function index($client_id = null) {
 
         $data['card']['title'] = 'Trips';
 
         if (isset($client_id)) {
-            // Check if user has access to the client
-            if (!$this->auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-                // If user does not have access, display an error message
-                $this->view->error([
-                    'title' => 'Access Denied',
-                    'message' => 'You do not have permission to view this client.'
-                ]);
-                return;
-            }
             $client_page = true;
             $client = new Client($this->pdo);
             $client_header = $client->getClientHeader($client_id);

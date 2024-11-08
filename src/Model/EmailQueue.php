@@ -7,18 +7,40 @@ use Twetech\Nestogy\Model\Client;
 use Twetech\Nestogy\Model\Invoice;
 use PDO;
 
+/**
+ * Class EmailQueue
+ * Handles the queueing of email notifications for invoices
+ * 
+ * @package Twetech\Nestogy\Model
+ */
 class EmailQueue {
 
+    /** @var PDO */
     private $pdo;
+    
+    /** @var Invoice */
     private $invoice;
+    
+    /** @var Client */
     private $client;
 
+    /**
+     * EmailQueue constructor
+     * 
+     * @param PDO $pdo Database connection
+     */
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
         $this->invoice = new Invoice($pdo);
         $this->client = new Client($pdo);
     }
 
+    /**
+     * Sends invoice notifications for multiple invoices
+     * 
+     * @param array $invoice_ids Array of invoice IDs to send notifications for
+     * @return void
+     */
     public function SendInvoiceNotification($invoice_ids) {
         $emails = [];
         foreach ($invoice_ids as $invoice_id) {
@@ -27,6 +49,13 @@ class EmailQueue {
         $this->addToQueue($emails);
     }
 
+    /**
+     * Generates email content for a single invoice
+     * 
+     * @param int $invoice_id The ID of the invoice
+     * @param int $reminder_number Optional reminder number for follow-up emails
+     * @return array|false Email data array or false if invoice not found
+     */
     private function getInvoiceEmail($invoice_id, $reminder_number = 0) {
         $invoice = $this->invoice->getInvoice($invoice_id);
         if (!$invoice) {
@@ -85,6 +114,12 @@ class EmailQueue {
         ];
     }
 
+    /**
+     * Adds multiple emails to the email queue
+     * 
+     * @param array $emails Array of email data to be queued
+     * @return void
+     */
     private function addToQueue($emails) {
         foreach ($emails as $email) {
             $from = strval($email['from']);

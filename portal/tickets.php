@@ -11,7 +11,6 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
 
 // Ticket status from GET
 if (!isset($_GET['status'])) {
-    // If nothing is set, assume we only want to see open tickets
     $status = 'Open';
     $ticket_status_snippet = "ticket_status != '5'";
 } elseif (isset($_GET['status']) && ($_GET['status']) == 'Open') {
@@ -54,41 +53,41 @@ $statuses = [
 <div class="row">
 
     <div class="col-md-10">
+        <div class="card-datatable table-responsive">
+            <table class="datatables-basic table border-top table-striped table-hover">
+                <thead class="text-dark">
+                    <tr>
+                        <th>Number</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
 
-        <table id=responsive class="responsive table tabled-bordered border border-dark">
-            <thead class="thead-dark">
-                <tr>
-                    <th>#</th>
-                    <th>Subject</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
+                <?php
+                while ($row = mysqli_fetch_array($contact_tickets)) {
+                    $ticket_id = intval($row['ticket_id']);
+                    $ticket_prefix = nullable_htmlentities($row['ticket_prefix']);
+                    $ticket_number = intval($row['ticket_number']);
+                    $ticket_subject = nullable_htmlentities($row['ticket_subject']);
+                    $ticket_status = nullable_htmlentities($row['ticket_status_name']);
+                ?>
 
-            <?php
-            while ($row = mysqli_fetch_array($contact_tickets)) {
-                $ticket_id = intval($row['ticket_id']);
-                $ticket_prefix = nullable_htmlentities($row['ticket_prefix']);
-                $ticket_number = intval($row['ticket_number']);
-                $ticket_subject = nullable_htmlentities($row['ticket_subject']);
-                $ticket_status = nullable_htmlentities($row['ticket_status_name']);
-            ?>
-
-                <tr>
-                    <td>
-                        <a href="ticket.php?id=<?= $ticket_id; ?>"><?= "$ticket_prefix$ticket_number"; ?></a>
-                    </td>
-                    <td>
-                        <a href="ticket.php?id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a>
-                    </td>
-                    <td><?= $statuses[$ticket_status]; ?></td>
-                </tr>
-            <?php
-            }
-            ?>
-            </tbody>
-        </table>
-
+                    <tr>
+                        <td>
+                            <a href="ticket.php?id=<?= $ticket_id; ?>"><?= "$ticket_prefix$ticket_number"; ?></a>
+                        </td>
+                        <td>
+                            <a href="ticket.php?id=<?= $ticket_id; ?>"><?= $ticket_subject; ?></a>
+                        </td>
+                        <td><?= $statuses[$ticket_status]; ?></td>
+                    </tr>
+                <?php
+                }
+                ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="col-md-2">

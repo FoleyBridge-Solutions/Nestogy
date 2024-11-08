@@ -12,7 +12,7 @@ use Twetech\Nestogy\Model\Accounting;
 $config = require __DIR__ . '/../config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
-
+$accounting = new Accounting($pdo);
 
 // Define wording
 DEFINE("WORDING_PAYMENT_FAILED", "<br><h2>There was an error verifying your payment. Please contact us for more information.</h2>");
@@ -41,8 +41,6 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
 
     $invoice_url_key = sanitizeInput($_GET['url_key']);
     $invoice_id = intval($_GET['invoice_id']);
-
-    $accounting = new Accounting($pdo);
     // Query invoice details
     $invoice = $accounting->getInvoice($invoice_id);
 
@@ -51,12 +49,24 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $invoice_status = nullable_htmlentities($invoice['invoice_status']);
     $invoice_date = nullable_htmlentities($invoice['invoice_date']);
     $invoice_discount = floatval($invoice['invoice_discount_amount']);
-    $invoice_amount = floatval($invoice['invoice_amount']);
+    $invoice_amount = $accounting->getInvoiceAmount($invoice_id);
+    $invoice_deposit_amount = floatval($invoice['invoice_deposit_amount']);
     $invoice_currency_code = nullable_htmlentities($invoice['invoice_currency_code']);
     $client_id = intval($invoice['invoice_client_id']);
+    $contact_email = sanitizeInput($invoice['contact_email']);
     
     $balance = $invoice['invoice_balance'];
+
     $amount_paid = $invoice_amount - $balance;
+
+
+    if ($invoice_deposit_amount > 0) {
+        if ($balance > $invoice_deposit_amount) {
+            $balance = $invoice_deposit_amount;
+            $paying_deposit = true;
+        }
+    }
+
 
     if ($payment_method == "ach") {
         $fees = [
@@ -86,8 +96,6 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $gateway_fee = round($balance_to_pay - $balance, 2);
     $balance_to_pay = round($balance_to_pay, 2);
 
-    // Get invoice items
-    $sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_invoice_id = $invoice_id ORDER BY item_id ASC");
 
     // Set Currency Formatting
     $currency_format = numfmt_create("en_US", NumberFormatter::CURRENCY);
@@ -125,28 +133,41 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
 
                     $item_total = 0;
 
-                    foreach ($invoice['items'] as $item) {
-                        $item_name = nullable_htmlentities($item['item_name']);
-                        $item_quantity = floatval($item['item_quantity']);
-                        $item_price = floatval($item['item_price']);
-                        $item_discount = floatval($item['item_discount']);
-                        $item_tax_id = intval($item['item_tax_id']);
-                        $item_tax_rate = floatval($item['tax_percent']);
-
-                        $sub_total = ($item_price * $item_quantity) - $item_discount;
-                        
-                        $item_tax = $sub_total * ($item_tax_rate / 100);
-                        
-                        $item_total = $sub_total + $item_tax;
+                    if (isset($paying_deposit) && $paying_deposit) {
+                        // Only show deposit item
                         ?>
-
                         <tr>
-                            <td><?= $item_name; ?></td>
-                            <td class="text-center"><?= $item_quantity; ?></td>
-                            <td class="text-right"><?= numfmt_format_currency($currency_format, $item_total, $invoice_currency_code); ?></td>
+                            <td>Deposit Payment</td>
+                            <td class="text-center">1</td>
+                            <td class="text-right"><?= numfmt_format_currency($currency_format, $balance, $invoice_currency_code); ?></td>
                         </tr>
+                        <?php
+                    } else {
+                        // Show all invoice items
+                        foreach ($invoice['items'] as $item) {
+                            $item_name = nullable_htmlentities($item['item_name']);
+                            $item_quantity = floatval($item['item_quantity']);
+                            $item_price = floatval($item['item_price']);
+                            $item_discount = floatval($item['item_discount']);
+                            $item_tax_id = intval($item['item_tax_id']);
+                            $item_tax_rate = floatval($item['tax_percent']);
 
-                    <?php }
+                            $sub_total = ($item_price * $item_quantity) - $item_discount;
+                            
+                            $item_tax = $sub_total * ($item_tax_rate / 100);
+                            
+                            $item_total = $sub_total + $item_tax;
+                            ?>
+
+                            <tr>
+                                <td><?= $item_name; ?></td>
+                                <td class="text-center"><?= $item_quantity; ?></td>
+                                <td class="text-right"><?= numfmt_format_currency($currency_format, $item_total, $invoice_currency_code); ?></td>
+                            </tr>
+
+                        <?php }
+                    }
+
                     if ($config_stripe_client_pays_fees == 1) { ?>
                     
                         <tr>
@@ -199,8 +220,10 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     <!-- Include local JS that powers stripe -->
     <script>
         const stripe = Stripe(document.getElementById("stripe_publishable_key").value);
-
         let elements;
+
+        // Add this line to get the email address from PHP
+        const contactEmail = "<?php echo $contact_email; ?>";
 
         initialize();
         checkStatus();
@@ -215,7 +238,8 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
             invoice_id: <?php echo $invoice_id; ?>,
-            url_key: "<?php echo $invoice_url_key; ?>"
+            url_key: "<?php echo $invoice_url_key; ?>",
+            email: contactEmail  // Add this line to include the email
             }),
         }).then((r) => r.json());
 
@@ -243,7 +267,7 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
             elements,
             confirmParams: {
             return_url: window.location.href,
-            receipt_email: emailAddress,
+            receipt_email: contactEmail,  // Use the email here
             },
         });
 
@@ -305,16 +329,16 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
 
         // Show a spinner on payment submission
         function setLoading(isLoading) {
-        if (isLoading) {
-            // Disable the button and show a spinner
-            document.querySelector("#submit").disabled = true;
-            document.querySelector("#spinner").classList.remove("hidden");
-            document.querySelector("#button-text").classList.add("hidden");
-        } else {
-            document.querySelector("#submit").disabled = false;
-            document.querySelector("#spinner").classList.add("hidden");
-            document.querySelector("#button-text").classList.remove("hidden");
-        }
+            if (isLoading) {
+                // Disable the button and show a spinner
+                document.querySelector("#submit").disabled = true;
+                document.querySelector("#spinner").classList.remove("hidden");
+                document.querySelector("#button-text").classList.add("hidden");
+            } else {
+                document.querySelector("#submit").disabled = false;
+                document.querySelector("#spinner").classList.add("hidden");
+                document.querySelector("#button-text").classList.remove("hidden");
+            }
         }
 
     </script>
@@ -329,6 +353,7 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $pi_id = sanitizeInput($_GET['payment_intent']);
     $pi_cs = $_GET['payment_intent_client_secret'];
 
+
     // Initialize stripe
     require_once '/var/www/portal.twe.tech/includes/vendor/stripe-php-10.5.0/init.php';
 
@@ -339,11 +364,14 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
 
     if ($pi_obj->client_secret !== $pi_cs) {
         exit(WORDING_PAYMENT_FAILED);
+    } elseif ($pi_obj->status === "requires_action") {
+        // Redirect user to the verification URL
+        $verification_url = $pi_obj->next_action->verify_with_microdeposits->hosted_verification_url;
+        header("Location: $verification_url");
+        exit;
     } elseif ($pi_obj->status !== "succeeded") {
         exit(WORDING_PAYMENT_FAILED);
     } elseif ($pi_obj->amount !== $pi_obj->amount_received) {
-        // The invoice wasn't paid in full
-        // this should be flagged for manual review as would indicate something weird happening
         exit(WORDING_PAYMENT_FAILED);
     }
 
@@ -376,7 +404,7 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $invoice_id = intval($row['invoice_id']);
     $invoice_prefix = sanitizeInput($row['invoice_prefix']);
     $invoice_number = intval($row['invoice_number']);
-    $invoice_amount = floatval($row['invoice_amount']);
+    $invoice_amount = $accounting->getInvoiceAmount($invoice_id);
     $invoice_currency_code = sanitizeInput($row['invoice_currency_code']);
     $invoice_url_key = sanitizeInput($row['invoice_url_key']);
     $client_id = intval($row['client_id']);
@@ -401,38 +429,28 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     $balance_to_pay = $invoice_amount - $amount_paid_previously;
 
     // Check config to see if client pays fees is enabled or if should expense it
-    if ($config_stripe_client_pays_fees == 1) {
-        $balance_before_fees = $balance_to_pay;
-        // See here for passing costs on to client https://support.stripe.com/questions/passing-the-stripe-fee-on-to-customers
-        // Calculate the amount to charge the client
-        $balance_to_pay = ($balance_to_pay + $config_stripe_flat_fee) / (1 - $config_stripe_percentage_fee);
-        // Calculate the fee amount
-        $gateway_fee = round($balance_to_pay - $balance_before_fees, 2);
-        
-        // Add as line item to client Invoice
-        mysqli_query($mysqli,"INSERT INTO invoice_items SET item_name = 'Gateway Fees', item_description = 'Payment Gateway Fees', item_quantity = 1, item_price = $gateway_fee, item_subtotal = $gateway_fee, item_total = $gateway_fee, item_order = 999, item_invoice_id = $invoice_id");
-        // Update the Amount on the invoice to include the gateway fee
-        $new_invoice_amount = $invoice_amount + $gateway_fee;
-        mysqli_query($mysqli,"UPDATE invoices SET invoice_amount = $new_invoice_amount WHERE invoice_id = $invoice_id");
-    }
+    $balance_before_fees = $balance_to_pay;
+    // See here for passing costs on to client https://support.stripe.com/questions/passing-the-stripe-fee-on-to-customers
+    // Calculate the amount to charge the client
+    $balance_to_pay = ($balance_to_pay + $config_stripe_flat_fee) / (1 - $config_stripe_percentage_fee);
+    // Calculate the fee amount
+    $gateway_fee = round($balance_to_pay - $balance_before_fees, 2);
+    
+    echo "<br>Gateway fee: $gateway_fee";
+
+    // Add as line item to client Invoice
+    mysqli_query($mysqli,"INSERT INTO invoice_items SET item_name = 'Gateway Fees', item_description = 'Payment Gateway Fees', item_quantity = 1, item_price = $gateway_fee, item_order = 999, item_invoice_id = $invoice_id");
 
     // Check to see if Expense Fields are configured and client pays fee is off then create expense
-    if ($config_stripe_client_pays_fees == 0 && $config_stripe_expense_vendor > 0 && $config_stripe_expense_category > 0) {
-        // Calculate gateway expense fee
-        $gateway_fee = round($balance_to_pay * $config_stripe_percentage_fee + $config_stripe_flat_fee, 2);
+    // Calculate gateway expense fee
+    $gateway_fee = round($balance_to_pay * $config_stripe_percentage_fee + $config_stripe_flat_fee, 2);
 
-        // Add Expense
-        mysqli_query($mysqli,"INSERT INTO expenses SET expense_date = '$pi_date', expense_amount = $gateway_fee, expense_currency_code = '$invoice_currency_code', expense_account_id = $config_stripe_account, expense_vendor_id = $config_stripe_expense_vendor, expense_client_id = $client_id, expense_category_id = $config_stripe_expense_category, expense_description = 'Stripe Transaction for Invoice $invoice_prefix$invoice_number In the Amount of $balance_to_pay', expense_reference = 'Stripe - $pi_id'");
-    }
+    // Add Expense
+    mysqli_query($mysqli,"INSERT INTO expenses SET expense_date = '$pi_date', expense_amount = $gateway_fee, expense_currency_code = '$invoice_currency_code', expense_account_id = $config_stripe_account, expense_vendor_id = $config_stripe_expense_vendor, expense_client_id = $client_id, expense_category_id = $config_stripe_expense_category, expense_description = 'Stripe Transaction for Invoice $invoice_prefix$invoice_number In the Amount of $balance_to_pay', expense_reference = 'Stripe - $pi_id'");
 
     // Round balance to pay to 2 decimal places
     $balance_to_pay = round($balance_to_pay, 2);
-
-    // Sanity check that the amount paid is exactly the invoice outstanding balance
-    if (intval($balance_to_pay) !== intval($pi_amount_paid)) {
-        exit("Something went wrong confirming this payment. Please get in touch.");
-    }
-
+    echo "<br>Balance to pay: $balance_to_pay";
     // Apply payment
 
     // Update Invoice Status
@@ -502,11 +520,13 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     }
 
     // Redirect user to invoice
-    header('Location: //' . $config_base_url . '/portal/guest_view_invoice.php?invoice_id=' . $pi_invoice_id . '&url_key=' . $invoice_url_key);
+    referWithAlert('Payment Successful!', 'success', "https://portal.twe.tech/portal/guest_view_statement.php");
 
 } else {
     echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
 }
 
 
-require_once '/var/www/portal.twe.tech/portal/guest_footer.php';
+require_once '/var/www/portal.twe.tech/portal/portal_footer.php';
+
+

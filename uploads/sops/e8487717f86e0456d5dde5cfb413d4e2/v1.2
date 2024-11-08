@@ -1,0 +1,60 @@
+<p class="MsoListParagraphCxSpFirst" style="text-indent: -.25in; mso-list: l0 level1 lfo1;"><!-- [if !supportLists]--><span style="mso-bidi-font-family: Aptos; mso-bidi-theme-font: minor-latin;"><span style="mso-list: Ignore;">1.<span style="font: 7.0pt 'Times New Roman';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><!--[endif]-->After setting up proxmox you will now need to add it to ninja.</p>
+<p class="MsoListParagraphCxSpMiddle" style="text-indent: -.25in; mso-list: l0 level1 lfo1;"><!-- [if !supportLists]--><span style="mso-bidi-font-family: Aptos; mso-bidi-theme-font: minor-latin;"><span style="mso-list: Ignore;">2.<span style="font: 7.0pt 'Times New Roman';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><!--[endif]-->Start by opening a web browser using a computer or server on the same network.</p>
+<p class="MsoListParagraphCxSpMiddle">(<a href="https://192.168.***.***:8006">https://192.168.***.***:8006</a>) This is just an example.</p>
+<p class="MsoListParagraphCxSpLast" style="text-indent: -.25in; mso-list: l0 level1 lfo1;"><!-- [if !supportLists]--><span style="mso-bidi-font-family: Aptos; mso-bidi-theme-font: minor-latin;"><span style="mso-list: Ignore;">3.<span style="font: 7.0pt 'Times New Roman';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><!--[endif]-->Now in another tab open ninja and add a device</p>
+<p class="MsoNormal" style="text-indent: .25in;"><span style="mso-no-proof: yes;"><!-- [if gte vml 1]><v:shapetype
+ id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+ path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="_x0000_i1028" type="#_x0000_t75" alt="A screenshot of a computer&#10;&#10;Description automatically generated"
+ style='width:146.25pt;height:83.25pt;visibility:visible;mso-wrap-style:square'>
+ <v:imagedata src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image001.png"
+  o:title="A screenshot of a computer&#10;&#10;Description automatically generated"/>
+</v:shape><![endif]--><!-- [if !vml]--><img src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image001.png" alt="A screenshot of a computer
+
+Description automatically generated" width="195" height="111" border="0"><!--[endif]--></span></p>
+<p class="MsoListParagraphCxSpFirst" style="text-indent: -.25in; mso-list: l0 level1 lfo1;"><!-- [if !supportLists]--><span style="mso-bidi-font-family: Aptos; mso-bidi-theme-font: minor-latin;"><span style="mso-list: Ignore;">4.<span style="font: 7.0pt 'Times New Roman';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><!--[endif]-->Click &ldquo;computer&rdquo; and you should be prompted with the picture below</p>
+<p class="MsoListParagraphCxSpMiddle"><span style="mso-no-proof: yes;"><!-- [if gte vml 1]><v:shape
+ id="_x0000_i1027" type="#_x0000_t75" alt="A screenshot of a computer&#10;&#10;Description automatically generated"
+ style='width:341.25pt;height:291.75pt;visibility:visible;mso-wrap-style:square'>
+ <v:imagedata src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image002.png"
+  o:title="A screenshot of a computer&#10;&#10;Description automatically generated"/>
+</v:shape><![endif]--><!-- [if !vml]--><img src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image003.png" alt="A screenshot of a computer
+
+Description automatically generated" width="455" height="389" border="0"><!--[endif]--></span></p>
+<p class="MsoListParagraphCxSpMiddle">Since this is running on Proxmox, which is Linux Based we will select Linux.</p>
+<p class="MsoListParagraphCxSpLast">*Remember organization will depend on what client you&rsquo;re setting this up for*</p>
+<p class="MsoNormal"><span style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>5. From here you will get a URL and copy link.</p>
+<p class="MsoNormal"><span style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>6. Go back to Proxmox and click pve and you will see shell on the fourth selection down on the right-hand side.</p>
+<p class="MsoNormal"><span style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>7. In the shell type wget and then paste the URL you got from ninja (Make sure you put a space after wget.</p>
+<p class="MsoNormal"><span style="mso-no-proof: yes;"><!-- [if gte vml 1]><v:shape
+ id="_x0000_i1026" type="#_x0000_t75" style='width:468pt;height:18.75pt;
+ visibility:visible;mso-wrap-style:square'>
+ <v:imagedata src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image004.png"
+  o:title=""/>
+</v:shape><![endif]--><!-- [if !vml]--><img src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image005.png" width="624" height="25" border="0"><!--[endif]--></span></p>
+<p class="MsoNormal"><span style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>8. Once successfully downloaded we will now need to run it.</p>
+<p class="MsoNormal"><span style="mso-spacerun: yes;">&nbsp; </span>9. Start by typing dpkg -i and the download link is something like what you should see. *Remember the client&rsquo;s name should be different.</p>
+<p class="MsoNormal"><span style="mso-no-proof: yes;"><!-- [if gte vml 1]><v:shape
+ id="Picture_x0020_1" o:spid="_x0000_i1025" type="#_x0000_t75" style='width:468pt;
+ height:14.25pt;visibility:visible;mso-wrap-style:square'>
+ <v:imagedata src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image006.png"
+  o:title=""/>
+</v:shape><![endif]--><!-- [if !vml]--><img src="file:///C:/Users/JOSHUA~1/AppData/Local/Temp/msohtmlclip1/01/clip_image007.png" width="624" height="19" border="0"><!--[endif]--></span></p>
+<p><span style="font-size: 12.0pt; line-height: 115%; font-family: 'Aptos',sans-serif; mso-ascii-theme-font: minor-latin; mso-fareast-font-family: Aptos; mso-fareast-theme-font: minor-latin; mso-hansi-theme-font: minor-latin; mso-bidi-font-family: 'Times New Roman'; mso-bidi-theme-font: minor-bidi; mso-ansi-language: EN-US; mso-fareast-language: EN-US; mso-bidi-language: AR-SA;"><span style="mso-spacerun: yes;">&nbsp; </span>10. Now when you go into Ninja you will be able to see it under client devices</span></p>

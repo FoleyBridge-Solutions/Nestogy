@@ -24,7 +24,7 @@ $browser = sanitizeInput(getWebBrowser($user_agent));
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="robots" content="noindex">
 
-    <title><?= nullable_htmlentities($config_app_name); ?></title>
+    <title>TWE Tech</title>
 
     <!-- 
     Favicon

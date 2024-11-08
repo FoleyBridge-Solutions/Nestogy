@@ -2,6 +2,8 @@
 extract($statement);
 $currency_code = "USD";
 $max_rows = 10;
+$current_balance_calculated = $aging_balance + $aging_balance_30 + $aging_balance_60 + $aging_balance_90;
+$past_due_amount = $aging_balance_30 + $aging_balance_60 + $aging_balance_90;
 ?>
 <div class="card">
     <div class="card-header py-2">
@@ -39,11 +41,11 @@ $max_rows = 10;
                             </tr>
                             <tr>
                                 <td>Current Balance:</td>
-                                <td><?= numfmt_format_currency($currency_format, $client_balance, $currency_code); ?></td>
+                                <td><?= numfmt_format_currency($currency_format, $current_balance_calculated, $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>Past Due:</td>
-                                <td><?= numfmt_format_currency($currency_format, $client_past_due_amount, $currency_code); ?></td>
+                                <td><?= numfmt_format_currency($currency_format, $past_due_amount, $currency_code); ?></td>
                             </tr>
                         </table>                        
                     </div>
@@ -56,19 +58,19 @@ $max_rows = 10;
                         <table class="table table-sm" id="ageing_summary_table">
                             <tr>
                                 <td>0-30 Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, $ageing_balance, $currency_code); ?></td>
+                                <td><?= numfmt_format_currency($currency_format, $aging_balance, $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>31-60 Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, $ageing_balance_30, $currency_code); ?></td>
+                                <td><?= numfmt_format_currency($currency_format, $aging_balance_30, $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>61-90 Days:</td>
-                                    <td><?= numfmt_format_currency($currency_format, $ageing_balance_60, $currency_code); ?></td>
+                                    <td><?= numfmt_format_currency($currency_format, $aging_balance_60, $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>90+ Days:</td>
-                                <td><?= numfmt_format_currency($currency_format, $ageing_balance_90, $currency_code); ?></td>
+                                <td><?= numfmt_format_currency($currency_format, $aging_balance_90, $currency_code); ?></td>
                             </tr>
                         </table>
                     </div>
@@ -105,7 +107,7 @@ $max_rows = 10;
                                     // }
 
                                     $transaction_date = nullable_htmlentities($row['invoice_date']);
-                                    $transaction_type = "Invoice" . "<a href='/old_pages/invoice.php?invoice_id=" . $row['invoice_id'] . "'> " . $row['invoice_prefix'] . $row['invoice_number'] . "</a>";
+                                    $transaction_type = "Invoice" . "<a href='/public/?page=invoice&invoice_id=" . $row['invoice_id'] . "'> " . $row['invoice_prefix'] . $row['invoice_number'] . "</a>";
                                     $transaction_amount = floatval($row['invoice_amount']);
                                     $transaction_balance = $row['invoice_balance'];
                                     $transaction_due_date = sanitizeInput($row['invoice_due']);
@@ -115,9 +117,9 @@ $max_rows = 10;
                                         continue;
                                     }
 
-                                    if ($transaction_balance <= 0) {
-                                        $transaction_balance = 0;
-                                    }
+                                    // if ($transaction_balance <= 0) {
+                                    //     $transaction_balance = 0;
+                                    // }
 
 
                                     // IF due date has passed, add a warning class

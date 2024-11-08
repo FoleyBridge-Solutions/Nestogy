@@ -116,10 +116,8 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
         <div class="card-header d-print-none">
 
             <div class="float-right">
+                <button class="btn btn-label-primary" id="downloadBtn"><i class="fas fa-fw fa-download mr-2"></i>Download</button>
                 <a class="btn btn-label-primary" href="#" onclick="window.print();"><i class="fas fa-fw fa-print mr-2"></i>Print</a>
-                <a class="btn btn-label-primary" href="#" onclick="pdfMake.createPdf(docDefinition).download('<?= strtoAZaz09(html_entity_decode("$quote_date-$company_name-QUOTE-$quote_prefix$quote_number")); ?>');">
-                    <i class="fa fa-fw fa-download mr-2"></i>Download
-                </a>
             </div>
         </div>
         <div class="card-body">
@@ -201,7 +199,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                                 while ($row = mysqli_fetch_array($sql_items)) {
                                     $item_id = intval($row['item_id']);
                                     $item_name = nullable_htmlentities($row['item_name']);
-                                    $item_description = nullable_htmlentities($row['item_description']);
+                                    $item_description = $row['item_description'];
                                     $item_quantity = floatval($row['item_quantity']);
                                     $item_price = floatval($row['item_price']);
                                     $item_subtotal = $item_price * $item_quantity;
@@ -214,7 +212,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
 
                                     <tr>
                                         <td><?= $item_name; ?></td>
-                                        <td><?= nl2br($item_description); ?></td>
+                                        <td><?= nl2br(html_entity_decode($item_description)); ?></td>
                                         <td class="text-center"><?= $item_quantity; ?></td>
                                         <td class="text-right"><?= numfmt_format_currency($currency_format, $item_price, $quote_currency_code); ?></td>
                                         <td class="text-right"><?= numfmt_format_currency($currency_format, $item_tax, $quote_currency_code); ?></td>
@@ -292,8 +290,8 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
         </div>
     </div>
 
-    <script src='plugins/pdfmake/pdfmake.min.js'></script>
-    <script src='plugins/pdfmake/vfs_fonts.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/vfs_fonts.js"></script>
     <script>
 
         var docDefinition = {
@@ -438,35 +436,34 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                             $total_tax = 0;
                             $sub_total = 0;
 
-                            $sql_invoice_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_quote_id = $quote_id ORDER BY item_order ASC");
+                            $sql_quote_items = mysqli_query($mysqli, "SELECT * FROM invoice_items WHERE item_quote_id = $quote_id ORDER BY item_order ASC");
 
-                            while ($row = mysqli_fetch_array($sql_invoice_items)) {
-                            $item_name = $row['item_name'];
-                            $item_description = $row['item_description'];
-                            $item_quantity = $row['item_quantity'];
-                            $item_price = $row['item_price'];
-                            $item_subtotal = $row['item_price'];
-                            $item_tax = $row['item_tax'];
-                            $item_total = $row['item_total'];
-                            $tax_id = $row['item_tax_id'];
-                            $total_tax = $item_tax + $total_tax;
-                            $sub_total = $item_price * $item_quantity + $sub_total;
+                            while ($row = mysqli_fetch_array($sql_quote_items)) {
+                                $item_id = intval($row['item_id']);
+                                $item_name = nullable_htmlentities($row['item_name']);
+                                $item_description = $row['item_description'];
+                                $item_quantity = floatval($row['item_quantity']);
+                                $item_price = floatval($row['item_price']);
+                                $item_subtotal = $item_price * $item_quantity;
+                                $item_total = $accounting->getLineItemTotal($item_id);
+                                $item_tax = $item_total - $item_subtotal;
+                                $total_tax = $item_tax + $total_tax;
+                                $sub_total = $item_price * $item_quantity + $sub_total;
                             ?>
-
                             // Item
                             [
                                 [
                                     {
-                                        text: <?= json_encode($item_name) ?>,
+                                        text: <?= json_encode(strip_tags(html_entity_decode($item_name))) ?>,
                                         style: 'itemTitle'
                                     },
                                     {
-                                        text: <?= json_encode($item_description) ?>,
+                                        text: <?= json_encode(strip_tags(html_entity_decode($item_description))) ?>,
                                         style: 'itemDescription'
                                     }
                                 ],
                                 {
-                                    text: <?= $item_quantity ?>,
+                                    text: <?= json_encode($item_quantity) ?>,
                                     style: 'itemQty'
                                 },
                                 {
@@ -482,7 +479,6 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                                     style: 'itemNumber'
                                 }
                             ],
-
                             <?php
                             }
                             ?>
@@ -512,7 +508,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                             [
                                 {
                                     rowSpan: '*',
-                                    text: <?= json_encode(html_entity_decode($quote_note)) ?>,
+                                    text: <?= json_encode(strip_tags(html_entity_decode($quote_note))) ?>,
                                     style: 'notesText'
                                 },
                                 {
@@ -567,7 +563,7 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                 },
                 // TERMS / FOOTER
                 {
-                    text: <?= json_encode("$config_quote_footer"); ?>,
+                    text: <?= json_encode(html_entity_decode($config_quote_footer)); ?>,
                     style: 'documentFooterCenter'
                 }
             ], //End Content,
@@ -717,9 +713,18 @@ mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status',
                 columnGap: 20,
             }
         }
+
+        // Add this new code
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            pdfMake.createPdf(docDefinition).download('quote_<?= $quote_prefix . $quote_number ?>.pdf');
+        });
     </script>
 
 
 <?php
 require_once "portal/guest_footer.php";
+
+
+
+
 

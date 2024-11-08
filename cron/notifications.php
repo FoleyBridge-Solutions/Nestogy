@@ -1,5 +1,8 @@
 <?php
 
+// This script is used to send web push notifications to users
+// It is run once a minute by a cron job
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once "/var/www/portal.twe.tech/includes/config/config.php";
 require_once "/var/www/portal.twe.tech/includes/functions/functions.php";

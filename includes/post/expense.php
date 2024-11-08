@@ -13,6 +13,11 @@ if (isset($_POST['add_expense'])) {
 
     $extended_alert_description = '';
 
+    if (isset($_POST['bank_transaction_id'])) {
+        $bank_transaction_id = $_POST['bank_transaction_id'];
+        mysqli_query($mysqli, "UPDATE bank_transactions SET reconciled = 1 WHERE transaction_id = '$bank_transaction_id'");
+    }
+
 
     if (!empty($product)) {
         $product_id = $product;
@@ -27,12 +32,9 @@ if (isset($_POST['add_expense'])) {
             } else {
                 mysqli_query($mysqli,"INSERT INTO inventory SET inventory_product_id = $product_id, inventory_quantity = 1, inventory_vendor_id = $vendor, inventory_location_id = 1, inventory_cost = $cost");
             }
-            
         }
         $extended_alert_description = '. Product added to inventory';
     } 
-
-
 
     mysqli_query($mysqli,"INSERT INTO expenses SET expense_date = '$date', expense_amount = $amount, expense_currency_code = '$company_currency', expense_account_id = $account, expense_vendor_id = $vendor, expense_client_id = $client, expense_category_id = $category, expense_description = '$description', expense_reference = '$reference'");
 
@@ -364,4 +366,12 @@ if (isset($_GET['delete_recurring_expense'])) {
 
     header("Location: " . $_SERVER["HTTP_REFERER"]);
 
+}
+
+if (isset($_GET['create_expense'])) {
+    $transaction_id = intval($_GET['create_expense']);
+
+    $result = createExpenseFromTransaction($transaction_id);
+
+    header("Location: " . $_SERVER["HTTP_REFERER"]);
 }

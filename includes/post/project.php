@@ -87,13 +87,14 @@ if (isset($_POST['edit_project'])) {
     validateTechRole();
 
     $project_id = intval($_POST['project_id']);
+    $project_icon = sanitizeInput($_POST['project_icon']);
     $project_name = sanitizeInput($_POST['name']);
     $project_description = sanitizeInput($_POST['description']);
     $due_date = sanitizeInput($_POST['due_date']);
     $project_manager = intval($_POST['project_manager']);
     $client_id = intval($_POST['client_id']);
 
-    mysqli_query($mysqli, "UPDATE projects SET project_name = '$project_name', project_description = '$project_description', project_due = '$due_date', project_manager = $project_manager WHERE project_id = $project_id");
+    mysqli_query($mysqli, "UPDATE projects SET project_name = '$project_name', project_icon = '$project_icon', project_description = '$project_description', project_due = '$due_date', project_manager = $project_manager WHERE project_id = $project_id");
 
     // Logging
     mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Project', log_action = 'Edit', log_description = '$name edited project $project_name', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $project_id");
@@ -173,4 +174,15 @@ if (isset($_POST['add_project_ticket'])) {
     $_SESSION['alert_message'] = "You added Ticket <strong>$ticket_subject</strong> to <strong>$project_name</strong>";
 
     header("Location: " . $_SERVER["HTTP_REFERER"]);
+}
+
+if (isset($_POST['project_note_add'])) {
+
+    $project_id = intval($_POST['project_note_project_id']);
+    $project_note_title = sanitizeInput($_POST['project_note_title']);
+    $project_note_description = mysqli_escape_string($mysqli, $_POST['project_note_description']);
+
+    mysqli_query($mysqli, "INSERT INTO project_notes SET project_note_project_id = $project_id, project_note_title = '$project_note_title', project_note_description = '$project_note_description', project_note_date = NOW(), project_note_created_by = $user_id");
+
+    referWithAlert("You added a note to <strong>$project_name</strong>");
 }

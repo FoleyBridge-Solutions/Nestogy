@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>ITFlow-NG</title>
+    <title>TWE Tech</title>
 
     <meta name="description" content="" />
 
@@ -56,7 +56,7 @@
     <script src="/includes/assets/js/config.js"></script>
 
     <!-- TinyMCE -->
-    <script src="https://cdn.tiny.cloud/1/78o64w2w2bmaf98z8p7idos4tjloc808tr1j9iv8efl63nce/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script></head>
+    <script src="https://cdn.tiny.cloud/1/aq84ecg358zq9b4i9ea6hjaxqpx4mirbbtm7h5khkwevpqac/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script></head>
 
 </head>
 
@@ -82,6 +82,7 @@
                             <a class="dropdown-item" href="tickets.php">Tickets</a>
                             <?php if ($contact_primary == 1 || $contact_is_technical_contact) { ?>
                                 <a class="dropdown-item" href="documents.php">Documents</a>
+                                <a class="dropdown-item" href="assets.php">Assets</a>
                             <?php } ?>
                         </div>
                     </li>
@@ -96,6 +97,12 @@
                             <a class="dropdown-item" href="invoices.php">Invoices</a>
                             <a class="dropdown-item" href="quotes.php">Quotes</a>
                 <?php } ?>
+            </ul>
+
+            <ul class="nav navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="referrals.php">Referrals</a>
+                </li>
             </ul>
 
             <ul class="nav navbar-nav pull-right">
@@ -118,23 +125,3 @@
 
 <!-- Page content container -->
 <div class="container">
-
-    <div class="row mb-3 d-print-none">
-        <div class="col-md-1 text-center">
-            <?php if (!empty($contact_photo)) { ?>
-                <img src="<?= "..//uploads/clients/$client_id/$contact_photo"; ?>" alt="..." height="50" width="50" class="rounded-circle mb-3img-responsive">
-
-            <?php } else { ?>
-
-                <span class="fa-stack fa-2x rounded-left">
-                    <i class="fa fa-circle fa-stack-2x text-secondary"></i>
-                    <span class="fa fa-stack-1x text-white"><?= $contact_initials; ?></span>
-                </span>
-            <?php } ?>
-        </div>
-
-        <div class="col-md-11 p-0">
-            <h4>Welcome, <strong><?= stripslashes(nullable_htmlentities($contact_name)); ?></strong>!</h4>
-            <hr>
-        </div>
-    </div>

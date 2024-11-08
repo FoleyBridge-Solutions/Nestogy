@@ -48,7 +48,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Page CSS -->
 
+    
     <?= $page_css ?? ''?>
+
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 
     <!-- Helpers -->
     <script src="/includes/assets/vendor/js/helpers.js"></script>
@@ -60,18 +63,12 @@
     <script src="/includes/assets/js/config.js"></script>
 
     <script>
-  if (typeof navigator.serviceWorker !== 'undefined') {
-    navigator.serviceWorker.register('/service-worker.js')
-  }
-</script>
-
-    <!-- Loading -->
-    
-
-
+      if (typeof navigator.serviceWorker !== 'undefined') {
+        navigator.serviceWorker.register('/service-worker.js')
+      }
+    </script>
     <!-- TinyMCE -->
-    <script src="/includes/dist/vendor/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
-
+    <script src="https://cdn.tiny.cloud/1/aq84ecg358zq9b4i9ea6hjaxqpx4mirbbtm7h5khkwevpqac/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 
 <body>

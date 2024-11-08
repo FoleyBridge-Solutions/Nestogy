@@ -1,9 +1,5 @@
 <?php
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 require "/var/www/portal.twe.tech/includes/inc_all.php";
 
 // this page is to check for invoices with payments larger than the invoice amount

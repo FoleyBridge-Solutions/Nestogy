@@ -1,4 +1,3 @@
-
 <div class="row">
     <div class="col">
         <div class="card mb-2">
@@ -6,7 +5,8 @@
                 <h3 class="card-title"><i class="fas fa-fw fa-credit-card mr-2"></i>Edit Product</h3>
             </div>
             <div class="card-body">
-                <form action="?page=product&product_id=<?= $product['product_id'] ?>" method="post">
+                <form action="/post.php" method="post">
+                    <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
                     <div class="form-group">
                         <label for="product_name">Name</label>
                         <input type="text" class="form-control" id="product_name" name="product_name" value="<?= $product['product_name'] ?>">
@@ -41,13 +41,13 @@
                     </div>
                     <div class="form-group">
                         <label for="product_is_service">Is Service</label>
-                        <input type="checkbox" id="product_is_service" name="product_is_service" value="<?= $product['product_is_service'] ?>" <?= $product['product_is_service'] ? 'checked' : '' ?>>
+                        <input type="checkbox" id="product_is_service" name="product_is_service" <?php if ($product['product_is_service'] == 1) echo 'checked'; ?>>
                     </div>
                     <div class="form-group">
                         <label for="product_subscription">Is Subscription</label>
-                        <input type="checkbox" id="product_subscription" name="product_subscription" value="<?= $product['product_subscription'] ?>" <?= $product['product_subscription'] ? 'checked' : '' ?>>
+                        <input type="checkbox" id="product_subscription" name="product_subscription" <?php if ($product['product_subscription'] == 1) echo 'checked'; ?>>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" name="edit_product" id="edit_product" class="btn btn-primary">Save</button>
                 </form>
             </div>
         </div>

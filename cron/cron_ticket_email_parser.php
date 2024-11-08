@@ -124,26 +124,23 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
         $private_ips = trim($private_ips_matches[1] ?? '');
 
         
-        //Assign contact id based on name
-        $contact_id = mysqli_fetch_array(mysqli_query($mysqli, "SELECT contact_id FROM contacts WHERE contact_name LIKE '%$contact_name%'"));
-        if ($contact_id) {
-            $contact_id = $contact_id['contact_id'];
-        } else {
-            $contact_id = 0;
-        }
+        // Assign contact id based on name
+        $contact_name_escaped = mysqli_real_escape_string($mysqli, $contact_name);
+        $contact_id_result = mysqli_query($mysqli, "SELECT contact_id FROM contacts WHERE contact_name LIKE '%$contact_name_escaped%'");
+        $contact_id = mysqli_fetch_array($contact_id_result)['contact_id'] ?? 0;
 
         // Assign client based on organization name
-        $client_id = mysqli_fetch_array(mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_name LIKE '%$organization%'"));
-        if ($client_id) {
-            $client_id = $client_id['client_id'];
-        } else {
-            $client_id = $original_client_id;
+        $organization_escaped = mysqli_real_escape_string($mysqli, $organization);
+        $client_id_result = mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_name LIKE '%$organization_escaped%'");
+        $client_id = mysqli_fetch_array($client_id_result)['client_id'] ?? $original_client_id;
+        if ($client_id == $original_client_id) {
+            // Log or handle no client found case
             echo "No client found for organization: $organization";
         }
 
         // Redo the ticket description as a table
         $message = "
-            <table class='table table-bordered table-striped datatables-basic'>
+            <table class='table table-bordered table-striped'>
                 <tr><th>Field</th><th>Value</th></tr>
                 <tr><td><b>First Name</b></td><td>$first_name</td></tr>
                 <tr><td><b>Last Name</b></td><td>$last_name</td></tr>
@@ -421,19 +418,6 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
     }
 }
 
-function sendNotification($notification_type, $notification, $action = '', $client_id = 0)
-{
-    global $mysqli;
-    mysqli_query(
-        $mysqli,
-        "INSERT INTO notifications SET
-        notification_type = '$notification_type',
-        notification = '$notification',
-        notification_action = '$action',
-        notification_client_id = $client_id,
-        notification_is_webpush = 1"
-    );
-}
 
 
 // Initialize the client manager and create the client

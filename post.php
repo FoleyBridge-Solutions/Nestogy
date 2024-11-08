@@ -14,6 +14,10 @@ require_once "/var/www/portal.twe.tech/includes/check_login.php";
 
 requireOnceAll("/var/www/portal.twe.tech/includes/post");
 
+echo "<pre>";
+print_r($_POST);
+echo "</pre>";
+
 
 
 ?>

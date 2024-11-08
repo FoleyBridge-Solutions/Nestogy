@@ -782,10 +782,11 @@ if (isset($_GET['plaid_link_token'])) {
         'user' => [
             'client_user_id' => '1'
         ],
-        'products' => ['auth', 'transactions'],
+        'products' => ['transactions'],
+        'transactions' => [
+            'days_requested' => 730
+        ]
     ];
-
-    echo json_encode($data);
 
     // send the request using php curl
     $ch = curl_init($create_link_token_url);
@@ -798,6 +799,15 @@ if (isset($_GET['plaid_link_token'])) {
 
     $result = curl_exec($ch);
     curl_close($ch);
+
+    //if account is specified via get, save the link token to the database
+    if (isset($_GET['account_id'])) {
+        $account_id = $_GET['account_id'];
+        $link_token = $result['link_token'];
+        $sql = mysqli_query($mysqli, "UPDATE plaid_accounts SET plaid_link_token = '$link_token' 
+        LEFT JOIN accounts ON plaid_accounts.plaid_account_id = accounts.plaid_id
+        WHERE accounts.account_id = $account_id");
+    }
     
     echo $result;
 }
@@ -963,5 +973,68 @@ if (isset($_GET['send_invoice_email'])) {
 if (isset($_GET['cancel_invoice'])) {
     $invoice_id = intval($_GET['cancel_invoice']);
     updateInvoiceStatus($invoice_id, "Cancelled");
+    echo json_encode(['success' => true]);
+}
+
+if (isset($_GET['save_access_token'])) {
+    $account_id = $_GET['account_id'];
+    $data = json_decode(file_get_contents('php://input'), true);
+    $public_token = $data['public_token'];
+
+    // Exchange the public_token for an access_token
+    $exchange_url = "https://production.plaid.com/item/public_token/exchange";
+    $post_data = [
+        'client_id' => $config_plaid_client_id,
+        'secret' => $config_plaid_secret,
+        'public_token' => $public_token
+    ];
+
+    $ch = curl_init($exchange_url);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+    ]);
+
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    $result = json_decode($result, true);
+
+    if (isset($result['access_token'])) {
+        $access_token = $result['access_token'];
+        $item_id = $result['item_id'];
+
+
+        // Insert the access token in the database
+        mysqli_query($mysqli, "INSERT INTO plaid_accounts (plaid_access_token, plaid_account_id) VALUES ('$access_token', '$item_id')");
+        mysqli_query($mysqli, "UPDATE accounts SET plaid_id = '$item_id' WHERE account_id = $account_id");
+
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Could not exchange public_token']);
+    }
+}
+
+if (isset($_GET['sync_plaid_transactions'])) {
+    $account_id = $_GET['account_id'];
+    //Get the info from the database
+    $sql = mysqli_query($mysqli, "SELECT * FROM accounts LEFT JOIN plaid_accounts ON accounts.plaid_id = plaid_accounts.plaid_account_id WHERE account_id = $account_id");
+    
+    $account = mysqli_fetch_array($sql);
+    $next_cursor = $account['plaid_next_cursor'];
+
+    $response = syncPlaidTransactions($account_id, $next_cursor);
+
+    if ($response['success']) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $response['error']]);
+    }
+
+}
+
+if (isset($_GET['send_invoice_email'])) {
+    $invoice_id = intval($_GET['send_invoice_email']);
+    emailInvoice($invoice_id);
     echo json_encode(['success' => true]);
 }

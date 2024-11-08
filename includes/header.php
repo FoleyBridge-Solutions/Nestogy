@@ -59,6 +59,8 @@
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="/includes/assets/js/config.js"></script>
 
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+
     <!-- TinyMCE -->
     <script src="/includes/dist/vendor/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
 

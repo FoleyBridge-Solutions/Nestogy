@@ -130,6 +130,9 @@ function createTicket(
         }
     }
 
+    //Send Notification
+    sendNotification('New Ticket', "$contact_name created ticket $config_ticket_prefix$ticket_number - $ticket_subject", 'View', $client_id);
+
     // Logging
     mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Create', log_description = '$name created ticket $config_ticket_prefix$ticket_number - $ticket_subject', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $client_id, log_user_id = $user_id, log_entity_id = $ticket_id");
 
@@ -255,6 +258,9 @@ function updateTicket(
 
     //drop ticket_id from parameters for return data message
     unset($parameters['ticket_id']);
+
+    //Send Notification
+    sendNotification('Ticket Updated', "$name modified ticket $ticket_number - $subject", 'View', $client_id);
 
     $return_data = [
         'status' => 'success',

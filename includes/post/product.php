@@ -32,8 +32,25 @@ if (isset($_POST['edit_product'])) {
 
 
     $product_id = intval($_POST['product_id']);
+    $name = sanitizeInput($_POST['product_name']);
+    $description = sanitizeInput($_POST['product_description']);
+    $price = sanitizeInput($_POST['product_price']);
+    $tax = intval($_POST['product_tax_id']);
+    $cost = sanitizeInput($_POST['product_cost']);
+    $category = intval($_POST['product_category_id']);
+    $subscription = isset($_POST['product_subscription']) ? 1 : 0;
+    $service = isset($_POST['product_is_service']) ? 1 : 0;
 
-    mysqli_query($mysqli,"UPDATE products SET product_name = '$name', product_description = '$description', product_price = '$price', product_tax_id = $tax, product_cost = $cost, product_category_id = $category WHERE product_id = $product_id");
+    mysqli_query($mysqli,"UPDATE products
+        SET product_name = '$name',
+            product_description = '$description',
+            product_price = '$price',
+            product_tax_id = $tax,
+            product_cost = $cost,
+            product_category_id = $category,
+            product_subscription = $subscription,
+            product_is_service = $service
+        WHERE product_id = $product_id");
 
     //Logging
     mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Modify', log_description = '$name', log_user_id = $user_id");
@@ -41,7 +58,7 @@ if (isset($_POST['edit_product'])) {
     //logging
     mysqli_query($mysqli,"INSERT INTO logs SET log_type = 'Product', log_action = 'Modify', log_description = '$name modified product $name', log_ip = '$ip', log_user_agent = '$user_agent', log_user_id = $user_id");
 
-    $_SESSION['alert_message'] = "Product <strong>$name</strong> modified";
+    $_SESSION['alert_message'] = "Product <strong>$name</strong> modified, subscription: $subscription, service: $service";
 
     header("Location: " . $_SERVER["HTTP_REFERER"]);
 

@@ -8,9 +8,18 @@ use Twetech\Nestogy\Model\Documentation;
 use Twetech\Nestogy\View\View;
 use Twetech\Nestogy\Auth\Auth;
 
+/**
+ * Controller handling documentation-related operations
+ */
 class DocumentationController {
+    /** @var \PDO Database connection */
     private $pdo;
 
+    /**
+     * Constructor for DocumentationController
+     *
+     * @param \PDO $pdo Database connection
+     */
     public function __construct($pdo) {
         $this->pdo = $pdo;
 
@@ -21,6 +30,11 @@ class DocumentationController {
         }
     }
 
+    /**
+     * Display the documentation index page
+     *
+     * @return void
+     */
     public function index() {
         //Redirect to /public/?page=home temporarily
         // TODO: Implement the documentation home page
@@ -28,38 +42,33 @@ class DocumentationController {
         exit;
     }
 
+    /**
+     * Update client's last accessed timestamp
+     *
+     * @param int $client_id Client identifier
+     * @return void
+     */
     private function clientAccessed($client_id) {
         $clientModel = new Client($this->pdo);
         $clientModel->clientAccessed($client_id);
     }
 
+    /**
+     * Display specific documentation type for a client
+     *
+     * @param string $documentation_type Type of documentation to display (asset, license, login, network, service, vendor, file, document)
+     * @param int|false $client_id Optional client identifier
+     * @return void
+     */
     public function show($documentation_type, $client_id = false) {
         $view = new View();
         $auth = new Auth($this->pdo);
-        // Check if user has access to the documentation class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'documentation', 'view')) {
-            // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view documentation.'
-            ]);
-            return;
-        }
         $documentationModel = new Documentation($this->pdo);
         $client_page = false;
         $data = [];
 
         if ($client_id) {
             $this->clientAccessed($client_id);
-            // Check if user has access to the client
-            if (!$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-                // If user does not have access, display an error message
-                $view->error([
-                    'title' => 'Access Denied',
-                    'message' => 'You do not have permission to view this client.'
-                ]);
-                return;
-            }
             $client_page = true;
             $client = new Client($this->pdo);
             $client_header = $client->getClientHeader($client_id);
@@ -224,8 +233,14 @@ class DocumentationController {
                     'Actions'
                 ];
                 $data['action'] = [
-                    'title' => 'Add Vendor',
-                    'modal' => 'vendor_add_modal.php?client_id='.$client_id
+                    [
+                        'title' => 'Add Vendor',
+                        'modal' => 'vendor_add_modal.php?client_id='.$client_id
+                    ],
+                    [
+                        'title' => 'Add Vendor from Template',
+                        'modal' => 'vendor_add_from_template_modal.php?client_id='.$client_id
+                    ]
                 ];
                 $data['table']['body_rows'] = [];
                 foreach ($vendors as $vendor) {
@@ -270,6 +285,12 @@ class DocumentationController {
         $view->render('simpleTable', $data, $client_page);
     }
 
+    /**
+     * Decrypt login password using Documentation model
+     *
+     * @param string $encrypted_password Encrypted password string
+     * @return string Decrypted password
+     */
     private function decryptLoginPassword($encrypted_password) {
         $documentationModel = new Documentation($this->pdo);
         return $documentationModel->decryptLoginPassword($encrypted_password);

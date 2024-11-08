@@ -29,7 +29,7 @@
                             </a>
                             <div class="dropdown-divider"></div>
 
-                            <a href="#!" data-bs-toggle="modal" data-bs-target="#dynamicModal" class="dropdown-item loadModalContentBtn" data-modal-file="client_archive_modal.php?client_id=<?= $client_id; ?>">
+                            <a href="/post.php?archive_client=<?= $client_id; ?>" class="dropdown-item confirm-link">
                                 <i class="fas fa-fw fa-archive mr-2"></i>Archive Client
                             </a>
                             <?php if ($user_role == "admin") { ?>

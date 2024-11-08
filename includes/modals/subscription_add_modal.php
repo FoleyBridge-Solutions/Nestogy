@@ -6,7 +6,7 @@ if (isset($_GET['client_id'])) {
     $client_id = 0;
 }
 
-$clients = mysqli_query($mysqli, "SELECT * FROM clients");
+$clients = mysqli_query($mysqli, "SELECT * FROM clients WHERE client_archived_at IS NULL");
 
 $products = mysqli_query($mysqli, "SELECT * FROM products WHERE product_subscription = 1");
 

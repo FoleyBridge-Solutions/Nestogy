@@ -4,7 +4,7 @@
  * Landing / Home page for the client portal
  */
 
-
+$last_page = $_GET['last_page'] ?? null;
 
 $company_id = 1;
 require_once '/var/www/portal.twe.tech/includes/config/config.php';
@@ -78,18 +78,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
                 $_SESSION['contact_id'] = intval($row['contact_id']);
                 $_SESSION['login_method'] = "local";
 
-                header("Location: index.php");
+                // Redirect to last page
+                if (isset($last_page)) {
+                    header("Location: $last_page");
+                } else {
+                    header("Location: index.php");
+                }
 
                 mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client Login', log_action = 'Success', log_description = 'Client contact $row[contact_email] successfully logged in locally', log_ip = '$ip', log_user_agent = '$user_agent', log_client_id = $row[contact_client_id]");
 
             } else {
                 mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client Login', log_action = 'Failed', log_description = 'Failed client portal login attempt using $email', log_ip = '$ip', log_user_agent = '$user_agent'");
-                $_SESSION['login_message'] = 'Incorrect username or password.';
+                $_SESSION['login_message'] = 'Incorrect username or password.'; #incorrect password
             }
 
         } else {
             mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Client Login', log_action = 'Failed', log_description = 'Failed client portal login attempt using $email', log_ip = '$ip', log_user_agent = '$user_agent'");
-            $_SESSION['login_message'] = 'Incorrect username or password.';
+            $_SESSION['login_message'] = 'Incorrect username or password.'; #incorrect email
         }
     }
 }

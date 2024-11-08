@@ -15,11 +15,18 @@
 
 <?php require_once "/var/www/portal.twe.tech/includes/inc_confirm_modal.php"; ?>
 
+
 <!-- jQuery -->
 <script src="/includes/plugins/jquery/jquery.min.js"></script>
 
 <!-- Bootstrap 4 -->
 <script src="/includes/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.1/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.1/js/responsive.bootstrap5.js"></script>
 
 <!--- TinyMCE -->
 <script src="/includes/plugins/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
@@ -53,7 +60,13 @@
     },
         plugins: 'link image lists table code codesample fullscreen autoresize',
     });
-
+    
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('.datatables-basic').DataTable({
+            responsive: true
+        });
+    });
 </script>
 
 <script src="/includes/js/confirm_modal.js"></script>

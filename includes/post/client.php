@@ -12,8 +12,6 @@ if (isset($_POST['add_client'])) {
     require_once '/var/www/portal.twe.tech/includes/post/models/client_model.php';
 
 
-    validateAdminRole();
-
     $location_phone = preg_replace("/[^0-9]/", '', $_POST['location_phone']);
     $address = sanitizeInput($_POST['address']);
     $city = sanitizeInput($_POST['city']);
@@ -65,8 +63,6 @@ if (isset($_POST['edit_client'])) {
 
     require_once '/var/www/portal.twe.tech/includes/post/models/client_model.php';
 
-    validateAdminRole();
-
     $client_id = intval($_POST['client_id']);
 
     $return_data = updateClient(
@@ -90,8 +86,6 @@ if (isset($_POST['edit_client'])) {
 }
 
 if (isset($_GET['archive_client'])) {
-
-    validateAdminRole();
 
     $client_id = intval($_GET['archive_client']);
 
@@ -184,26 +178,13 @@ if (isset($_POST['export_clients_csv'])) {
 
 if (isset($_POST['export_client_pdf'])) {
 
-    validateAdminRole();
-
     $client_id = intval($_POST['client_id']);
-    $export_contacts = intval($_POST['export_contacts']);
-    $export_locations = intval($_POST['export_locations']);
-    $export_assets = intval($_POST['export_assets']);
-    $export_software = intval($_POST['export_software']);
-    $export_logins = intval($_POST['export_logins']);
-    $export_networks = intval($_POST['export_networks']);
-    $export_certificates = intval($_POST['export_certificates']);
-    $export_domains = intval($_POST['export_domains']);
-    $export_tickets = intval($_POST['export_tickets']);
-    $export_scheduled_tickets = intval($_POST['export_scheduled_tickets']);
-    $export_vendors = intval($_POST['export_vendors']);
-    $export_invoices = intval($_POST['export_invoices']);
-    $export_recurring = intval($_POST['export_recurring']);
-    $export_quotes = intval($_POST['export_quotes']);
-    $export_payments = intval($_POST['export_payments']);
-    $export_trips = intval($_POST['export_trips']);
-    $export_logs = intval($_POST['export_logs']);
+    $export_data = $_POST['export_data'];
+
+    if (in_array('all', $export_data)) {
+        $export_data = ['contacts', 'locations', 'assets', 'software', 'logins', 'networks', 'certificates', 'domains', 'tickets', 'scheduled_tickets', 'vendors', 'invoices', 'recurring', 'quotes', 'payments', 'trips', 'logs'];
+    }
+             
 
 
     //get records from database
@@ -215,15 +196,15 @@ if (isset($_POST['export_client_pdf'])) {
 
     $row = mysqli_fetch_array($sql);
 
-    $client_name = $row['client_name'];
-    $location_address = $row['location_address'];
-    $location_city = $row['location_city'];
-    $location_state = $row['location_state'];
-    $location_zip = $row['location_zip'];
-    $contact_name = $row['contact_name'];
-    $contact_phone = formatPhoneNumber($row['contact_phone']);
-    $contact_email = $row['contact_email'];
-    $client_website = $row['client_website'];
+    $client_name = $row['client_name'] ?? '';
+    $location_address = $row['location_address'] ?? '';
+    $location_city = $row['location_city'] ?? '';
+    $location_state = $row['location_state'] ?? '';
+    $location_zip = $row['location_zip'] ?? '';
+    $contact_name = $row['contact_name'] ?? '';
+    $contact_phone = formatPhoneNumber($row['contact_phone']) ?? '';
+    $contact_email = $row['contact_email'] ?? '';
+    $client_website = $row['client_website'] ?? '';
 
     $sql_contacts = mysqli_query($mysqli,"SELECT * FROM contacts WHERE contact_client_id = $client_id AND contact_archived_at IS NULL ORDER BY contact_name ASC");
     $sql_locations = mysqli_query($mysqli,"SELECT * FROM locations WHERE location_client_id = $client_id AND location_archived_at IS NULL ORDER BY location_name ASC");
@@ -248,8 +229,8 @@ if (isset($_POST['export_client_pdf'])) {
 
     ?>
 
-    <script src='plugins/pdfmake/pdfmake.min.js'></script>
-    <script src='plugins/pdfmake/vfs_fonts.js'></script>
+    <script src='/includes/plugins/pdfmake/pdfmake.min.js'></script>
+    <script src='/includes/plugins/pdfmake/vfs_fonts.js'></script>
     <script>
 
         var docDefinition = {
@@ -335,7 +316,7 @@ if (isset($_POST['export_client_pdf'])) {
                 },
 
                 //Contacts Start
-                <?php if(mysqli_num_rows($sql_contacts) > 0 && $export_contacts == 1){ ?>
+                <?php if(mysqli_num_rows($sql_contacts) > 0 && in_array('contacts', $export_data)){ ?>
                 {
                     text: 'Contacts',
                     style: 'title'
@@ -424,7 +405,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Contact END
 
                 //Locations Start
-                <?php if(mysqli_num_rows($sql_locations) > 0 && $export_locations == 1){ ?>
+                <?php if(mysqli_num_rows($sql_locations) > 0 && in_array('locations', $export_data)){ ?>
                 {
                     text: 'Locations',
                     style: 'title'
@@ -483,7 +464,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Locations END
 
                 //Vendors Start
-                <?php if(mysqli_num_rows($sql_vendors) > 0 && $export_vendors == 1){ ?>
+                <?php if(mysqli_num_rows($sql_vendors) > 0 && in_array('vendors', $export_data)){ ?>
                 {
                     text: 'Vendors',
                     style: 'title'
@@ -559,7 +540,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Vendors END
 
                 //Logins Start
-                <?php if(mysqli_num_rows($sql_logins) > 0 && $export_logins == 1){ ?>
+                <?php if(mysqli_num_rows($sql_logins) > 0 && in_array('logins', $export_data)){ ?>
                 {
                     text: 'Logins',
                     style: 'title'
@@ -637,7 +618,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Logins END
 
                 //Assets Start
-                <?php if(mysqli_num_rows($sql_assets) > 0 && $export_assets == 1){ ?>
+                <?php if(mysqli_num_rows($sql_assets) > 0 && in_array('assets', $export_data)){ ?>
                 {
                     text: 'Assets',
                     style: 'assetTitle'
@@ -646,7 +627,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Assets END
 
                 //Asset Workstations Start
-                <?php if(mysqli_num_rows($sql_asset_workstations) > 0 && $export_assets == 1){ ?>
+                <?php if(mysqli_num_rows($sql_asset_workstations) > 0 && in_array('assets', $export_data)){ ?>
                 {
                     text: 'Workstations',
                     style: 'assetSubTitle'
@@ -769,7 +750,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Asset Workstation END
 
                 //Assets Servers Start
-                <?php if(mysqli_num_rows($sql_asset_servers) > 0 && $export_assets == 1){ ?>
+                <?php if(mysqli_num_rows($sql_asset_servers) > 0 && in_array('assets', $export_data)){ ?>
                 {
                     text: 'Servers',
                     style: 'assetSubTitle'
@@ -883,7 +864,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Asset Servers END
 
                 //Asset VMs Start
-                <?php if(mysqli_num_rows($sql_asset_vms) > 0 && $export_assets == 1){ ?>
+                <?php if(mysqli_num_rows($sql_asset_vms) > 0 && in_array('assets', $export_data)){ ?>
                 {
                     text: 'Virtual Machines',
                     style: 'assetSubTitle'
@@ -956,7 +937,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Asset VMs END
 
                 //Assets Network Devices Start
-                <?php if(mysqli_num_rows($sql_asset_network) > 0 && $export_assets == 1){ ?>
+                <?php if(mysqli_num_rows($sql_asset_network) > 0 && in_array('assets', $export_data)){ ?>
                 {
                     text: 'Network Devices',
                     style: 'assetSubTitle'
@@ -1070,7 +1051,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Asset Network Devices END
 
                 //Asset Other Start
-                <?php if(mysqli_num_rows($sql_asset_other) > 0 && $export_assets == 1){ ?>
+                <?php if(mysqli_num_rows($sql_asset_other) > 0 && in_array('assets', $export_data)){ ?>
                 {
                     text: 'Other Devices',
                     style: 'assetSubTitle'
@@ -1185,7 +1166,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Asset Other END
 
                 //Software Start
-                <?php if(mysqli_num_rows($sql_software) > 0 && $export_software == 1){ ?>
+                <?php if(mysqli_num_rows($sql_software) > 0 && in_array('software', $export_data)){ ?>
                 {
                     text: 'Software',
                     style: 'title'
@@ -1260,7 +1241,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Software END
 
                 //Networks Start
-                <?php if(mysqli_num_rows($sql_networks) > 0 && $export_networks == 1){ ?>
+                <?php if(mysqli_num_rows($sql_networks) > 0 && in_array('networks', $export_data)){ ?>
                 {
                     text: 'Networks',
                     style: 'title'
@@ -1334,7 +1315,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Networks END
 
                 //Domains Start
-                <?php if(mysqli_num_rows($sql_domains) > 0 && $export_domains == 1){ ?>
+                <?php if(mysqli_num_rows($sql_domains) > 0 && in_array('domains', $export_data)){ ?>
                 {
                     text: 'Domains',
                     style: 'title'
@@ -1381,7 +1362,7 @@ if (isset($_POST['export_client_pdf'])) {
                 //Domains END
 
                 //Certificates Start
-                <?php if(mysqli_num_rows($sql_certficates) > 0 && $export_certificates == 1){ ?>
+                    <?php if(mysqli_num_rows($sql_certficates) > 0 && in_array('certificates', $export_data)){ ?>
                 {
                     text: 'Certificates',
                     style: 'title'

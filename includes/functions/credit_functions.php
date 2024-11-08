@@ -1,27 +1,38 @@
 <?php
+include '/var/www/portal.twe.tech/bootstrap.php';
 
 // Credit Related Functions
 
 function createCredit(
     $amount,
-    $payment_id
+    $payment_id = null,
+    $client_id = null
 ) {
     // Access global variables
-    global $mysqli, $user_id, $ip, $user_agent;
+    global $mysqli;
 
-    //get payment details for other details
-    $payment_sql = mysqli_query($mysqli, "SELECT * FROM payments WHERE payment_id = $payment_id");
-    $payment_row = mysqli_fetch_array($payment_sql);
-    $invoice_id = $payment_row['payment_invoice_id'];
-    $currency_code = $payment_row['payment_currency_code'];
-    $date = $payment_row['payment_date'];
-    $reference = $payment_row['payment_reference'];
-    $account = $payment_row['payment_account_id'];
+    if ($payment_id = null)
+    {
+        if ($client_id = null) {
+            return false;
+        } else {
+            $credit_query = "INSERT INTO credits SET credit_amount = $amount, credit_date = CURDATE(), credit_reference = 'Overpayment', credit_client_id = $client_id, credit_payment_id = $payment_id, credit_account_id = 1";
+        }
+    } else {
+        //get payment details for other details
+        $payment_sql = mysqli_query($mysqli, "SELECT * FROM payments WHERE payment_id = $payment_id");
+        $payment_row = mysqli_fetch_array($payment_sql);
+        $invoice_id = $payment_row['payment_invoice_id'];
+        $currency_code = $payment_row['payment_currency_code'];
+        $date = $payment_row['payment_date'];
+        $reference = $payment_row['payment_reference'];
+        $account = $payment_row['payment_account_id'];
 
-    // Create credit
-    $credit_query = "INSERT INTO credits SET credit_amount = $amount, credit_currency_code = '$currency_code', credit_date = '$date', credit_reference = 'Overpayment: $reference', credit_client_id = (SELECT invoice_client_id FROM invoices WHERE invoice_id = $invoice_id), credit_payment_id = $payment_id, credit_account_id = $account";
+        // Create credit
+        $credit_query = "INSERT INTO credits SET credit_amount = $amount, credit_currency_code = '$currency_code', credit_date = '$date', credit_reference = 'Overpayment: $reference', credit_client_id = (SELECT invoice_client_id FROM invoices WHERE invoice_id = $invoice_id), credit_payment_id = $payment_id, credit_account_id = $account";
+    }
+
     mysqli_query($mysqli, $credit_query);
-
     // Get credit ID for reference
     $credit_id = mysqli_insert_id($mysqli);
     return $credit_id;

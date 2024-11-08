@@ -127,7 +127,7 @@ function addToMailQueue($mysqli, $data)
         $recipient = strval($email['recipient']);
         $recipient_name = strval($email['recipient_name']);
         $subject = strval($email['subject']);
-        $body = strval($email['body']);
+        $body = mysqli_real_escape_string($mysqli, $email['body']);
 
         $cal_str = '';
         if (isset($email['cal_str'])) {
@@ -181,17 +181,16 @@ function emailInvoice(
     $company_name = sanitizeInput($row['company_name']);
     $company_phone = sanitizeInput(formatPhoneNumber($row['company_phone']));
 
-
     // Sanitize Config vars from get_settings.php
     $config_invoice_from_name = sanitizeInput($config_invoice_from_name);
     $config_invoice_from_email = sanitizeInput($config_invoice_from_email);
 
     if ($invoice_status == 'Paid') {
         $subject = "$company_name Invoice $invoice_prefix$invoice_number Receipt";
-        $body = "Hello $contact_name,<br><br>Please click on the link below to see your invoice regarding \"$invoice_scope\" marked <b>paid</b>.<br><br><a href=\'https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>Invoice Link</a><br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+        $body = "Hello $contact_name,<br><br>Please click on the link below to see your invoice regarding \"$invoice_scope\" marked <b>paid</b>.<br><br><a href='https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key'>Invoice Link</a><br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
     } else {
         $subject = "$company_name Invoice $invoice_prefix$invoice_number";
-        $body = "Hello $contact_name,<br><br>Please view the details of your invoice regarding \"$invoice_scope\" below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+        $body = "Hello $contact_name,<br><br>Please view the details of your invoice regarding \"$invoice_scope\" below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href='https://$config_base_url/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
     }
 
     // Queue Mail

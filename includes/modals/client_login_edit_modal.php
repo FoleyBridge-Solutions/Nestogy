@@ -95,7 +95,7 @@ $client_id = $login['login_client_id'];
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                                     </div>
-                                    <input class="form-control" data-bs-toggle="password" name="password" placeholder="Password" value="<?= $login_password; ?>" required autocomplete="new-password">
+                                    <input class="form-control" name="password" placeholder="Password" value="<?= $login_password; ?>" required autocomplete="new-password">
                                     <div class="input-group-append">
                                         <button class="btn btn-default clipboardjs" type="button" data-clipboard-text="<?= $login_password; ?>"><i class="fa fa-fw fa-copy"></i></button>
                                     </div>

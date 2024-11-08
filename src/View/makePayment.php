@@ -1,3 +1,6 @@
+<?php
+$payment_received = -1  *  $transaction['amount'];
+?>
 <div class="row">
     <div class="col-12">
         <div class="card mb-2">
@@ -12,7 +15,7 @@
                         <div class="col-md-5 col-12">
                             <div class="form-group">
                                 <label for="Client">Client</label>
-                                <select name="Client" id="Client" class="form-control select2" required>
+                                <select name="Client" id="Client" class="form-control select2" required autocomplete="off">
                                     <option value="">Select Client</option>
                                     <?php
                                     foreach ($clients as $client) {
@@ -57,7 +60,7 @@
                         <div class="col-md-4 col-12">
                             <div class="form-group">
                                 <label for="payment_date">Payment Date</label>
-                                <input type="date" name="payment_date" id="payment_date" class="form-control" value="<?= date('Y-m-d') ?>">
+                                <input type="date" name="payment_date" id="payment_date" class="form-control" autocomplete="off" value="<?= $transaction['date'] ? date('Y-m-d', strtotime($transaction['date'])) : date('Y-m-d') ?>">
                             </div>
                         </div>
                     </div>
@@ -65,7 +68,7 @@
                         <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_method">Payment Method</label>
-                                <select name="payment_method" id="payment_method" class="form-control">
+                                <select name="payment_method" id="payment_method" class="form-control" autocomplete="off">
                                     <option value="">Select Payment Method</option>
                                     <?php
                                     foreach ($categories as $category) {
@@ -83,7 +86,7 @@
                         <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_account">Deposit to</label>
-                                <select name="payment_account" id="payment_account" class="form-control">
+                                <select name="payment_account" id="payment_account" class="form-control" autocomplete="off">
                                     <option value="">Select Account</option>
                                     <?php
                                     foreach ($accounts as $account) {
@@ -105,7 +108,11 @@
                         <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_reference">Payment Reference</label>
-                                <input type="text" name="payment_reference" id="payment_reference" class="form-control">
+                                <input type="text" name="payment_reference" id="payment_reference" class="form-control" autocomplete="off"
+                                <?php if (isset($transaction)) {
+                                    echo "value='" . $transaction['name'] . " - " . date('F j, Y', strtotime($transaction['date'])) . "'";
+                                } ?>
+                                >
                             </div>
                         </div>
                         <div class="col-md-4 col-12">
@@ -113,7 +120,11 @@
                         <div class="col-md-2 col-12">
                             <div class="form-group">
                                 <label for="payment_amount">Amount Received</label>
-                                <input type="number" name="payment_amount" id="payment_amount" class="form-control" step="0.01" min="0.01" placeholder="<?= $payment_received ?>">
+                                <input type="number" name="payment_amount" id="payment_amount" class="form-control" step="0.01" min="0.01" placeholder="<?= $payment_received ?>" autocomplete="off"
+                                <?php if (isset($transaction)) {
+                                    echo "value='" . $payment_received . "'";
+                                } ?>
+                                >
                             </div>
                         </div>
                     </div>
@@ -145,8 +156,16 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Loading Animation -->
+                            <tr id="loading-animation" style="display: none;">
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-grow text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
                             <!-- Empty Table Placeholder -->
-                            <tr class="text-center">
+                            <tr class="text-center empty-placeholder">
                                 <td colspan="7">No Invoices Found</td>
                             </tr>
                         </tbody>
@@ -251,20 +270,31 @@
         }
 
         function fetchClientInvoices(clientId) {
-            $.ajax({
-                url: `/ajax/ajax.php?client_invoices=${clientId}`,
-                type: 'GET',
-                success: function(response) {
-                    const data = JSON.parse(response);
-                    const table = $('.table tbody').empty();
-                    data.forEach(invoice => {
-                        const invoiceRow = handleInvoiceSelection(invoice);
-                        if (invoiceRow) table.append(invoiceRow);
-                    });
-                    attachInvoiceEventHandlers();
-                },
-                error: handleError
-            });
+            // Show loading animation and hide empty placeholder
+            $('.empty-placeholder').hide();
+            $('#loading-animation').show();
+
+            setTimeout(() => {
+                $.ajax({
+                    url: `/ajax/ajax.php?client_invoices=${clientId}`,
+                    type: 'GET',
+                    success: function(response) {
+                        const data = JSON.parse(response);
+                        const table = $('.table tbody').empty();
+                        data.forEach(invoice => {
+                            const invoiceRow = handleInvoiceSelection(invoice);
+                            if (invoiceRow) table.append(invoiceRow);
+                        });
+                        attachInvoiceEventHandlers();
+                        $('#loading-animation').hide();
+                    },
+                    error: function(xhr) {
+                        handleError(xhr);
+                        $('#loading-animation').hide();
+                        $('.empty-placeholder').show();
+                    }
+                });
+            }, 750); // 0.75 second delay
         }
 
         function fetchClientCredits(clientId) {
@@ -340,7 +370,16 @@
             const clientId = $(this).val();
             fetchClientInvoices(clientId);
             fetchClientCredits(clientId);
+            
+            // Add focus to payment reference after client selection
+            setTimeout(() => {
+                $('#payment_reference').focus();
+            }, 100);
         });
+
+        setTimeout(() => {
+            $('#Client').select2('open');
+        }, 100);
 
         $('#check_all').on('change', function() {
             const isChecked = $(this).prop('checked');

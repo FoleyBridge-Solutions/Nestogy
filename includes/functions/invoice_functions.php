@@ -144,7 +144,7 @@ function updateInvoice(
     $invoice_category_id = isset($parameters['invoice_category_id']) ? $parameters['invoice_category_id'] : $invoice_data['invoice_category_id'];
     $invoice_url_key = isset($parameters['invoice_url_key']) ? $parameters['invoice_url_key'] : $invoice_data['invoice_url_key'];
     $invoice_client_id = isset($parameters['invoice_client_id']) ? $parameters['invoice_client_id'] : $invoice_data['invoice_client_id'];
-
+    $invoice_deposit_amount = isset($parameters['invoice_deposit_amount']) ? $parameters['invoice_deposit_amount'] : $invoice_data['invoice_deposit_amount'];
 
     // if invoice status is a parameter, use update invoice status function for that part
     // else, use the current status
@@ -192,7 +192,8 @@ function updateInvoice(
         invoice_currency_code = '$invoice_currency_code',
         invoice_category_id = $invoice_category_id,
         invoice_url_key = '$invoice_url_key',
-        invoice_client_id = $invoice_client_id
+        invoice_client_id = $invoice_client_id,
+        invoice_deposit_amount = $invoice_deposit_amount
         WHERE invoice_id = $invoice_id
     ");
 
@@ -402,3 +403,4 @@ function getInvoiceBadgeColor($invoice_status)
 
     return $invoice_badge_color;
 }
+

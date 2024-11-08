@@ -9,8 +9,11 @@ $config_currency_code = 'USD'; #TODO: Get from config
     </div>
     <div class="card-body p-0">
         <div>
+
+                    <h5>Total AR: <span class="text-danger"><?= numfmt_format_currency($currency_format, $collections_report['total_balance'], $config_currency_code); ?></span></h5>
+
             <div class="card-datatable table-responsive container-fluid  pt-0">   
-                <table class="datatables-basic responsive table table-sm">
+                <table class="datatables-basic responsive table table-bordered table-striped table-hover table-sm">
                     <thead class="text-dark">
                         <tr>
                             <th>Client Name</th>
@@ -28,6 +31,7 @@ $config_currency_code = 'USD'; #TODO: Get from config
                             $client_name = $client['client_name'];
                             $contact_phone = $client['contact_phone'];
                             $balance = $client['balance'];
+                            $total_balance += $balance;
                             $monthly_recurring_amount = $client['monthly_recurring_amount'];
                             $past_due_amount = $client['past_due_amount'];
 

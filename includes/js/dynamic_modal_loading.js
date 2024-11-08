@@ -16,12 +16,6 @@ $(document).ready(function() {
                 // Create a temporary div to hold the loaded content
                 var tempDiv = $('<div>').html(data);
 
-                // if redirected to the login page, add the login form to the modal
-                if (tempDiv.find('.modal-body').html().includes('login')) {
-                    console.log('Redirected to login page');
-                    $('#dynamicModal .modal-body').html(tempDiv.find('.modal-body').html());
-                }
-
                 // Extract and replace the modal title, body, and footer from the loaded content
                 $('#dynamicModalLabel').html(tempDiv.find('.modal-title').html());
                 $('#dynamicModal .modal-body').html(tempDiv.find('.modal-body').html());

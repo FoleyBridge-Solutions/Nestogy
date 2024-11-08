@@ -6,101 +6,34 @@ include '/var/www/portal.twe.tech/bootstrap.php';
 
 use Twetech\Nestogy\Model\Accounting;
 
-function getPlaidLinkToken($client_user_id = 1) {
-    global $config_plaid_client_id, $config_plaid_secret, $mysqli;
-
-    validateAccountantRole();
-
-    $client_user_id = intval($client_user_id);
-
-    $curl = curl_init();
-
-    // check if there are any access tokens in the database
-    $sql = "SELECT * FROM plaid_access_tokens WHERE client_id = 1";
-    $result = mysqli_query($mysqli, $sql);
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_assoc($result);
-        $access_token = ', "access_token": "' . $row['encrypted_access_token'] . '"';
-    } else {
-        $access_token = '';
-    }
-
-    curl_setopt_array($curl, array(
-        CURLOPT_URL => 'https://production.plaid.com/link/token/create',
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS =>'{
-        "client_id": "' . $config_plaid_client_id . '",
-        "secret": "' . $config_plaid_secret . '",
-        "client_name": "TWE Technologies",
-        "country_codes": ["US"],
-        "language": "en",
-        "user": {
-        "client_user_id": "' . $client_user_id . '"
-        },
-        "products": ["transactions"],
-        "redirect_uri": "https://portal.twe.tech/admin/plaid.php"
-        ' . $access_token . '
-    }',
-        CURLOPT_HTTPHEADER => array(
-        'Content-Type: application/json'
-        ),
-    ));
-    
-    $response = curl_exec($curl);
-    
-    curl_close($curl);
-
-    $response = json_decode($response, true);
-    
-    error_log(print_r($response, true));
-
-    return $response['link_token'] ?? null;
-}
-
-function syncPlaidTransactions($next_cursor = null) {
+function syncPlaidTransactions($db_account_id, $next_cursor = null) {
     global $mysqli, $config_plaid_client_id, $config_plaid_secret;
 
-    validateAccountantRole();
+    error_log("Starting syncPlaidTransactions for account_id: $db_account_id, next_cursor: $next_cursor");
 
-    $next_cursor = sanitizeInput($next_cursor);
-    
-    // Get access token from database
-    $sql = "SELECT * FROM plaid_access_tokens WHERE client_id = 1";
+    // Get access token and next cursor from database
+    $sql = "SELECT plaid_access_token, plaid_next_cursor FROM plaid_accounts
+    LEFT JOIN accounts ON plaid_accounts.plaid_account_id = accounts.plaid_id
+    WHERE account_id = $db_account_id";
     $result = mysqli_query($mysqli, $sql);
     if (mysqli_num_rows($result) == 0) {
-        error_log("Function: No access token found");
+        error_log("No access token found for account_id: $db_account_id");
         return "no_access_token";
     }
 
     $row = mysqli_fetch_assoc($result);
-    $access_token = $row['encrypted_access_token'];
+    $access_token = $row['plaid_access_token'];
+    $next_cursor = $next_cursor ? $next_cursor : $row['plaid_next_cursor'];
+
+    error_log("Using access_token: $access_token, next_cursor: $next_cursor");
 
     $postfields = [
         "client_id" => $config_plaid_client_id,
         "secret" => $config_plaid_secret,
-        "access_token" => $access_token
+        "access_token" => $access_token,
+        "cursor" => $next_cursor
     ];
 
-    // Check for next cursor in database and set postfields accordingly
-    if ($next_cursor == null) {
-        $sql = "SELECT * FROM plaid_sync WHERE client_id = 1";
-        $result = mysqli_query($mysqli, $sql);
-        if (mysqli_num_rows($result) == 0) {
-            $sql = "INSERT INTO plaid_sync SET next_cursor = null, client_id = 1";
-            $cursor_sql = mysqli_query($mysqli, $sql);
-            $next_cursor = null;
-        } else {
-            $row = mysqli_fetch_assoc($result);
-            $next_cursor = $row['next_cursor'];
-            $postfields['cursor'] = $next_cursor;
-        }
-    }
     $postfields = json_encode($postfields);
 
     $curl = curl_init();
@@ -123,60 +56,67 @@ function syncPlaidTransactions($next_cursor = null) {
     curl_close($curl);
     $response = json_decode($response, true);
 
-    error_log(print_r($response, true));
+    if (isset($response['error_code']) && $response['error_code'] == 'ITEM_LOGIN_REQUIRED') {
+        return ['success' => false, 'error' => 'ITEM_LOGIN_REQUIRED'];
+    } else {
+        //update the account updated_at field
+        $sql = "UPDATE plaid_accounts SET plaid_last_update = NOW() WHERE plaid_access_token = '$access_token'";
+        $account_sql = mysqli_query($mysqli, $sql);
+    }
+
+    error_log("Plaid response summary: " . 
+              "Added: " . count($response['added'] ?? []) . ", " .
+              "Modified: " . count($response['modified'] ?? []) . ", " .
+              "Removed: " . count($response['removed'] ?? []) . ", " .
+              "Has more: " . ($response['has_more'] ? 'Yes' : 'No') . ", " .
+              "Next cursor: " . ($response['next_cursor'] ?? 'Not provided'));
 
     $accounts = $response['accounts'] ?? [];
-    $added_transactions = $response['added'] ?? '';
-    $modified_transactions = $response['modified'] ?? '';
-    $removed_transactions = $response['removed'] ?? '';
+    $added_transactions = $response['added'] ?? [];
+    $modified_transactions = $response['modified'] ?? [];
+    $removed_transactions = $response['removed'] ?? [];
 
     if (is_array($accounts)) {
         foreach ($accounts as $account) {
             $account_id = $account['account_id'] ?? '';
-            $account_name = $account['official_name'] ?? '';
+            $account_name = $account['official_name'] ?? $account['name'];
             $account_type = $account['type'] ?? '';
             $account_subtype = $account['subtype'] ?? '';
-            $account_currency_code = $account['balances']['iso_currency_code'] ?? '';
             $account_balance_current = $account['balances']['current'] ?? '0';
             $account_balance_available = $account['balances']['available'] ?? '0';
             $account_balance_limit = $account['balances']['limit'] ?? '0';
-            $account_persistent_id = $account['persistent_account_id'] ?? '';
 
             // Check if account already exists
-            $sql = "SELECT * FROM plaid_accounts WHERE plaid_persistent_account_id = '$account_persistent_id'";
+            $sql = "SELECT * FROM plaid_accounts WHERE plaid_access_token = '$access_token'";
             $result = mysqli_query($mysqli, $sql);
             if (mysqli_num_rows($result) > 0) {
-                error_log("Account already exists: " . $account_persistent_id);
-                continue;
-            } else {
-                $sql = "INSERT INTO plaid_accounts SET
-                plaid_account_id = '$account_id',
+                //update the account
+                $sql = "UPDATE plaid_accounts SET
+                plaid_name = '$account_name',
                 plaid_official_name = '$account_name',
                 plaid_type = '$account_type',
                 plaid_subtype = '$account_subtype',
-                plaid_balance_iso_currency_code = '$account_currency_code',
                 plaid_balance_current = '$account_balance_current',
                 plaid_balance_available = '$account_balance_available',
-                plaid_balance_limit = '$account_balance_limit',
-                plaid_persistent_account_id = '$account_persistent_id'
+                plaid_balance_limit = '$account_balance_limit'
+                WHERE plaid_access_token = '$access_token'
                 ";
-                error_log($sql);
                 $account_sql = mysqli_query($mysqli, $sql);
                 if (!$account_sql) {
                     error_log(mysqli_error($mysqli));
                 }
-                error_log("Added account: " . $account_persistent_id);
             }
         }
     }
 
     if (is_array($added_transactions)){
+        error_log("Processing " . count($added_transactions) . " added transactions");
         foreach ($added_transactions as $transaction) {
             $account_id = $transaction['account_id'] ?? '';
             $account_owner = $transaction['account_owner'] ?? '';
             $amount = $transaction['amount'] ?? '';
             $authorized_date = $transaction['authorized_date'] ?? '0000-00-00';
-            $category = $transaction['category'] ?? '';
+            $category = sanitizeInput($transaction['category'] ?? '');
             $category_id = $transaction['category_id'] ?? '';
             $date = $transaction['date'] ?? '0000-00-00';
             $iso_currency_code = $transaction['iso_currency_code'] ?? '';
@@ -188,6 +128,7 @@ function syncPlaidTransactions($next_cursor = null) {
             $pending_transaction_id = $transaction['pending_transaction_id'] ?? '';
             $transaction_id = $transaction['transaction_id'] ?? '';
             $transaction_type = $transaction['transaction_type'] ?? '';
+            $icon_url = $transaction['personal_finance_category_icon_url'] ?? '';
     
             // Check if transaction already exists
             $sql = "SELECT * FROM bank_transactions WHERE transaction_id = '$transaction_id'";
@@ -223,7 +164,8 @@ function syncPlaidTransactions($next_cursor = null) {
             pending = '$pending',
             pending_transaction_id = '$pending_transaction_id',
             transaction_id = '$transaction_id',
-            transaction_type = '$transaction_type'
+            transaction_type = '$transaction_type',
+            icon_url = '$icon_url'
             ";
             $transaction_sql = mysqli_query($mysqli, $sql);
 
@@ -232,9 +174,26 @@ function syncPlaidTransactions($next_cursor = null) {
             }
             error_log("Added transaction: " . $transaction_id);
         }
-        if ($response['has_more']) {
-            syncPlaidTransactions($next_cursor);
+        
+        // Update next cursor in database
+        $next_cursor = $response['next_cursor'] ?? null;
+        if ($next_cursor) {
+            $sql = "UPDATE plaid_accounts
+            LEFT JOIN accounts ON plaid_accounts.plaid_account_id = accounts.plaid_id
+            SET plaid_accounts.plaid_next_cursor = '$next_cursor'
+            WHERE accounts.account_id = $db_account_id";
+            $update_result = mysqli_query($mysqli, $sql);
+            error_log("Updated next_cursor in database: " . ($update_result ? 'Success' : 'Failed'));
+        } else {
+            error_log("No next_cursor provided in response");
         }
+
+        if ($response['has_more']) {
+            error_log("More transactions available. Recursively calling syncPlaidTransactions");
+            return syncPlaidTransactions($db_account_id, $next_cursor);
+        }
+    } else {
+        error_log("No added transactions in this batch");
     }
 
     if (is_array($modified_transactions)) {
@@ -305,14 +264,9 @@ function syncPlaidTransactions($next_cursor = null) {
         }
     }
 
-    $next_cursor = $response['next_cursor'] ?? null;
+    error_log("Finished syncPlaidTransactions for account_id: $db_account_id");
 
-    // Update next cursor in database
-    $sql = "UPDATE plaid_sync SET next_cursor = '$next_cursor' WHERE client_id = 1";
-    error_log($sql);
-    $cursor_sql = mysqli_query($mysqli, $sql);
-
-    return true;
+    return ['success' => true];
 }
 
 function linkPlaidAccount($account_id, $plaid_account_id) {
@@ -610,7 +564,7 @@ function getClientBalance($client_id) {
     return $accounting_model->getClientBalance($client_id);
 }
 
-function getClientAgeingBalance($client_id, $from, $to) {
+function getClientAgingBalance($client_id, $from, $to) {
 
     global $mysqli;
 
@@ -918,7 +872,13 @@ function getMostRecentPaymentDate($invoice_id)
 
 function createCreditForInvoice($invoice_id, $credit_amount) {
 
-    global $mysqli;
+    global $pdo;
+    if (!$pdo) {
+        // Initialize $pdo if not already done
+        $config = require "/var/www/portal.twe.tech/config.php";
+        $database = new \Twetech\Nestogy\Database($config['db']);
+        $pdo = $database->getConnection();
+    }
 
     $invoice_id = intval($invoice_id);
     $credit_amount = floatval($credit_amount);
@@ -934,8 +894,8 @@ function createCreditForInvoice($invoice_id, $credit_amount) {
         payment_account_id = 1
     ";
 
-    mysqli_query($mysqli, $sql);
-    $payment_id = mysqli_insert_id($mysqli);
+    $pdo->query($sql);
+    $payment_id = $pdo->lastInsertId();
 
     // Create credit for the payment
     $sql = "INSERT INTO credits SET
@@ -946,10 +906,10 @@ function createCreditForInvoice($invoice_id, $credit_amount) {
         credit_client_id = (SELECT invoice_client_id FROM invoices WHERE invoice_id = $invoice_id),
         credit_reference = 'Credit'
         ";
-    $result = mysqli_query($mysqli, $sql);
-    $credit_id = mysqli_insert_id($mysqli);
+    $pdo->query($sql);
+    $credit_id = $pdo->lastInsertId();
     
-    if ($result) {
+    if ($credit_id) {
         return $credit_id;
     } else {
         return false;
@@ -966,4 +926,35 @@ function getRecurringInvoiceAmount($recurring_id) {
         $recurring_amount += getItemTotal($row['item_id']);
     }
     return $recurring_amount;
+}
+
+function createExpenseFromTransaction($transaction_id) {
+    global $mysqli;
+    $transaction_id = intval($transaction_id);
+    $sql = "SELECT * FROM bank_transactions WHERE transaction_id = $transaction_id";
+    $result = mysqli_query($mysqli, $sql);
+    $row = mysqli_fetch_assoc($result);
+
+    $expense_amount = floatval($row['transaction_amount']);
+    $expense_date = $row['transaction_date'];
+    $expense_currency_code = 'USD';
+    $expense_reference = $row['name'];
+    $transaction_account_id = $row['bank_account_id'];
+
+    $sql = "SELECT * FROM accounts WHERE account_id = $transaction_account_id";
+    $result = mysqli_query($mysqli, $sql);
+    $row = mysqli_fetch_assoc($result);
+    $expense_account_id = $row['account_expense_id'];
+
+    $sql = "INSERT INTO expenses SET
+        expense_amount = $expense_amount,
+        expense_date = '$expense_date',
+        expense_currency_code = '$expense_currency_code',
+        expense_reference = '$expense_reference',
+        expense_account_id = $expense_account_id
+    ";
+    mysqli_query($mysqli, $sql);
+    $expense_id = mysqli_insert_id($mysqli);
+
+    return $expense_id;
 }

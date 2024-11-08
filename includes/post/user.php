@@ -13,9 +13,6 @@ if (isset($_POST['add_user'])) {
 
     global $mysqli, $ip, $user_agent, $user_id, $name, $config_smtp_host, $config_mail_from_name, $config_mail_from_email, $config_ticket_from_email, $config_login_key_secret, $config_base_url;
 
-    validateAdminRole();
-    validateCSRFToken($_POST['csrf_token']);
-
     $password = password_hash(trim($_POST['password']), PASSWORD_DEFAULT);
     $user_specific_encryption_ciphertext = encryptUserSpecificKey(trim($_POST['password']));
 
@@ -103,10 +100,6 @@ if (isset($_POST['edit_user'])) {
     require_once '/var/www/portal.twe.tech/includes/post/models/user_model.php';
 
     global $mysqli, $ip, $user_agent, $user_id, $name;
-
-    validateAdminRole();
-
-    validateCSRFToken($_POST['csrf_token']);
 
     $user_id = intval($_POST['user_id']);
     $new_password = trim($_POST['new_password']);

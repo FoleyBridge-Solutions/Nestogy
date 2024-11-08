@@ -92,35 +92,31 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                         <span class="tf-icons fa fa-fw fa-exclamation-triangle mr-2"></span>
                     </a>
                 <?php } ?>
-                <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php<?php if(isset($client_id)) echo "?client_id=$client_id"; ?>">
+                <a href="#!" class="btn btn-label-secondary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="ticket_add_modal.php<?php if(isset($_GET['client_id'])) echo "?client_id=".$_GET['client_id']; ?>">
                     Add Ticket
                     <i class="fa fa-fw fa-plus mr-2"></i>
                 </a>
-
             </div>
-
         </div>
     </div>
-
     <div class="card-body">
         <form id="bulkActions" action="/post/" method="post">
             <div class="card-datatable table-responsive">
-                <table class="datatables-basic table border-top">
+                <table class="datatables-basic table border-top table-striped table-hover">
                     <thead class="text-dark">
                         <tr>
                             <?php
                             // table head
                             if (!$mobile) {
-                                $rows = [ 'Number', 'Subject', 'Client / Contact', 'Priority', 'Status', 'Assigned', 'Last Response', 'Created' ];
+                                $rows = [ 'Number', 'Subject', 'Client / Contact', 'Priority', 'Status', 'Assigned', 'Last Response', 'Created'];
                                 $datatable_order = "[[7,'desc']]";
                                 $datatable_priority = [
                                     'Number' => 1,
                                     'Subject' => 2,
                                     'Assigned' => 3
                                 ];
-
                             } else {
-                                $rows = [ 'Subject', 'Client', 'Number', 'Status', 'Assigned', 'Last Response', 'Created' ];
+                                $rows = [ 'Subject', 'Client', 'Number', 'Status', 'Assigned', 'Last Response', 'Created'];
                                 $datatable_order = "[[6,'desc']]";
                                 $datatable_priority = [
                                     'Status' => 1,
@@ -131,9 +127,7 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                                     'Last Response' => 6
                                 ];
                             }
-                            
-                                $rows[] = 'Billable';
-
+                            $rows[] = 'Billable';
                             // Add actions to the end of the table
                             $rows[] = 'Actions';
 
@@ -163,6 +157,7 @@ $ticket_type = isset($_GET['ticket_type']) ? $_GET['ticket_type'] : 'support';
                             $created = $ticket['ticket_created_at'];
                             $billable = $ticket['ticket_billable'];
                             $last_response = $ticket['ticket_last_response'];
+                            $last_response_by = $ticket['ticket_last_response_by'];
 
                             if ($billable == 1) {
                                 $billable = "<a href='/post.php?ticket_unbillable=$ticket_id' class='badge rounded-pill bg-label-success' data-bs-toggle='tooltip' data-bs-placement='top' title='Mark ticket as unbillable'>$</a>";

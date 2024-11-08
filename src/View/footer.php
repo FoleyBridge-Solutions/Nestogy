@@ -135,14 +135,16 @@ document.querySelectorAll('textarea').forEach(function(textarea) {
             console.log('Initializing TinyMCE for:', this.id); // Debug log
             tinymce.init({
                 selector: '#' + this.id,
-                plugins: 'autosave link image media table',
-                toolbar: 'undo redo | restoredraft | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+                plugins: 'autosave link image media wordcount powerpaste table autolink autoresize fullscreen help lists advlist preview searchreplace visualchars',
+                toolbar: 'fullscreen | undo redo searchreplace | restoredraft | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat | help',
                 promotion: false,
                 newline_behavior: 'block',
                 autosave_retention: '480m',
                 autosave_prefix: 'tinymce-autosave-' + this.id + '-',
                 autosave_restore_when_empty: true,
-                autosave_interval: '5s'
+                autosave_interval: '5s',
+                browser_spellcheck: true,
+
             });
         }
     }, { once: true });
@@ -166,6 +168,7 @@ $('.sendInvoiceEmailBtn').click(function() {
 
             //update the status of the invoice
             $('.invoiceStatus[data-invoice-id="' + invoice_id + '"]').text('Sent');
+            
         },
         error: function() {
             alert('Error sending email');

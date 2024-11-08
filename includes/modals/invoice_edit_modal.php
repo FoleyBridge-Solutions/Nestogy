@@ -12,6 +12,7 @@ $invoice_due = nullable_htmlentities($row['invoice_due']);
 $invoice_scope = nullable_htmlentities($row['invoice_scope']);
 $invoice_discount = floatval($row['invoice_discount']);
 $invoice_created_at = nullable_htmlentities($row['invoice_created_at']);
+$invoice_deposit_amount = floatval($row['invoice_deposit_amount']);
 
 
 ?>
@@ -86,6 +87,16 @@ $invoice_created_at = nullable_htmlentities($row['invoice_created_at']);
                                 <span class='input-group-text'><i class='fa fa-fw fa-dollar-sign'></i></span>
                             </div>
                             <input type='text' class='form-control' inputmode="numeric" pattern="-?[0-9]*\.?[0-9]{0,2}" name='invoice_discount' placeholder='0.00' value="<?= number_format($invoice_discount, 2, '.', ''); ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Deposit Amount</label>
+                        <div class='input-group'>
+                            <div class='input-group-prepend'>
+                                <span class='input-group-text'><i class='fa fa-fw fa-dollar-sign'></i></span>
+                            </div>
+                            <input type='text' class='form-control' inputmode="numeric" pattern="-?[0-9]*\.?[0-9]{0,2}" name='invoice_deposit_amount' placeholder='0.00' value="<?= number_format($invoice_deposit_amount, 2, '.', ''); ?>">
                         </div>
                     </div>
 

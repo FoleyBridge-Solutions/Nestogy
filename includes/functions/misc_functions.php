@@ -376,3 +376,17 @@ function referWithAlert(
     header("Location: " . $url);
     exit();
 }
+
+function sendNotification($notification_type, $notification, $action = '', $client_id = 0)
+{
+    global $mysqli;
+    mysqli_query(
+        $mysqli,
+        "INSERT INTO notifications SET
+        notification_type = '$notification_type',
+        notification = '$notification',
+        notification_action = '$action',
+        notification_client_id = $client_id,
+        notification_is_webpush = 1"
+    );
+}

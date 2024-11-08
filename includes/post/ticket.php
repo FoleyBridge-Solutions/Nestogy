@@ -1106,7 +1106,7 @@ if (isset($_POST['add_invoice_from_ticket'])) {
 
     $_SESSION['alert_message'] = "Invoice created from ticket";
 
-    referWithAlert("Invoice created from ticket", "success");
+    referWithAlert("Invoice created from ticket", "success", '/public/?page=invoice&invoice_id='.$invoice_id);
 }
 
 if (isset($_POST['export_client_tickets_csv'])) {

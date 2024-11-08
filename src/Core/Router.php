@@ -5,31 +5,42 @@ namespace Twetech\Nestogy\Core;
 use Twetech\Nestogy\Auth\Auth;
 use Twetech\Nestogy\Database;
 
+/**
+ * Router Class
+ * 
+ * Handles routing and dispatching of requests to appropriate controllers
+ * in the Nestogy application.
+ */
 class Router {
     private $routes = [];
+    private $apiRoutes = [];
     private $middlewares = [];
     private $defaultPage = 'dashboard';
     private $pdo;
 
+    /**
+     * Router constructor.
+     * 
+     * Initializes the router with database connection and registers routes.
+     */
     public function __construct()
     {
         $config = require __DIR__ . '/../../config.php';
         $database = new Database($config['db']);
         $this->pdo = $database->getConnection();
         $this->registerRoutes();
+        $this->registerApiRoutes();
     }
 
-    public function add($route, $controller, $action, $middlewares = [])
-    {
-        $this->routes[$route] = [
-            'controller' => $controller,
-            'action' => $action,
-            'middlewares' => $middlewares
-        ];
-    }
+    /**
+     * Register all application routes.
+     * 
+     * @return void
+     */
+    public function registerRoutes() {
+        //Blank route for Debugging
+        $this->add('debug', 'DebugController', 'index');
 
-    public function registerRoutes()
-    {
         // Dashboard routes
         $this->add('dashboard', 'DashboardController', 'index', ['month', 'year']);
 
@@ -42,6 +53,9 @@ class Router {
         // Support routes
         $this->add('tickets', 'SupportController', 'index', ['client_id', 'status', 'user_id', 'ticket_type']);
         $this->add('ticket', 'SupportController', 'show', ['ticket_id']);
+        $this->add('inventory', 'InventoryController', 'index', ['location_id']);
+        $this->add('projects', 'ProjectController', 'index', ['client_id']);
+        $this->add('project', 'ProjectController', 'show', ['project_id']);
 
         // Documentation routes
         $this->add('documentations', 'DocumentationController', 'index');
@@ -58,7 +72,7 @@ class Router {
         $this->add('subscription','AccountingController','showSubscription',['subscription_id']);
         $this->add('payments', 'AccountingController', 'showPayments', ['client_id']);
         $this->add('payment', 'AccountingController', 'showPayment', ['payment_reference']);
-        $this->add('make_payment', 'AccountingController', 'makePayment');
+        $this->add('make_payment', 'AccountingController', 'makePayment', ['bank_transaction_id']);
         $this->add('quotes', 'AccountingController', 'showQuotes', ['client_id']);
         $this->add('quote', 'AccountingController', 'showQuote', ['quote_id']);
         $this->add('contracts', 'AccountingController', 'showContracts', ['client_id']);
@@ -66,20 +80,97 @@ class Router {
         $this->add('products', 'AccountingController', 'showProducts');
         $this->add('product', 'AccountingController', 'showProduct', ['product_id']);
         $this->add('statement', 'AccountingController', 'showStatement', ['client_id']);
+        $this->add('accounts', 'AccountingController', 'showAccounts');
+        $this->add('account', 'AccountingController', 'showAccount', ['account_id']);
+        $this->add('expenses', 'AccountingController', 'showExpenses', ['client_id']);
+        $this->add('expense', 'AccountingController', 'showExpense', ['expense_id']);
+        $this->add('bank_transactions', 'AccountingController', 'showBankTransactions', ['client_id']);
         
         // Reports routes
         $this->add('report', 'ReportsController', 'index', ['report']);
+
+        // Account Management routes
+        $this->add('aging_invoices', 'AccountManagementController', 'agingInvoices');
+        $this->add('closed_tickets', 'AccountManagementController', 'closedTickets');
+        $this->add('aging_tickets', 'AccountManagementController', 'agingTickets');
+        $this->add('clients_without_login', 'AccountManagementController', 'clientsWithoutLogin');
+        $this->add('clients_without_subscription', 'AccountManagementController', 'clientsWithoutSubscription');
+        $this->add('sales_pipeline', 'AccountManagementController', 'salesPipeline');
 
         // Administration routes
         $this->add('admin', 'AdministrationController', 'index', ['admin_page', 'sent']);
 
         // Human Resources routes
-        $this->add('hr', 'HumanResourcesController', 'index', ['hr_page', 'pay_period']);
+        $this->add('hr', 'HumanResourcesController', 'index', ['hr_page', 'pay_period', 'employee_id']);
 
         // Course route
         $this->add('learn', 'CourseController', 'index', ['course_id']);
+
+        // SOP route
+        $this->add('sop', 'SOPController', 'index', ['id', 'version']);
     }
 
+    /**
+     * Register all API routes.
+     * 
+     * @return void
+     */
+    private function registerApiRoutes() {
+        // Invoice actions
+        $this->addApi('email_invoice', 'AccountingController', 'emailInvoice');
+        $this->addApi('cancel_invoice', 'AccountingController', 'cancelInvoice');
+        $this->addApi('delete_invoice', 'AccountingController', 'deleteInvoice');
+        $this->addApi('mark_invoice_sent', 'AccountingController', 'markInvoiceSent');
+        
+        // Project actions
+        $this->addApi('project_note_add', 'ProjectController', 'addNote');
+        
+        // Ticket actions
+        $this->addApi('delete_ticket', 'SupportController', 'deleteTicket');
+        
+        // Authentication actions
+        $this->addApi('logout', 'AuthController', 'logout');
+    }
+
+    /**
+     * Add a new route to the application.
+     * 
+     * @param string $route      The route identifier
+     * @param string $controller The controller class name
+     * @param string $action     The controller action method
+     * @param array  $middlewares Optional middleware parameters
+     * @return void
+     */
+    public function add($route, $controller, $action, $middlewares = []) {
+        $this->routes[$route] = [
+            'controller' => $controller,
+            'action' => $action,
+            'middlewares' => $middlewares
+        ];
+    }
+
+    /**
+     * Add a new API endpoint.
+     * 
+     * @param string $endpoint      The API endpoint identifier
+     * @param string $controller    The controller class name
+     * @param string $method        The controller method to call
+     * @param string $requestMethod The HTTP request method (default: 'POST')
+     * @return void
+     */
+    public function addApi($endpoint, $controller, $method, $requestMethod = 'POST') {
+        $this->apiRoutes[$endpoint] = [
+            'controller' => $controller,
+            'method' => $method,
+            'requestMethod' => $requestMethod
+        ];
+    }
+
+    /**
+     * Dispatch the current request to the appropriate controller.
+     * 
+     * @return void
+     */
     public function dispatch()
     {
         // Get the page from the URL
@@ -117,6 +208,12 @@ class Router {
         }
     }
 
+    /**
+     * Sanitize POST data to prevent XSS attacks.
+     * 
+     * @param array $data The POST data to sanitize
+     * @return array Sanitized data
+     */
     private function sanitizePostData($data)
     {
         $sanitizedData = [];
@@ -126,7 +223,12 @@ class Router {
         return $sanitizedData;
     }
 
-    // Get the parameters from the URL
+    /**
+     * Get parameters from URL based on middleware requirements.
+     * 
+     * @param array $middlewares List of required parameters
+     * @return array List of parameter values
+     */
     private function getParams($middlewares)
     {
         $params = [];
@@ -140,7 +242,11 @@ class Router {
         return $params;
     }
 
-    // Handle the error when the page is not found
+    /**
+     * Handle 404 Not Found errors.
+     * 
+     * @return void
+     */
     private function handleNotFound()
     {
 
@@ -159,5 +265,41 @@ class Router {
             'title' => 'Oops! Page not found',
             'message' => $message
         ]);
+    }
+
+    /**
+     * Handle API requests and return JSON responses.
+     * 
+     * @return void
+     * @throws \Exception When request method is invalid
+     */
+    private function handleApiRequest() {
+        $endpoint = $_GET['endpoint'] ?? null;
+        $route = $this->apiRoutes[$endpoint] ?? null;
+
+        if (!$route) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Endpoint not found']);
+            exit;
+        }
+
+        try {
+            $controller = "Twetech\\Nestogy\\Controller\\" . $route['controller'];
+            $method = $route['method'];
+            
+            if ($_SERVER['REQUEST_METHOD'] !== $route['requestMethod']) {
+                throw new \Exception('Invalid request method');
+            }
+
+            $controllerInstance = new $controller($this->pdo);
+            $requestData = json_decode(file_get_contents('php://input'), true) ?? [];
+            $result = $controllerInstance->$method($requestData);
+            
+            echo json_encode(['success' => true, 'data' => $result]);
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
     }
 }

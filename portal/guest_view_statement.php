@@ -56,6 +56,17 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
     } else {
         $outstanding_wording = "Outstanding";
     }
+
+    $aging_balances = [
+     '0-30' => getClientAgingBalance($client_id, 0, 30),
+     '31-60' => getClientAgingBalance($client_id, 31, 60),
+     '61-90' => getClientAgingBalance($client_id, 61, 90),
+     '90+' => getClientAgingBalance($client_id, 91, 9999)
+    ];
+
+
+    $past_due_balance = $aging_balances['90+'] + $aging_balances['61-90'] + $aging_balances['31-60'];
+    $balance_due = $client_balance;
     ?>
 
     <div class="card">
@@ -63,6 +74,9 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
         <h3 class="card-title mt-2"><i class="fas fa-fw fa-balance-scale mr-2"></i>Statement for <?= $client_name ?></h3>
         <div class="card-tools">
             <button type="button" class="btn btn-label-primary d-print-none" onclick="window.print();"><i class="fas fa-fw fa-print mr-2"></i>Print</button>
+            <!-- <?php if ($client_balance > 0) { ?>
+                <button type="button" class="btn btn-label-primary d-print-none" data-bs-toggle="modal" data-bs-target="#pay_balance_modal"><i class="fas fa-fw fa-money-bill-wave mr-2"></i>Pay Balance</button>
+            <?php } ?> -->
         </div>
     </div>
     <div class="card-body">
@@ -86,8 +100,8 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                             </tr>
                             <tr>
                                 <td>Past Due:</td>
-                                <td class="<?php if (getClientPastDueBalance($client_id) > 0) { echo 'text-danger'; } ?>">
-                                    <?= numfmt_format_currency($currency_format, getClientPastDueBalance($client_id), $currency_code); ?>
+                                <td class="<?php if ($past_due_balance > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $past_due_balance, $currency_code); ?>
                                 </td>
                             </tr>
                         </table>                        
@@ -96,36 +110,28 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                 </div>
                 <div class="col-md-6 col-12">
                     <!-- 0-30. 30-60, 60-90, 90+ -->
-                     <?php
-                       $ageing_balances = [
-                        '0-30' => getClientAgeingBalance($client_id, 0, 30),
-                        '31-60' => getClientAgeingBalance($client_id, 31, 60),
-                        '61-90' => getClientAgeingBalance($client_id, 61, 90),
-                        '90+' => getClientAgeingBalance($client_id, 91, 9999)
-                       ]                    
-                     ?>
                     <div class="me-4">
-                        <h4>Ageing Summary</h4>
-                        <table class="table table-sm" id="ageing_summary_table">
+                        <h4>Aging Summary</h4>
+                        <table class="table table-sm" id="aging_summary_table">
                             <tr>
                                 <td>0-30 Days:</td>
                                 <td>
-                                    <?= numfmt_format_currency($currency_format, $ageing_balances['0-30'], $currency_code); ?></td>
+                                    <?= numfmt_format_currency($currency_format, $aging_balances['0-30'], $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>31-60 Days:</td>
-                                <td class="<?php if ($ageing_balances['31-60'] > 0) { echo 'text-danger'; } ?>">
-                                    <?= numfmt_format_currency($currency_format, $ageing_balances['31-60'], $currency_code); ?></td>
+                                <td class="<?php if ($aging_balances['31-60'] > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $aging_balances['31-60'], $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>61-90 Days:</td>
-                                <td class="<?php if ($ageing_balances['61-90'] > 0) { echo 'text-danger'; } ?>">
-                                    <?= numfmt_format_currency($currency_format, $ageing_balances['61-90'], $currency_code); ?></td>
+                                <td class="<?php if ($aging_balances['61-90'] > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $aging_balances['61-90'], $currency_code); ?></td>
                             </tr>
                             <tr>
                                 <td>90+ Days:</td>
-                                <td class="<?php if ($ageing_balances['90+'] > 0) { echo 'text-danger'; } ?>">
-                                    <?= numfmt_format_currency($currency_format, $ageing_balances['90+'], $currency_code); ?></td>
+                                <td class="<?php if ($aging_balances['90+'] > 0) { echo 'text-danger'; } ?>">
+                                    <?= numfmt_format_currency($currency_format, $aging_balances['90+'], $currency_code); ?></td>
                             </tr>
                         </table>
                     </div>
@@ -217,8 +223,7 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
                                                 <h5>
                                                     <i class="bx bx-receipt"></i>
                                                     <?= $transaction_type; ?>                                                    
-                                                </h5>
-</td>
+                                                </h5></td>
                                             <td><?= $transaction_date; ?></td>
                                             <td><?= numfmt_format_currency($currency_format, $transaction_amount, $currency_code); ?></td>
                                             <td rowspan="<?= count($payments) + 1 ?>" class="align-bottom"><?= $transaction_balance ?></td>
@@ -281,7 +286,28 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
         </div>
     </div>
 </div>
+<div class='modal' id='pay_balance_modal'>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-fw fa-money-bill-wave mr-2"></i>Pay Balance</h5>
+            </div>
+            <div class="modal-body bg-white">
+                <form action="guest_pay_balance_stripe.php" method="post">
+                    <input type="hidden" name="client_id" value="<?= $client_id; ?>">
+                    <input type="hidden" name="balance" value="<?= $client_balance; ?>">
+                    <input type="hidden" name="past_due_balance" value="<?= $past_due_balance; ?>">
+                    <input type="radio" name="balance_due" value="balance_due" checked> Balance Due (<?= numfmt_format_currency($currency_format, $balance_due, $currency_code); ?>)<br>
+                    <?php if (round($past_due_balance, 2) != round($client_balance, 2)) { ?>
+                        <input type="radio" name="balance_due" value="past_due_balance" <?php if ($past_due_balance > 0) { echo 'checked'; } ?>> Past Due Balance (<?= numfmt_format_currency($currency_format, $past_due_balance, $currency_code); ?>)<br>
+                    <?php } ?>
 
+                    <button type="submit" class="btn btn-primary">Continue to Payment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <style>
     .dark-line {
         background-color: #999; /* Lighter shade of black */

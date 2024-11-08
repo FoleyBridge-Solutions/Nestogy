@@ -25,14 +25,14 @@ $datatable_settings = ",
     <div class="card-body p-2 p-md-3">
 
         <div class="card-datatable table-responsive  pt-0">
-            <table class="datatables-basic table border-top">
+            <table class="datatables-basic table border-top" id="clientsTable">
                 <thead>
                     <tr>
                         <th style="display: none;">Accessed At</th>
                         <th data-priority="1">Name</th>
                         <th data-priority="2">Primary Location</th>
                         <th>Primary Contact</th>
-                        <th class="text-right " data-priority="3">Billing (Balance)</th>
+                        <th class="text-right " data-priority="3">Billing (Past Due)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,15 +61,14 @@ $datatable_settings = ",
                         $contact_extension = sanitizeInput($client['contact_extension']);
                         $contact_mobile = sanitizeInput($client['contact_mobile']);
                         $contact_email = sanitizeInput($client['contact_email']);
-                        $balance = floatval($client['client_balance']);
                         $amount_paid = floatval($client['client_payments']);
                         $recurring_monthly = floatval($client['client_recurring_monthly']);
                         $client_rate = floatval($client['client_rate']);
-                        $balance_text_color = '';
-                        if ($balance > 0) {
-                            $balance_text_color = 'text-danger';
-                        } elseif ($balance < 0) {
-                            $balance_text_color = 'text-success';
+                        $client_past_due_amount = floatval($client['client_past_due_amount']);
+                        if ($client_past_due_amount > 0) {
+                            $past_due_text_color = 'text-danger';
+                        } else {
+                            $past_due_text_color = 'text-secondary';
                         }
 
                     ?>
@@ -143,9 +142,9 @@ $datatable_settings = ",
                             </td>
 
                             <!-- Show Billing for Admin/Accountant roles only and if accounting module is enabled -->
-                            <td class="text-right" data-order="<?= $balance; ?>">
+                            <td class="text-right" data-order="<?= $client_past_due_amount; ?>">
                                 <div class="mt-1">
-                                    <span class="text-secondary">Balance: </span> <span class="<?= $balance_text_color; ?>"><?= numfmt_format_currency($GLOBALS['currency_format'], $balance, "USD"); ?></span>
+                                    <span class="text-secondary">Past Due: </span> <span class="<?= $past_due_text_color; ?>"><?= numfmt_format_currency($GLOBALS['currency_format'], $client_past_due_amount, "USD"); ?></span>
                                 </div>
                                 <div class="mt-1">
                                     <span class="text-secondary">Paid (YTD):</span> <?= numfmt_format_currency($GLOBALS['currency_format'], $amount_paid, "USD"); ?>

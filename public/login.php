@@ -1,4 +1,19 @@
-<?php
+   <?php
+   // Set the desired session cookie parameters
+   ini_set('session.gc_maxlifetime', 30 * 24 * 60 * 60); // 30 days
+   session_set_cookie_params([
+       'lifetime' => 30 * 24 * 60 * 60,
+       'path' => '/',
+       'domain' => '', // Set to your domain
+       'secure' => true,
+       'httponly' => true,
+       'samesite' => 'Lax' // Or 'Strict', 'None'
+   ]);
+
+   // Start the session
+   session_start();
+
+   // ... rest of your initialization code
 
 // public/login.php
 require '../bootstrap.php';
@@ -17,49 +32,59 @@ if (Auth::check()) {
     exit;
 }
 
-if (isset($_POST['login'])) {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $remember_me = isset($_POST['remember_me']) ? true : false;
+$ip = $_SERVER['REMOTE_ADDR'];
 
-    $user = $auth->findUser($email, $password);
+if ($auth->isIPBlocked($ip)) {
+    $response = 'Too many login attempts from your IP address. Please try again later.';
+} else {
+    if (isset($_POST['login'])) {
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+        $remember_me = isset($_POST['remember_me']) ? true : false;
 
-    if ($user) {
-        if (isset($user['user_token'])) {
-            $token_field = '<div class="form-group mb-4"><label for="token">Token</label><input type="text" class="form-control" placeholder="2FA Token" name="token" required></div>';
+        if ($auth->isAccountLocked($email)) {
+            $response = 'Your account is locked due to too many failed login attempts. Please try again after 15 minutes.';
         } else {
-            $userLogin = [
-                'user_id' => $user['user_id'],
-                'user_name' => $user['user_name'],
-                'user_role' => $user['user_role'],
-                'user_avatar' => $user['user_avatar'],
-                'remember_me' => $remember_me,
-                'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'],
-                'user_password' => $password
-            ];
-            $auth->login($userLogin);
-            exit;
-        }
+            $user = $auth->findUser($email, $password);
 
-        if (isset($_POST['token'])) {
-            if (TokenAuth6238::verify($user['user_token'], $_POST['token'])) {
-                $userLogin = [
-                    'user_id' => $user['user_id'],
-                    'user_name' => $user['user_name'],
-                    'user_role' => $user['user_role'],
-                    'user_avatar' => $user['user_avatar'],
-                    'remember_me' => $remember_me,
-                    'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'],
-                    'user_password' => $password
-                ];
-                $auth->login($userLogin);
-                exit;
+            if ($user) {
+                if (isset($user['user_token'])) {
+                    $token_field = '<div class="form-group mb-4"><label for="token">Token</label><input type="text" class="form-control" placeholder="2FA Token" name="token" required></div>';
+                } else {
+                    $userLogin = [
+                        'user_id' => $user['user_id'],
+                        'user_name' => $user['user_name'],
+                        'user_role' => $user['user_role'],
+                        'user_avatar' => $user['user_avatar'],
+                        'remember_me' => $remember_me,
+                        'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'],
+                        'user_password' => $password
+                    ];
+                    $auth->login($userLogin);
+                    exit;
+                }
+
+                if (isset($_POST['token'])) {
+                    if (TokenAuth6238::verify($user['user_token'], $_POST['token'])) {
+                        $userLogin = [
+                            'user_id' => $user['user_id'],
+                            'user_name' => $user['user_name'],
+                            'user_role' => $user['user_role'],
+                            'user_avatar' => $user['user_avatar'],
+                            'remember_me' => $remember_me,
+                            'user_specific_encryption_ciphertext' => $user['user_specific_encryption_ciphertext'],
+                            'user_password' => $password
+                        ];
+                        $auth->login($userLogin);
+                        exit;
+                    } else {
+                        $response = 'Invalid token.';
+                    }
+                }
             } else {
-                $response = 'Invalid token.';
+                $response = 'Invalid email or password.';
             }
         }
-    } else {
-        $response = 'Invalid email or password.';
     }
 }
 
@@ -71,7 +96,7 @@ if (isset($_POST['login'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Login</title>
+    <title>Employee Login</title>
     <meta name="robots" content="noindex">
     <link rel="stylesheet" href="/includes/plugins/fontawesome-free/css/all.min.css">
     <meta charset="utf-8">
@@ -115,7 +140,7 @@ if (isset($_POST['login'])) {
 					<div class="u-login-form">
 						<form method="post">
 							<div class="mb-3">
-								<h1 class="h2">Welcome Back!</h1>
+								<h1 class="h2">Employee Login</h1>
 								<p class="small">Login with technician email address and password.</p>
 							</div>
 
@@ -144,7 +169,7 @@ if (isset($_POST['login'])) {
 						</form>
 
                         <hr>
-                            <h5 class="text-center">Looking for the <a href="/">Client Portal?</a></h5>
+                            <h3 class="text-center">Looking for the <a href="/">Client Portal?</a></h3>
 					</div>
 
 					<div class="u-login-form text-muted py-3 mt-auto">

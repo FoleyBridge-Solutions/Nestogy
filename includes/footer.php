@@ -164,22 +164,6 @@ document.querySelectorAll('textarea').forEach(function(textarea) {
         }
     }, { once: true });
 });
-
-document.querySelectorAll('.textarea').forEach(function(textarea) {
-    textarea.addEventListener('click', function initTinyMCE() {
-        // This check ensures that TinyMCE is initialized only once for each textarea
-        if (!tinymce.get(this.id)) {
-            tinymce.init({
-                selector: '#' + this.id,
-                plugins: 'autosave markdown link image media table',
-                toolbar: 'undo redo | restoredraft | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-                promotion: false,
-                newline_behavior: 'block',
-                autosave_prefix: 'tinymce-autosave-{path}{query}-{id}-',
-            });
-        }
-    }, { once: true });
-});
 </script>
 
 <script>

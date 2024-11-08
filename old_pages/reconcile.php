@@ -2,9 +2,6 @@
 require "/var/www/portal.twe.tech/includes/inc_all.php";
 // This page will be used to reconcile bank transactions
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 $bank_transactions_sql =
     "SELECT * FROM bank_transactions

@@ -1,18 +1,12 @@
 <?php
 
-if (isset($_GET['sync_transactions'])) {
-    // Fetch transactions from plaid
+if (isset($_GET['create_owners_draw'])) {
+    // Create owners draw from transaction
+    $transaction_id = $_GET['transaction_id'];
 
-    $result = syncPlaidTransactions();
-    error_log("Result: " . $result);
+    // Create owners draw from transaction
+    $sql = "UPDATE bank_transactions SET reconciled = 1 WHERE transaction_id = '$transaction_id'";
+    $result = mysqli_query($mysqli, $sql);
 
-    if($result === "no_access_token") {
-        error_log("Post: No access token found");
-        referWithAlert("Please link your bank account to sync transactions", "warning", "/old_pages/admin/plaid.php");
-    } elseif($result === "failed") {
-        referWithAlert("Failed to sync transactions", "warning", "/old_pages/reconcile.php");
-    } else {
-        referWithAlert("Transactions synced successfully", "success", "/old_pages/reconcile.php");
-    }
-
+    referWithAlert("Owners draw created successfully for transaction", "success");
 }

@@ -25,8 +25,9 @@ if (isset($_POST['edit_invoice'])) {
 
     require_once '/var/www/portal.twe.tech/includes/post/models/invoice_model.php';
 
-    $invoice_id = intval($_POST['invoice_id']);
-    $due = sanitizeInput($_POST['due']);
+    $parameters['invoice_id'] = intval($_POST['invoice_id']);
+    $parameters['invoice_due'] = sanitizeInput($_POST['due']);
+    $parameters['invoice_deposit_amount'] = floatval($_POST['invoice_deposit_amount']);
 
     updateInvoice($parameters);
     referWithAlert("Invoice edited", "success");
@@ -211,12 +212,15 @@ if (isset($_POST['invoice_note'])) {
 
 if (isset($_POST['edit_item'])) {
 
+    //check if invoice is locked
+    $invoice_id = intval($_POST['invoice_id'] ?? 0);
+
     $invoice_id = intval($_POST['invoice_id'] ?? 0);
     $quote_id = intval($_POST['quote_id'] ?? 0);
     $recurring_id = intval($_POST['recurring_id'] ?? 0);
     $item_id = intval($_POST['item_id']);
     $name = sanitizeInput($_POST['name'] ?? '');
-    $description = ($_POST['description'] ?? '');
+    $description = $_POST['description'] ?? '';
     $qty = floatval($_POST['qty'] ?? 1);
     $price = floatval($_POST['price'] ?? 0);
     $discount = sanitizeInput($_POST['discount'] ?? 0);
@@ -557,3 +561,11 @@ if (isset($_GET['create_credit_custom'])) {
         referWithAlert("Credit creation failed", "error");
     }
 }
+
+if (isset($_GET['resend_invoice'])) {
+    $invoice_id = intval($_GET['resend_invoice']);
+
+    emailInvoice($invoice_id);
+    referWithAlert("Invoice resent", "success");
+}
+

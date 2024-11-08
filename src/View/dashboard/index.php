@@ -7,7 +7,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-12">
-                            <div id="overview-chart"></div>
+                            <canvas id="overview-chart" width="400" height="200"></canvas>
                         </div>
                     </div>
                 </div>
@@ -15,13 +15,11 @@
         <?php } ?>
         <div class="card mb-3">
             <div class="card-body">
-                <h3><?= ucfirst($user['user_role']) ?> Overview for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?></h3>
-            </div>
-        </div>
-        <div class="card mb-3">
-            <div class="card-body">
                 <form class="row mb-2" method="get" onchange="this.submit()">
                     <div class="row">
+                        <div class="col-3">
+                        <h3><?= ucfirst($user['user_role']) ?> Overview for </h3>
+                        </div>
                         <div class="col-3">
                             <select name="month" class="form-select">
                                 <?php foreach ($time['months'] as $month) { ?>
@@ -68,6 +66,24 @@
                                 <div class="card-body">
                                     <p class="card-text">Unbilled Tickets for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
                                     <span class="badge bg-secondary"><?= $dashboards['financial']['unbilled_tickets'] ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="card-text">Income Overview for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
+                                    <canvas id="income-chart" width="200" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="card-text">Expenses Overview for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
+                                    <canvas id="expenses-chart" width="200" height="200"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -167,172 +183,215 @@
     </div>
 </div>
 
-<!-- Include ApexCharts library -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<!-- Replace ApexCharts with Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-    var options = {
-        series: [{
-            name: 'Income',
-            type: 'column',
-            data: [<?php
-                    foreach ($chart_data as $data) {
-                        echo $data['income'] . ',';
-                    }
-                    ?>]
-        }, {
-            name: 'Expenses',
-            type: 'column',
-            data: [<?php
-                    foreach ($chart_data as $data) {
-                        echo $data['expenses'] . ',';
-                    }
-                    ?>]
-        }, {
-            name: 'Profit',
-            type: 'line',
-            data: [<?php
-                    foreach ($chart_data as $data) {
-                        echo $data['profit'] . ',';
-                    }
-                    ?>]
-        }, {
-            name: 'Profit (Estimated)',
-            type: 'line',
-            data: [<?php
-                    foreach ($chart_data as $data) {
-                        echo $data['estimated_profit'] . ',';
-                    }
-                    ?>]
-        }, {
-            name: 'Profit (LY)',
-            type: 'line',
-            data: [<?php
-                    foreach ($chart_data as $data) {
-                        echo $data['last_year_profit'] . ',';
-                    }
-                    ?>]
-        }],
-        chart: {
-            height: 350,
-            type: 'line',
-            stacked: false
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to generate a color based on a string seed
+    function generateColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const h = hash % 360;
+        const s = 65 + (hash % 20); // 65-85%
+        const l = 45 + (hash % 20); // 45-65%
+        return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+
+    // Function to generate color palette from category names
+    function generateColorPalette(categories) {
+        return categories.map(category => generateColor(category));
+    }
+
+    // Plugin to draw total in the center of doughnut
+    const doughnutLabel = {
+        id: 'doughnutLabel',
+        afterDatasetsDraw(chart, args, pluginOptions) {
+            const { ctx, data } = chart;
+            const centerX = chart.getDatasetMeta(0).data[0].x;
+            const centerY = chart.getDatasetMeta(0).data[0].y;
+
+            ctx.save();
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+            ctx.fillText('Total:', centerX, centerY - 15);
+            ctx.fillText('$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), centerX, centerY + 15);
+            ctx.restore();
+        }
+    };
+
+    // Main Overview Chart
+    const mainCtx = document.getElementById('overview-chart').getContext('2d');
+    new Chart(mainCtx, {
+        type: 'bar',
+        data: {
+            labels: [<?php echo implode(',', array_map(function($data) { return "'" . date('M', mktime(0, 0, 0, $data['month'], 1)) . "'"; }, $chart_data)); ?>],
+            datasets: [{
+                label: 'Income',
+                data: [<?php echo implode(',', array_column($chart_data, 'income')); ?>],
+                backgroundColor: 'rgba(50, 205, 50, 0.5)',
+                borderColor: 'rgb(50, 205, 50)',
+                borderWidth: 1,
+                stack: 'Stack 0'
+            }, {
+                label: 'Receivables',
+                data: [<?php echo implode(',', array_column($chart_data, 'recievables')); ?>],
+                backgroundColor: 'rgba(0, 0, 255, 0.5)',
+                borderColor: 'rgb(0, 0, 255)',
+                borderWidth: 1,
+                stack: 'Stack 0'
+            }, {
+                label: 'Expenses',
+                data: [<?php echo implode(',', array_column($chart_data, 'expenses')); ?>],
+                backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                borderColor: 'rgb(255, 0, 0)',
+                borderWidth: 1
+            }, {
+                label: 'Profit',
+                data: [<?php echo implode(',', array_column($chart_data, 'profit')); ?>],
+                type: 'line',
+                borderColor: 'rgb(128, 0, 128)',
+                borderWidth: 2,
+                fill: false
+            }]
         },
-        colors: ['#32CD32', '#FF0000', '#800080', '#FFA500', '#808080'], // Custom colors
-        dataLabels: {
-            enabled: false
-        },
-        stroke: {
-            width: [1, 1, 4, 4, 4]
-        },
-        title: {
-            text: 'Financial Overview - YTD <?= $time['year'] ?>',
-            align: 'left',
-            offsetX: 110
-        },
-        xaxis: {
-            categories: [<?php
-                            foreach ($chart_data as $data) {
-                                $month = date('M', mktime(0, 0, 0, $data['month'], 1));
-                                echo "'" . $month . "',";
-                            }
-                            ?>],
-        },
-        yaxis: [{
-                seriesName: 'Income',
-                axisTicks: {
-                    show: true,
-                },
-                axisBorder: {
-                    show: true,
-                    color: '#32CD32'
-                },
-                labels: {
-                    style: {
-                        colors: '#32CD32',
-                    }
-                },
+        options: {
+            responsive: true,
+            plugins: {
                 title: {
-                    text: "Income ($K)",
-                    style: {
-                        color: '#32CD32',
-                    }
+                    display: true,
+                    text: 'Financial Overview - YTD <?= $time['year'] ?>'
                 },
                 tooltip: {
-                    enabled: true
-                }
-            },
-            {
-                seriesName: 'Expenses',
-                axisTicks: {
-                    show: true,
-                },
-                axisBorder: {
-                    show: true,
-                    color: '#FF0000'
-                },
-                labels: {
-                    show: true,
-                    style: {
-                        colors: '#FF0000',
-                    }
-                },
-                title: {
-                    text: "Expenses ($K)",
-                    style: {
-                        color: '#FF0000',
-                    }
-                },
-            },
-            {
-                seriesName: 'Profit',
-                opposite: true,
-                axisTicks: {
-                    show: true,
-                },
-                axisBorder: {
-                    show: true,
-                    color: '#800080'
-                },
-                labels: {
-                    style: {
-                        colors: '#800080',
-                    },
-                },
-                title: {
-                    text: "Profit ($K)",
-                    style: {
-                        color: '#800080',
-                    }
-                },
-            }
-        ],
-        tooltip: {
-            fixed: {
-                enabled: true,
-                position: 'topLeft', // topRight, topLeft, bottomRight, bottomLeft
-                offsetY: 30,
-                offsetX: 60
-            },
-        },
-        legend: {
-            horizontalAlign: 'left',
-            offsetX: 40
-        },
-        responsive: [{
-            breakpoint: 1000,
-            options: {
-                plotOptions: {
-                    bar: {
-                        horizontal: true
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
                     }
                 },
                 legend: {
-                    position: "bottom"
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    display: true,
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Amount (USD)'
+                    },
                 }
             }
-        }]
-    };
+        }
+    });
 
-    var chart = new ApexCharts(document.querySelector("#overview-chart"), options);
-    chart.render();
+    // Income Doughnut Chart
+    const incomeCategories = <?= json_encode(array_keys($dashboards['financial']['income_categories'])) ?>;
+    const incomeData = <?= json_encode(array_values($dashboards['financial']['income_categories'])) ?>;
+    const incomeColors = generateColorPalette(incomeCategories);
+
+    const incomeCtx = document.getElementById('income-chart').getContext('2d');
+    new Chart(incomeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: incomeCategories,
+            datasets: [{
+                data: incomeData,
+                backgroundColor: incomeColors,
+                borderColor: incomeColors.map(color => color.replace(')', ', 0.8)')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Income by Category'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [doughnutLabel]
+    });
+
+    // Expenses Doughnut Chart
+    const expenseCategories = <?= json_encode(array_keys($dashboards['financial']['expense_categories'])) ?>;
+    const expenseData = <?= json_encode(array_values($dashboards['financial']['expense_categories'])) ?>;
+    const expenseColors = generateColorPalette(expenseCategories);
+
+    const expensesCtx = document.getElementById('expenses-chart').getContext('2d');
+    new Chart(expensesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: expenseCategories,
+            datasets: [{
+                data: expenseData,
+                backgroundColor: expenseColors,
+                borderColor: expenseColors.map(color => color.replace(')', ', 0.8)')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Expenses by Category'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [doughnutLabel]
+    });
+});
 </script>

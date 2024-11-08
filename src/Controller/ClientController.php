@@ -9,11 +9,19 @@ use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\View\View;
 use Twetech\Nestogy\Auth\Auth;
 
+/**
+ * Controller handling client-related operations
+ */
 class ClientController {
     private $pdo;
     private $clientModel;
     private $accountingModel;
 
+    /**
+     * Initialize the ClientController with database connection
+     *
+     * @param \PDO $pdo Database connection instance
+     */
     public function __construct($pdo) {
         $this->pdo = $pdo;
         
@@ -27,27 +35,31 @@ class ClientController {
         }
     }
 
+    /**
+     * Display list of all clients with their financial information
+     *
+     * @return void
+     */
     public function index() {
         $view = new View();
         $auth = new Auth($this->pdo);
         // Check if user has access to the client class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'client', 'view')) {
-        // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view clients.'
-            ]);
-            return;
-        }
         $clients = $this->clientModel->getClients(true);
         // Add Additional Data for Each Client
         foreach ($clients as &$client) {
-            $client['client_balance'] = $this->accountingModel->getClientBalance($client['client_id']);
+            $client['client_past_due_amount'] = $this->accountingModel->getPastDueAmount($client['client_id']);
             $client['client_payments'] = $this->accountingModel->getClientPaidAmount($client['client_id']);
             $client['client_recurring_monthly'] = $this->accountingModel->getMonthlySubscriptionAmount($client['client_id']);
         }
         $view->render('clients', ['clients' => $clients]);
     }
+
+    /**
+     * Display detailed information for a specific client
+     *
+     * @param int $client_id The ID of the client to display
+     * @return void
+     */
     public function show($client_id) {
         $view = new View();
         $auth = new Auth($this->pdo);
@@ -63,15 +75,6 @@ class ClientController {
             return;
         }
 
-        // Check if user has access to the client class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'client', 'view') || !$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-            // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view this client.'
-            ]);
-            return;
-        }
 
         // Get information for client overview screen
         $clientModel = new Client($this->pdo);
@@ -91,30 +94,18 @@ class ClientController {
 
         $view->render('client', $data, true);
     }
+
+    /**
+     * Display contacts for a specific client
+     *
+     * @param int $client_id The ID of the client whose contacts to display
+     * @return void
+     */
     public function showContacts($client_id) {
         $contactModel = new Contact($this->pdo);
         $clientModel = new Client($this->pdo);
         $auth = new Auth($this->pdo);
         $view = new View();
-
-        // Check if user has access to the client class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'contact', 'view')) {
-            // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view client contacts.'
-            ]);
-            return;
-        }
-        // Check if user has access to client
-        if (!$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-            // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view this client\'s contacts.'
-            ]);
-            return;
-        }
 
         $rawContacts = $contactModel->getContacts($client_id);
 
@@ -127,7 +118,10 @@ class ClientController {
                 $contact['contact_email'],
                 $contact['contact_phone'],
                 $contact['contact_mobile'],
-                $contact['contact_primary'] ? 'Yes' : 'No'
+                $contact['contact_primary'] ? 'Yes' : 'No',
+                '<a href="#" class="dropdown-item loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="client_contact_edit_modal.php?contact_id=' . $contact['contact_id'] . '">
+                    <i class="fa fa-pencil"></i>
+                </a>'
             ];
         }
         $data = [
@@ -136,7 +130,7 @@ class ClientController {
             ],
             'client_header' => $clientModel->getClientHeader($client_id)['client_header'],
             'table' => [
-                'header_rows' => ['Name', 'Email', 'Phone', 'Mobile', 'Primary'],
+                'header_rows' => ['Name', 'Email', 'Phone', 'Mobile', 'Primary', 'Actions'],
                 'body_rows' => $contacts
             ],
             'return_page' => [
@@ -150,29 +144,18 @@ class ClientController {
         ];
         $view->render('simpleTable', $data, true);
     }
+
+    /**
+     * Display locations for a specific client
+     *
+     * @param int $client_id The ID of the client whose locations to display
+     * @return void
+     */
     public function showLocations($client_id) {
         $clientModel = new Client($this->pdo);
         $auth = new Auth($this->pdo);
         $view = new View();
 
-        // Check if user has access to the client class
-        if (!$auth->checkClassAccess($_SESSION['user_id'], 'client', 'view')) {
-            // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view client locations.'
-            ]);
-            return;
-        }
-        // Check if user has access to client
-        if (!$auth->checkClientAccess($_SESSION['user_id'], $client_id, 'view')) {
-            // If user does not have access, display an error message
-            $view->error([
-                'title' => 'Access Denied',
-                'message' => 'You do not have permission to view this client\'s locations.'
-            ]);
-            return;
-        }
         $rawLocations = $clientModel->getClientLocations($client_id);
 
         $locations = [];
@@ -210,6 +193,13 @@ class ClientController {
 
         $view->render('simpleTable', $data, true);
     }
+
+    /**
+     * Record that a client's information was accessed
+     *
+     * @param int $client_id The ID of the client being accessed
+     * @return void
+     */
     public function clientAccessed($client_id) {
         $clientModel = new Client($this->pdo);
         $clientModel->clientAccessed($client_id);

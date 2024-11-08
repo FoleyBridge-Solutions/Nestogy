@@ -148,48 +148,92 @@ if ($client_page) {
         ['title' => 'Support',
             'icon' => 'bx bx-support',
             'children' => [
-                ['title' => 'Tickets', 'link' => '/public/?page=tickets', 'icon' => 'bx bx-first-aid', 'roles' => ['admin', 'tech']],
-                ['title' => 'Trips', 'link' => '/public/?page=trips', 'icon' => 'bx bx-car', 'roles' => ['admin', 'tech']],
-                ['title' => 'Projects', 'link' => '/public/?page=projects', 'icon' => 'bx bx-task', 'roles' => ['admin', 'tech']],
-                ['title' => 'Calendar', 'link' => '/public/?page=calendar', 'icon' => 'bx bx-calendar', 'roles' => ['admin', 'tech']]
+                ['title' => 'Tickets', 'link' => '/public/?page=tickets', 'icon' => 'bx bx-first-aid', 'roles' => ['admin', 'tech', 'account_management']],
+                ['title' => 'Trips', 'link' => '/public/?page=trips', 'icon' => 'bx bx-car', 'roles' => ['admin', 'tech', 'account_management']],
+                ['title' => 'Projects', 'link' => '/public/?page=projects', 'icon' => 'bx bx-task', 'roles' => ['admin', 'tech', 'account_management']],
+                ['title' => 'Calendar', 'link' => '/public/?page=calendar', 'icon' => 'bx bx-calendar', 'roles' => ['admin', 'tech', 'account_management']],
+                ['title' => 'Inventory', 'link' => '/public/?page=inventory', 'icon' => 'bx bx-store', 'roles' => ['admin', 'tech']]
             ],
-            'roles' => ['admin', 'tech']
+            'roles' => ['admin', 'tech', 'account_management']
         ],
-        ['title' => 'Sales',
-            'icon' => 'bx bx-shopping-bag',
+        ['title' => 'Financial',
+            'icon' => 'bx bx-dollar',
             'children' => [
-                ['title' => 'Quotes', 'link' => '/public/?page=quotes', 'icon' => 'bx bx-message-square-detail', 'roles' => ['admin', 'sales']  ],
-                ['title' => 'Invoices', 'link' => '/public/?page=invoices', 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'sales']],
-                ['title' => 'Subscriptions', 'link' => '/public/?page=subscriptions', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'sales']],
-                ['title' => 'Products', 'link' => '/public/?page=products', 'icon' => 'bx bx-box', 'roles' => ['admin', 'sales']],
-                ['title' => 'Contracts', 'link' => '/public/?page=contracts', 'icon' => 'bx bx-file', 'roles' => ['admin', 'sales']]
-            ],
-            'roles' => ['admin', 'sales']
-        ],
-        ['title' => 'Accounting',
-            'icon' => 'bx bx-money-withdraw',
-            'children' => [
-                ['title' => 'Payments', 
-                    'icon' => 'bx bx-credit-card', 
+                ['title' => 'Income', 
+                    'icon' => 'bx bx-money', 
                     'children' => [
-                        ['title' => 'View Payments', 'link' => '/public/?page=payments', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
-                        ['title' => 'Make Payment', 'link' => '/public/?page=make_payment', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']]
+                        ['title' => 'Quotes', 'link' => '/public/?page=quotes', 'icon' => 'bx bx-message-square-detail', 'roles' => ['admin', 'sales']  ],
+                        ['title' => 'Invoices', 'link' => '/public/?page=invoices', 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'sales']],
+                        ['title' => 'Payments',
+                            'icon' => 'bx bx-credit-card',
+                            'children' => [
+                                ['title' => 'View Payments', 'link' => '/public/?page=payments', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
+                                ['title' => 'Make Payment', 'link' => '/public/?page=make_payment', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
+                            ],
+                            'roles' => ['admin', 'accounting']
+                        ],
+                        ['title' => 'Subscriptions', 'link' => '/public/?page=subscriptions', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'sales']],
+                        ['title' => 'Products', 'link' => '/public/?page=products', 'icon' => 'bx bx-box', 'roles' => ['admin', 'sales']],
                     ],
                     'roles' => ['admin', 'accounting']
                 ],
-                ['title' => 'Credits', 'link' => '/public/?page=credits', 'icon' => 'bx bx-money', 'roles' => ['admin', 'accounting']],
-                ['title' => 'Expenses', 'link' => '/public/?page=expenses', 'icon' => 'bx bx-money', 'roles' => ['admin', 'accounting']],
-                ['title' => 'Transfers', 'link' => '/public/?page=transfers', 'icon' => 'bx bx-transfer', 'roles' => ['admin', 'accounting']],
-                ['title' => 'Accounts', 'link' => '/public/?page=accounts', 'icon' => 'bx bx-wallet', 'roles' => ['admin', 'accounting']],
-                ['title' => 'Credits', 'link' => '/public/?page=credits', 'icon' => 'bx bx-money', 'roles' => ['admin', 'accounting']]
+                ['title' => 'Expenses',
+                    'icon' => 'bx bx-money-withdraw', 
+                    'children' => [
+                        ['title' => 'Reconciled Expenses', 'link' => '/public/?page=expenses', 'icon' => 'bx bx-money-withdraw', 'roles' => ['admin', 'accounting']],
+                        ['title' => 'Unreconciled Expenses', 'link' => '/public/?page=bank_transactions', 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'accounting']],
+                    ],
+                    'roles' => ['admin', 'accounting']
+                ],
+                ['title' => 'Accounting',
+                    'icon' => 'bx bx-calculator',
+                    'children' => [
+                        ['title' => 'Transfers', 'link' => '/public/?page=transfers', 'icon' => 'bx bx-transfer', 'roles' => ['admin', 'accounting']],
+                        ['title' => 'Accounts', 'link' => '/public/?page=accounts', 'icon' => 'bx bx-wallet', 'roles' => ['admin', 'accounting']],
+                        ['title' => 'Credits', 'link' => '/public/?page=credits', 'icon' => 'bx bx-money', 'roles' => ['admin', 'accounting']],
+                        ['title' => 'Contracts', 'link' => '/public/?page=contracts', 'icon' => 'bx bx-file', 'roles' => ['admin', 'sales']]
+
+                    ],
+                    'roles' => ['admin', 'accounting']
+                ]
             ],
             'roles' => ['admin', 'accounting']
+        ],
+        ['title' => 'Account Management',
+            'icon' => 'bx bx-folder',
+            'children' => [
+                ['title' => 'Client Satisfaction',
+                    'icon' => 'bx bx-star',
+                    'children' => [
+                        ['title' => 'Unrated Tickets', 'link' => '/public/?page=unrated_tickets', 'icon' => 'bx bx-star', 'roles' => ['account_management', 'admin']],
+                        ['title' => 'Aging Tickets', 'link' => '/public/?page=aging_tickets', 'icon' => 'bx bx-time', 'roles' => ['account_management', 'admin']],
+                        ['title' => 'Closed Tickets', 'link' => '/public/?page=closed_tickets', 'icon' => 'bx bx-lock-alt', 'roles' => ['account_management', 'admin']],
+                        ['title' => 'Clients without Login', 'link' => '/public/?page=clients_without_login', 'icon' => 'bx bx-shield-plus', 'roles' => ['account_management', 'admin']]
+                    ],
+                    'roles' => ['account_management', 'admin']
+                ],
+                ['title' => 'Collections',
+                    'icon' => 'bx bx-collection',
+                    'children' => [
+                        ['title' => 'Aging Invoices', 'link' => '/public/?page=aging_invoices', 'icon' => 'bx bxs-time', 'roles' => ['account_management', 'admin']],
+                        ['title' => 'Collections', 'link' => '/public/?page=report&report=collections', 'icon' => 'bx bx-box', 'roles' => ['account_management', 'admin']]
+                    ],
+                    'roles' => ['account_management', 'admin']
+                ],
+                ['title' => 'Sales',
+                    'icon' => 'bx bx-cart',
+                    'children' => [
+                        ['title' => 'Clients Without Subscription', 'link' => '/public/?page=clients_without_subscription', 'icon' => 'bx bx-box', 'roles' => ['account_management', 'admin']],
+                        ['title' => 'Sales Pipeline', 'link' => '/public/?page=sales_pipeline', 'icon' => 'bx bx-box', 'roles' => ['account_management', 'admin']]
+                    ],
+                    'roles' => ['account_management', 'admin']
+                ]
+            ],
+            'roles' => ['account_management', 'admin']
         ],
         ['title' => 'Human Resources',
             'icon' => 'bx bx-user-voice',
             'children' => [
-                ['title' => 'Employees', 'link' => '/public/?page=hr&hr_page=employees', 'icon' => 'bx bx-user', 'roles' => ['admin']],
-                ['title' => 'Time Tracking', 'link' => '/public/?page=hr&hr_page=time_tracking', 'icon' => 'bx bx-stopwatch', 'roles' => ['admin']],
                 ['title' => 'Payroll', 'link' => '/public/?page=hr&hr_page=payroll', 'icon' => 'bx bx-money', 'roles' => ['admin']]
             ],
             'roles' => ['admin']
@@ -286,7 +330,7 @@ if ($client_page) {
             'children' => [
                 ['title' => 'Help Course', 'link' => '?page=learn', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']],
                 ['title' => 'Knowledge Base', 'link' => '?page=help&help_page=knowledge_base', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']],
-                ['title' => 'Standard Operating Procedures', 'link' => '?page=help&help_page=sop', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']]
+                ['title' => 'Standard Operating Procedures', 'link' => '?page=sop', 'icon' => 'bx bx-book', 'roles' => ['tech', 'admin', 'sales', 'accounting']]
             ],
             'roles' => ['tech', 'admin', 'sales', 'accounting']
         ]
@@ -599,3 +643,19 @@ $nav_title_link = '/public/';
 
                 <!-- Content -->
                 <div class="container-xxl flex-grow-1 container-p-y">
+                <?php
+                //Alert Feedback
+                if (!empty($_SESSION['alert_message'])) {
+                    if (!isset($_SESSION['alert_type'])) {
+                        $_SESSION['alert_type'] = "info";
+                    }
+                    ?>
+                    <div class="alert alert-<?= $_SESSION['alert_type']; ?>" id="alert">
+                        <?= $_SESSION['alert_message']; ?>
+                        <button class='close' data-bs-dismiss='alert'>&times;</button>
+                    </div>
+                    <?php
+                    unset($_SESSION['alert_type']);
+                    unset($_SESSION['alert_message']);
+                }
+                ?>

@@ -340,3 +340,49 @@ function unarchiveAsset(
     ];
     return $return_data;
 }
+
+function getAssetFromRMM($asset_rmm_id) {
+    global $mysqli;
+    $config = include '/var/www/portal.twe.tech/config.php';
+    $api_key = $config['ninjarrm']['api_key'];
+    $api_secret = $config['ninjarrm']['api_secret'];
+
+    $url = "https://app.ninjarmm.com/v2/device/$asset_rmm_id";
+    $timestamp = time();
+    $nonce = bin2hex(random_bytes(16));
+
+    // Create the string to sign
+    $string_to_sign = $timestamp . $nonce . 'GET' . '/v2/device/' . $asset_rmm_id;
+
+    // Create the signature
+    $signature = hash_hmac('sha256', $string_to_sign, $api_secret);
+
+    // Create the Authorization header
+    $auth_header = "Authorization: NinjaRMM " . $api_key . ':' . $signature . ':' . $nonce . ':' . $timestamp;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Accept: application/json',
+        $auth_header
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    curl_close($ch);
+
+    if ($http_code == 200) {
+        $asset_data = json_decode($response, true);
+        return [
+            'status' => 'success',
+            'data' => $asset_data
+        ];
+    } else {
+        return [
+            'status' => 'error',
+            'message' => "Failed to fetch asset from NinjaRMM. HTTP Code: $http_code",
+            'data' => $response
+        ];
+    }
+}

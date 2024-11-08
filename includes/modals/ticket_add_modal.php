@@ -1,5 +1,12 @@
 <?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
 
+if (isset($_GET['project_id'])) {
+    $project_id = intval($_GET['project_id']);
+    $project_sql = mysqli_query($mysqli, "SELECT * FROM projects WHERE project_id = $project_id");
+    $project_row = mysqli_fetch_array($project_sql);
+    $_GET['client_id'] = intval($project_row['project_client_id']);
+}
+
 $client_id = intval($_GET['client_id']);
 
 ?>
@@ -15,7 +22,6 @@ $client_id = intval($_GET['client_id']);
             </div>
             <form action="/post.php" method="post" autocomplete="off">
                 <div class="modal-body bg-white">
-
                     <?php if (isset($_GET['client_id'])) { ?>
                         <ul class="nav nav-pills  mb-3">
                             <li class="nav-item">
@@ -49,7 +55,11 @@ $client_id = intval($_GET['client_id']);
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
                                     </div>
-                                    <input type="text" class="form-control" name="subject" placeholder="Subject" required>
+                                    <?php if (isset($_GET['project_id'])) { ?>
+                                        <input type="text" class="form-control" name="subject" required value="<?= $project_row['project_prefix'] . $project_row['project_id'] . ': ' . $project_row['project_name']; ?> - ">
+                                    <?php } else { ?>
+                                        <input type="text" class="form-control" name="subject" placeholder="Subject" required>
+                                    <?php } ?>
                                 </div>
                             </div>
 
