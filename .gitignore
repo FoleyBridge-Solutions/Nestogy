@@ -1,5 +1,5 @@
 node_modules
-
+uploads/sops/*
 uploads/favicon.ico
 uploads/clients/*
 !uploads/clients/index.php
