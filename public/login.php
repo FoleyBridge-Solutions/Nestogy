@@ -19,6 +19,14 @@
 require '../bootstrap.php';
 require_once "/var/www/portal.twe.tech/includes/rfc6238.php";
 
+$domain = $_SERVER['HTTP_HOST'];
+
+use Twetech\Nestogy\Database;
+$config = require '/var/www/portal.twe.tech/config/' . $domain . '/config.php';
+$company_logo = $config['company_logo'];
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
+
 use Twetech\Nestogy\Auth\Auth;
 
 $auth = new Auth($pdo);
@@ -124,7 +132,7 @@ if ($auth->isIPBlocked($ip)) {
 			<div class="row">
 				<div class="col-lg-6 d-flex flex-column justify-content-center align-items-center bg-white mnh-100vh login-box">
 					<a class="u-login-form py-3 mb-auto login-logo" href="index.html">
-                        <img alt="logo" height="110" width="380" class="img-fluid" src="<?= "/uploads/settings/$company_logo"; ?>">
+                        <img alt="logo" height="110" width="380" class="img-fluid" src="<?= "/uploads/settings/$domain.jpg"; ?>">
 					</a>
 
                     <?php if(!empty($config_login_message)){ ?>

@@ -8,7 +8,10 @@ use Twetech\Nestogy\Core\Router;
 // // Benchmarking
 // $start_time = microtime(true);
 
-$router = new Router();
+//Get the domain
+$domain = $_SERVER['HTTP_HOST'];
+
+$router = new Router($domain);
 $router->dispatch();
 
 // // Benchmarking

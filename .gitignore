@@ -14,6 +14,7 @@ uploads/tmp/*
 uploads/tickets/*
 !uploads/tickets/index.php
 .idea/*
+logs/*
 config.php
 inlcudes/config.php
 includes/config/*
@@ -27,3 +28,9 @@ plugins/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer/CSS/*
 cron/*.log
 vendor/
 .cursorignore
+apache_error.log
+private_key.txt
+public_key.txt
+private_key.pem
+old_pages/
+old_pages/*

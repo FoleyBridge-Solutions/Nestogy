@@ -4,6 +4,7 @@ namespace Twetech\Nestogy\Core;
 
 use Twetech\Nestogy\Auth\Auth;
 use Twetech\Nestogy\Database;
+use NumberFormatter;
 
 /**
  * Router Class
@@ -14,8 +15,8 @@ use Twetech\Nestogy\Database;
 class Router {
     private $routes = [];
     private $apiRoutes = [];
-    private $middlewares = [];
     private $defaultPage = 'dashboard';
+    private $currency_format;
     private $pdo;
 
     /**
@@ -23,11 +24,13 @@ class Router {
      * 
      * Initializes the router with database connection and registers routes.
      */
-    public function __construct()
+    public function __construct($domain)
     {
-        $config = require __DIR__ . '/../../config.php';
+        $config = require '/var/www/portal.twe.tech/config/' . $domain . '/config.php';
         $database = new Database($config['db']);
         $this->pdo = $database->getConnection();
+        $this->currency_format = numfmt_create($config['locale'], NumberFormatter::CURRENCY);
+        $GLOBALS['currency_format'] = $this->currency_format;
         $this->registerRoutes();
         $this->registerApiRoutes();
     }
@@ -169,13 +172,17 @@ class Router {
     /**
      * Dispatch the current request to the appropriate controller.
      * 
+     * @param string $domain The domain to use for the request
      * @return void
      */
     public function dispatch()
     {
+
         // Get the page from the URL
         $page = $_GET['page'] ?? $this->defaultPage;
         $route = $this->routes[$page] ?? null;
+
+        
 
         // If the page is not found, handle the error
         if (!$route) {
