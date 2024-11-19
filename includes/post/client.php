@@ -9,7 +9,7 @@ global $mysqli, $name, $ip, $user_agent, $user_id;
 
 if (isset($_POST['add_client'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/client_model.php';
+    require_once '/var/www/nestogy/includes/post/models/client_model.php';
 
 
     $location_phone = preg_replace("/[^0-9]/", '', $_POST['location_phone']);
@@ -61,7 +61,7 @@ if (isset($_POST['add_client'])) {
 
 if (isset($_POST['edit_client'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/client_model.php';
+    require_once '/var/www/nestogy/includes/post/models/client_model.php';
 
     $client_id = intval($_POST['client_id']);
 

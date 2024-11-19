@@ -4,7 +4,7 @@ require "../../bootstrap.php";
 use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\Model\Client;
 use Twetech\Nestogy\Database;
-$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
+$config = require '/var/www/nestogy/config/nestogy/config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
 

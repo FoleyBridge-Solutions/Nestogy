@@ -9,7 +9,7 @@ global $mysqli, $name, $ip, $user_agent, $user_id;
 
 if (isset($_POST['add_tag'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/tag_model.php';
+    require_once '/var/www/nestogy/includes/post/models/tag_model.php';
 
 
     mysqli_query($mysqli,"INSERT INTO tags SET tag_name = '$name', tag_type = $type, tag_color = '$color', tag_icon = '$icon'");
@@ -25,7 +25,7 @@ if (isset($_POST['add_tag'])) {
 
 if (isset($_POST['edit_tag'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/tag_model.php';
+    require_once '/var/www/nestogy/includes/post/models/tag_model.php';
 
 
     $tag_id = intval($_POST['tag_id']);

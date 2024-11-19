@@ -1,7 +1,7 @@
 <?php 
 if (isset($_POST['sop_add_modal_submit'])) {
     // Define the base directory
-    $base_dir = "/var/www/portal.twe.tech/uploads/sops/";
+    $base_dir = "/var/www/nestogy/uploads/sops/";
     
     // Create new folder in the base directory with a random name
     $folder_name = bin2hex(random_bytes(16));
@@ -39,7 +39,7 @@ if (isset($_GET['save_sop'])) {
 
         $sop_file_path = $sop['file_path'];
         // Get all versions of the SOP to find the next version number (assume versioning by v1.1, v1.2, v1.3 ... v1.10, v1.11, etc.)
-        $versions = scandir("/var/www/portal.twe.tech/uploads/sops/{$sop_file_path}");
+        $versions = scandir("/var/www/nestogy/uploads/sops/{$sop_file_path}");
         $latest_version = 0;
         foreach ($versions as $version) {
             if (strpos($version, 'v') === 0) {
@@ -52,6 +52,6 @@ if (isset($_GET['save_sop'])) {
         $latest_version = $latest_version + 0.1;
         $version = "v" . $latest_version;
         // Save the content to the file
-        file_put_contents("/var/www/portal.twe.tech/uploads/sops/{$sop_file_path}/{$version}", $sop_content);
+        file_put_contents("/var/www/nestogy/uploads/sops/{$sop_file_path}/{$version}", $sop_content);
 }
 ?>

@@ -17,12 +17,12 @@
 
 // public/login.php
 require '../bootstrap.php';
-require_once "/var/www/portal.twe.tech/includes/rfc6238.php";
+require_once "/var/www/nestogy/includes/rfc6238.php";
 
 $domain = $_SERVER['HTTP_HOST'];
 
 use Twetech\Nestogy\Database;
-$config = require '/var/www/portal.twe.tech/config/' . $domain . '/config.php';
+$config = require '/var/www/nestogy/config/' . $domain . '/config.php';
 $company_logo = $config['company_logo'];
 $database = new Database($config['db']);
 $pdo = $database->getConnection();

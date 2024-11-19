@@ -1,9 +1,9 @@
 <?php
-$config = require '/var/www/portal.twe.tech/config.php';
+$config = require '/var/www/nestogy/config.php';
 
-require_once '/var/www/portal.twe.tech/includes/config/config.php';
-require_once '/var/www/portal.twe.tech/includes/functions/functions.php';
-require_once '/var/www/portal.twe.tech/includes/check_login.php';
+require_once '/var/www/nestogy/includes/config/config.php';
+require_once '/var/www/nestogy/includes/functions/functions.php';
+require_once '/var/www/nestogy/includes/check_login.php';
 
 
 ?>

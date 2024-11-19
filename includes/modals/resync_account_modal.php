@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php";
 
 $account_id = $_GET['account_id'];
 $plaid_status = $_GET['plaid_status'] ?? 'Unlinked';

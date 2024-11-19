@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; 
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php"; 
 $client_id = intval($_GET['client_id']);
 ?>
 
@@ -14,7 +14,7 @@ $client_id = intval($_GET['client_id']);
             <form action="/post.php" method="post" autocomplete="off">
                 <div class="modal-body bg-white">
 
-                    <?php require_once "/var/www/portal.twe.tech/includes/inc_export_warning.php";
+                    <?php require_once "/var/www/nestogy/includes/inc_export_warning.php";
  ?>
                 <input type="hidden" name="client_id" value="<?= $client_id; ?>">
                 <div class="form-group">

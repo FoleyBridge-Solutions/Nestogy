@@ -5,15 +5,15 @@ use TomorrowIdeas\Plaid\Plaid;
 // Set working directory to the directory this cron script lives at.
 chdir(dirname(__FILE__));
 
-require_once "/var/www/portal.twe.tech/includes/tenant_db.php";
+require_once "/var/www/nestogy/includes/tenant_db.php";
 
-require_once "/var/www/portal.twe.tech/includes/config/config.php";
+require_once "/var/www/nestogy/includes/config/config.php";
 
-require_once "/var/www/portal.twe.tech/includes/functions/functions.php";
+require_once "/var/www/nestogy/includes/functions/functions.php";
 
-require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
-require_once "/var/www/portal.twe.tech/src/Model/Client.php";
-require_once "/var/www/portal.twe.tech/src/Database.php";
+require_once "/var/www/nestogy/src/Model/Accounting.php";
+require_once "/var/www/nestogy/src/Model/Client.php";
+require_once "/var/www/nestogy/src/Database.php";
 
 
 use Twetech\Nestogy\Database;
@@ -371,7 +371,7 @@ foreach ($invoiceAlertArray as $day) {
 // if ($config_plaid_enabled == 1) {
 
 //     // instantiate Plaid SDK
-//     require_once '/var/www/portal.twe.tech/vendor/autoload.php';
+//     require_once '/var/www/nestogy/vendor/autoload.php';
 
 //     $plaid = new Plaid(
 //         \getenv("PLAID_CLIENT_ID"),

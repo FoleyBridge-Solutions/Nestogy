@@ -2,7 +2,7 @@
 
 // Accounting related functions
 
-include '/var/www/portal.twe.tech/bootstrap.php';
+include '/var/www/nestogy/bootstrap.php';
 
 use Twetech\Nestogy\Model\Accounting;
 
@@ -556,7 +556,7 @@ function getClientBalance($client_id) {
     if (!$pdo) {
         // Initialize $pdo if not already done
         $domain = $_SERVER['HTTP_HOST'];
-        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
+        $config = require "/var/www/nestogy/config/$domain/config.php";
         $database = new Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -604,7 +604,7 @@ function getClientPastDueBalance($client_id, $credits = false) {
     global $pdo;
     if (!$pdo) {
         // Initialize $pdo if not already done
-        $config = require "/var/www/portal.twe.tech/config.php";
+        $config = require "/var/www/nestogy/config.php";
         $database = new Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -808,7 +808,7 @@ function getInvoiceBalance($invoice_id)
     if (!$pdo) {
         // Initialize $pdo if not already done
         $domain = $_SERVER['HTTP_HOST'];
-        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
+        $config = require "/var/www/nestogy/config/$domain/config.php";
         $database = new Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -836,7 +836,7 @@ function getInvoiceAmount($invoice_id)
     if (!$pdo) {
         // Initialize $pdo if not already done
         $domain = $_SERVER['HTTP_HOST'];
-        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
+        $config = require "/var/www/nestogy/config/$domain/config.php";
         $database = new \Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -879,7 +879,7 @@ function createCreditForInvoice($invoice_id, $credit_amount) {
     if (!$pdo) {
         // Initialize $pdo if not already done
         $domain = $_SERVER['HTTP_HOST'];
-        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
+        $config = require "/var/www/nestogy/config/$domain/config.php";
         $database = new \Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }

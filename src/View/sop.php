@@ -30,9 +30,9 @@
             <div class="card-body">
                 <?php
                 // in a grid, show all versions of the SOP, and when the file was last updated
-                $versions = scandir("/var/www/portal.twe.tech/uploads/sops/{$sop['file_path']}");
+                $versions = scandir("/var/www/nestogy/uploads/sops/{$sop['file_path']}");
                 foreach ($versions as $version) {
-                    $last_updated = filemtime("/var/www/portal.twe.tech/uploads/sops/{$sop['file_path']}/{$version}");
+                    $last_updated = filemtime("/var/www/nestogy/uploads/sops/{$sop['file_path']}/{$version}");
                     if (strpos($version, 'v') === 0) {
                         echo '<a href="/public/?page=sop&id='.$sop['id'].'&version='.$version.'">'.$version.'</a><br>';
                         echo '<small>Last updated: '.date('F j, Y @ h:iA', $last_updated).'</small><br>';

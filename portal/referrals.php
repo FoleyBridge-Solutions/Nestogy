@@ -1,5 +1,5 @@
 <?php
-require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
+require_once "/var/www/nestogy/includes/inc_portal.php";
 ?>
 <div class="row">
     <div class="col-md-12">
@@ -329,7 +329,7 @@ Best wishes,
 </script>
 
 <?php
-require_once "/var/www/portal.twe.tech/portal/portal_footer.php";
+require_once "/var/www/nestogy/portal/portal_footer.php";
 ?>
 
 <link rel="stylesheet" href="/includes/assets/vendor/libs/bs-stepper/bs-stepper.css" />

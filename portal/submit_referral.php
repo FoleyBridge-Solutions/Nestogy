@@ -1,6 +1,6 @@
 <?php
-require_once "/var/www/portal.twe.tech/includes/functions/functions.php";
-require_once "/var/www/portal.twe.tech/includes/config/config.php";
+require_once "/var/www/nestogy/includes/functions/functions.php";
+require_once "/var/www/nestogy/includes/config/config.php";
 
 
 $client_id = $_SESSION['client_id'];

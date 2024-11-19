@@ -411,7 +411,7 @@ function renderUserShortcuts($shortcutsData, $shortcutsMap)
     echo $html;
 }
 
-require_once "/var/www/portal.twe.tech/includes/shortcuts.php";
+require_once "/var/www/nestogy/includes/shortcuts.php";
 
 //TODO: Implement notifications
 $num_notifications = 0;

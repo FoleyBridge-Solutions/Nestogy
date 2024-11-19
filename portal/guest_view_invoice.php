@@ -1,16 +1,16 @@
 <?php
 
-require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
-require_once "/var/www/portal.twe.tech/src/Model/Client.php";
-require_once "/var/www/portal.twe.tech/src/Database.php";
-require_once "/var/www/portal.twe.tech/portal/guest_header.php";
-require_once "/var/www/portal.twe.tech/portal/portal_header.php";
+require_once "/var/www/nestogy/src/Model/Accounting.php";
+require_once "/var/www/nestogy/src/Model/Client.php";
+require_once "/var/www/nestogy/src/Database.php";
+require_once "/var/www/nestogy/portal/guest_header.php";
+require_once "/var/www/nestogy/portal/portal_header.php";
 
 
 use Twetech\Nestogy\Database;
 use Twetech\Nestogy\Model\Accounting;
 
-$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
+$config = require '/var/www/nestogy/config/nestogy/config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
 
@@ -71,7 +71,7 @@ $company_website = nullable_htmlentities($row['company_website']);
 $company_logo = nullable_htmlentities($row['company_logo']);
 
 if (!empty($company_logo)) {
-    $company_logo_base64 = base64_encode(file_get_contents("/var/www/portal.twe.tech/uploads/settings/$company_logo"));
+    $company_logo_base64 = base64_encode(file_get_contents("/var/www/nestogy/uploads/settings/$company_logo"));
 }
 $company_locale = nullable_htmlentities($row['company_locale']);
 $config_invoice_footer = nullable_htmlentities($row['config_invoice_footer']);

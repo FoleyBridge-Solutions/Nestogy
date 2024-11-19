@@ -9,7 +9,7 @@ global $mysqli, $name, $ip, $user_agent, $user_id;
 
 if (isset($_POST['add_expense'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/expense_model.php';
+    require_once '/var/www/nestogy/includes/post/models/expense_model.php';
 
     $extended_alert_description = '';
 
@@ -70,7 +70,7 @@ if (isset($_POST['add_expense'])) {
 
 if (isset($_POST['edit_expense'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/expense_model.php';
+    require_once '/var/www/nestogy/includes/post/models/expense_model.php';
 
 
     $expense_id = intval($_POST['expense_id']);

@@ -2,9 +2,9 @@
 
 global $mysqli, $name, $ip, $user_agent, $user_id;
 
-require_once '/var/www/portal.twe.tech/includes/functions/functions.php';
+require_once '/var/www/nestogy/includes/functions/functions.php';
 
-require_once '/var/www/portal.twe.tech/includes/config/config.php';
+require_once '/var/www/nestogy/includes/config/config.php';
 
 $conig_sql = mysqli_query($mysqli,"SELECT * FROM settings WHERE company_id = 1");
 
@@ -23,7 +23,7 @@ if (isset($_POST['add_quote'])) {
 
     global $mysqli, $company_currency, $config_quote_prefix, $config_quote_next_number, $ip, $user_agent, $user_id, $currency_format;
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/quote_model.php';
+    require_once '/var/www/nestogy/includes/post/models/quote_model.php';
 
     $client = intval($_POST['client']);
 
@@ -213,7 +213,7 @@ if (isset($_POST['edit_quote_note'])) {
 
 if (isset($_POST['edit_quote'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/quote_model.php';
+    require_once '/var/www/nestogy/includes/post/models/quote_model.php';
 
     $quote_id = intval($_POST['quote_id']);
 
@@ -351,7 +351,7 @@ if (isset($_GET['decline_quote'])) {
 
 if (isset($_GET['email_quote'])) {
 
-    require "/var/www/portal.twe.tech/includes/get_settings.php";
+    require "/var/www/nestogy/includes/get_settings.php";
 
     $quote_id = intval($_GET['email_quote']);
 
@@ -404,7 +404,7 @@ if (isset($_GET['email_quote'])) {
     $quote_scope<br>
     <br>
     <br>
-    View and accept your estimate online <a href=\"https://portal.twe.tech/portal/guest_view_quote.php?quote_id=$quote_id&url_key=$quote_url_key\">here</a><br>
+    View and accept your estimate online <a href=\"https://nestogy/portal/guest_view_quote.php?quote_id=$quote_id&url_key=$quote_url_key\">here</a><br>
     <br>
     <br>
     --<br>

@@ -9,7 +9,7 @@ global $mysqli, $name, $ip, $user_agent, $user_id;
 
 if (isset($_POST['add_transfer'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/transfer_model.php';
+    require_once '/var/www/nestogy/includes/post/models/transfer_model.php';
 
 
     mysqli_query($mysqli,"INSERT INTO expenses SET expense_date = '$date', expense_amount = $amount, expense_currency_code = '$company_currency', expense_vendor_id = 0, expense_category_id = 0, expense_account_id = $account_from");
@@ -31,7 +31,7 @@ if (isset($_POST['add_transfer'])) {
 
 if (isset($_POST['edit_transfer'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/transfer_model.php';
+    require_once '/var/www/nestogy/includes/post/models/transfer_model.php';
 
 
     $transfer_id = intval($_POST['transfer_id']);

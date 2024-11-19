@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php"; ?>
 <div class="modal" id="exportTripModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content bg-dark">
@@ -12,7 +12,7 @@
                 <div class="modal-body bg-white">
                 <input type="hidden" name="client_id" value="<?= $client_id; ?>">
 
-                    <?php require_once "/var/www/portal.twe.tech/includes/inc_export_warning.php";
+                    <?php require_once "/var/www/nestogy/includes/inc_export_warning.php";
  ?>
 
                 </div>

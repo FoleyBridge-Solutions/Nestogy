@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php";
 
 $clients_sql = "SELECT * FROM clients WHERE client_archived_at IS NULL ORDER BY client_name ASC";
 $clients = mysqli_query($mysqli, $clients_sql);

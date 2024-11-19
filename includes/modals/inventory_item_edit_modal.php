@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php"; ?>
 
 <?php
 $inventory_id = isset($_GET['inventory_id']) ? intval($_GET['inventory_id']) : 0;

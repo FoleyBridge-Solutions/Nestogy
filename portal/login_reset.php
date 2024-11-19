@@ -7,11 +7,11 @@
 
 
 $company_id = 1;
-require_once '/var/www/portal.twe.tech/includes/config/config.php';
+require_once '/var/www/nestogy/includes/config/config.php';
 
-require_once '/var/www/portal.twe.tech/includes/functions/functions.php';
+require_once '/var/www/nestogy/includes/functions/functions.php';
 
-require_once '/var/www/portal.twe.tech/includes/get_settings.php';
+require_once '/var/www/nestogy/includes/get_settings.php';
 
 
 if (empty($config_smtp_host)) {

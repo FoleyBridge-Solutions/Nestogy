@@ -70,7 +70,7 @@ date_default_timezone_set($timezone);
 //Set Currency Format
 $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
 
-require_once "/var/www/portal.twe.tech/includes/get_settings.php";
+require_once "/var/www/nestogy/includes/get_settings.php";
 
 
 //Detects if using an Apple device and uses Apple Maps instead of google

@@ -8,17 +8,17 @@
 chdir(dirname(__FILE__));
 
 // Autoload Composer dependencies
-require_once '/var/www/portal.twe.tech/includes/plugins/php-imap/vendor/autoload.php';
+require_once '/var/www/nestogy/includes/plugins/php-imap/vendor/autoload.php';
 
 // Get ITFlow config & helper functions
-require_once "/var/www/portal.twe.tech/includes/config/config.php";
+require_once "/var/www/nestogy/includes/config/config.php";
 
 // Set Timezone
-require_once "/var/www/portal.twe.tech/includes/inc_set_timezone.php";
-require_once "/var/www/portal.twe.tech/includes/functions/functions.php";
+require_once "/var/www/nestogy/includes/inc_set_timezone.php";
+require_once "/var/www/nestogy/includes/functions/functions.php";
 
 // Get settings for the "default" company
-require_once "/var/www/portal.twe.tech/includes/get_settings.php";
+require_once "/var/www/nestogy/includes/get_settings.php";
 
 $config_ticket_prefix = sanitizeInput($config_ticket_prefix);
 $config_ticket_from_name = sanitizeInput($config_ticket_from_name);
@@ -178,15 +178,15 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     echo "\nCreated new ticket.<br>";
     mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Ticket', log_action = 'Create', log_description = 'Email parser: Client contact $contact_email_esc created ticket $ticket_prefix_esc$ticket_number ($subject_esc) ($id)', log_client_id = $client_id_esc");
 
-    mkdirMissing('/var/www/portal.twe.tech/uploads/tickets/');
-    $att_dir = "/var/www/portal.twe.tech/uploads/tickets/" . $id;
+    mkdirMissing('/var/www/nestogy/uploads/tickets/');
+    $att_dir = "/var/www/nestogy/uploads/tickets/" . $id;
     mkdirMissing($att_dir);
 
     echo "\n\nATTdir" . $att_dir . "";
     echo "\nOriginal message file{$original_message_file}";
-    echo "Rename:" . "/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}" . "->" . "{$att_dir}{$original_message_file}";
+    echo "Rename:" . "/var/www/nestogy/uploads/tmp/{$original_message_file}" . "->" . "{$att_dir}{$original_message_file}";
 
-    rename("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}", "{$att_dir}/{$original_message_file}");
+    rename("/var/www/nestogy/uploads/tmp/{$original_message_file}", "{$att_dir}/{$original_message_file}");
 
     $original_message_file_esc = mysqli_real_escape_string($mysqli, $original_message_file);
     mysqli_query($mysqli, "INSERT INTO ticket_attachments SET ticket_attachment_name = 'Original-parsed-email.eml', ticket_attachment_reference_name = '$original_message_file_esc', ticket_attachment_ticket_id = $id");
@@ -348,7 +348,7 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
         mysqli_query($mysqli, "INSERT INTO ticket_replies SET ticket_reply = '$message_esc', ticket_reply_type = '$ticket_reply_type', ticket_reply_time_worked = '00:00:00', ticket_reply_by = $ticket_reply_contact, ticket_reply_ticket_id = $ticket_id");
         $reply_id = mysqli_insert_id($mysqli);
 
-        mkdirMissing('/var/www/portal.twe.tech/uploads/tickets/');
+        mkdirMissing('/var/www/nestogy/uploads/tickets/');
         foreach ($attachments as $attachment) {
             $att_name = $attachment->getName();
             $att_extarr = explode('.', $att_name);
@@ -356,9 +356,9 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
 
             if (in_array($att_extension, $allowed_extensions)) {
                 $att_saved_filename = md5(uniqid(rand(), true)) . '.' . $att_extension;
-                $att_saved_path = "/var/www/portal.twe.tech/uploads/tickets/" . $ticket_id . "/" . $att_saved_filename;
-                $attachment->save("/var/www/portal.twe.tech/uploads/tickets/" . $ticket_id); // Save the attachment to the directory
-                rename("/var/www/portal.twe.tech/uploads/tickets/" . $ticket_id . "/" . $attachment->getName(), $att_saved_path); // Rename the saved file to the hashed name
+                $att_saved_path = "/var/www/nestogy/uploads/tickets/" . $ticket_id . "/" . $att_saved_filename;
+                $attachment->save("/var/www/nestogy/uploads/tickets/" . $ticket_id); // Save the attachment to the directory
+                rename("/var/www/nestogy/uploads/tickets/" . $ticket_id . "/" . $attachment->getName(), $att_saved_path); // Rename the saved file to the hashed name
 
                 $ticket_attachment_name = sanitizeInput($att_name);
                 $ticket_attachment_reference_name = sanitizeInput($att_saved_filename);
@@ -447,7 +447,7 @@ if ($messages->count() > 0) {
         $email_processed = false;
 
         // Create the temporary directory if it doesn't exist
-        $tempDir = '/var/www/portal.twe.tech/uploads/tmp/';
+        $tempDir = '/var/www/nestogy/uploads/tmp/';
         if (!file_exists($tempDir)) {
             if (!mkdir($tempDir, 0777, true) && !is_dir($tempDir)) {
                 error_log("Failed to create temporary directory: $tempDir");
@@ -564,8 +564,8 @@ if ($messages->count() > 0) {
             mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket Creation Failed', notification = 'Email parser: Failed to process email from $from_email', notification_action = 'email.php', notification_client_id = 0, notification_is_webpush = 1");
         }
         // Delete the original message file
-        if (file_exists("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}")) {
-            // unlink("/var/www/portal.twe.tech/uploads/tmp/{$original_message_file}");
+        if (file_exists("/var/www/nestogy/uploads/tmp/{$original_message_file}")) {
+            // unlink("/var/www/nestogy/uploads/tmp/{$original_message_file}");
         }
     }
     // Output that no new emails were found

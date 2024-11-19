@@ -1,6 +1,6 @@
 <?php
 
-require_once '/var/www/portal.twe.tech/cron/interfaces/TaskInterface.php';
+require_once '/var/www/nestogy/cron/interfaces/TaskInterface.php';
 
 function requireOnceAll($path) {
     foreach (glob($path . '/*.php') as $file) {
@@ -13,21 +13,21 @@ function requireOnceAll($path) {
     }
 }
 
-$tasksDir = opendir('/var/www/portal.twe.tech/cron/tasks/');
+$tasksDir = opendir('/var/www/nestogy/cron/tasks/');
 if (!$tasksDir) {
     exit("Could not open tasks directory -- Quitting..");
 }
 
 //requireOnceAll for tasks
-requireOnceAll('/var/www/portal.twe.tech/cron/tasks');
+requireOnceAll('/var/www/nestogy/cron/tasks');
 
 require_once 'daemon.php';
-require_once '/var/www/portal.twe.tech/config.php';
-require_once '/var/www/portal.twe.tech/vendor/autoload.php';
+require_once '/var/www/nestogy/config.php';
+require_once '/var/www/nestogy/vendor/autoload.php';
 
 use Twetech\Nestogy\Core\Daemon;
 
-$config = require '/var/www/portal.twe.tech/config.php';
+$config = require '/var/www/nestogy/config.php';
 
 // Pass the cron key from command-line arguments
 if (!isset($argv[1])) {

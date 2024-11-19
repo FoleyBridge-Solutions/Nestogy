@@ -23,7 +23,7 @@ function requireOnceAll($functionsPath) {
 // Load all functions -----------------------------------------
 // Other functions are categorized in different files
 
-$functionsPath = "/var/www/portal.twe.tech/includes/functions";
+$functionsPath = "/var/www/nestogy/includes/functions";
 
 // Require Once All in the functions folder
 requireOnceAll($functionsPath);

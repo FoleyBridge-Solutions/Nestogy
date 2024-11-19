@@ -4,7 +4,7 @@
  * Invoices for PTC
  */
 
-require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
+require_once "/var/www/nestogy/includes/inc_portal.php";
 
 if ($contact_primary == 0 && !$contact_is_billing_contact) {
     header("Location: portal_post.php?logout");

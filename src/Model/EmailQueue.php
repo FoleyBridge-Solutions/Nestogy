@@ -95,7 +95,7 @@ class EmailQueue {
             Due Date\: $invoice_due<br>
             <br>
             To view your invoice, please click 
-                <a href=\'https://portal.twe.tech/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>
+                <a href=\'https://nestogy/portal/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>
                     here
                 </a>.<br>
             <br>

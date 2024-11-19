@@ -1,10 +1,10 @@
-<?php include_once '/var/www/portal.twe.tech/bootstrap.php';
+<?php include_once '/var/www/nestogy/bootstrap.php';
 
 use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\Model\Client;
 
 
-require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+require_once "/var/www/nestogy/includes/inc_all_modal.php";
 
 
 $accounting = new Accounting($pdo);
@@ -319,7 +319,7 @@ if ($transaction_amount < 0) {
                             ?>
                                 <div class="row">
                                     <div class="col">
-                                        <a href="https://portal.twe.tech/public/?page=make_payment&bank_transaction_id=<?= $transaction_id ?>"
+                                        <a href="https://nestogy/public/?page=make_payment&bank_transaction_id=<?= $transaction_id ?>"
                                             class="btn btn-primary">Create</a>
                                     <?php
                                 } ?>

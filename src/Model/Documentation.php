@@ -289,7 +289,7 @@ class Documentation {
         $sop = $stmt->fetch(PDO::FETCH_ASSOC);
         if (is_null($version)) {
             //find the latest version of the sop
-            $versions = scandir("/var/www/portal.twe.tech/uploads/sops/{$sop['file_path']}");
+            $versions = scandir("/var/www/nestogy/uploads/sops/{$sop['file_path']}");
             $latest_version = null;
             foreach ($versions as $version) {
                 if (strpos($version, 'v') !== false) {
@@ -300,7 +300,7 @@ class Documentation {
             $latest_version = $version;
         }
 
-        $sop['content'] = file_get_contents("/var/www/portal.twe.tech/uploads/sops/{$sop['file_path']}/{$latest_version}");
+        $sop['content'] = file_get_contents("/var/www/nestogy/uploads/sops/{$sop['file_path']}/{$latest_version}");
         return $sop;
     }
 

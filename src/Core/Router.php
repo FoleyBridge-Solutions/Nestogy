@@ -26,7 +26,7 @@ class Router {
      */
     public function __construct($domain)
     {
-        $config = require '/var/www/portal.twe.tech/config/' . $domain . '/config.php';
+        $config = require '/var/www/nestogy/config/' . $domain . '/config.php';
         $database = new Database($config['db']);
         $this->pdo = $database->getConnection();
         $this->currency_format = numfmt_create($config['locale'], NumberFormatter::CURRENCY);

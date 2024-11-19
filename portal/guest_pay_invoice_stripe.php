@@ -1,15 +1,15 @@
 <?php
 
-require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
-require_once "/var/www/portal.twe.tech/src/Model/Client.php";
-require_once "/var/www/portal.twe.tech/src/Database.php";
-require_once "/var/www/portal.twe.tech/portal/guest_header.php";
+require_once "/var/www/nestogy/src/Model/Accounting.php";
+require_once "/var/www/nestogy/src/Model/Client.php";
+require_once "/var/www/nestogy/src/Database.php";
+require_once "/var/www/nestogy/portal/guest_header.php";
 
 
 use Twetech\Nestogy\Database;
 use Twetech\Nestogy\Model\Accounting;
 
-$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
+$config = require '/var/www/nestogy/config/nestogy/config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
 $accounting = new Accounting($pdo);
@@ -355,7 +355,7 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
 
 
     // Initialize stripe
-    require_once '/var/www/portal.twe.tech/includes/vendor/stripe-php-10.5.0/init.php';
+    require_once '/var/www/nestogy/includes/vendor/stripe-php-10.5.0/init.php';
 
     \Stripe\Stripe::setApiKey($config_stripe_secret);
 
@@ -520,13 +520,13 @@ if (isset($_GET['invoice_id'], $_GET['url_key']) && !isset($_GET['payment_intent
     }
 
     // Redirect user to invoice
-    referWithAlert('Payment Successful!', 'success', "https://portal.twe.tech/portal/guest_view_statement.php");
+    referWithAlert('Payment Successful!', 'success', "https://nestogy/portal/guest_view_statement.php");
 
 } else {
     echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
 }
 
 
-require_once '/var/www/portal.twe.tech/portal/portal_footer.php';
+require_once '/var/www/nestogy/portal/portal_footer.php';
 
 

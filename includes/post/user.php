@@ -9,7 +9,7 @@ global $mysqli, $name, $ip, $user_agent, $user_id;
 
 if (isset($_POST['add_user'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/user_model.php';
+    require_once '/var/www/nestogy/includes/post/models/user_model.php';
 
     global $mysqli, $ip, $user_agent, $user_id, $name, $config_smtp_host, $config_mail_from_name, $config_mail_from_email, $config_ticket_from_email, $config_login_key_secret, $config_base_url;
 
@@ -97,7 +97,7 @@ if (isset($_POST['add_user'])) {
 
 if (isset($_POST['edit_user'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/user_model.php';
+    require_once '/var/www/nestogy/includes/post/models/user_model.php';
 
     global $mysqli, $ip, $user_agent, $user_id, $name;
 

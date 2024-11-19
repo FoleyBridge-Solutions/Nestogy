@@ -9,7 +9,7 @@ global $mysqli, $name, $ip, $user_agent, $user_id;
 
 if (isset($_POST['add_invoice'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/invoice_model.php';
+    require_once '/var/www/nestogy/includes/post/models/invoice_model.php';
 
     $parameters['invoice_client_id'] = intval($_POST['client']);
     $parameters['invoice_date'] = sanitizeInput($_POST['date']);
@@ -23,7 +23,7 @@ if (isset($_POST['add_invoice'])) {
 
 if (isset($_POST['edit_invoice'])) {
 
-    require_once '/var/www/portal.twe.tech/includes/post/models/invoice_model.php';
+    require_once '/var/www/nestogy/includes/post/models/invoice_model.php';
 
     $parameters['invoice_id'] = intval($_POST['invoice_id']);
     $parameters['invoice_due'] = sanitizeInput($_POST['due']);

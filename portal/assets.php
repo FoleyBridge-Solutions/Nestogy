@@ -1,5 +1,5 @@
 <?php
-require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
+require_once "/var/www/nestogy/includes/inc_portal.php";
 
 $client_id = $_SESSION['client_id'];
 

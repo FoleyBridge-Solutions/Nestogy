@@ -1,5 +1,5 @@
 <?php
-require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+require_once "/var/www/nestogy/includes/inc_all_modal.php";
 
 $payment_reference = $_GET['payment_reference'];
 //get all invoices for this payment reference

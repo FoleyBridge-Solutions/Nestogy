@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php"; ?>
 
 <?php
 $employee_time_sql = "SELECT * FROM employee_times WHERE employee_time_id = ?";

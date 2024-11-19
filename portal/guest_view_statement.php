@@ -1,7 +1,7 @@
 <?php
 
 
-require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
+require_once "/var/www/nestogy/includes/inc_portal.php";
 
 
 
@@ -315,6 +315,6 @@ require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
     }
 </style>
 
-<?php require_once '/var/www/portal.twe.tech/includes/footer.php';
+<?php require_once '/var/www/nestogy/includes/footer.php';
 
 ?>

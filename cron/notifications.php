@@ -4,8 +4,8 @@
 // It is run once a minute by a cron job
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once "/var/www/portal.twe.tech/includes/config/config.php";
-require_once "/var/www/portal.twe.tech/includes/functions/functions.php";
+require_once "/var/www/nestogy/includes/config/config.php";
+require_once "/var/www/nestogy/includes/functions/functions.php";
 
 use Minishlink\WebPush\WebPush;
 use Minishlink\WebPush\Subscription;
@@ -53,7 +53,7 @@ function sendNotifications() {
         $notification_payload = json_encode([
             'title' => $row['notification_type'],
             'body' => $row['notification'],
-            'url' => "https://portal.twe.tech/".$notification_action
+            'url' => "https://nestogy/".$notification_action
         ]);
 
         if ($user_id == 0) {

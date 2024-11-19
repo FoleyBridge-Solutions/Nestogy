@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function sendPublicToken(public_token) {
         console.log(public_token);
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://portal.twe.tech/api/plaid.php?public_token", true);
+        xhr.open("POST", "https://nestogy/api/plaid.php?public_token", true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function() {
             if (xhr.readyState == 4 && xhr.status == 200) {

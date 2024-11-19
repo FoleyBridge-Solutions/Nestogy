@@ -343,7 +343,7 @@ function unarchiveAsset(
 
 function getAssetFromRMM($asset_rmm_id) {
     global $mysqli;
-    $config = include '/var/www/portal.twe.tech/config.php';
+    $config = include '/var/www/nestogy/config.php';
     $api_key = $config['ninjarrm']['api_key'];
     $api_secret = $config['ninjarrm']['api_secret'];
 

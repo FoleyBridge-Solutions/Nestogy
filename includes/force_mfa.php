@@ -1,9 +1,9 @@
 <?php
-require_once "/var/www/portal.twe.tech/includes/tenant_db.php";
+require_once "/var/www/nestogy/includes/tenant_db.php";
 
-require_once "/var/www/portal.twe.tech/includes/config/config.php";
+require_once "/var/www/nestogy/includes/config/config.php";
 
-include_once "/var/www/portal.twe.tech/includes/functions/functions.php";
+include_once "/var/www/nestogy/includes/functions/functions.php";
 
 require_once "check_login.php";
 
@@ -71,5 +71,5 @@ require_once "header.php";
 </div>
 
 <?php
-require_once '/var/www/portal.twe.tech/includes/footer.php';
+require_once '/var/www/nestogy/includes/footer.php';
 

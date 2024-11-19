@@ -1,6 +1,6 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php"; ?>
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php"; ?>
 <?php
-include '/var/www/portal.twe.tech/bootstrap.php';
+include '/var/www/nestogy/bootstrap.php';
 
 $login_id = $_GET['login_id'];
 

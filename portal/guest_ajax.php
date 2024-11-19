@@ -6,23 +6,23 @@
  * Always returns data in JSON format, unless otherwise specified
  */
 
-require_once "/var/www/portal.twe.tech/includes/tenant_db.php";
+require_once "/var/www/nestogy/includes/tenant_db.php";
 
-require_once "/var/www/portal.twe.tech/includes/config/config.php";
+require_once "/var/www/nestogy/includes/config/config.php";
 
-require_once "/var/www/portal.twe.tech/includes/functions/functions.php";
+require_once "/var/www/nestogy/includes/functions/functions.php";
 
-require_once "/var/www/portal.twe.tech/includes/rfc6238.php";
+require_once "/var/www/nestogy/includes/rfc6238.php";
 
-require_once "/var/www/portal.twe.tech/src/Model/Accounting.php";
-require_once "/var/www/portal.twe.tech/src/Model/Client.php";
-require_once "/var/www/portal.twe.tech/src/Database.php";
+require_once "/var/www/nestogy/src/Model/Accounting.php";
+require_once "/var/www/nestogy/src/Model/Client.php";
+require_once "/var/www/nestogy/src/Database.php";
 
 
 use Twetech\Nestogy\Database;
 use Twetech\Nestogy\Model\Accounting;
 
-$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
+$config = require '/var/www/nestogy/config/nestogy/config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
 
@@ -106,7 +106,7 @@ if (isset($_GET['stripe_create_pi'])) {
     $balance_to_pay = round($balance_to_pay, 2);
 
     // Setup Stripe
-    require_once '/var/www/portal.twe.tech/includes/vendor/stripe-php-10.5.0/init.php';
+    require_once '/var/www/nestogy/includes/vendor/stripe-php-10.5.0/init.php';
 
 
     $row = mysqli_fetch_array(mysqli_query($mysqli, "SELECT config_stripe_enable, config_stripe_secret, config_stripe_account FROM settings WHERE company_id = 1"));

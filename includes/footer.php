@@ -25,8 +25,8 @@
 </script>
 
 <?php
-    require_once "/var/www/portal.twe.tech/includes/inc_confirm_modal.php";
-    require_once "/var/www/portal.twe.tech/includes/inc_dynamic_modal.php";
+    require_once "/var/www/nestogy/includes/inc_confirm_modal.php";
+    require_once "/var/www/nestogy/includes/inc_dynamic_modal.php";
     function renderMenuItems($items, $level = 0, $isLast = true) {
         $itemCount = count($items);
         $firstItem = true; // Track the first item at this level

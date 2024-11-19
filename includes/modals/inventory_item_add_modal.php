@@ -1,5 +1,5 @@
 <?php 
-require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+require_once "/var/www/nestogy/includes/inc_all_modal.php";
 $products_sql = "SELECT * FROM products ORDER BY product_name ASC";
 $products = mysqli_fetch_all(mysqli_query($mysqli, $products_sql), MYSQLI_ASSOC);
 ?>

@@ -1,5 +1,5 @@
 <?php
-require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+require_once "/var/www/nestogy/includes/inc_all_modal.php";
 
 $plaid_account_id = $_GET['plaid_id'];
 $accounts_sql = "SELECT * FROM accounts WHERE plaid_id IS NULL";

@@ -6,7 +6,7 @@
 
 
 
-require_once "/var/www/portal.twe.tech/includes/inc_portal.php";
+require_once "/var/www/nestogy/includes/inc_portal.php";
 
 $products_sql = mysqli_query($mysqli, "SELECT * FROM products WHERE product_public = 1");
 $products = [];

@@ -1,4 +1,4 @@
-<?php require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+<?php require_once "/var/www/nestogy/includes/inc_all_modal.php";
 $client_id = $_GET['client_id'];
 
 $sql = mysqli_query($mysqli, "SELECT * FROM clients LEFT JOIN client_tags ON client_id = client_tag_client_id WHERE client_id = $client_id");
