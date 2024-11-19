@@ -285,4 +285,77 @@ class Client {
     public function getSalesLandings(){
         return [];
     }
+
+    public function getTotalClients() {
+        $stmt = $this->pdo->query("SELECT COUNT(*) FROM clients WHERE client_archived_at IS NULL");
+        return $stmt->fetchColumn();
+    }
+
+    public function getFilteredClientsCount($search) {
+        $where = "WHERE client_archived_at IS NULL";
+        if ($search) {
+            $search = "%$search%";
+            $where .= " AND (client_name LIKE ? OR client_type LIKE ? OR client_notes LIKE ?)";
+        }
+        
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM clients $where");
+        if ($search) {
+            $stmt->execute([$search, $search, $search]);
+        } else {
+            $stmt->execute();
+        }
+        
+        return $stmt->fetchColumn();
+    }
+
+    public function getFilteredClients($start, $length, $search, $order_column, $order_dir) {
+        $columns = [
+            'client_accessed_at',
+            'client_name',
+            'location_address',
+            'contact_name',
+            'client_created_at'
+        ];
+        
+        $where = "WHERE c.client_archived_at IS NULL";
+        if ($search) {
+            $search = "%$search%";
+            $where .= " AND (c.client_name LIKE ? OR c.client_type LIKE ? OR c.client_notes LIKE ?)";
+        }
+        
+        $orderColumn = isset($columns[$order_column]) ? $columns[$order_column] : 'client_name';
+        $order = "ORDER BY " . $orderColumn . " " . $order_dir;
+        
+        $sql = "SELECT 
+            c.*,
+            l.location_address,
+            l.location_zip,
+            co.contact_name,
+            co.contact_phone,
+            co.contact_extension,
+            co.contact_mobile,
+            co.contact_email,
+            GROUP_CONCAT(t.tag_name) as tag_names
+        FROM clients c
+        LEFT JOIN locations l ON c.client_id = l.location_client_id AND l.location_primary = 1
+        LEFT JOIN contacts co ON c.client_id = co.contact_client_id AND co.contact_primary = 1
+        LEFT JOIN client_tags ct ON c.client_id = ct.client_tag_client_id
+        LEFT JOIN tags t ON ct.client_tag_tag_id = t.tag_id
+        $where
+        GROUP BY c.client_id
+        $order
+        LIMIT ?, ?";
+        
+        $stmt = $this->pdo->prepare($sql);
+        
+        $params = [];
+        if ($search) {
+            $params = [$search, $search, $search];
+        }
+        $params[] = $start;
+        $params[] = $length;
+        
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

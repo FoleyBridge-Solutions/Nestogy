@@ -22,7 +22,7 @@ require_once "/var/www/portal.twe.tech/src/Database.php";
 use Twetech\Nestogy\Database;
 use Twetech\Nestogy\Model\Accounting;
 
-$config = require __DIR__ . '/../config.php';
+$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
 
@@ -62,6 +62,14 @@ if (isset($_GET['stripe_create_pi'])) {
     $payment_method = $_GET['payment_method'] ?? 'card';
 
     $balance = $invoice['invoice_balance'];
+
+    // Add deposit handling
+    $invoice_deposit_amount = floatval($invoice['invoice_deposit_amount']);
+    if ($invoice_deposit_amount > 0) {
+        if ($balance > $invoice_deposit_amount) {
+            $balance = $invoice_deposit_amount;
+        }
+    }
 
     if ($payment_method == "ach") {
         $fees = [

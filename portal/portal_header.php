@@ -72,36 +72,43 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item <?php if (basename($_SERVER['PHP_SELF']) == "index.php") {echo "active";} ?>">
-                    <a class="nav-link" href="index.php">Home</a>
+                    <a class="nav-link" href="index.php"><i class="fas fa-fw fa-home mr-2"></i>Home</a>
                 </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Support
-                        </a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="tickets.php">Tickets</a>
+                <li class="nav-item <?php if (basename($_SERVER['PHP_SELF']) == "store.php") {echo "active";} ?>">
+                    <a class="nav-link" href="store.php"><i class="fas fa-fw fa-store mr-2"></i>Store</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-fw fa-life-ring mr-2"></i>
+                        Support
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="tickets.php"><i class="fas fa-fw fa-ticket-alt mr-2"></i>Tickets</a>
                             <?php if ($contact_primary == 1 || $contact_is_technical_contact) { ?>
-                                <a class="dropdown-item" href="documents.php">Documents</a>
-                                <a class="dropdown-item" href="assets.php">Assets</a>
-                            <?php } ?>
-                        </div>
-                    </li>
+                                <a class="dropdown-item" href="documents.php"><i class="fas fa-fw fa-file-alt mr-2"></i>Documents</a>
+                                <a class="dropdown-item" href="assets.php"><i class="fas fa-fw fa-cogs mr-2"></i>Assets</a>
+                        <?php } ?>
+                    </div>
+                </li>
+
                 
                 <?php if (($contact_primary == 1 || $contact_is_billing_contact) && $config_module_enable_accounting == 1) { ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-fw fa-dollar-sign mr-2"></i>
                             Accounting
                         </a>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="guest_view_statement.php">Statement</a>
-                            <a class="dropdown-item" href="invoices.php">Invoices</a>
-                            <a class="dropdown-item" href="quotes.php">Quotes</a>
+                            <a class="dropdown-item" href="guest_view_statement.php"><i class="fas fa-fw fa-file-alt mr-2"></i>Statement</a>
+                            <a class="dropdown-item" href="subscriptions.php"><i class="fas fa-fw fa-cogs mr-2"></i>Subscriptions</a>
+                            <a class="dropdown-item" href="invoices.php"><i class="fas fa-fw fa-file-invoice mr-2"></i>Invoices</a>
+                            <a class="dropdown-item" href="quotes.php"><i class="fas fa-fw fa-file-alt mr-2"></i>Quotes</a>
                 <?php } ?>
             </ul>
 
             <ul class="nav navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="referrals.php">Referrals</a>
+                    <a class="nav-link" href="referrals.php"><i class="fas fa-fw fa-users mr-2"></i> Referrals</a>
                 </li>
             </ul>
 

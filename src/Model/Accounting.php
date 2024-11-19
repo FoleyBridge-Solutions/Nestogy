@@ -1640,11 +1640,13 @@ class Accounting {
      * @param bool $unreconciled Whether to get only unreconciled transactions
      * @return array Array of transactions
      */
-    public function getBankTransactions($unreconciled = true) {
-        if ($unreconciled) {
-            $stmt = $this->pdo->query("SELECT * FROM bank_transactions WHERE reconciled = 0");
+    public function getUnreconciledTransactions($type = null) {
+        if ($type == 'income') {
+            $stmt = $this->pdo->query("SELECT * FROM bank_transactions WHERE reconciled = 0 AND amount < 0");
+        } else if ($type == 'expense') {
+            $stmt = $this->pdo->query("SELECT * FROM bank_transactions WHERE reconciled = 0 AND amount > 0");
         } else {
-            $stmt = $this->pdo->query("SELECT * FROM bank_transactions");
+            $stmt = $this->pdo->query("SELECT * FROM bank_transactions WHERE reconciled = 0");
         }
         $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $transactions;
@@ -1810,6 +1812,120 @@ class Accounting {
         $stmt->execute(['payment_reference' => $payment_reference]);
         $count = $stmt->fetchColumn();
         return $count;
+    }
+
+    /**
+     * Gets revenue
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Revenue
+     */
+    public function getRevenue($month, $year) {
+        $sql = "SELECT SUM(payments.payment_amount) AS total_revenue FROM payments
+        LEFT JOIN invoices ON payments.payment_invoice_id = invoices.invoice_id
+        WHERE MONTH(payments.payment_date) = :month AND YEAR(payments.payment_date) = :year";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['month' => $month, 'year' => $year]);
+        $revenue = $stmt->fetchColumn();
+        return $revenue;
+    }
+
+    /**
+     * Gets revenue trend
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Revenue trend percentage
+     */
+    public function getRevenueTrend($month, $year) {
+        $current_revenue = $this->getRevenue($month, $year);
+        $previous_revenue = $this->getRevenue($month - 1, $year);
+        $trend = ($current_revenue - $previous_revenue) / $previous_revenue * 100;
+        return round($trend, 2);
+    }
+
+    /**
+     * Gets expenses trend
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Expenses trend percentage    
+     */
+    public function getExpensesTrend($month, $year) {
+        $current_expenses = $this->getExpensesTotal($month, $year);
+        $previous_expenses = $this->getExpensesTotal($month - 1, $year);
+        $trend = ($current_expenses - $previous_expenses) / $previous_expenses * 100;
+        return round($trend, 2);
+    }
+
+    /**
+     * Gets profit trend
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Profit trend percentage
+     */
+    public function getProfitTrend($month, $year) {
+        $current_profit = $this->getProfit($month, $year);
+        $previous_profit = $this->getProfit($month - 1, $year);
+        $trend = ($current_profit - $previous_profit) / $previous_profit * 100;
+        return round($trend, 2);
+    }
+
+    /**
+     * Gets quotes trend
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Quotes trend percentage
+     */
+    public function getQuotesTrend($month, $year) {
+        return 0;
+    }
+
+    /**
+     * Gets average quote value
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Average quote value
+     */
+    public function getAverageQuoteValue($month, $year) {
+        return 0;
+    }
+
+    /**
+     * Gets average quote value trend
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Average quote value trend percentage
+     */
+    public function getAverageQuoteValueTrend($month, $year) {
+        return 0;
+    }
+
+    /**
+     * Gets quote conversion rate
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Quote conversion rate
+     */
+    public function getQuoteConversionRate($month, $year) {
+        return 0;
+    }
+
+    /**
+     * Gets quote conversion trend
+     * 
+     * @param int $month Month number
+     * @param int $year Year
+     * @return int Quote conversion trend percentage
+     */
+    public function getQuoteConversionTrend($month, $year) {
+        return 0;
     }
 }
 

@@ -3,6 +3,10 @@ require "../../bootstrap.php";
 
 use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\Model\Client;
+use Twetech\Nestogy\Database;
+$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
 
 $accounting = new Accounting($pdo);
 $clientModel = new Client($pdo);

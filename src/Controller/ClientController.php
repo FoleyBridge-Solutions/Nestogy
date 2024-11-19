@@ -41,17 +41,53 @@ class ClientController {
      * @return void
      */
     public function index() {
+        // Check if this is a DataTables AJAX request
+        if (isset($_GET['draw'])) {
+            $this->getClientsJson();
+            return;
+        }
+
         $view = new View();
-        $auth = new Auth($this->pdo);
-        // Check if user has access to the client class
-        $clients = $this->clientModel->getClients(true);
-        // Add Additional Data for Each Client
+        $view->render('clients', []);
+    }
+
+    /**
+     * Handle DataTables AJAX request for clients data
+     * 
+     * @return void
+     */
+    private function getClientsJson() {
+        // Get DataTables parameters
+        $draw = isset($_GET['draw']) ? intval($_GET['draw']) : 1;
+        $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
+        $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
+        $search = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
+        $order_column = isset($_GET['order'][0]['column']) ? intval($_GET['order'][0]['column']) : 0;
+        $order_dir = isset($_GET['order'][0]['dir']) ? $_GET['order'][0]['dir'] : 'ASC';
+
+        // Get total count and filtered data from model
+        $total = $this->clientModel->getTotalClients();
+        $filtered_count = $this->clientModel->getFilteredClientsCount($search);
+        $clients = $this->clientModel->getFilteredClients($start, $length, $search, $order_column, $order_dir);
+
+        // Add financial data
         foreach ($clients as &$client) {
             $client['client_past_due_amount'] = $this->accountingModel->getPastDueAmount($client['client_id']);
             $client['client_payments'] = $this->accountingModel->getClientPaidAmount($client['client_id']);
             $client['client_recurring_monthly'] = $this->accountingModel->getMonthlySubscriptionAmount($client['client_id']);
         }
-        $view->render('clients', ['clients' => $clients]);
+
+        // Format response for DataTables
+        $response = [
+            'draw' => $draw,
+            'recordsTotal' => $total,
+            'recordsFiltered' => $filtered_count,
+            'data' => $clients
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
     }
 
     /**

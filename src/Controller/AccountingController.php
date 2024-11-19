@@ -697,9 +697,9 @@ class AccountingController {
      *
      * @return void
      */
-    public function showBankTransactions() {
-        $transactions = $this->accounting->getBankTransactions();
-        $data['card']['title'] = 'Unreconciled Transactions';
+    public function showUnreconciledTransactions($type) {
+        $transactions = $this->accounting->getUnreconciledTransactions($type);
+        $data['card']['title'] = 'Unreconciled ' . ucfirst($type);
         $data['table']['header_rows'] = ['Date', 'Amount', 'Type', 'Name', 'Reconciled'];
         $data['header_cards'] = [];
         $bank_accounts = $this->accounting->getPlaidAccounts();

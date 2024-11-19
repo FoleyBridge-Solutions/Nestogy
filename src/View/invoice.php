@@ -296,311 +296,152 @@ $products = $all_products
     </div>
     <!-- /Invoice Edit-->
 
-    <!-- Invoice Actions -->
-    <div class="col-lg-3 col-md-12 order-lg-2 order-md-1 order-1">
-        <div class="card mb-4">
-            <?php if ($wording === 'Invoice') { ?>
-                <div class="card-body">
-                    <?php if ($invoice_status == 'Draft') { ?>
-                        <div class="d-grid d-flex my-3 w-100">
-                            <button class="btn btn-primary dropdown-toggle d-grid w-100 d-flex align-items-center justify-content-center text-nowrap" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-fw fa-paper-plane me-1"></i>Send
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="/post.php?email_invoice=<?= $invoice_id; ?>">
-                                    <i class="fas fa-fw fa-paper-plane mr-2"></i>Send Email
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/post.php?mark_invoice_sent=<?= $invoice_id; ?>">
-                                    <i class="fas fa-fw fa-check mr-2"></i>Mark Sent
-                                </a>
-                            </div>
-                        </div>
-                        <div class="d-grid d-flex my-3 w-100">
-                            <button class="btn btn-primary loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="invoice_edit_modal.php?invoice_id=<?= $invoice_id ?>">
-                                <i class="fas fa-fw fa-edit me-1"></i>Edit
-                            </button>
-                        </div>
-                    <?php } ?>
-                    <div class="d-grid d-flex my-3">
-                        <a target="_blank" href="/portal/guest_view_invoice.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key"; ?>" class="btn btn-label-primary me-3 w-100">
-                            <i class="bx bx-show me-1"></i>
-                            View
-                        </a>
-                        <button class="btn btn-primary d-grid w-100 loadModalContentBtn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="invoice_payment_add_modal.php?invoice_id=<?= $invoice_id ?>&balance=<?= $balance ?>">
-                            <span class="d-flex align-items-center justify-content-center text-nowrap"><i class="bx bx-dollar bx-xs me-1"></i>Add Payment</span>
-                        </button>
-                    </div>
-                    <div class="d-grid d-flex my-3">
-                        <a href="/post.php?cancel_invoice=<?= $invoice_id ?>" class="btn btn-label-danger me-3 w-100 confirm-link"><i class="bx bx-x-circle me-1"></i>Cancel</a>
-                        <a href="/post.php?delete_invoice=<?= $invoice_id ?>" class="btn btn-label-danger me-3 w-100 confirm-link"><i class="bx bx-trash me-1"></i></a>
-                    </div>
-                    <div class="d-grid d-flex my-3">
-                        <a href="/post.php?email_invoice=<?= $invoice_id ?>" class="btn btn-label-primary me-3 w-100 confirm-link"><i class="bx bx-refresh me-1"></i><?php if ($invoice_status == 'Sent') { echo "Resend"; } else { echo "Send"; } ?></a>
-                    </div>
-                    <hr class="my-0" />
+    <!-- Include the sidebar component -->
+    <?php include __DIR__ . '/Components/invoice_sidebar.php'; ?>
+</div>
 
-                    <div class="d-flex justify-content-between mt-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bx bx-dollar me-2"></i>
-                            <span class="fw-medium">Amount Due:</span>
-                        </div>
-                        <span class="fw-medium"><?= numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) ?></span>
-                    </div>
-                    <?php if ($amount_paid > 0) { ?>
-                        <div class="d-flex justify-content-between mt-3">
-                            <div class="d-flex align-items-center">
-                                <i class="bx bx-credit-card me-2"></i>
-                                <span class="fw-medium">Amount Paid:</span>
-                            </div>
-                            <span class="fw-medium"><?= numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) ?></span>
-                        </div>
-                    <?php } ?>
-                    <div class="d-flex justify-content-between mt-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bx bx-dollar me-2"></i>
-                            <span class="fw-medium">Margin:</span>
-                        </div>
-                        <?php
-                        if ($total_cost != 0) {
-                            $margin = $profit / $subtotal;
-                        } else {
-                            $margin = 0;  // Default or error value if cost is zero
+<!-- Include jQuery UI -->
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $(document).on('modalContentLoaded', function() {
+            // Bind event handlers to the inputs after the modal content has been loaded
+            // Get the description of the selected product
+
+            $(function() {
+                var availableProducts = <?= json_encode($all_products) ?>;
+                var zIndex = $('#name').css('z-index');
+
+                $("#name").autocomplete({
+                    source: availableProducts,
+                    select: function(event, ui) {
+                        $("#name").val(ui.item.label); // Product name field - this seemingly has to referenced as label
+                        $("#desc").val(ui.item.description); // Product description field
+                        $("#qty").val(1); // Product quantity field automatically make it a 1
+                        $("#price").val(ui.item.price); // Product price field
+                        $("#product_id").val(ui.item.productId); // Product ID field
+                        $(".invoice-item-tax-modal").val(ui.item.tax).trigger('change'); // Product tax field
+                        if (tinymce.get("desc")) { // Check if the TinyMCE instance for 'desc' exists
+                            tinymce.get("desc").setContent(ui.item.description);
                         }
-                        echo number_format($margin * 100, 1) . "%";
-                        echo "</span>";
-                        ?>
-                    </div>
-                    <?php if ($invoice_deposit_amount > 0) { ?>
-                        <div class="d-flex justify-content-between mt-3">
-                            <div class="d-flex align-items-center">
-                                <i class="bx bx-dollar me-2"></i>
-                                <span class="fw-medium">Deposit:</span>
-                            </div>
-                            <span class="fw-medium"><?= numfmt_format_currency($currency_format, $invoice_deposit_amount, $invoice_currency_code) ?></span>
-                        </div>
-                    <?php } ?>
-                </div>
-            <?php } else if ($wording === 'Quote') { ?>
-                <div class="card-body">
-                    <div class="d-grid d-flex my-3">
-                        <a target="_blank" href="/portal/guest_view_quote.php?quote_id=<?= "$invoice_id&url_key=$quote_url_key"; ?>" class="btn btn-label-primary me-3 w-100">
-                            <i class="bx bx-show me-1"></i>
-                            View
-                        </a>
-                        <a href="/post.php?delete_quote=<?= $invoice_id ?>" class="btn btn-label-danger me-3 w-100 confirm-link">
-                            <i class="bx bx-trash me-1"></i>
-                            Delete
-                        </a>
-                    </div>
-                    <div class="d-grid d-flex my-3">
-                        <a href="/post.php?add_quote_to_invoice&quote_id=<?= $invoice_id ?>" class="btn btn-label-success me-3 w-100 confirm-link">
-                            <i class="bx bx-check me-1"></i>
-                            Approve Quote
-                        </a>
-                        <a href="/post.php?email_quote=<?= $invoice_id ?>" class="btn btn-label-primary me-3 w-100 confirm-link">
-                            <i class="bx bx-paper-plane me-1"></i>
-                            Send Quote
-                        </a>
-                    </div>
-                </div>
-            <?php } ?>
-        </div>
-        <?php if ($wording === 'Invoice') { ?>
-            <div class="card">
-                <div class="card-header text-bold">
-                    <i class="fa fa-cog mr-2"></i>Tickets
-                    <div class="card-tools">
-                        <?php #TODO; add ticket model 
-                        ?>
-                        <a class="btn btn-tool loadModalContentBtn" href="#" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-modal-file="invoice_add_ticket_modal.php?invoice_id=<?= $invoice_id ?>">
-                            <i class="fas fa-plus"></i>
-                        </a>
-
-                        <a class="btn btn-tool" href="tickets.php?client_id=<?= $client_id; ?>">
-                            <i class="fas fa-external-link-alt"></i>
-                        </a>
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-
-                        </button>
-                        <button type="button" class="btn btn-tool" data-card-widget="remove">
-                            <i class="fas fa-times"></i>
-
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <?php if (isset($tickets)) {
-                            foreach ($tickets as $ticket) {
-                                $ticket_id = intval($ticket['ticket_id']);
-                                $ticket_created_at = nullable_htmlentities($ticket['ticket_created_at']);
-                                $ticket_subject = nullable_htmlentities($ticket['ticket_subject']);
-                                $ticket_status = nullable_htmlentities($ticket['ticket_status']);
-                                $ticket_priority = nullable_htmlentities($ticket['ticket_priority']);
-                                $ticket_assigned_to = intval($ticket['ticket_assigned_to']);
-                                $ticket_total_time_worked = floatval($ticket['total_time_worked']);
-
-                        ?>
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <a href="/old_pages/ticket.php?ticket_id=<?= $ticket_id ?>"><?= $ticket_subject ?></a>
-                                        <p class="mb-0"><?= $ticket_status ?> | <?= $ticket_priority ?> | <?= $ticket_assigned_to ?> | <?= $ticket_total_time_worked ?></p>
-                                    </div>
-                                </div>
-
-
-                    <?php
-                            }
-                            }
-                        } ?>
-                    </div>
-                </div>
-                <!-- /Invoice Actions -->
-            </div>
-        </div>
-    </div>
-    <!-- Include jQuery UI -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-            $(document).on('modalContentLoaded', function() {
-                // Bind event handlers to the inputs after the modal content has been loaded
-                // Get the description of the selected product
-
-                $(function() {
-                    var availableProducts = <?= json_encode($all_products) ?>;
-                    var zIndex = $('#name').css('z-index');
-
-                    $("#name").autocomplete({
-                        source: availableProducts,
-                        select: function(event, ui) {
-                            $("#name").val(ui.item.label); // Product name field - this seemingly has to referenced as label
-                            $("#desc").val(ui.item.description); // Product description field
-                            $("#qty").val(1); // Product quantity field automatically make it a 1
-                            $("#price").val(ui.item.price); // Product price field
-                            $("#product_id").val(ui.item.productId); // Product ID field
-                            $(".invoice-item-tax-modal").val(ui.item.tax).trigger('change'); // Product tax field
-                            if (tinymce.get("desc")) { // Check if the TinyMCE instance for 'desc' exists
-                                tinymce.get("desc").setContent(ui.item.description);
-                            }
-                            updateLineTotal();
-                            return false;
-                        }
-                    });
-
-                    // Event listeners for when the inputs are changed
-                    $('#price, #qty, .invoice-item-discount').on('input', function() {
-                        updateLineTotal(); // Call the update function when price, qty, or discount changes
-                    });
-
-                    $('.invoice-item-tax-modal').on('change', function() {
                         updateLineTotal();
-                    });
-
-                    console.log("Length: ", $('.invoice-item-tax').length); // Check how many selects with this class are present
-                    $('.invoice-item-tax').each(function() {
-                        console.log("Num Options: ", $(this).find('option:selected').length); // Check how many options are selected in each
-                        console.log("Data Rata: ", $(this).find('option:selected').data('rate')); // Log the data rate of selected options
-                    });
-
-                    function updateLineTotal() {
-                        var price = parseFloat($('#price').val()) || 0; // Get the price or 0 if empty
-                        var qty = parseFloat($('#qty').val()) || 0; // Get the quantity or 0 if empty
-                        var discountInput = $('.invoice-item-discount').val().trim(); // Get the discount value
-                        var taxRate = $('.invoice-item-tax-modal').find(':selected').data('rate') || 0;
-
-                        var subtotal = price * qty; // Calculate the subtotal
-                        var taxAmount = subtotal * (taxRate / 100); // Calculate the tax amount
-                        var discount = 0; // Initialize discount
-
-                        if (discountInput.endsWith('%')) {
-                            var discountPercentage = parseFloat(discountInput) || 0; // Parse the percentage number
-                            discount = (subtotal * discountPercentage / 100); // Calculate percentage-based discount
-                        } else {
-                            discount = parseFloat(discountInput) || 0; // Otherwise, treat it as a fixed amount
-                        }
-
-                        var total = subtotal + taxAmount - discount; // Calculate the total after tax and discount
-                        $('.invoice-item-total').val(total.toFixed(2)); // Set the calculated total, formatted to 2 decimal places
+                        return false;
                     }
                 });
-            });
 
-
-
-
-
-            // Find all input, textarea, and select elements within any 'item-container' div
-            document.querySelectorAll('.item-container input, .item-container textarea, .item-container select').forEach(function(element) {
-                element.addEventListener('focus', function() {
-                    // Find the closest parent element with the class 'item-container'
-                    var itemContainer = this.closest('.item-container');
-
-                    // Find the save button within this container and show it
-                    var saveButton = itemContainer.querySelector('.btn[data-bs-original-title="Save Changes"]');
-                    if (saveButton) {
-                        saveButton.hidden = false;
-                    }
+                // Event listeners for when the inputs are changed
+                $('#price, #qty, .invoice-item-discount').on('input', function() {
+                    updateLineTotal(); // Call the update function when price, qty, or discount changes
                 });
-            });
 
+                $('.invoice-item-tax-modal').on('change', function() {
+                    updateLineTotal();
+                });
+
+                console.log("Length: ", $('.invoice-item-tax').length); // Check how many selects with this class are present
+                $('.invoice-item-tax').each(function() {
+                    console.log("Num Options: ", $(this).find('option:selected').length); // Check how many options are selected in each
+                    console.log("Data Rata: ", $(this).find('option:selected').data('rate')); // Log the data rate of selected options
+                });
+
+                function updateLineTotal() {
+                    var price = parseFloat($('#price').val()) || 0; // Get the price or 0 if empty
+                    var qty = parseFloat($('#qty').val()) || 0; // Get the quantity or 0 if empty
+                    var discountInput = $('.invoice-item-discount').val().trim(); // Get the discount value
+                    var taxRate = $('.invoice-item-tax-modal').find(':selected').data('rate') || 0;
+
+                    var subtotal = price * qty; // Calculate the subtotal
+                    var taxAmount = subtotal * (taxRate / 100); // Calculate the tax amount
+                    var discount = 0; // Initialize discount
+
+                    if (discountInput.endsWith('%')) {
+                        var discountPercentage = parseFloat(discountInput) || 0; // Parse the percentage number
+                        discount = (subtotal * discountPercentage / 100); // Calculate percentage-based discount
+                    } else {
+                        discount = parseFloat(discountInput) || 0; // Otherwise, treat it as a fixed amount
+                    }
+
+                    var total = subtotal + taxAmount - discount; // Calculate the total after tax and discount
+                    $('.invoice-item-total').val(total.toFixed(2)); // Set the calculated total, formatted to 2 decimal places
+                }
+            });
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSortable();
+
+
+
+
+        // Find all input, textarea, and select elements within any 'item-container' div
+        document.querySelectorAll('.item-container input, .item-container textarea, .item-container select').forEach(function(element) {
+            element.addEventListener('focus', function() {
+                // Find the closest parent element with the class 'item-container'
+                var itemContainer = this.closest('.item-container');
+
+                // Find the save button within this container and show it
+                var saveButton = itemContainer.querySelector('.btn[data-bs-original-title="Save Changes"]');
+                if (saveButton) {
+                    saveButton.hidden = false;
+                }
+            });
         });
 
-        function initializeSortable() {
-            if (typeof Sortable !== 'undefined') {
-                Sortable.create(document.getElementById('invoiceItemsContainer'), {
-                    animation: 150,
-                    handle: '.drag-handle', // Use the drag handle
-                    onEnd: function(evt) {
-                        var itemElements = Array.from(evt.from.children);
-                        var itemOrder = itemElements.map(function(itemElement) {
-                            var inputElement = itemElement.querySelector('input[name="item_id"]');
-                            return inputElement ? inputElement.value : null;
-                        }).filter(function(value) {
-                            return value !== null;
-                        });
+    });
 
-                        // You can send this itemOrder array to the server to save the new order
-                        saveOrder(itemOrder);
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSortable();
+    });
 
-                        console.log(itemOrder); // Debugging: see the new order
-                    }
-                });
-            }
+    function initializeSortable() {
+        if (typeof Sortable !== 'undefined') {
+            Sortable.create(document.getElementById('invoiceItemsContainer'), {
+                animation: 150,
+                handle: '.drag-handle', // Use the drag handle
+                onEnd: function(evt) {
+                    var itemElements = Array.from(evt.from.children);
+                    var itemOrder = itemElements.map(function(itemElement) {
+                        var inputElement = itemElement.querySelector('input[name="item_id"]');
+                        return inputElement ? inputElement.value : null;
+                    }).filter(function(value) {
+                        return value !== null;
+                    });
+
+                    // You can send this itemOrder array to the server to save the new order
+                    saveOrder(itemOrder);
+
+                    console.log(itemOrder); // Debugging: see the new order
+                }
+            });
         }
+    }
 
-        function saveOrder(order) {
-            fetch('/post.php?save_invoice_item_order=<?= $invoice_id ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        order: order
-                    })
+    function saveOrder(order) {
+        fetch('/post.php?save_invoice_item_order=<?= $invoice_id ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order: order
                 })
-                .then(response => response.json())
-                .then(data => console.log(data))
-                .catch(error => console.error('Error:', error));
-        }
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+    }
 
-        // Re-initialize SortableJS after dynamic content update
-        function updateInvoiceItems(newItems) {
-            document.getElementById('invoiceItemsContainer').innerHTML = newItems;
-            initializeSortable();
-        }
-    </script>
+    // Re-initialize SortableJS after dynamic content update
+    function updateInvoiceItems(newItems) {
+        document.getElementById('invoiceItemsContainer').innerHTML = newItems;
+        initializeSortable();
+    }
+</script>
 
 
-    <style>
-        .ui-autocomplete {
-            z-index: 9999999;
-        }
-    </style>
+<style>
+    .ui-autocomplete {
+        z-index: 9999999;
+    }
+</style>
 
 <!-- Add this closing div -->

@@ -6,29 +6,32 @@ $card_title = $card['title'];
 $table_header_rows = $table['header_rows'];
 $table_body_rows = $table['body_rows'];
 //if action is not an array of arrays, make it an array of arrays
-if (!is_array($action[0])) {
-    $action = [$action];
+if (isset($action)) {
+    if (!is_array($action[0])) {
+        $action = [$action];
+    }
 }
-if (!is_array($table['footer_row'])) {
-    $table['footer_row'] = [$table['footer_row']];
+if (isset($table['footer_row'])) {
+    if (!is_array($table['footer_row'])) {
+        $table['footer_row'] = [$table['footer_row']];
+    }
 }
 
 ?>
 <?php if (isset($header_cards)) : ?>
     <div class="row">
-    <?php foreach ($header_cards as $header_card) : ?>
-        <?php //count how many cards there are and set the col-md-X class accordingly ?>
-        <?php $card_count = count($header_cards); ?>
-        <div class="col-md-<?= 12 / $card_count ?>">
-            <div class="card mb-3">
-                <div class="card-header header-elements">
-                    <h5 class="card-header-title"><?= $header_card['title'] ?></h5>
-                </div>
-                <div class="card-body">
-                    <?= $header_card['body'] ?>
+        <?php foreach ($header_cards as $header_card) : ?>
+            <?php $card_count = count($header_cards); ?>
+            <div class="col-md-<?= 12 / $card_count ?>">
+                <div class="card mb-3">
+                    <div class="card-header header-elements">
+                        <h5 class="card-header-title"><?= $header_card['title'] ?></h5>
+                    </div>
+                    <div class="card-body">
+                        <?= $header_card['body'] ?>
+                    </div>
                 </div>
             </div>
-        </div>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>

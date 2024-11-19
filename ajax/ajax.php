@@ -818,7 +818,7 @@ if (isset($_GET['client_invoices'])) {
 
     $sql = mysqli_query($mysqli,
         "SELECT invoice_id, invoice_date, invoice_due, invoice_status, invoice_number FROM invoices
-        WHERE invoice_client_id = $client_id AND invoice_status != 'Paid'
+        WHERE invoice_client_id = $client_id
         ORDER BY invoice_date ASC"
     );
 
@@ -833,10 +833,11 @@ if (isset($_GET['client_invoices'])) {
         $invoice_id = $row['invoice_id'];
         $invoice_balance = getInvoiceBalance($invoice_id);
         $row['invoice_balance'] = numfmt_format_currency($currency_format, $invoice_balance, $client_currency);
-        $response[] = $row;
         //format the amount
         $amount = numfmt_format_currency($currency_format, $row['invoice_amount'], $client_currency);
         $row['invoice_amount'] = $amount;
+
+        $response[] = $row;
     }
 
     echo json_encode($response);
@@ -854,6 +855,7 @@ if (isset($_GET['apply_payment'])) {
     $payment_reference = $data['payment_reference'];
     $payment_account = $data['payment_account'];
     $credit = $data['credit'];
+    $link_payment_to_transaction = $data['link_payment_to_transaction'];
 
     if ($credit) {
         //Create a credit
@@ -868,7 +870,8 @@ if (isset($_GET['apply_payment'])) {
             'method' => $payment_method,
             'reference' => $payment_reference,
             'account' => $payment_account,
-            'balance' => $invoice['invoice_payment_amount']
+            'balance' => $invoice['invoice_payment_amount'],
+            'link_to_transaction' => $link_payment_to_transaction
         ]);
     }
     //success

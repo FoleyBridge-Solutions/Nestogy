@@ -1,189 +1,50 @@
-<div class="row">
-    
-<h3>Welcome back, <?= $user['user_name'] ?>!</h3>
-    <div class="col-9">
-        <?php if (isset($chart_data)) { ?>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <canvas id="overview-chart" width="400" height="200"></canvas>
+<div class="container-fluid">
+    <div class="row">
+        <?php if ($components['welcome']) { ?>
+            <?php include 'components/welcome.php'; ?>
+        <?php } ?>
+        
+        <div class="col-9">
+            <?php if (isset($chart_data)) { ?>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <canvas id="overview-chart" width="400" height="200"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        <?php } ?>
-        <div class="card mb-3">
-            <div class="card-body">
-                <form class="row mb-2" method="get" onchange="this.submit()">
-                    <div class="row">
-                        <div class="col-3">
-                        <h3><?= ucfirst($user['user_role']) ?> Overview for </h3>
-                        </div>
-                        <div class="col-3">
-                            <select name="month" class="form-select">
-                                <?php foreach ($time['months'] as $month) { ?>
-                                    <option value="<?= $month ?>" <?= $month == $time['month'] ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $month, 1)) ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                        <div class="col-3">
-                            <select name="year" class="form-select">
-                                <?php foreach ($time['years'] as $year) { ?>
-                                    <option value="<?= $year ?>" <?= $year == $time['year'] ? 'selected' : '' ?>><?= $year ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
+            <?php } ?>
+            
+            <?php include 'components/time_selector.php'; ?>
+            
+            <?php 
+            if ($components['financial']) {
+                include 'components/financial_overview.php';
+                echo '<hr>';
+            }
+            
+            if ($components['sales']) {
+                include 'components/sales_overview.php';
+                echo '<hr>';
+            }
+            
+            if ($components['support']) {
+                include 'components/support_overview.php';
+                echo '<hr>';
+            }
+            ?>
         </div>
-        <?php if (isset($dashboards['financial'])) { ?>
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h3>Financial Overview</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Recievables for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <span class="badge bg-primary"><?= numfmt_format_currency($formatter, $dashboards['financial']['recievables'], 'USD') ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Income for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <span class="badge bg-success"><?= numfmt_format_currency($formatter, $dashboards['financial']['income'], 'USD') ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Unbilled Tickets for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <span class="badge bg-secondary"><?= $dashboards['financial']['unbilled_tickets'] ?></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Income Overview for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <canvas id="income-chart" width="200" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Expenses Overview for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <canvas id="expenses-chart" width="200" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-        <?php if (isset($dashboards['sales'])) { ?>
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h3>Sales Overview</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Quotes for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <span class="badge bg-primary"><?= numfmt_format_currency($formatter, $dashboards['sales']['total_quotes'], 'USD') ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">Quotes Accepted for <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <span class="badge bg-success"><?= numfmt_format_currency($formatter, $dashboards['sales']['total_quotes_accepted'], 'USD') ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="card-text">New Clients in <?= date('F Y', strtotime($time['year'] . '-' . $time['month'] . '-01')) ?>: </p>
-                                    <span class="badge bg-secondary"><?= $dashboards['sales']['new_clients'] ?></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-        <?php if (isset($dashboards['support'])) { ?>
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h3>Support Overview</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Unassigned Tickets</h5>
-                                    <p class="card-text">Unassigned Tickets: <?= $dashboards['support']['unassigned_tickets'] ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Assigned Tickets</h5>
-                                    <p class="card-text">Assigned Tickets: <?= $dashboards['support']['assigned_tickets'] ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">My Resolved Tickets</h5>
-                                    <p class="card-text">Resolved Tickets: <?= $dashboards['support']['resolved_tickets'] ?></p>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-    </div>
-    <div class="col-3">
-        <div class="card">
-            <div class="card-header">
-                <h3>Recent Activities</h3>
-            </div>
-            <div class="card-body">
-                <?php foreach ($dashboards['recent_activities'] as $activity) { ?>
-                    <div class="card mb-1">
-                        <div class="card-body">
-                            <h5 class="card-title small"><?= $activity['log_description'] ?></h5>
-                            <p class="card-text small text-muted"><?= $activity['user_name'] ?></p> 
-                            <p class="card-text small text-muted text-end"><?= date('g:i a - n M, Y', strtotime($activity['log_created_at'])) ?></p>
-                        </div>
-                    </div>
-                <?php } ?>
-            </div>
+        
+        <div class="col-3">
+            <?php if ($components['recent_activities']) { ?>
+                <?php include 'components/recent_activities.php'; ?>
+            <?php } ?>
         </div>
     </div>
 </div>
 
-<!-- Replace ApexCharts with Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -203,26 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateColorPalette(categories) {
         return categories.map(category => generateColor(category));
     }
-
-    // Plugin to draw total in the center of doughnut
-    const doughnutLabel = {
-        id: 'doughnutLabel',
-        afterDatasetsDraw(chart, args, pluginOptions) {
-            const { ctx, data } = chart;
-            const centerX = chart.getDatasetMeta(0).data[0].x;
-            const centerY = chart.getDatasetMeta(0).data[0].y;
-
-            ctx.save();
-            ctx.font = 'bold 14px Arial';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-            ctx.fillText('Total:', centerX, centerY - 15);
-            ctx.fillText('$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), centerX, centerY + 15);
-            ctx.restore();
-        }
-    };
 
     // Main Overview Chart
     const mainCtx = document.getElementById('overview-chart').getContext('2d');
@@ -321,34 +162,49 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 data: incomeData,
                 backgroundColor: incomeColors,
-                borderColor: incomeColors.map(color => color.replace(')', ', 0.8)')),
-                borderWidth: 1
+                borderColor: '#fff',
+                borderWidth: 2,
+                hoverOffset: 10,
+                spacing: 3,
+                borderRadius: 4,
+                weight: 1
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1,
+            cutout: '70%',
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
             plugins: {
                 title: {
                     display: true,
-                    text: 'Income by Category'
+                    text: 'Income by Category',
+                    padding: 20
+                },
+                legend: {
+                    display: false
                 },
                 tooltip: {
+                    enabled: true,
                     callbacks: {
                         label: function(context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed !== null) {
-                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
-                            }
-                            return label;
+                            const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return `${context.label}: ${new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'USD' 
+                            }).format(context.parsed)} (${percentage}%)`;
                         }
                     }
                 }
             }
-        },
-        plugins: [doughnutLabel]
+        }
     });
 
     // Expenses Doughnut Chart
@@ -364,34 +220,139 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 data: expenseData,
                 backgroundColor: expenseColors,
-                borderColor: expenseColors.map(color => color.replace(')', ', 0.8)')),
-                borderWidth: 1
+                borderColor: '#fff',
+                borderWidth: 2,
+                hoverOffset: 10,
+                spacing: 3,
+                borderRadius: 4,
+                weight: 1
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1,
+            cutout: '70%',
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
             plugins: {
                 title: {
                     display: true,
-                    text: 'Expenses by Category'
+                    text: 'Expenses by Category',
+                    padding: 20
+                },
+                legend: {
+                    display: false
                 },
                 tooltip: {
+                    enabled: true,
                     callbacks: {
                         label: function(context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed !== null) {
-                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
-                            }
-                            return label;
+                            const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return `${context.label}: ${new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'USD' 
+                            }).format(context.parsed)} (${percentage}%)`;
                         }
                     }
                 }
             }
+        }
+    });
+
+    // Profit Trend Chart
+    const profitCtx = document.getElementById('profit-trend-chart').getContext('2d');
+    
+    <?php
+    // Get current month and previous 2 months
+    $currentMonth = (int)date('m');
+    $currentYear = (int)date('Y');
+    $last3Months = [];
+    $last3MonthsData = [];
+    
+    for ($i = 0; $i < 3; $i++) {
+        $month = $currentMonth - $i;
+        $year = $currentYear;
+        
+        // Handle year rollover
+        if ($month <= 0) {
+            $month += 12;
+            $year--;
+        }
+        
+        $monthLabel = date('M', mktime(0, 0, 0, $month, 1));
+        $last3Months[] = "'" . $monthLabel . "'";
+        
+        // Find the profit data for this month
+        $monthData = array_values(array_filter($chart_data, function($data) use ($month) {
+            return $data['month'] == $month;
+        }));
+        
+        $profit = !empty($monthData) ? $monthData[0]['profit'] : 0;
+        $last3MonthsData[] = $profit;
+    }
+    
+    // Reverse arrays to show oldest to newest
+    $last3Months = array_reverse($last3Months);
+    $last3MonthsData = array_reverse($last3MonthsData);
+    ?>
+
+    new Chart(profitCtx, {
+        type: 'line',
+        data: {
+            labels: [<?php echo implode(',', $last3Months); ?>],
+            datasets: [{
+                label: 'Profit',
+                data: [<?php echo implode(',', array_map(function($value) { return $value * 1000; }, $last3MonthsData)); ?>],
+                borderColor: 'rgb(128, 0, 128)',
+                backgroundColor: 'rgba(128, 0, 128, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
         },
-        plugins: [doughnutLabel]
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 20,
+                    bottom: 20
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'USD' 
+                            }).format(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: false
+                },
+                y: {
+                    display: false,
+                    beginAtZero: false
+                }
+            }
+        }
     });
 });
 </script>
+

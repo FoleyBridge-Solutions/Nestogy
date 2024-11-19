@@ -19,7 +19,7 @@ function createPayment(
     $invoice_id = intval($payment['invoice_id']);
     $email_receipt = intval($payment['email_receipt']) ?? 1;
     $balance = floatval($payment['balance']);
-
+    $link_payment_to_transaction = $payment['link_payment_to_transaction'] ?? null;
 
      //Check to see if amount entered is greater than the balance of the invoice
     if ($amount > $balance) {
@@ -35,7 +35,17 @@ function createPayment(
     }
 
 
-    mysqli_query($mysqli,"INSERT INTO payments SET payment_date = '$date', payment_amount = $amount, payment_currency_code = '$currency_code', payment_account_id = $account, payment_method = '$payment_method', payment_reference = '$reference', payment_invoice_id = $invoice_id");
+    if ($link_payment_to_transaction) {
+        // Set bank transaction to reconciled
+        mysqli_query($mysqli, "UPDATE bank_transactions SET reconciled = 1 WHERE transaction_id = $link_payment_to_transaction");
+        
+        $sql = "INSERT INTO payments SET payment_date = '$date', payment_amount = $amount, payment_currency_code = '$currency_code', payment_account_id = $account, payment_method = '$payment_method', payment_reference = '$reference', payment_invoice_id = $invoice_id, plaid_transaction_id = $link_payment_to_transaction";
+    } else {
+        $sql = "INSERT INTO payments SET payment_date = '$date', payment_amount = $amount, payment_currency_code = '$currency_code', payment_account_id = $account, payment_method = '$payment_method', payment_reference = '$reference', payment_invoice_id = $invoice_id";
+    }
+
+    mysqli_query($mysqli, $sql);
+
 
     // Get payment ID for reference
     $payment_id = mysqli_insert_id($mysqli);

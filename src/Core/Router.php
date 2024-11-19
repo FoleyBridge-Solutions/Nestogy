@@ -15,7 +15,7 @@ use NumberFormatter;
 class Router {
     private $routes = [];
     private $apiRoutes = [];
-    private $defaultPage = 'dashboard';
+    private $defaultPage = 'tickets';
     private $currency_format;
     private $pdo;
 
@@ -87,7 +87,7 @@ class Router {
         $this->add('account', 'AccountingController', 'showAccount', ['account_id']);
         $this->add('expenses', 'AccountingController', 'showExpenses', ['client_id']);
         $this->add('expense', 'AccountingController', 'showExpense', ['expense_id']);
-        $this->add('bank_transactions', 'AccountingController', 'showBankTransactions', ['client_id']);
+        $this->add('unreconciled', 'AccountingController', 'showUnreconciledTransactions', ['type']);
         
         // Reports routes
         $this->add('report', 'ReportsController', 'index', ['report']);

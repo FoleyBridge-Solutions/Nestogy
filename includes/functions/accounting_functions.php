@@ -555,7 +555,8 @@ function getClientBalance($client_id) {
     global $pdo;
     if (!$pdo) {
         // Initialize $pdo if not already done
-        $config = require "/var/www/portal.twe.tech/config.php";
+        $domain = $_SERVER['HTTP_HOST'];
+        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
         $database = new Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -806,7 +807,8 @@ function getInvoiceBalance($invoice_id)
     global $pdo;
     if (!$pdo) {
         // Initialize $pdo if not already done
-        $config = require "/var/www/portal.twe.tech/config.php";
+        $domain = $_SERVER['HTTP_HOST'];
+        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
         $database = new Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -833,7 +835,8 @@ function getInvoiceAmount($invoice_id)
     global $pdo;
     if (!$pdo) {
         // Initialize $pdo if not already done
-        $config = require "/var/www/portal.twe.tech/config.php";
+        $domain = $_SERVER['HTTP_HOST'];
+        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
         $database = new \Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }
@@ -875,7 +878,8 @@ function createCreditForInvoice($invoice_id, $credit_amount) {
     global $pdo;
     if (!$pdo) {
         // Initialize $pdo if not already done
-        $config = require "/var/www/portal.twe.tech/config.php";
+        $domain = $_SERVER['HTTP_HOST'];
+        $config = require "/var/www/portal.twe.tech/config/$domain/config.php";
         $database = new \Twetech\Nestogy\Database($config['db']);
         $pdo = $database->getConnection();
     }

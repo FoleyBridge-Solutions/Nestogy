@@ -368,4 +368,24 @@ class Support {
     public function getSalesMeetings(){
         return [];
     }
+
+    public function getTicketsTrend($month, $year) {
+        return 0;
+    }   
+
+    public function getAverageResponseTime($month, $year) {
+        return 0;
+    }
+
+    public function getResponseTimeTrend($month, $year) {
+        return 0;
+    }
+
+    public function getCustomerSatisfaction($month, $year) {
+        return 0;
+    }
+
+    public function getSatisfactionTrend($month, $year) {
+        return 0;
+    }
 }

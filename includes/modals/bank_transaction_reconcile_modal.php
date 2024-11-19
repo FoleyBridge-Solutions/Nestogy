@@ -3,10 +3,13 @@
 use Twetech\Nestogy\Model\Accounting;
 use Twetech\Nestogy\Model\Client;
 
+
+require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
+
+
 $accounting = new Accounting($pdo);
 $client = new Client($pdo);
 
-require_once "/var/www/portal.twe.tech/includes/inc_all_modal.php";
 
 $transaction_id = $_GET['transaction_id'];
 $sql_transaction = mysqli_query($mysqli, "SELECT * FROM bank_transactions WHERE transaction_id = '$transaction_id'");

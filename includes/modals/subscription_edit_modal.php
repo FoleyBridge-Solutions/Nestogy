@@ -2,6 +2,11 @@
 require "../../bootstrap.php";
 
 use Twetech\Nestogy\Model\Accounting;
+use Twetech\Nestogy\Database;
+
+$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
+$database = new Database($config['db']);
+$pdo = $database->getConnection();
 
 $accounting = new Accounting($pdo);
 
@@ -27,8 +32,8 @@ $tax_rate = $subscription['tax_percent'];
     <div class="form-group">
         <label for="subscription_product_term">Term</label>
         <select class="form-control" id="subscription_product_term" name="subscription_product_term">
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
+            <option value="monthly" <?= $subscription['subscription_term'] == 'monthly' ? 'selected' : '' ?>>Monthly</option>
+            <option value="yearly" <?= $subscription['subscription_term'] == 'yearly' ? 'selected' : '' ?>>Yearly</option>
         </select>
     </div>
     <div class="form-group">

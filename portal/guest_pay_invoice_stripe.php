@@ -9,7 +9,7 @@ require_once "/var/www/portal.twe.tech/portal/guest_header.php";
 use Twetech\Nestogy\Database;
 use Twetech\Nestogy\Model\Accounting;
 
-$config = require __DIR__ . '/../config.php';
+$config = require '/var/www/portal.twe.tech/config/portal.twe.tech/config.php';
 $database = new Database($config['db']);
 $pdo = $database->getConnection();
 $accounting = new Accounting($pdo);

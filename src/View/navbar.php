@@ -169,6 +169,7 @@ if ($client_page) {
                             'children' => [
                                 ['title' => 'View Payments', 'link' => '/public/?page=payments', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
                                 ['title' => 'Make Payment', 'link' => '/public/?page=make_payment', 'icon' => 'bx bx-credit-card', 'roles' => ['admin', 'accounting']],
+                                ['title' => 'Unreconciled Income', 'link' => '/public/?page=unreconciled&type=income', 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'accounting']]
                             ],
                             'roles' => ['admin', 'accounting']
                         ],
@@ -181,7 +182,7 @@ if ($client_page) {
                     'icon' => 'bx bx-money-withdraw', 
                     'children' => [
                         ['title' => 'Reconciled Expenses', 'link' => '/public/?page=expenses', 'icon' => 'bx bx-money-withdraw', 'roles' => ['admin', 'accounting']],
-                        ['title' => 'Unreconciled Expenses', 'link' => '/public/?page=bank_transactions', 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'accounting']],
+                        ['title' => 'Unreconciled Expenses', 'link' => '/public/?page=unreconciled&type=expense', 'icon' => 'bx bx-receipt', 'roles' => ['admin', 'accounting']],
                     ],
                     'roles' => ['admin', 'accounting']
                 ],

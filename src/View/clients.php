@@ -25,7 +25,7 @@ $datatable_settings = ",
     <div class="card-body p-2 p-md-3">
 
         <div class="card-datatable table-responsive  pt-0">
-            <table class="datatables-basic table border-top" id="clientsTable">
+            <table class="table border-top" id="clientsTable">
                 <thead>
                     <tr>
                         <th style="display: none;">Accessed At</th>
@@ -165,3 +165,129 @@ $datatable_settings = ",
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#clientsTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: '/public/?page=clients',
+        columns: [
+            { data: 'client_accessed_at', visible: false },
+            { 
+                data: null,
+                render: function(data, type, row) {
+                    let html = `<a href="/public/?page=client&action=show&client_id=${row.client_id}">
+                        <h4><i class="bx bx-right-arrow me-1"></i>${row.client_name}</h4>
+                    </a>`;
+                    
+                    if (row.client_type) {
+                        html += `<div class="text-secondary mt-1">${row.client_type}</div>`;
+                    }
+                    
+                    if (row.tag_names) {
+                        html += `<div class="mt-1">${formatTags(row.tag_names)}</div>`;
+                    }
+                    
+                    html += `<div class="mt-1 text-secondary">
+                        <small><strong>Created:</strong> ${row.client_created_at}</small>
+                    </div>`;
+                    
+                    return html;
+                }
+            },
+            { 
+                data: null,
+                render: function(data, type, row) {
+                    return `<a href="//maps.google.com/?q=${encodeURIComponent(row.location_address + ' ' + row.location_zip)}" target="_blank">
+                        ${row.location_address}${row.location_zip ? ', ' + row.location_zip : ''}
+                    </a>`;
+                }
+            },
+            { 
+                data: null,
+                render: function(data, type, row) {
+                    return formatContactInfo(row);
+                }
+            },
+            { 
+                data: null,
+                render: function(data, type, row) {
+                    return formatBillingInfo(row);
+                }
+            }
+        ]
+    });
+});
+
+function formatTags(tags) {
+    if (!tags) return '';
+    return tags.split(',')
+        .map(tag => `<span class='badge bg-label-secondary'>${tag}</span>`)
+        .join(' ');
+}
+
+function formatContactInfo(row) {
+    if (!row.contact_name && !row.contact_phone && !row.contact_mobile && !row.contact_email) {
+        return '-';
+    }
+
+    let html = '';
+    
+    if (row.contact_name) {
+        html += `<div class="text-bold">
+            <i class="fa fa-fw fa-user text-secondary mr-2 mb-2"></i>${row.contact_name}
+        </div>`;
+    }
+
+    if (row.contact_phone) {
+        html += `<div class="mt-1">
+            <i class="fa fa-fw fa-phone text-secondary mr-2 mb-2"></i>${row.contact_phone}
+            ${row.contact_extension ? 'x' + row.contact_extension : ''}
+        </div>`;
+    }
+
+    if (row.contact_mobile) {
+        html += `<div class="mt-1">
+            <i class="fa fa-fw fa-mobile-alt text-secondary mr-2"></i>${row.contact_mobile}
+        </div>`;
+    }
+
+    if (row.contact_email) {
+        html += `<div class="mt-1">
+            <i class="fa fa-fw fa-envelope text-secondary mr-2"></i>
+            <a href="mailto:${row.contact_email}">${row.contact_email}</a>
+            <button class='btn btn-sm clipboardjs' data-clipboard-text='${row.contact_email}'>
+                <i class='far fa-copy text-secondary'></i>
+            </button>
+        </div>`;
+    }
+
+    return html || '-';
+}
+
+function formatBillingInfo(row) {
+    const pastDueClass = parseFloat(row.client_past_due_amount) > 0 ? 'text-danger' : 'text-secondary';
+    
+    return `<div class="mt-1">
+        <span class="text-secondary">Past Due: </span>
+        <span class="${pastDueClass}">${formatCurrency(row.client_past_due_amount)}</span>
+    </div>
+    <div class="mt-1">
+        <span class="text-secondary">Paid (YTD):</span> ${formatCurrency(row.client_payments)}
+    </div>
+    <div class="mt-1">
+        <span class="text-secondary">Monthly: </span> ${formatCurrency(row.client_recurring_monthly)}
+    </div>
+    <div class="mt-1">
+        <span class="text-secondary">Hourly Rate: </span> ${formatCurrency(row.client_rate)}
+    </div>`;
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-US', { 
+        style: 'currency', 
+        currency: 'USD' 
+    }).format(amount);
+}
+</script>

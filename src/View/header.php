@@ -69,6 +69,28 @@
     </script>
     <!-- TinyMCE -->
     <script src="https://cdn.tiny.cloud/1/aq84ecg358zq9b4i9ea6hjaxqpx4mirbbtm7h5khkwevpqac/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-</head>
+
+    <style>
+
+
+        /* Initial state for cards */
+        body:not(.content-loaded) .card {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Animation styles */
+        .card {
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            will-change: opacity, transform;
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+  </head>
+
 
 <body>

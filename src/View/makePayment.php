@@ -11,6 +11,9 @@ $payment_received = -1  *  $transaction['amount'];
             <div class="card-body">
                 <div id="credit-notification" class="alert alert-info" style="display: none;"></div>
                 <form action="/old_pages/payment_add.php" method="post">
+                    <?php if (isset($transaction)) { ?>
+                        <input type="hidden" name="bank_transaction_id" value="<?= $transaction['transaction_id'] ?>">
+                    <?php } ?>
                     <div class="row">
                         <div class="col-md-5 col-12">
                             <div class="form-group">
@@ -340,7 +343,8 @@ $payment_received = -1  *  $transaction['amount'];
                 payment_method: $('#payment_method').val(),
                 payment_reference: $('#payment_reference').val(),
                 payment_account: $('#payment_account').val(),
-                client: $('#Client').val()
+                client: $('#Client').val(),
+                link_payment_to_transaction: $('#bank_transaction_id').val()
             };
 
             if (!data.payment_date) return alert('Payment date is required');
