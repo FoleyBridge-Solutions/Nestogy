@@ -207,13 +207,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 $(function () {
+
+
+    // Initialize DataTables
     var datatable = $('.datatables-basic').DataTable({
+        processing: true,
         responsive: true,
         stateSave: true,
-        order: <?= $datatable_order ?>
-        <?= $datatable_settings ?>
+        order: [],
+        autoWidth: false,
+        scrollCollapse: true,
+        language: {
+            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+        },
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        columnDefs: [{ visible: false, targets: 0 }]
     });
 
+    // Handle window resize
+    $(window).on('resize', function() {
+        datatable.columns.adjust().responsive.recalc();
+    });
+
+    // Handle tab changes if using Bootstrap tabs
+    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function() {
+        datatable.columns.adjust().responsive.recalc();
+    });
+
+    // Initialize Select2
     $(".select2").select2();
 
     // video

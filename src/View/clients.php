@@ -23,16 +23,15 @@ $datatable_settings = ",
     </header>
 
     <div class="card-body p-2 p-md-3">
-
-        <div class="card-datatable table-responsive  pt-0">
+        <div class="card-datatable">
             <table class="table border-top" id="clientsTable">
                 <thead>
                     <tr>
-                        <th style="display: none;">Accessed At</th>
-                        <th data-priority="1">Name</th>
-                        <th data-priority="2">Primary Location</th>
+                        <th style="display: none;">Last Accessed</th>
+                        <th>Name</th>
+                        <th>Primary Location</th>
                         <th>Primary Contact</th>
-                        <th class="text-right " data-priority="3">Billing (Past Due)</th>
+                        <th class="text-right">Billing</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,9 +72,6 @@ $datatable_settings = ",
 
                     ?>
                         <tr>
-                            <td style="display: none;" data-order="<?= $client_accessed_at; ?>">
-                                <?= $client_accessed_at; ?>
-                            </td>
                             <td data-order="<?= $client_name; ?>">
                                 <a href="/public/?page=client&action=show&client_id=<?= $client_id; ?>">
                                     <h4><i class="bx bx-right-arrow me-1"></i><?= $client_name; ?></h4>
@@ -168,55 +164,101 @@ $datatable_settings = ",
 
 <script>
 $(document).ready(function() {
-    $('#clientsTable').DataTable({
+    var table = $('#clientsTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '/public/?page=clients',
+        responsive: true,
+        ajax: {
+            url: window.location.pathname + '?page=clients',
+            type: 'GET',
+            error: function(xhr, error, thrown) {
+                console.error('DataTables error:', error, thrown);
+            }
+        },
         columns: [
-            { data: 'client_accessed_at', visible: false },
             { 
-                data: null,
+                data: 'client_accessed_at',
+                visible: false
+            },
+            { 
+                data: 'client_name',
+                className: 'align-middle',
+                width: '40%', // Set width for name column
                 render: function(data, type, row) {
-                    let html = `<a href="/public/?page=client&action=show&client_id=${row.client_id}">
-                        <h4><i class="bx bx-right-arrow me-1"></i>${row.client_name}</h4>
-                    </a>`;
-                    
-                    if (row.client_type) {
-                        html += `<div class="text-secondary mt-1">${row.client_type}</div>`;
+                    if (type === 'display') {
+                        let html = `<a href="${window.location.pathname}?page=client&action=show&client_id=${row.client_id}">
+                            <h4><i class="bx bx-right-arrow me-1"></i>${row.client_name}</h4>
+                        </a>`;
+                        
+                        if (row.client_type) {
+                            html += `<div class="text-secondary mt-1">${row.client_type}</div>`;
+                        }
+                        
+                        if (row.tag_names) {
+                            html += `<div class="mt-1">${formatTags(row.tag_names)}</div>`;
+                        }
+                        
+                        html += `<div class="mt-1 text-secondary">
+                            <small><strong>Created:</strong> ${row.client_created_at}</small>
+                        </div>`;
+                        
+                        return html;
                     }
-                    
-                    if (row.tag_names) {
-                        html += `<div class="mt-1">${formatTags(row.tag_names)}</div>`;
+                    return data;
+                }
+            },
+            { 
+                data: 'location_address',
+                className: 'align-middle',
+                width: '20%', // Set width for location column
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        return row.location_address ? 
+                            `<a href="//maps.google.com/?q=${encodeURIComponent(row.location_address + ' ' + row.location_zip)}" target="_blank">
+                                ${row.location_address}${row.location_zip ? ', ' + row.location_zip : ''}
+                            </a>` : '-';
                     }
-                    
-                    html += `<div class="mt-1 text-secondary">
-                        <small><strong>Created:</strong> ${row.client_created_at}</small>
-                    </div>`;
-                    
-                    return html;
+                    return data;
                 }
             },
             { 
-                data: null,
+                data: 'contact_name',
+                className: 'align-middle',
+                width: '25%', // Set width for contact column
                 render: function(data, type, row) {
-                    return `<a href="//maps.google.com/?q=${encodeURIComponent(row.location_address + ' ' + row.location_zip)}" target="_blank">
-                        ${row.location_address}${row.location_zip ? ', ' + row.location_zip : ''}
-                    </a>`;
+                    if (type === 'display') {
+                        return formatContactInfo(row);
+                    }
+                    return data;
                 }
             },
             { 
-                data: null,
+                data: 'client_created_at',
+                className: 'align-middle text-right',
+                width: '15%', // Set width for billing column
                 render: function(data, type, row) {
-                    return formatContactInfo(row);
-                }
-            },
-            { 
-                data: null,
-                render: function(data, type, row) {
-                    return formatBillingInfo(row);
+                    if (type === 'display') {
+                        return formatBillingInfo(row);
+                    }
+                    return data;
                 }
             }
-        ]
+        ],
+        order: [[0, 'desc']],
+        pageLength: 10,
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        language: {
+            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+        },
+        autoWidth: false,
+        scrollCollapse: true
+    });
+
+    // Handle window resize
+    $(window).on('resize', function() {
+        table.columns.adjust().responsive.recalc();
     });
 });
 

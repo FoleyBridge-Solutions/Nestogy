@@ -308,26 +308,31 @@ class Client {
         return $stmt->fetchColumn();
     }
 
-    public function getFilteredClients($start, $length, $search, $order_column, $order_dir) {
+    public function getFilteredClients($start, $length, $search, $order_column, $order_dir = 'ASC') {
         $columns = [
-            'client_accessed_at',
-            'client_name',
-            'location_address',
-            'contact_name',
-            'client_created_at'
+            'c.client_accessed_at', // column 0 (hidden)
+            'c.client_name',        // column 1
+            'l.location_address',   // column 2
+            'co.contact_name',      // column 3
+            'c.client_created_at'   // column 4
         ];
         
-        $where = "WHERE c.client_archived_at IS NULL";
+        $orderColumn = isset($columns[$order_column]) ? $columns[$order_column] : 'c.client_accessed_at';
+        $order = "ORDER BY " . $orderColumn . " " . $order_dir;
+        
+        $where = "WHERE c.client_archived_at IS NULL AND c.client_lead = 0";
         if ($search) {
             $search = "%$search%";
             $where .= " AND (c.client_name LIKE ? OR c.client_type LIKE ? OR c.client_notes LIKE ?)";
         }
         
-        $orderColumn = isset($columns[$order_column]) ? $columns[$order_column] : 'client_name';
-        $order = "ORDER BY " . $orderColumn . " " . $order_dir;
-        
         $sql = "SELECT 
-            c.*,
+            c.client_id,
+            c.client_name,
+            c.client_type,
+            c.client_created_at,
+            c.client_accessed_at,
+            c.client_rate,
             l.location_address,
             l.location_zip,
             co.contact_name,
@@ -335,14 +340,16 @@ class Client {
             co.contact_extension,
             co.contact_mobile,
             co.contact_email,
-            GROUP_CONCAT(t.tag_name) as tag_names
+            GROUP_CONCAT(DISTINCT t.tag_name) as tag_names
         FROM clients c
         LEFT JOIN locations l ON c.client_id = l.location_client_id AND l.location_primary = 1
         LEFT JOIN contacts co ON c.client_id = co.contact_client_id AND co.contact_primary = 1
         LEFT JOIN client_tags ct ON c.client_id = ct.client_tag_client_id
         LEFT JOIN tags t ON ct.client_tag_tag_id = t.tag_id
         $where
-        GROUP BY c.client_id
+        GROUP BY c.client_id, c.client_name, c.client_type, c.client_created_at, c.client_accessed_at,
+                 c.client_rate, l.location_address, l.location_zip, co.contact_name, co.contact_phone,
+                 co.contact_extension, co.contact_mobile, co.contact_email
         $order
         LIMIT ?, ?";
         

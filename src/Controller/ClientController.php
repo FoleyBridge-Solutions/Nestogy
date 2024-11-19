@@ -63,7 +63,7 @@ class ClientController {
         $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
         $search = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
         $order_column = isset($_GET['order'][0]['column']) ? intval($_GET['order'][0]['column']) : 0;
-        $order_dir = isset($_GET['order'][0]['dir']) ? $_GET['order'][0]['dir'] : 'ASC';
+        $order_dir = isset($_GET['order'][0]['dir']) ? $_GET['order'][0]['dir'] : 'DESC';
 
         // Get total count and filtered data from model
         $total = $this->clientModel->getTotalClients();
