@@ -1,0 +1,191 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class CategorySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        DB::table('categories')->insert([
+            // Expense Categories
+            [
+                'id' => 1,
+                'company_id' => 1,
+                'name' => 'Office Supplies',
+                'type' => 'expense',
+                'color' => '#3498db',
+                'icon' => 'fas fa-paperclip',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 2,
+                'company_id' => 1,
+                'name' => 'Software & Licenses',
+                'type' => 'expense',
+                'color' => '#9b59b6',
+                'icon' => 'fas fa-laptop-code',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 3,
+                'company_id' => 1,
+                'name' => 'Hardware & Equipment',
+                'type' => 'expense',
+                'color' => '#e74c3c',
+                'icon' => 'fas fa-server',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 4,
+                'company_id' => 1,
+                'name' => 'Travel & Transportation',
+                'type' => 'expense',
+                'color' => '#f39c12',
+                'icon' => 'fas fa-car',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 5,
+                'company_id' => 1,
+                'name' => 'Professional Services',
+                'type' => 'expense',
+                'color' => '#2ecc71',
+                'icon' => 'fas fa-handshake',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            
+            // Income Categories
+            [
+                'id' => 6,
+                'company_id' => 1,
+                'name' => 'IT Services',
+                'type' => 'income',
+                'color' => '#1abc9c',
+                'icon' => 'fas fa-tools',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 7,
+                'company_id' => 1,
+                'name' => 'Consulting',
+                'type' => 'income',
+                'color' => '#34495e',
+                'icon' => 'fas fa-user-tie',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 8,
+                'company_id' => 1,
+                'name' => 'Software Development',
+                'type' => 'income',
+                'color' => '#8e44ad',
+                'icon' => 'fas fa-code',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 9,
+                'company_id' => 1,
+                'name' => 'Managed Services',
+                'type' => 'income',
+                'color' => '#27ae60',
+                'icon' => 'fas fa-shield-alt',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            
+            // Ticket Categories
+            [
+                'id' => 10,
+                'company_id' => 1,
+                'name' => 'Hardware Issue',
+                'type' => 'ticket',
+                'color' => '#e67e22',
+                'icon' => 'fas fa-wrench',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 11,
+                'company_id' => 1,
+                'name' => 'Software Issue',
+                'type' => 'ticket',
+                'color' => '#3498db',
+                'icon' => 'fas fa-bug',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 12,
+                'company_id' => 1,
+                'name' => 'Network Issue',
+                'type' => 'ticket',
+                'color' => '#e74c3c',
+                'icon' => 'fas fa-network-wired',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 13,
+                'company_id' => 1,
+                'name' => 'User Request',
+                'type' => 'ticket',
+                'color' => '#2ecc71',
+                'icon' => 'fas fa-user-plus',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+            [
+                'id' => 14,
+                'company_id' => 1,
+                'name' => 'Security Issue',
+                'type' => 'ticket',
+                'color' => '#c0392b',
+                'icon' => 'fas fa-shield-alt',
+                'parent_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'archived_at' => null,
+            ],
+        ]);
+    }
+}
