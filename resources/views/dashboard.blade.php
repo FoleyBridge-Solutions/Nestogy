@@ -14,9 +14,25 @@
                 <div class="flex items-center space-x-6">
                     <div>
                         <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                            Executive Dashboard
+                            @php
+                                $workflowTitles = [
+                                    'urgent' => 'Urgent Items Dashboard',
+                                    'today' => "Today's Work Dashboard",
+                                    'scheduled' => 'Scheduled Work Dashboard',
+                                    'financial' => 'Financial Dashboard',
+                                    'reports' => 'Reports Dashboard',
+                                    'default' => 'Executive Dashboard'
+                                ];
+                                $currentWorkflow = $workflow ?? $workflowView ?? 'default';
+                            @endphp
+                            {{ $workflowTitles[$currentWorkflow] ?? 'Executive Dashboard' }}
                         </h1>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" x-text="currentTime"></p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            @if($selectedClient ?? null)
+                                <span class="font-medium">{{ $selectedClient->name }}</span> •
+                            @endif
+                            <span x-text="currentTime"></span>
+                        </p>
                     </div>
                 </div>
 
@@ -83,6 +99,29 @@
 
     <!-- Main Dashboard Content -->
     <main class="px-6 py-8">
+        @php
+            $currentWorkflow = $workflow ?? $workflowView ?? 'default';
+        @endphp
+        
+        @if($currentWorkflow === 'urgent' && isset($workflowData))
+            <!-- Urgent Workflow Content -->
+            @include('dashboard.workflows.urgent', ['data' => $workflowData, 'kpis' => $kpis ?? [], 'alerts' => $alerts ?? []])
+        @elseif($currentWorkflow === 'today' && isset($workflowData))
+            <!-- Today's Work Content -->
+            @include('dashboard.workflows.today', ['data' => $workflowData, 'kpis' => $kpis ?? []])
+        @elseif($currentWorkflow === 'scheduled' && isset($workflowData))
+            <!-- Scheduled Work Content -->
+            @include('dashboard.workflows.scheduled', ['data' => $workflowData, 'kpis' => $kpis ?? []])
+        @elseif($currentWorkflow === 'financial' && isset($workflowData))
+            <!-- Financial Workflow Content -->
+            @include('dashboard.workflows.financial', ['data' => $workflowData, 'kpis' => $kpis ?? []])
+        @elseif($currentWorkflow === 'reports' && isset($workflowData))
+            <!-- Reports Workflow Content -->
+            @include('dashboard.workflows.reports', ['data' => $workflowData, 'kpis' => $kpis ?? []])
+        @else
+            <!-- Default Executive Dashboard -->
+        @endif
+        
         <!-- KPI Cards Grid -->
         <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
             <!-- Total Revenue Card -->
