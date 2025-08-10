@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('client_addresses', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('contact_id')->nullable();
             $table->string('name');
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->timestamp('accessed_at')->nullable();
 
             // Indexes
-            $table->index('tenant_id');
+            $table->index('company_id');
             $table->index('client_id');
             $table->index('contact_id');
             $table->index('name');
@@ -43,14 +43,14 @@ return new class extends Migration
             $table->index('zip_code');
             $table->index('country');
             $table->index('primary');
-            $table->index(['tenant_id', 'client_id']);
+            $table->index(['company_id', 'client_id']);
             $table->index(['client_id', 'primary']);
             $table->index(['state', 'city']);
             $table->index('deleted_at');
             $table->index('accessed_at');
 
             // Foreign key constraints
-            $table->foreign('tenant_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreign('contact_id')->references('id')->on('client_contacts')->onDelete('set null');
         });

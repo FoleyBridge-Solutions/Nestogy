@@ -29,13 +29,13 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = User::with(['company', 'settings'])
+        $query = User::with(['company', 'userSetting'])
             ->where('company_id', $user->company_id)
             ->whereNull('archived_at');
 
         // Apply filters
         if ($request->filled('role')) {
-            $query->whereHas('settings', function ($q) use ($request) {
+            $query->whereHas('userSetting', function ($q) use ($request) {
                 $q->where('role', $request->get('role'));
             });
         }
@@ -125,7 +125,7 @@ class UserController extends Controller
 
         $user->load([
             'company',
-            'settings',
+            'userSetting',
             'createdTickets' => function ($query) {
                 $query->orderBy('created_at', 'desc')->limit(10);
             },
@@ -270,7 +270,7 @@ class UserController extends Controller
         ]);
 
         try {
-            $oldRole = $user->settings->role ?? 1;
+            $oldRole = $user->userSetting->role ?? 1;
             $newRole = $request->get('role');
             
             $this->userService->updateUserRole($user, $newRole);
@@ -488,7 +488,7 @@ class UserController extends Controller
     public function profile(Request $request)
     {
         $user = Auth::user();
-        $user->load(['company', 'settings']);
+        $user->load(['company']);
 
         if ($request->wantsJson()) {
             return response()->json($user);
@@ -598,11 +598,11 @@ class UserController extends Controller
     {
         $user = Auth::user();
         
-        $technicians = User::with('settings')
+        $technicians = User::with('userSetting')
             ->where('company_id', $user->company_id)
             ->where('status', 1)
             ->whereNull('archived_at')
-            ->whereHas('settings', function ($query) {
+            ->whereHas('userSetting', function ($query) {
                 $query->where('role', '>', 1); // Tech role and above
             })
             ->orderBy('name')
@@ -634,7 +634,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         
-        $users = User::with(['settings'])
+        $users = User::with(['userSetting'])
             ->where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
@@ -664,7 +664,7 @@ class UserController extends Controller
             // CSV data
             foreach ($users as $user) {
                 $roleNames = [1 => 'User', 2 => 'Tech', 3 => 'Admin', 4 => 'Super Admin'];
-                $role = $roleNames[$user->settings->role ?? 1] ?? 'User';
+                $role = $roleNames[$user->userSetting->role ?? 1] ?? 'User';
                 
                 fputcsv($file, [
                     $user->name,

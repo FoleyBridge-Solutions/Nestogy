@@ -83,7 +83,7 @@
 
                             <!-- Back to Login -->
                             <div class="text-center">
-                                <a href="{{ route('auth.login') }}" class="text-decoration-none">
+                                <a href="{{ route('login') }}" class="text-decoration-none">
                                     <i class="fas fa-arrow-left me-1"></i>Back to Login
                                 </a>
                             </div>

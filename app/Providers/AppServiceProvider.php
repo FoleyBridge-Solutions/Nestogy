@@ -4,7 +4,15 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\ConfigurationValidationService;
+use App\Services\NavigationService;
+use App\Services\VoIPTaxService;
+use App\Services\VoIPUsageService;
+use App\Services\VoIPTieredPricingService;
+use App\Http\ViewComposers\NavigationComposer;
+use App\Http\ViewComposers\ClientViewComposer;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +24,28 @@ class AppServiceProvider extends ServiceProvider
         // Register the configuration validation service
         $this->app->singleton(ConfigurationValidationService::class, function ($app) {
             return new ConfigurationValidationService();
+        });
+
+        // Register the navigation service
+        $this->app->singleton(NavigationService::class, function ($app) {
+            return new NavigationService();
+        });
+
+        // Register VoIP services with proper dependency injection
+        $this->app->bind(VoIPTaxService::class, function ($app) {
+            $service = new VoIPTaxService();
+            if (Auth::check() && Auth::user()->company_id) {
+                $service->setCompanyId(Auth::user()->company_id);
+            }
+            return $service;
+        });
+
+        $this->app->bind(VoIPUsageService::class, function ($app) {
+            return new VoIPUsageService();
+        });
+
+        $this->app->bind(VoIPTieredPricingService::class, function ($app) {
+            return new VoIPTieredPricingService();
         });
     }
 
@@ -36,6 +66,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Configure upload directories
         $this->configureUploadDirectories();
+
+        // Register view composers
+        $this->registerViewComposers();
     }
 
     /**
@@ -61,6 +94,18 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             Log::error('Failed to run configuration validation', ['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Register view composers
+     */
+    protected function registerViewComposers(): void
+    {
+        // Inject navigation data into the main app layout
+        View::composer('layouts.app', NavigationComposer::class);
+        
+        // Inject selected client data into client views
+        View::composer('clients.*', ClientViewComposer::class);
     }
 
     /**

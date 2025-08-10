@@ -21,9 +21,15 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // Add model policies here as needed
+        // Domain model policies
         \App\Models\Client::class => \App\Policies\ClientPolicy::class,
         \App\Models\Ticket::class => \App\Policies\TicketPolicy::class,
+        \App\Models\Asset::class => \App\Policies\AssetPolicy::class,
+        \App\Models\User::class => \App\Policies\UserPolicy::class,
+        \App\Models\Project::class => \App\Policies\ProjectPolicy::class,
+        \App\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
+        \App\Models\Quote::class => \App\Policies\QuotePolicy::class,
+        \App\Models\Recurring::class => \App\Policies\RecurringPolicy::class,
     ];
 
     /**
@@ -41,6 +47,27 @@ class AuthServiceProvider extends ServiceProvider
         
         // Define administrative gates
         $this->defineAdminGates();
+
+        // Define new permission-based gates
+        $this->definePermissionGates();
+
+        // Define quote-specific gates
+        $this->defineQuoteGates();
+
+        // Define recurring billing gates
+        $this->defineRecurringGates();
+
+        // Define approval workflow gates
+        $this->defineApprovalGates();
+
+        // Define export permission gates
+        $this->defineExportGates();
+
+        // Define company and team gates
+        $this->defineCompanyGates();
+
+        // Define security and audit gates
+        $this->defineSecurityGates();
     }
 
     /**
@@ -203,6 +230,411 @@ class AuthServiceProvider extends ServiceProvider
     }
 
     /**
+     * Define permission-based authorization gates.
+     */
+    protected function definePermissionGates(): void
+    {
+        // Dynamic permission gates
+        Gate::define('has-permission', function (User $user, string $permission) {
+            return $user->hasPermission($permission);
+        });
+
+        Gate::define('has-any-permission', function (User $user, array $permissions) {
+            return $user->hasAnyPermission($permissions);
+        });
+
+        Gate::define('has-all-permissions', function (User $user, array $permissions) {
+            return $user->hasAllPermissions($permissions);
+        });
+
+        // Domain access gates
+        Gate::define('access-domain', function (User $user, string $domain) {
+            return $user->canAccessDomain($domain);
+        });
+
+        Gate::define('perform-action', function (User $user, string $domain, string $action) {
+            return $user->canPerformAction($domain, $action);
+        });
+
+        // Role hierarchy gates (using new system)
+        Gate::define('has-role-level', function (User $user, int $level) {
+            return $user->getRoleLevel() >= $level;
+        });
+
+        Gate::define('is-company-admin', function (User $user) {
+            return $user->hasRole('admin') && $user->company_id;
+        });
+    }
+
+    /**
+     * Define quote-specific authorization gates.
+     */
+    protected function defineQuoteGates(): void
+    {
+        // Quote management gates
+        Gate::define('manage-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.manage');
+        });
+
+        Gate::define('create-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.manage');
+        });
+
+        Gate::define('view-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.view');
+        });
+
+        Gate::define('approve-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.approve');
+        });
+
+        Gate::define('send-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.manage');
+        });
+
+        Gate::define('convert-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.manage') &&
+                   $user->hasPermission('financial.invoices.manage');
+        });
+
+        // Quote workflow gates
+        Gate::define('approve-quotes-manager', function (User $user) {
+            return $user->hasPermission('financial.quotes.approve') &&
+                   ($user->hasRole('manager') || $user->hasRole('executive') || $user->hasRole('admin'));
+        });
+
+        Gate::define('approve-quotes-executive', function (User $user) {
+            return $user->hasPermission('financial.quotes.approve') &&
+                   ($user->hasRole('executive') || $user->hasRole('admin'));
+        });
+
+        Gate::define('approve-quotes-finance', function (User $user) {
+            return $user->hasPermission('financial.quotes.approve') &&
+                   ($user->hasRole('finance') || $user->hasRole('executive') || $user->hasRole('admin'));
+        });
+
+        // Quote template gates
+        Gate::define('manage-quote-templates', function (User $user) {
+            return $user->hasPermission('financial.quotes.templates');
+        });
+
+        Gate::define('use-quote-templates', function (User $user) {
+            return $user->hasPermission('financial.quotes.manage');
+        });
+
+        // VoIP configuration gates
+        Gate::define('manage-voip-config', function (User $user) {
+            return $user->hasPermission('financial.quotes.manage') &&
+                   $user->hasPermission('voip.configuration');
+        });
+
+        // Quote export gates
+        Gate::define('export-quotes', function (User $user) {
+            return $user->hasPermission('financial.quotes.export');
+        });
+
+        // Quote analytics gates
+        Gate::define('view-quote-analytics', function (User $user) {
+            return $user->hasPermission('financial.quotes.analytics') ||
+                   $user->hasPermission('reports.financial');
+        });
+    }
+
+    /**
+     * Define recurring billing authorization gates.
+     */
+    protected function defineRecurringGates(): void
+    {
+        // Recurring billing management gates
+        Gate::define('manage-recurring', function (User $user) {
+            return $user->hasPermission('financial.recurring.manage');
+        });
+
+        Gate::define('create-recurring', function (User $user) {
+            return $user->hasPermission('financial.recurring.manage');
+        });
+
+        Gate::define('view-recurring', function (User $user) {
+            return $user->hasPermission('financial.recurring.view');
+        });
+
+        Gate::define('generate-recurring-invoices', function (User $user) {
+            return $user->hasPermission('financial.recurring.generate');
+        });
+
+        Gate::define('process-recurring-usage', function (User $user) {
+            return $user->hasPermission('financial.recurring.usage');
+        });
+
+        Gate::define('manage-recurring-escalations', function (User $user) {
+            return $user->hasPermission('financial.recurring.escalations');
+        });
+
+        Gate::define('manage-recurring-adjustments', function (User $user) {
+            return $user->hasPermission('financial.recurring.adjustments');
+        });
+
+        // VoIP-specific recurring billing gates
+        Gate::define('manage-voip-tiers', function (User $user) {
+            return $user->hasPermission('financial.recurring.manage') &&
+                   $user->hasPermission('voip.configuration');
+        });
+
+        Gate::define('process-voip-usage', function (User $user) {
+            return $user->hasPermission('financial.recurring.usage') &&
+                   $user->hasPermission('voip.billing');
+        });
+
+        Gate::define('manage-voip-tax', function (User $user) {
+            return $user->hasPermission('financial.recurring.tax') &&
+                   ($user->isAdmin() || $user->isManager());
+        });
+
+        // Recurring billing bulk operations
+        Gate::define('bulk-recurring-operations', function (User $user) {
+            return $user->hasPermission('financial.recurring.bulk');
+        });
+
+        // Recurring billing analytics and reports
+        Gate::define('view-recurring-analytics', function (User $user) {
+            return $user->hasPermission('financial.recurring.analytics');
+        });
+
+        Gate::define('view-recurring-reports', function (User $user) {
+            return $user->hasPermission('financial.recurring.reports');
+        });
+
+        Gate::define('export-recurring', function (User $user) {
+            return $user->hasPermission('financial.recurring.export');
+        });
+
+        Gate::define('view-revenue-forecast', function (User $user) {
+            return $user->hasPermission('financial.recurring.forecast') &&
+                   ($user->isAdmin() || $user->isManager());
+        });
+
+        // Recurring billing automation gates
+        Gate::define('manage-recurring-automation', function (User $user) {
+            return $user->hasPermission('financial.recurring.automation') &&
+                   ($user->isAdmin() || $user->isManager());
+        });
+
+        Gate::define('test-recurring-automation', function (User $user) {
+            return $user->hasPermission('financial.recurring.automation') &&
+                   ($user->isAdmin() || $user->isManager());
+        });
+
+        // Recurring billing history and audit
+        Gate::define('view-recurring-history', function (User $user) {
+            return $user->hasPermission('financial.recurring.history');
+        });
+
+        Gate::define('override-recurring-calculations', function (User $user) {
+            return $user->hasPermission('financial.recurring.override') &&
+                   ($user->isAdmin() || $user->isManager());
+        });
+
+        // Quote to recurring conversion
+        Gate::define('convert-quotes-to-recurring', function (User $user) {
+            return $user->hasPermission('financial.recurring.manage') &&
+                   $user->hasPermission('financial.quotes.view');
+        });
+    }
+
+    /**
+     * Define approval workflow gates.
+     */
+    protected function defineApprovalGates(): void
+    {
+        // Quote approval workflows
+        Gate::define('approve-quotes-any-level', function (User $user) {
+            return $user->hasPermission('financial.quotes.approve');
+        });
+
+        // Financial approval workflows
+        Gate::define('approve-expenses', function (User $user) {
+            return $user->hasPermission('financial.expenses.approve');
+        });
+
+        Gate::define('approve-payments', function (User $user) {
+            return $user->hasAnyPermission([
+                'financial.payments.manage',
+                'financial.expenses.approve'
+            ]);
+        });
+
+        Gate::define('approve-budgets', function (User $user) {
+            return $user->hasPermission('financial.manage') || $user->isAdmin();
+        });
+
+        // Project approval workflows
+        Gate::define('approve-project-changes', function (User $user) {
+            return $user->hasPermission('projects.manage');
+        });
+
+        Gate::define('approve-time-entries', function (User $user) {
+            return $user->hasAnyPermission([
+                'projects.manage',
+                'tickets.manage'
+            ]);
+        });
+
+        // Asset approval workflows
+        Gate::define('approve-asset-disposal', function (User $user) {
+            return $user->hasPermission('assets.manage') || $user->isAdmin();
+        });
+
+        Gate::define('approve-maintenance-schedules', function (User $user) {
+            return $user->hasPermission('assets.maintenance.manage');
+        });
+
+        // User management approvals
+        Gate::define('approve-user-access', function (User $user) {
+            return $user->hasAnyPermission([
+                'users.manage',
+                'system.permissions.manage'
+            ]);
+        });
+    }
+
+    /**
+     * Define export permission gates.
+     */
+    protected function defineExportGates(): void
+    {
+        // General export gates
+        Gate::define('export-any-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'clients.export',
+                'assets.export',
+                'financial.export',
+                'projects.export',
+                'reports.export',
+                'users.export'
+            ]);
+        });
+
+        Gate::define('export-sensitive-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'financial.export',
+                'users.export',
+                'reports.export'
+            ]) || $user->isAdmin();
+        });
+
+        // Domain-specific export gates
+        Gate::define('export-client-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'clients.export',
+                'clients.contacts.export',
+                'clients.locations.export',
+                'clients.documents.export'
+            ]);
+        });
+
+        Gate::define('export-financial-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'financial.export',
+                'financial.payments.export',
+                'financial.expenses.export',
+                'financial.invoices.export',
+                'financial.quotes.export'
+            ]);
+        });
+
+        Gate::define('export-asset-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'assets.export',
+                'assets.maintenance.export',
+                'assets.warranties.export',
+                'assets.depreciations.export'
+            ]);
+        });
+
+        Gate::define('export-project-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'projects.export',
+                'projects.tasks.export'
+            ]);
+        });
+
+        Gate::define('export-reports', function (User $user) {
+            return $user->hasPermission('reports.export');
+        });
+
+        // Bulk export operations
+        Gate::define('bulk-export', function (User $user) {
+            return $user->hasPermission('reports.export') || $user->isAdmin();
+        });
+
+        Gate::define('scheduled-exports', function (User $user) {
+            return $user->hasPermission('reports.export');
+        });
+    }
+
+    /**
+     * Define company and team-based gates.
+     */
+    protected function defineCompanyGates(): void
+    {
+        // Company scoping gates
+        Gate::define('same-company', function (User $user, $model) {
+            if (method_exists($model, 'company_id')) {
+                return $user->company_id === $model->company_id;
+            }
+            return false;
+        });
+
+        Gate::define('manage-company-settings', function (User $user) {
+            return $user->hasAnyPermission([
+                'system.settings.manage',
+                'users.manage'
+            ]) || $user->isAdmin();
+        });
+
+        // Team-based gates for projects
+        Gate::define('manage-team', function (User $user, $project = null) {
+            if (!$project) {
+                return $user->hasPermission('projects.members.manage');
+            }
+
+            // Project managers can manage their team
+            if ($project->manager_id === $user->id) {
+                return true;
+            }
+
+            return $user->hasPermission('projects.manage');
+        });
+    }
+
+    /**
+     * Define security and audit gates.
+     */
+    protected function defineSecurityGates(): void
+    {
+        // Sensitive operation gates
+        Gate::define('access-sensitive-data', function (User $user) {
+            return $user->hasAnyPermission([
+                'financial.manage',
+                'users.manage',
+                'system.settings.manage'
+            ]) || $user->isAdmin();
+        });
+
+        Gate::define('view-audit-logs', function (User $user) {
+            return $user->hasPermission('system.logs.view') || $user->isAdmin();
+        });
+
+        Gate::define('impersonate-users', function (User $user) {
+            return $user->hasPermission('system.permissions.manage') && $user->isAdmin();
+        });
+
+        Gate::define('bypass-restrictions', function (User $user) {
+            return $user->hasPermission('system.permissions.manage') && $user->isAdmin();
+        });
+    }
+
+    /**
      * Define super admin gate for development/maintenance.
      */
     protected function defineSuperAdminGate(): void
@@ -244,6 +676,19 @@ class AuthServiceProvider extends ServiceProvider
                 'manage-finances' => 'Manage Finances',
                 'view-financial-reports' => 'View Financial Reports',
                 'manage-invoices' => 'Manage Invoices',
+                'manage-quotes' => 'Manage Quotes',
+                'approve-quotes' => 'Approve Quotes',
+                'export-quotes' => 'Export Quotes',
+                'manage-recurring' => 'Manage Recurring Billing',
+                'view-recurring' => 'View Recurring Billing',
+                'generate-recurring-invoices' => 'Generate Recurring Invoices',
+                'process-recurring-usage' => 'Process VoIP Usage Data',
+                'manage-recurring-escalations' => 'Manage Contract Escalations',
+                'manage-recurring-adjustments' => 'Manage Billing Adjustments',
+                'bulk-recurring-operations' => 'Bulk Recurring Operations',
+                'view-recurring-analytics' => 'View Recurring Analytics',
+                'export-recurring' => 'Export Recurring Data',
+                'manage-recurring-automation' => 'Manage Billing Automation',
             ],
             'Technical Management' => [
                 'manage-technical' => 'Manage Technical',

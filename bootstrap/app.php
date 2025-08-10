@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom authentication middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
             'company' => \App\Http\Middleware\CompanyMiddleware::class,
             'remember' => \App\Http\Middleware\RememberTokenMiddleware::class,
         ]);

@@ -7,24 +7,24 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^11.0",
-        "laravel/tinker": "^2.10.1",
-
-        "symfony/mailer": "^7.0",
-        "guzzlehttp/guzzle": "^7.9",
-        "webklex/laravel-imap": "^5.3",
         "barryvdh/laravel-dompdf": "^2.2",
-        "spatie/laravel-pdf": "^1.6",
-        "spatie/laravel-medialibrary": "^11.1",
+        "guzzlehttp/guzzle": "^7.9",
         "intervention/image": "^3.3",
+        "laravel/fortify": "*",
+        "laravel/framework": "^11.0",
         "laravel/socialite": "^5.14",
-        "spatie/laravel-permission": "^6.7",
-        "pragmarx/google2fa-laravel": "^2.3",
+        "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
-        "spatie/laravel-backup": "^9.3",
+        "pragmarx/google2fa-laravel": "^2.3",
         "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-backup": "^9.3",
+        "spatie/laravel-data": "^4.0",
+        "spatie/laravel-medialibrary": "^11.1",
+        "spatie/laravel-pdf": "^1.6",
+        "spatie/laravel-permission": "^6.7",
         "spatie/laravel-query-builder": "^6.3",
-        "spatie/laravel-data": "^4.0"
+        "symfony/mailer": "^7.0",
+        "webklex/laravel-imap": "^5.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -40,6 +40,7 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
+            "Foleybridge\\Nestogy\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

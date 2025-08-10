@@ -58,7 +58,7 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('auth.login') }}">
+                        <form method="POST" action="{{ route('login') }}">
                             @csrf
 
                             <!-- Company Selection -->

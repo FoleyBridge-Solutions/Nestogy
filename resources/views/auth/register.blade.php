@@ -30,7 +30,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('auth.register') }}">
+                    <form method="POST" action="{{ route('register') }}">
                         @csrf
 
                         <div class="row">

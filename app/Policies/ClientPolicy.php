@@ -13,8 +13,7 @@ class ClientPolicy
      */
     public function viewAny(User $user): bool
     {
-        // All authenticated users can view clients list
-        return true;
+        return $user->hasPermission('clients.view') && $this->sameCompany($user);
     }
 
     /**
@@ -22,8 +21,7 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        // User can view client if they belong to the same company
-        return $user->company_id === $client->company_id;
+        return $user->hasPermission('clients.view') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -31,8 +29,7 @@ class ClientPolicy
      */
     public function create(User $user): bool
     {
-        // All authenticated users can create clients
-        return true;
+        return $user->hasPermission('clients.create');
     }
 
     /**
@@ -40,8 +37,7 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
-        // User can update client if they belong to the same company
-        return $user->company_id === $client->company_id;
+        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -49,10 +45,7 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client): bool
     {
-        // User can delete client if they belong to the same company
-        // and have appropriate role (admin or manager)
-        return $user->company_id === $client->company_id
-            && $this->userHasRole($user, ['admin', 'manager']);
+        return $user->hasPermission('clients.delete') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -60,10 +53,7 @@ class ClientPolicy
      */
     public function restore(User $user, Client $client): bool
     {
-        // User can restore client if they belong to the same company
-        // and have appropriate role (admin or manager)
-        return $user->company_id === $client->company_id
-            && $this->userHasRole($user, ['admin', 'manager']);
+        return $user->hasPermission('clients.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -71,9 +61,7 @@ class ClientPolicy
      */
     public function forceDelete(User $user, Client $client): bool
     {
-        // Only admins can permanently delete clients
-        return $user->company_id === $client->company_id
-            && $this->userHasRole($user, ['admin']);
+        return $user->hasPermission('clients.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -81,8 +69,7 @@ class ClientPolicy
      */
     public function archive(User $user, Client $client): bool
     {
-        // User can archive client if they belong to the same company
-        return $user->company_id === $client->company_id;
+        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -90,8 +77,7 @@ class ClientPolicy
      */
     public function export(User $user): bool
     {
-        // All authenticated users can export their company's clients
-        return true;
+        return $user->hasPermission('clients.export');
     }
 
     /**
@@ -99,8 +85,7 @@ class ClientPolicy
      */
     public function import(User $user): bool
     {
-        // Only admins and managers can import clients
-        return $this->userHasRole($user, ['admin', 'manager']);
+        return $user->hasPermission('clients.import');
     }
 
     /**
@@ -108,8 +93,7 @@ class ClientPolicy
      */
     public function manageTags(User $user, Client $client): bool
     {
-        // User can manage tags if they belong to the same company
-        return $user->company_id === $client->company_id;
+        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -117,10 +101,7 @@ class ClientPolicy
      */
     public function convertLead(User $user, Client $client): bool
     {
-        // User can convert lead if they belong to the same company
-        // and the client is actually a lead
-        return $user->company_id === $client->company_id 
-            && $client->lead === true;
+        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client) && $client->lead === true;
     }
 
     /**
@@ -128,20 +109,7 @@ class ClientPolicy
      */
     public function viewFinancial(User $user, Client $client): bool
     {
-        // User can view financial info if they belong to the same company
-        // and have appropriate role or permission
-        return $user->company_id === $client->company_id
-            && ($this->userHasRole($user, ['admin', 'manager', 'accountant'])
-                || $this->userHasPermission($user, 'view_client_financial'));
-    }
-
-    /**
-     * Determine whether the user can manage client locations.
-     */
-    public function manageLocations(User $user, Client $client): bool
-    {
-        // User can manage locations if they belong to the same company
-        return $user->company_id === $client->company_id;
+        return $user->hasAnyPermission(['clients.manage', 'financial.view']) && $this->sameCompany($user, $client);
     }
 
     /**
@@ -149,58 +117,106 @@ class ClientPolicy
      */
     public function manageContacts(User $user, Client $client): bool
     {
-        // User can manage contacts if they belong to the same company
+        return $user->hasPermission('clients.contacts.manage') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can view client contacts.
+     */
+    public function viewContacts(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.contacts.view') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can export client contacts.
+     */
+    public function exportContacts(User $user): bool
+    {
+        return $user->hasPermission('clients.contacts.export');
+    }
+
+    /**
+     * Determine whether the user can manage client locations.
+     */
+    public function manageLocations(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.locations.manage') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can view client locations.
+     */
+    public function viewLocations(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.locations.view') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can export client locations.
+     */
+    public function exportLocations(User $user): bool
+    {
+        return $user->hasPermission('clients.locations.export');
+    }
+
+    /**
+     * Determine whether the user can manage client documents.
+     */
+    public function manageDocuments(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.documents.manage') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can view client documents.
+     */
+    public function viewDocuments(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.documents.view') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can export client documents.
+     */
+    public function exportDocuments(User $user): bool
+    {
+        return $user->hasPermission('clients.documents.export');
+    }
+
+    /**
+     * Determine whether the user can manage client files.
+     */
+    public function manageFiles(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.files.manage') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can view client files.
+     */
+    public function viewFiles(User $user, Client $client): bool
+    {
+        return $user->hasPermission('clients.files.view') && $this->sameCompany($user, $client);
+    }
+
+    /**
+     * Determine whether the user can export client files.
+     */
+    public function exportFiles(User $user): bool
+    {
+        return $user->hasPermission('clients.files.export');
+    }
+
+    /**
+     * Check if user and model belong to same company.
+     */
+    private function sameCompany(User $user, ?Client $client = null): bool
+    {
+        if (!$client) {
+            return true; // For general operations without specific client
+        }
+        
         return $user->company_id === $client->company_id;
-    }
-
-    /**
-     * Check if user has any of the given roles
-     */
-    private function userHasRole(User $user, array $roles): bool
-    {
-        // Check if user has the hasRole method (from a role package)
-        if (method_exists($user, 'hasRole')) {
-            return $user->hasRole($roles);
-        }
-
-        // Fallback to checking user_role in user_settings
-        $userRole = $user->userSetting->role ?? null;
-        
-        $roleMap = [
-            1 => 'accountant',
-            2 => 'technician',
-            3 => 'admin'
-        ];
-
-        $userRoleName = $roleMap[$userRole] ?? null;
-        
-        return in_array($userRoleName, $roles);
-    }
-
-    /**
-     * Check if user has a specific permission
-     */
-    private function userHasPermission(User $user, string $permission): bool
-    {
-        // Check if user has the hasPermission method (from a permission package)
-        if (method_exists($user, 'hasPermission')) {
-            return $user->hasPermission($permission);
-        }
-
-        // Fallback logic based on role
-        $userRole = $user->userSetting->role ?? null;
-        
-        // Admin (role 3) has all permissions
-        if ($userRole === 3) {
-            return true;
-        }
-
-        // Define permission mappings for other roles
-        $permissions = [
-            'view_client_financial' => [1, 3], // Accountant and Admin
-        ];
-
-        return isset($permissions[$permission]) 
-            && in_array($userRole, $permissions[$permission]);
     }
 }

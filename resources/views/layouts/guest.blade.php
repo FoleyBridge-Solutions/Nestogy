@@ -26,7 +26,7 @@
                     <div class="flex">
                         <!-- Logo -->
                         <div class="shrink-0 flex items-center">
-                            <a href="{{ route('home') }}">
+                            <a href="{{ url('/') }}">
                                 <img src="{{ asset('assets/img/branding/nestogy-logo.png') }}" alt="Nestogy" class="h-8 w-auto">
                             </a>
                         </div>
@@ -35,11 +35,11 @@
                     <!-- Guest Navigation Links -->
                     <div class="hidden sm:flex sm:items-center sm:space-x-8">
                         @guest
-                            <a href="{{ route('auth.login') }}" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                            <a href="{{ route('login') }}" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
                                 {{ __('Login') }}
                             </a>
-                            @if (Route::has('auth.register'))
-                                <a href="{{ route('auth.register') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                                     {{ __('Register') }}
                                 </a>
                             @endif
@@ -68,11 +68,11 @@
             <div class="sm:hidden" id="mobile-menu">
                 <div class="px-2 pt-2 pb-3 space-y-1">
                     @guest
-                        <a href="{{ route('auth.login') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
+                        <a href="{{ route('login') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
                             {{ __('Login') }}
                         </a>
-                        @if (Route::has('auth.register'))
-                            <a href="{{ route('auth.register') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
                                 {{ __('Register') }}
                             </a>
                         @endif

@@ -26,10 +26,10 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 @guest
-                    <a href="{{ route('auth.register') }}" class="bg-white text-blue-600 hover:bg-blue-50 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
+                    <a href="{{ route('register') }}" class="bg-white text-blue-600 hover:bg-blue-50 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
                         Start Free Trial
                     </a>
-                    <a href="{{ route('auth.login') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
+                    <a href="{{ route('login') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
                         Sign In →
                     </a>
                 @else
@@ -467,7 +467,7 @@
                             Join over 10,000+ businesses already using Nestogy to streamline their operations and accelerate growth.
                         </p>
                         @guest
-                            <a href="{{ route('auth.register') }}" class="inline-block bg-white hover:bg-gray-100 text-blue-600 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            <a href="{{ route('register') }}" class="inline-block bg-white hover:bg-gray-100 text-blue-600 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
                                 Start Your Free Trial
                             </a>
                         @else
@@ -535,10 +535,10 @@
         </p>
         @guest
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{{ route('auth.register') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl">
+                <a href="{{ route('register') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl">
                     Start Free Trial
                 </a>
-                <a href="{{ route('auth.login') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
+                <a href="{{ route('login') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
                     Sign In
                 </a>
             </div>

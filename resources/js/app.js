@@ -38,10 +38,15 @@ import {
     LineElement,
     PointElement,
     ArcElement,
+    LineController,
+    BarController,
+    DoughnutController,
+    PieController,
     Title,
     Tooltip,
     Legend,
-    TimeScale
+    TimeScale,
+    Filler
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
@@ -52,10 +57,15 @@ Chart.register(
     LineElement,
     PointElement,
     ArcElement,
+    LineController,
+    BarController,
+    DoughnutController,
+    PieController,
     Title,
     Tooltip,
     Legend,
-    TimeScale
+    TimeScale,
+    Filler
 );
 
 // FullCalendar
@@ -88,6 +98,19 @@ window.FullCalendarPlugins = {
     interactionPlugin,
     bootstrap5Plugin
 };
+
+// Import modern components
+import { modernDashboard } from './components/dashboard.js';
+import { modernLayout, layoutUtils } from './components/layout.js';
+import { clientSwitcher } from './components/client-switcher.js';
+
+// Register components globally
+Alpine.data('modernDashboard', modernDashboard);
+Alpine.data('modernLayout', modernLayout);
+Alpine.data('clientSwitcher', clientSwitcher);
+
+// Make utilities available globally
+window.layoutUtils = layoutUtils;
 
 // Alpine.js components
 Alpine.data('fileUpload', () => ({

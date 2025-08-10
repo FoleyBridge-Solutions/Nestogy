@@ -4,13 +4,65 @@
 
 @section('content')
 <div class="space-y-6">
+    <!-- Client Selection Status -->
+    @if($selectedClient)
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-blue-800">
+                            Currently working with: <strong>{{ $selectedClient->name }}</strong>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="{{ route('clients.show', $selectedClient) }}" class="text-sm text-blue-600 hover:text-blue-800">View Dashboard</a>
+                    <a href="{{ route('clients.switch') }}" class="text-sm text-blue-600 hover:text-blue-800">Switch Client</a>
+                    <a href="{{ route('clients.clear-selection') }}" class="text-sm text-red-600 hover:text-red-800">Clear Selection</a>
+                </div>
+            </div>
+        </div>
+    @else
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <strong>No client selected.</strong> Please select a client below to access client-specific features like contacts, locations, documents, and more.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Page Header -->
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:px-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Clients</h1>
-                    <p class="mt-1 text-sm text-gray-500">Manage your client relationships and information</p>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        @if($selectedClient)
+                            Select Different Client
+                        @else
+                            Select Client
+                        @endif
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">
+                        @if($selectedClient)
+                            Choose a different client to work with, or manage client relationships
+                        @else
+                            Choose a client to access their contacts, locations, documents and other information
+                        @endif
+                    </p>
                 </div>
                 <div class="flex space-x-3">
                     <a href="{{ route('clients.import.form') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -53,7 +105,7 @@
                 </h3>
                 <div class="flex items-center space-x-2">
                     <!-- Export -->
-                    <a href="{{ route('clients.export', ['lead' => request('lead')]) }}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <a href="{{ route('clients.export.csv', ['lead' => request('lead')]) }}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
@@ -231,7 +283,17 @@ $(document).ready(function() {
                 searchable: false,
                 render: function(data, type, row) {
                     let html = '<div class="flex items-center space-x-2">';
-                    html += '<a href="/clients/' + row.id + '" class="text-blue-600 hover:text-blue-900">View</a>';
+                    @if($selectedClient)
+                        html += '<a href="/clients/' + row.id + '" class="text-blue-600 hover:text-blue-900">View</a>';
+                        if ({{ $selectedClient->id }} !== row.id) {
+                            html += '<button onclick="selectClient(' + row.id + ', \'' + row.name + '\')" class="text-green-600 hover:text-green-900">Select</button>';
+                        } else {
+                            html += '<span class="text-green-600 font-medium">Current</span>';
+                        }
+                    @else
+                        html += '<button onclick="selectClient(' + row.id + ', \'' + row.name + '\')" class="text-blue-600 hover:text-blue-900 font-medium">Select</button>';
+                        html += '<a href="/clients/' + row.id + '" class="text-gray-600 hover:text-gray-900">View</a>';
+                    @endif
                     html += '<a href="/clients/' + row.id + '/edit" class="text-indigo-600 hover:text-indigo-900">Edit</a>';
                     if (row.lead) {
                         html += '<button onclick="convertLead(' + row.id + ')" class="text-green-600 hover:text-green-900">Convert</button>';
@@ -260,6 +322,25 @@ $(document).ready(function() {
         }
     });
 });
+
+// Select client
+function selectClient(clientId, clientName) {
+    if (confirm(`Select "${clientName}" as your working client?`)) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/clients/select/${clientId}`;
+        
+        const tokenField = document.createElement('input');
+        tokenField.type = 'hidden';
+        tokenField.name = '_token';
+        tokenField.value = '{{ csrf_token() }}';
+        
+        form.appendChild(tokenField);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 
 // Delete client
 function deleteClient(clientId) {

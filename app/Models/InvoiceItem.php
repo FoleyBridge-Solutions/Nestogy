@@ -5,7 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\VoIPTaxService;
+use App\Models\TaxCategory;
+use App\Models\TaxExemptionUsage;
 
 /**
  * InvoiceItem Model
@@ -61,6 +65,11 @@ class InvoiceItem extends Model
         'invoice_id',
         'category_id',
         'product_id',
+        'service_type',
+        'tax_category_id',
+        'voip_tax_data',
+        'line_count',
+        'minutes',
     ];
 
     /**
@@ -80,6 +89,10 @@ class InvoiceItem extends Model
         'invoice_id' => 'integer',
         'category_id' => 'integer',
         'product_id' => 'integer',
+        'tax_category_id' => 'integer',
+        'voip_tax_data' => 'array',
+        'line_count' => 'integer',
+        'minutes' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'archived_at' => 'datetime',
@@ -139,6 +152,84 @@ class InvoiceItem extends Model
     }
 
     /**
+     * Get the VoIP tax category this item belongs to.
+     */
+    public function voipTaxCategory(): BelongsTo
+    {
+        return $this->belongsTo(TaxCategory::class, 'tax_category_id');
+    }
+
+    /**
+     * Get tax exemption usage records for this item.
+     */
+    public function taxExemptionUsage(): HasMany
+    {
+        return $this->hasMany(TaxExemptionUsage::class, 'invoice_item_id');
+    }
+
+    /**
+     * Calculate VoIP taxes for this item.
+     */
+    public function calculateVoIPTaxes(?array $serviceAddress = null): array
+    {
+        if (!$this->service_type) {
+            return [];
+        }
+
+        $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
+        $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;
+
+        $taxService = new VoIPTaxService($companyId);
+
+        $params = [
+            'amount' => $this->subtotal - $this->discount,
+            'service_type' => $this->service_type,
+            'service_address' => $serviceAddress ?? $this->getServiceAddress(),
+            'client_id' => $clientId,
+            'calculation_date' => now(),
+            'line_count' => $this->line_count ?? 1,
+            'minutes' => $this->minutes ?? 0,
+        ];
+
+        $taxCalculation = $taxService->calculateTaxes($params);
+        
+        // Store detailed tax data
+        $this->voip_tax_data = $taxCalculation;
+        
+        return $taxCalculation;
+    }
+
+    /**
+     * Get service address for tax calculation.
+     */
+    protected function getServiceAddress(): array
+    {
+        if ($this->invoice && $this->invoice->client) {
+            return [
+                'address' => $this->invoice->client->address,
+                'city' => $this->invoice->client->city,
+                'state' => $this->invoice->client->state,
+                'state_code' => $this->invoice->client->state,
+                'zip_code' => $this->invoice->client->zip_code,
+                'country' => $this->invoice->client->country,
+            ];
+        }
+
+        if ($this->quote && $this->quote->client) {
+            return [
+                'address' => $this->quote->client->address,
+                'city' => $this->quote->client->city,
+                'state' => $this->quote->client->state,
+                'state_code' => $this->quote->client->state,
+                'zip_code' => $this->quote->client->zip_code,
+                'country' => $this->quote->client->country,
+            ];
+        }
+
+        return [];
+    }
+
+    /**
      * Calculate and update item totals.
      */
     public function calculateTotals(): void
@@ -151,7 +242,13 @@ class InvoiceItem extends Model
         
         // Calculate tax
         $taxAmount = 0;
-        if ($this->taxRate) {
+        
+        // Use VoIP tax calculation if service type is specified
+        if ($this->service_type) {
+            $taxCalculation = $this->calculateVoIPTaxes();
+            $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
+        } elseif ($this->taxRate) {
+            // Fallback to legacy tax calculation
             $taxAmount = $this->taxRate->calculateTaxAmount($discountedSubtotal);
         }
         
@@ -163,6 +260,30 @@ class InvoiceItem extends Model
             'tax' => $taxAmount,
             'total' => $total,
         ]);
+    }
+
+    /**
+     * Check if this is a VoIP service item.
+     */
+    public function isVoIPService(): bool
+    {
+        return !empty($this->service_type);
+    }
+
+    /**
+     * Get VoIP tax breakdown.
+     */
+    public function getVoIPTaxBreakdown(): array
+    {
+        return $this->voip_tax_data['tax_breakdown'] ?? [];
+    }
+
+    /**
+     * Get exemptions applied to this item.
+     */
+    public function getAppliedExemptions(): array
+    {
+        return $this->voip_tax_data['exemptions_applied'] ?? [];
     }
 
     /**
@@ -267,6 +388,40 @@ class InvoiceItem extends Model
     }
 
     /**
+     * Create VoIP service item.
+     */
+    public static function createVoIPServiceItem(array $data): array
+    {
+        return array_merge([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'quantity' => $data['quantity'] ?? 1,
+            'price' => $data['price'],
+            'discount' => $data['discount'] ?? 0,
+            'service_type' => $data['service_type'],
+            'tax_category_id' => $data['tax_category_id'] ?? null,
+            'line_count' => $data['line_count'] ?? 1,
+            'minutes' => $data['minutes'] ?? 0,
+        ], $data);
+    }
+
+    /**
+     * Scope to get VoIP service items.
+     */
+    public function scopeVoIPServices($query)
+    {
+        return $query->whereNotNull('service_type');
+    }
+
+    /**
+     * Scope to get items by service type.
+     */
+    public function scopeByServiceType($query, string $serviceType)
+    {
+        return $query->where('service_type', $serviceType);
+    }
+
+    /**
      * Scope to get items by parent type.
      */
     public function scopeForInvoice($query, int $invoiceId)
@@ -313,6 +468,10 @@ class InvoiceItem extends Model
             'tax_id' => 'nullable|integer|exists:taxes,id',
             'category_id' => 'nullable|integer|exists:categories,id',
             'product_id' => 'nullable|integer|exists:products,id',
+            'service_type' => 'nullable|string|max:50',
+            'tax_category_id' => 'nullable|integer|exists:tax_categories,id',
+            'line_count' => 'nullable|integer|min:1',
+            'minutes' => 'nullable|integer|min:0',
         ];
     }
 
@@ -333,7 +492,22 @@ class InvoiceItem extends Model
             
             // Calculate tax
             $taxAmount = 0;
-            if ($item->taxRate) {
+            
+            // Use VoIP tax calculation if service type is specified
+            if ($item->service_type) {
+                try {
+                    $taxCalculation = $item->calculateVoIPTaxes();
+                    $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
+                } catch (\Exception $e) {
+                    // Log error but don't fail the save
+                    \Log::warning('VoIP tax calculation failed for item', [
+                        'item_id' => $item->id,
+                        'service_type' => $item->service_type,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } elseif ($item->taxRate) {
+                // Fallback to legacy tax calculation
                 $taxAmount = $item->taxRate->calculateTaxAmount($discountedSubtotal);
             }
             

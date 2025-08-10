@@ -506,61 +506,9 @@ return new class extends Migration
             $table->index('archived_at');
         });
 
-        Schema::create('payments', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('company_id');
-            $table->date('date');
-            $table->decimal('amount', 15, 2);
-            $table->string('currency_code', 3);
-            $table->string('method')->nullable(); // Cash, Check, Credit Card, Bank Transfer, etc.
-            $table->string('reference')->nullable(); // Check number, transaction ID, etc.
-            $table->timestamps();
-            $table->timestamp('archived_at')->nullable();
-            $table->unsignedBigInteger('account_id');
-            $table->unsignedBigInteger('invoice_id')->nullable();
-            $table->string('plaid_transaction_id')->nullable(); // For bank integration
-
-            // Indexes
-            $table->index('date');
-            $table->index('invoice_id');
-            $table->index('account_id');
-            $table->index('company_id');
-            $table->index('method');
-            $table->index(['invoice_id', 'date']);
-            $table->index(['company_id', 'date']);
-            $table->index('archived_at');
-        });
-
-        Schema::create('expenses', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('company_id');
-            $table->text('description')->nullable();
-            $table->decimal('amount', 15, 2);
-            $table->string('currency_code', 3);
-            $table->date('date');
-            $table->string('reference')->nullable();
-            $table->string('payment_method')->nullable();
-            $table->string('receipt')->nullable(); // File path to receipt
-            $table->timestamps();
-            $table->timestamp('archived_at')->nullable();
-            $table->unsignedBigInteger('vendor_id')->nullable();
-            $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('category_id');
-            $table->unsignedBigInteger('account_id')->nullable();
-            $table->string('plaid_transaction_id')->nullable(); // For bank integration
-
-            // Indexes
-            $table->index('date');
-            $table->index('vendor_id');
-            $table->index('client_id');
-            $table->index('category_id');
-            $table->index('account_id');
-            $table->index('company_id');
-            $table->index(['client_id', 'date']);
-            $table->index(['category_id', 'date']);
-            $table->index(['company_id', 'date']);
-            $table->index('archived_at');
-        });
+        // Note: payments and expenses tables are created by separate comprehensive migrations
+        // 2024_01_15_000003_create_payments_table.php
+        // 2024_01_15_000002_create_expenses_table.php
 
         Schema::create('products', function (Blueprint $table) {
             $table->id();
@@ -917,21 +865,7 @@ return new class extends Migration
             $table->foreign('product_id')->references('id')->on('products')->onDelete('set null');
         });
 
-        // Payments foreign keys
-        Schema::table('payments', function (Blueprint $table) {
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('account_id')->references('id')->on('accounts')->onDelete('cascade');
-            $table->foreign('invoice_id')->references('id')->on('invoices')->onDelete('cascade');
-        });
-
-        // Expenses foreign keys
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('set null');
-            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
-            $table->foreign('account_id')->references('id')->on('accounts')->onDelete('set null');
-        });
+        // Note: Foreign keys for payments and expenses are handled in their respective comprehensive migrations
 
         // Products foreign keys
         Schema::table('products', function (Blueprint $table) {
@@ -983,8 +917,7 @@ return new class extends Migration
         Schema::dropIfExists('recurring');
         Schema::dropIfExists('quotes');
         Schema::dropIfExists('products');
-        Schema::dropIfExists('expenses');
-        Schema::dropIfExists('payments');
+        // Note: expenses and payments tables are dropped by their respective comprehensive migrations
         Schema::dropIfExists('invoice_items');
         Schema::dropIfExists('invoices');
         Schema::dropIfExists('taxes');

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('client_contacts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('client_id');
             $table->string('name');
             $table->string('title')->nullable();
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->timestamp('accessed_at')->nullable();
 
             // Indexes
-            $table->index('tenant_id');
+            $table->index('company_id');
             $table->index('client_id');
             $table->index('name');
             $table->index('email');
@@ -46,7 +46,7 @@ return new class extends Migration
             $table->index('important');
             $table->index('billing');
             $table->index('technical');
-            $table->index(['tenant_id', 'client_id']);
+            $table->index(['company_id', 'client_id']);
             $table->index(['client_id', 'primary']);
             $table->index(['client_id', 'billing']);
             $table->index(['client_id', 'technical']);
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->index('accessed_at');
 
             // Foreign key constraints
-            $table->foreign('tenant_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
         });
     }

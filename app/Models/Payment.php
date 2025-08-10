@@ -18,17 +18,33 @@ class Payment extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'payments';
-    const DELETED_AT = 'archived_at';
+    // Using standard soft delete column to match database schema
 
     protected $fillable = [
-        'date', 'amount', 'currency_code', 'method', 'reference',
-        'account_id', 'invoice_id', 'plaid_transaction_id'
+        'company_id', 'client_id', 'invoice_id', 'processed_by',
+        'payment_method', 'payment_reference', 'amount', 'currency',
+        'gateway', 'gateway_transaction_id', 'gateway_fee', 'status',
+        'payment_date', 'notes', 'metadata', 'refund_amount',
+        'refund_reason', 'refunded_at', 'chargeback_amount',
+        'chargeback_reason', 'chargeback_date'
     ];
 
     protected $casts = [
-        'date' => 'date', 'amount' => 'decimal:2',
-        'account_id' => 'integer', 'invoice_id' => 'integer',
-        'created_at' => 'datetime', 'updated_at' => 'datetime', 'archived_at' => 'datetime'
+        'company_id' => 'integer',
+        'client_id' => 'integer',
+        'invoice_id' => 'integer',
+        'processed_by' => 'integer',
+        'amount' => 'decimal:2',
+        'gateway_fee' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
+        'chargeback_amount' => 'decimal:2',
+        'payment_date' => 'datetime',
+        'refunded_at' => 'datetime',
+        'chargeback_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'metadata' => 'array'
     ];
 
     const METHOD_CASH = 'Cash';

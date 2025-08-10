@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use App\Services\VoIPTaxService;
+use App\Models\TaxExemption;
+use App\Models\TaxExemptionUsage;
 
 /**
  * Invoice Model
@@ -46,12 +49,14 @@ class Invoice extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'company_id',
         'prefix',
         'number',
         'scope',
         'status',
         'date',
         'due',
+        'due_date',
         'discount_amount',
         'amount',
         'currency_code',
@@ -65,9 +70,11 @@ class Invoice extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
+        'company_id' => 'integer',
         'number' => 'integer',
         'date' => 'date',
         'due' => 'date',
+        'due_date' => 'date',
         'discount_amount' => 'decimal:2',
         'amount' => 'decimal:2',
         'created_at' => 'datetime',
@@ -132,6 +139,155 @@ class Invoice extends Model
     }
 
     /**
+     * Get tax exemptions for this invoice's client.
+     */
+    public function taxExemptions(): HasMany
+    {
+        return $this->hasMany(TaxExemption::class, 'client_id', 'client_id')
+                    ->where('company_id', $this->company_id);
+    }
+
+    /**
+     * Get tax exemption usage records for this invoice.
+     */
+    public function taxExemptionUsage(): HasMany
+    {
+        return $this->hasMany(TaxExemptionUsage::class);
+    }
+
+    /**
+     * Calculate VoIP taxes for all invoice items.
+     */
+    public function calculateVoIPTaxes(?array $serviceAddress = null): array
+    {
+        $taxService = new VoIPTaxService($this->company_id);
+        $allCalculations = [];
+        $totalTaxAmount = 0;
+
+        $address = $serviceAddress ?? $this->getServiceAddress();
+
+        foreach ($this->items as $item) {
+            if ($item->service_type) {
+                $params = [
+                    'amount' => $item->subtotal - $item->discount,
+                    'service_type' => $item->service_type,
+                    'service_address' => $address,
+                    'client_id' => $this->client_id,
+                    'calculation_date' => $this->date,
+                    'line_count' => $item->line_count ?? 1,
+                    'minutes' => $item->minutes ?? 0,
+                ];
+
+                $calculation = $taxService->calculateTaxes($params);
+                $allCalculations[] = array_merge($calculation, ['item_id' => $item->id]);
+                $totalTaxAmount += $calculation['total_tax_amount'];
+
+                // Record exemption usage if any exemptions were applied
+                if (!empty($calculation['exemptions_applied'])) {
+                    $taxService->recordExemptionUsage(
+                        $calculation['exemptions_applied'],
+                        $this->id
+                    );
+                }
+            }
+        }
+
+        return [
+            'calculations' => $allCalculations,
+            'total_tax_amount' => $totalTaxAmount,
+            'summary' => $taxService->getCalculationSummary($allCalculations),
+        ];
+    }
+
+    /**
+     * Get service address for tax calculation.
+     */
+    public function getServiceAddress(): array
+    {
+        if ($this->client) {
+            return [
+                'address' => $this->client->address,
+                'city' => $this->client->city,
+                'state' => $this->client->state,
+                'state_code' => $this->client->state,
+                'zip_code' => $this->client->zip_code,
+                'country' => $this->client->country,
+            ];
+        }
+
+        return [];
+    }
+
+    /**
+     * Get VoIP service items on this invoice.
+     */
+    public function voipItems()
+    {
+        return $this->items()->voipServices();
+    }
+
+    /**
+     * Check if invoice has VoIP services.
+     */
+    public function hasVoIPServices(): bool
+    {
+        return $this->voipItems()->exists();
+    }
+
+    /**
+     * Get tax breakdown for all VoIP services.
+     */
+    public function getVoIPTaxBreakdown(): array
+    {
+        $breakdown = [];
+        
+        foreach ($this->voipItems as $item) {
+            if ($item->voip_tax_data) {
+                $breakdown[$item->id] = [
+                    'item_name' => $item->name,
+                    'service_type' => $item->service_type,
+                    'tax_breakdown' => $item->voip_tax_data['tax_breakdown'] ?? [],
+                    'total_tax' => $item->voip_tax_data['total_tax_amount'] ?? 0,
+                ];
+            }
+        }
+
+        return $breakdown;
+    }
+
+    /**
+     * Get compliance report data.
+     */
+    public function getComplianceReportData(): array
+    {
+        return [
+            'invoice_number' => $this->getFullNumber(),
+            'client_name' => $this->client->name ?? 'Unknown',
+            'invoice_date' => $this->date->toDateString(),
+            'service_address' => $this->getServiceAddress(),
+            'voip_items' => $this->voipItems->map(function ($item) {
+                return [
+                    'name' => $item->name,
+                    'service_type' => $item->service_type,
+                    'amount' => $item->subtotal - $item->discount,
+                    'tax_amount' => $item->tax,
+                    'line_count' => $item->line_count,
+                    'minutes' => $item->minutes,
+                    'tax_data' => $item->voip_tax_data,
+                ];
+            })->toArray(),
+            'exemptions_used' => $this->taxExemptionUsage->map(function ($usage) {
+                return [
+                    'exemption_name' => $usage->taxExemption->exemption_name ?? 'Unknown',
+                    'exemption_type' => $usage->taxExemption->exemption_type ?? 'Unknown',
+                    'original_amount' => $usage->original_tax_amount,
+                    'exempted_amount' => $usage->exempted_amount,
+                ];
+            })->toArray(),
+        ];
+    }
+
+    /**
      * Get the invoice's full number.
      */
     public function getFullNumber(): string
@@ -148,9 +304,9 @@ class Invoice extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->status !== self::STATUS_PAID && 
+        return $this->status !== self::STATUS_PAID &&
                $this->status !== self::STATUS_CANCELLED &&
-               Carbon::now()->gt($this->due);
+               Carbon::now()->gt($this->due_date);
     }
 
     /**
@@ -219,6 +375,38 @@ class Invoice extends Model
         $total = $subtotal - $this->discount_amount + $tax;
 
         $this->update(['amount' => $total]);
+    }
+
+    /**
+     * Recalculate all taxes using VoIP tax engine.
+     */
+    public function recalculateVoIPTaxes(?array $serviceAddress = null): void
+    {
+        if (!$this->hasVoIPServices()) {
+            return;
+        }
+
+        $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
+        
+        // Update individual items with new tax calculations
+        foreach ($taxCalculations['calculations'] as $calculation) {
+            $item = $this->items()->find($calculation['item_id']);
+            if ($item) {
+                $item->update([
+                    'tax' => $calculation['total_tax_amount'],
+                    'voip_tax_data' => $calculation,
+                ]);
+            }
+        }
+
+        // Recalculate invoice totals
+        $this->calculateTotals();
+
+        \Log::info('Invoice VoIP taxes recalculated', [
+            'invoice_id' => $this->id,
+            'total_tax' => $taxCalculations['total_tax_amount'],
+            'items_processed' => count($taxCalculations['calculations'])
+        ]);
     }
 
     /**
@@ -305,7 +493,7 @@ class Invoice extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNotIn('status', [self::STATUS_PAID, self::STATUS_CANCELLED])
-                    ->where('due', '<', Carbon::now());
+                    ->where('due_date', '<', Carbon::now());
     }
 
     /**
@@ -354,7 +542,7 @@ class Invoice extends Model
             'scope' => 'nullable|string|max:255',
             'status' => 'required|in:Draft,Sent,Paid,Overdue,Cancelled',
             'date' => 'required|date',
-            'due' => 'required|date|after_or_equal:date',
+            'due_date' => 'required|date|after_or_equal:date',
             'discount_amount' => 'numeric|min:0',
             'currency_code' => 'required|string|size:3',
             'note' => 'nullable|string',

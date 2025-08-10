@@ -1,0 +1,474 @@
+/**
+ * Modern Dashboard Component
+ * Optimized for Vite and Tailwind CSS
+ */
+
+import { Chart } from 'chart.js';
+
+export function modernDashboard() {
+    return {
+        // State Management
+        loading: false,
+        darkMode: localStorage.getItem('darkMode') === 'true' || false,
+        currentTime: '',
+        autoRefresh: true,
+        refreshInterval: null,
+        
+        // Data
+        kpis: {},
+        charts: {
+            revenue: null,
+            tickets: null
+        },
+        
+        // Lifecycle
+        init() {
+            this.updateCurrentTime();
+            this.applyDarkMode();
+            this.setupAutoRefresh();
+            
+            // Initialize charts with proper timing
+            this.$nextTick(() => {
+                this.initCharts();
+                this.loadRealtimeData();
+            });
+            
+            // Update time every second
+            setInterval(() => this.updateCurrentTime(), 1000);
+            
+            console.log('Modern Dashboard initialized');
+        },
+        
+        destroy() {
+            // Cleanup
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+            }
+            
+            // Destroy charts
+            Object.values(this.charts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+        },
+        
+        // Time Management
+        updateCurrentTime() {
+            const now = new Date();
+            this.currentTime = now.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+        
+        // Auto-refresh Management
+        setupAutoRefresh() {
+            if (this.autoRefresh) {
+                this.refreshInterval = setInterval(() => {
+                    this.loadRealtimeData(false);
+                }, 30000); // 30 seconds
+            }
+        },
+        
+        toggleAutoRefresh() {
+            this.autoRefresh = !this.autoRefresh;
+            
+            if (this.autoRefresh) {
+                this.setupAutoRefresh();
+                this.showNotification('Auto-refresh enabled', 'success');
+            } else {
+                if (this.refreshInterval) {
+                    clearInterval(this.refreshInterval);
+                    this.refreshInterval = null;
+                }
+                this.showNotification('Auto-refresh disabled', 'info');
+            }
+        },
+        
+        // Dark Mode Management
+        toggleDarkMode() {
+            this.darkMode = !this.darkMode;
+            this.applyDarkMode();
+            localStorage.setItem('darkMode', this.darkMode);
+            
+            // Recreate charts with new theme
+            if (this.charts.revenue || this.charts.tickets) {
+                setTimeout(() => this.updateChartsTheme(), 100);
+            }
+        },
+        
+        applyDarkMode() {
+            if (this.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        },
+        
+        updateChartsTheme() {
+            // Recreate charts with proper theme
+            Object.values(this.charts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            
+            this.charts = { revenue: null, tickets: null };
+            this.initCharts();
+        },
+        
+        // Data Management
+        async loadRealtimeData(showLoading = true) {
+            if (showLoading) this.loading = true;
+            
+            try {
+                const response = await fetch('/api/dashboard/realtime?type=all', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Update KPIs with animation
+                this.updateKPIs(data.stats || {});
+                
+                console.log('Dashboard data refreshed at:', new Date().toLocaleTimeString());
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                this.showNotification('Failed to load dashboard data', 'error');
+            } finally {
+                if (showLoading) this.loading = false;
+            }
+        },
+        
+        updateKPIs(newKpis) {
+            // Smooth transition for KPI updates
+            Object.keys(newKpis).forEach(key => {
+                if (this.kpis[key]?.value !== newKpis[key]?.value) {
+                    // Trigger a subtle animation class
+                    const element = document.querySelector(`[data-kpi="${key}"]`);
+                    if (element) {
+                        element.classList.add('animate-pulse');
+                        setTimeout(() => element.classList.remove('animate-pulse'), 500);
+                    }
+                }
+            });
+            
+            this.kpis = newKpis;
+        },
+        
+        // Chart Management
+        initCharts() {
+            if (!Chart) {
+                console.warn('Chart.js not available');
+                return;
+            }
+            
+            try {
+                this.initRevenueChart();
+                this.initTicketsChart();
+                console.log('Charts initialized successfully');
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+            }
+        },
+        
+        initRevenueChart() {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+            
+            const isDark = this.darkMode;
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            
+            this.charts.revenue = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgb(34, 197, 94)',
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgb(34, 197, 94)',
+                            borderWidth: 1,
+                            cornerRadius: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Revenue: $${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                color: textColor,
+                                font: { size: 12, family: 'Inter' }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                color: textColor,
+                                font: { size: 12, family: 'Inter' },
+                                callback: function(value) {
+                                    return '$' + (value / 1000) + 'K';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        },
+        
+        initTicketsChart() {
+            const ctx = document.getElementById('ticketsChart');
+            if (!ctx) return;
+            
+            const isDark = this.darkMode;
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
+            
+            this.charts.tickets = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Open', 'In Progress', 'Resolved', 'Closed'],
+                    datasets: [{
+                        data: [12, 8, 24, 16],
+                        backgroundColor: [
+                            'rgb(239, 68, 68)',   // Red for Open
+                            'rgb(245, 158, 11)',  // Amber for In Progress
+                            'rgb(34, 197, 94)',   // Green for Resolved
+                            'rgb(107, 114, 128)'  // Gray for Closed
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 15,
+                        cutout: '60%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 25,
+                                usePointStyle: true,
+                                font: { size: 12, family: 'Inter' },
+                                color: textColor
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.parsed * 100) / total);
+                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        },
+        
+        // Export Functionality
+        async exportData(format) {
+            this.loading = true;
+            
+            try {
+                const response = await fetch(`/api/dashboard/export?format=${format}&type=executive`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`Export failed: ${response.status}`);
+                
+                const data = await response.json();
+                
+                // Create and trigger download
+                this.downloadFile(data.data, `dashboard-export.${format}`, format);
+                this.showNotification(`Dashboard exported as ${format.toUpperCase()}`, 'success');
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                this.showNotification('Export failed. Please try again.', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        downloadFile(data, filename, format) {
+            let content, mimeType;
+            
+            switch (format) {
+                case 'json':
+                    content = JSON.stringify(data, null, 2);
+                    mimeType = 'application/json';
+                    break;
+                case 'csv':
+                    content = this.convertToCSV(data);
+                    mimeType = 'text/csv';
+                    break;
+                default:
+                    content = JSON.stringify(data, null, 2);
+                    mimeType = 'application/json';
+            }
+            
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            window.URL.revokeObjectURL(url);
+        },
+        
+        convertToCSV(data) {
+            if (!data || typeof data !== 'object') return '';
+            
+            const rows = [];
+            const headers = Object.keys(data);
+            rows.push(headers.join(','));
+            
+            // Simple CSV conversion - could be enhanced for complex nested data
+            const values = headers.map(header => {
+                const value = data[header];
+                return typeof value === 'object' ? JSON.stringify(value) : value;
+            });
+            rows.push(values.join(','));
+            
+            return rows.join('\n');
+        },
+        
+        // Utility Functions
+        formatCurrency(amount) {
+            if (!amount && amount !== 0) return '$0';
+            
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        },
+        
+        formatNumber(number) {
+            if (!number && number !== 0) return '0';
+            
+            return new Intl.NumberFormat('en-US').format(number);
+        },
+        
+        // Modern notification system with better UX
+        showNotification(message, type = 'info') {
+            const icons = {
+                success: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>`,
+                error: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>`,
+                info: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`
+            };
+            
+            const colors = {
+                success: 'bg-emerald-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `
+                fixed top-4 right-4 p-4 rounded-xl shadow-2xl z-50 max-w-sm 
+                transform translate-x-full transition-all duration-300 ease-in-out
+                ${colors[type]} text-white
+            `;
+            
+            notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">${icons[type]}</div>
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+    };
+}

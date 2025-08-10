@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\VoIPTaxController;
+use App\Http\Controllers\Api\VoIPTaxReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +18,55 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// VoIP Tax Management API Routes
+Route::middleware(['auth:sanctum'])->prefix('voip-tax')->name('api.voip-tax.')->group(function () {
+    // Tax calculation endpoints
+    Route::post('/calculate', [VoIPTaxController::class, 'calculateTaxes'])->name('calculate');
+    
+    // Tax rates management
+    Route::get('/rates', [VoIPTaxController::class, 'getTaxRates'])->name('rates');
+    Route::post('/rates', [VoIPTaxController::class, 'createOrUpdateTaxRate'])->name('rates.store');
+    Route::post('/rates/initialize-defaults', [VoIPTaxController::class, 'initializeDefaultRates'])->name('rates.initialize');
+    
+    // Jurisdictions
+    Route::get('/jurisdictions', [VoIPTaxController::class, 'getJurisdictions'])->name('jurisdictions');
+    
+    // Tax categories
+    Route::get('/categories', [VoIPTaxController::class, 'getCategories'])->name('categories');
+    
+    // Client exemptions
+    Route::get('/exemptions', [VoIPTaxController::class, 'getClientExemptions'])->name('exemptions');
+    
+    // Compliance and reporting
+    Route::post('/compliance/report', [VoIPTaxController::class, 'generateComplianceReport'])->name('compliance.report');
+    Route::get('/compliance/status', [VoIPTaxController::class, 'checkComplianceStatus'])->name('compliance.status');
+    Route::post('/compliance/export', [VoIPTaxController::class, 'exportComplianceData'])->name('compliance.export');
+    
+    // Utility endpoints
+    Route::get('/service-types', [VoIPTaxController::class, 'getServiceTypes'])->name('service-types');
+    Route::post('/cache/clear', [VoIPTaxController::class, 'clearCache'])->name('cache.clear');
+    
+    // Tax Reporting endpoints
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Dashboard and summary reports
+        Route::get('/dashboard', [VoIPTaxReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('/tax-summary', [VoIPTaxReportController::class, 'taxSummary'])->name('tax-summary');
+        
+        // Specialized reports
+        Route::get('/jurisdiction/{jurisdictionId}', [VoIPTaxReportController::class, 'jurisdictionReport'])->name('jurisdiction');
+        Route::get('/service-type-analysis', [VoIPTaxReportController::class, 'serviceTypeAnalysis'])->name('service-type-analysis');
+        Route::get('/exemption-usage', [VoIPTaxReportController::class, 'exemptionReport'])->name('exemption-usage');
+        Route::get('/rate-effectiveness', [VoIPTaxReportController::class, 'rateEffectiveness'])->name('rate-effectiveness');
+        
+        // Export functionality
+        Route::post('/export', [VoIPTaxReportController::class, 'exportReport'])->name('export');
+        
+        // Metadata and configuration
+        Route::get('/jurisdictions', [VoIPTaxReportController::class, 'availableJurisdictions'])->name('jurisdictions');
+        Route::get('/metadata', [VoIPTaxReportController::class, 'reportMetadata'])->name('metadata');
+    });
 });
 
 /*
@@ -69,18 +120,18 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::patch('{client}/notes', [App\Http\Controllers\ClientController::class, 'updateNotes'])->name('notes.update');
         
         // Client Relationships
-        Route::get('{client}/contacts', [\Foleybridge\Nestogy\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');
-        Route::post('{client}/contacts', [\Foleybridge\Nestogy\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
-        Route::put('{client}/contacts/{contact}', [\Foleybridge\Nestogy\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
-        Route::delete('{client}/contacts/{contact}', [\Foleybridge\Nestogy\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
+        Route::get('{client}/contacts', [App\Http\Controllers\ContactController::class, 'index'])->name('contacts.index');
+        Route::post('{client}/contacts', [App\Http\Controllers\ContactController::class, 'store'])->name('contacts.store');
+        Route::put('{client}/contacts/{contact}', [App\Http\Controllers\ContactController::class, 'update'])->name('contacts.update');
+        Route::delete('{client}/contacts/{contact}', [App\Http\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
         
-        Route::get('{client}/locations', [\Foleybridge\Nestogy\Domains\Client\Controllers\LocationController::class, 'index'])->name('locations.index');
-        Route::post('{client}/locations', [\Foleybridge\Nestogy\Domains\Client\Controllers\LocationController::class, 'store'])->name('locations.store');
-        Route::put('{client}/locations/{location}', [\Foleybridge\Nestogy\Domains\Client\Controllers\LocationController::class, 'update'])->name('locations.update');
-        Route::delete('{client}/locations/{location}', [\Foleybridge\Nestogy\Domains\Client\Controllers\LocationController::class, 'destroy'])->name('locations.destroy');
+        Route::get('{client}/locations', [App\Domains\Client\Controllers\LocationController::class, 'index'])->name('locations.index');
+        Route::post('{client}/locations', [App\Domains\Client\Controllers\LocationController::class, 'store'])->name('locations.store');
+        Route::put('{client}/locations/{location}', [App\Domains\Client\Controllers\LocationController::class, 'update'])->name('locations.update');
+        Route::delete('{client}/locations/{location}', [App\Domains\Client\Controllers\LocationController::class, 'destroy'])->name('locations.destroy');
         
         Route::get('{client}/tickets', [App\Http\Controllers\TicketController::class, 'index'])->name('tickets.index');
-        Route::get('{client}/invoices', [App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('{client}/invoices', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('{client}/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
         
         // Quick Access
@@ -116,12 +167,12 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         
         // Time Tracking API
         Route::prefix('{ticket}/time')->name('time.')->group(function () {
-            Route::get('/', [\Foleybridge\Nestogy\Domains\Ticket\Controllers\TimeEntryController::class, 'index'])->name('index');
-            Route::post('/', [\Foleybridge\Nestogy\Domains\Ticket\Controllers\TimeEntryController::class, 'store'])->name('store');
-            Route::put('{timeEntry}', [\Foleybridge\Nestogy\Domains\Ticket\Controllers\TimeEntryController::class, 'update'])->name('update');
-            Route::delete('{timeEntry}', [\Foleybridge\Nestogy\Domains\Ticket\Controllers\TimeEntryController::class, 'destroy'])->name('destroy');
-            Route::post('start', [\Foleybridge\Nestogy\Domains\Ticket\Controllers\TimeEntryController::class, 'startTimer'])->name('start');
-            Route::post('stop', [\Foleybridge\Nestogy\Domains\Ticket\Controllers\TimeEntryController::class, 'stopTimer'])->name('stop');
+            Route::get('/', [App\Http\Controllers\TimeEntryController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\TimeEntryController::class, 'store'])->name('store');
+            Route::put('{timeEntry}', [App\Http\Controllers\TimeEntryController::class, 'update'])->name('update');
+            Route::delete('{timeEntry}', [App\Http\Controllers\TimeEntryController::class, 'destroy'])->name('destroy');
+            Route::post('start', [App\Http\Controllers\TimeEntryController::class, 'startTimer'])->name('start');
+            Route::post('stop', [App\Http\Controllers\TimeEntryController::class, 'stopTimer'])->name('stop');
         });
         
         // Quick Access
@@ -159,103 +210,103 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // Invoice API
         Route::prefix('invoices')->name('invoices.')->group(function () {
             // Standard CRUD
-            Route::get('/', [App\Http\Controllers\InvoiceController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\InvoiceController::class, 'store'])->name('store');
-            Route::get('{invoice}', [App\Http\Controllers\InvoiceController::class, 'show'])->name('show');
-            Route::put('{invoice}', [App\Http\Controllers\InvoiceController::class, 'update'])->name('update');
-            Route::delete('{invoice}', [App\Http\Controllers\InvoiceController::class, 'destroy'])->name('destroy');
-            
+            Route::get('/', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('index');
+            Route::post('/', [App\Domains\Financial\Controllers\InvoiceController::class, 'store'])->name('store');
+            Route::get('{invoice}', [App\Domains\Financial\Controllers\InvoiceController::class, 'show'])->name('show');
+            Route::put('{invoice}', [App\Domains\Financial\Controllers\InvoiceController::class, 'update'])->name('update');
+            Route::delete('{invoice}', [App\Domains\Financial\Controllers\InvoiceController::class, 'destroy'])->name('destroy');
+
             // Invoice Items
-            Route::post('{invoice}/items', [App\Http\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
-            Route::put('{invoice}/items/{item}', [App\Http\Controllers\InvoiceController::class, 'updateItem'])->name('items.update');
-            Route::delete('{invoice}/items/{item}', [App\Http\Controllers\InvoiceController::class, 'deleteItem'])->name('items.destroy');
-            
+            Route::post('{invoice}/items', [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
+            Route::put('{invoice}/items/{item}', [App\Domains\Financial\Controllers\InvoiceController::class, 'updateItem'])->name('items.update');
+            Route::delete('{invoice}/items/{item}', [App\Domains\Financial\Controllers\InvoiceController::class, 'deleteItem'])->name('items.destroy');
+
             // Invoice Actions
-            Route::patch('{invoice}/status', [App\Http\Controllers\InvoiceController::class, 'updateStatus'])->name('status.update');
-            Route::post('{invoice}/send', [App\Http\Controllers\InvoiceController::class, 'sendEmail'])->name('send');
-            Route::post('{invoice}/copy', [App\Http\Controllers\InvoiceController::class, 'copy'])->name('copy');
-            Route::patch('{invoice}/notes', [App\Http\Controllers\InvoiceController::class, 'updateNotes'])->name('notes.update');
-            
+            Route::patch('{invoice}/status', [App\Domains\Financial\Controllers\InvoiceController::class, 'updateStatus'])->name('status.update');
+            Route::post('{invoice}/send', [App\Domains\Financial\Controllers\InvoiceController::class, 'sendEmail'])->name('send');
+            Route::post('{invoice}/copy', [App\Domains\Financial\Controllers\InvoiceController::class, 'copy'])->name('copy');
+            Route::patch('{invoice}/notes', [App\Domains\Financial\Controllers\InvoiceController::class, 'updateNotes'])->name('notes.update');
+
             // Invoice Payments
-            Route::get('{invoice}/payments', [App\Http\Controllers\InvoiceController::class, 'getPayments'])->name('payments.index');
-            Route::post('{invoice}/payments', [App\Http\Controllers\InvoiceController::class, 'addPayment'])->name('payments.store');
-            
+            Route::get('{invoice}/payments', [App\Domains\Financial\Controllers\InvoiceController::class, 'getPayments'])->name('payments.index');
+            Route::post('{invoice}/payments', [App\Domains\Financial\Controllers\InvoiceController::class, 'addPayment'])->name('payments.store');
+
             // Quick Access
-            Route::get('overdue', [App\Http\Controllers\InvoiceController::class, 'index'])->name('overdue');
-            Route::get('draft', [App\Http\Controllers\InvoiceController::class, 'index'])->name('draft');
+            Route::get('overdue', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('overdue');
+            Route::get('draft', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('draft');
             Route::get('search', [App\Http\Controllers\SearchController::class, 'invoices'])->name('search');
         });
         
         // Payment API
         Route::prefix('payments')->name('payments.')->group(function () {
-            Route::get('/', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'index'])->name('index');
-            Route::post('/', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'store'])->name('store');
-            Route::get('{payment}', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'show'])->name('show');
-            Route::put('{payment}', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'update'])->name('update');
-            Route::delete('{payment}', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'destroy'])->name('destroy');
+            Route::get('/', [App\Http\Controllers\PaymentController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\PaymentController::class, 'store'])->name('store');
+            Route::get('{payment}', [App\Http\Controllers\PaymentController::class, 'show'])->name('show');
+            Route::put('{payment}', [App\Http\Controllers\PaymentController::class, 'update'])->name('update');
+            Route::delete('{payment}', [App\Http\Controllers\PaymentController::class, 'destroy'])->name('destroy');
             
             // Payment Actions
-            Route::post('{payment}/refund', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'refund'])->name('refund');
-            Route::get('recent', [\Foleybridge\Nestogy\Domains\Financial\Controllers\PaymentController::class, 'recent'])->name('recent');
+            Route::post('{payment}/refund', [App\Http\Controllers\PaymentController::class, 'refund'])->name('refund');
+            Route::get('recent', [App\Http\Controllers\PaymentController::class, 'recent'])->name('recent');
         });
         
         // Expense API
         Route::prefix('expenses')->name('expenses.')->group(function () {
-            Route::get('/', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'index'])->name('index');
-            Route::post('/', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'store'])->name('store');
-            Route::get('{expense}', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'show'])->name('show');
-            Route::put('{expense}', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'update'])->name('update');
-            Route::delete('{expense}', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
+            Route::get('/', [App\Http\Controllers\ExpenseController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\ExpenseController::class, 'store'])->name('store');
+            Route::get('{expense}', [App\Http\Controllers\ExpenseController::class, 'show'])->name('show');
+            Route::put('{expense}', [App\Http\Controllers\ExpenseController::class, 'update'])->name('update');
+            Route::delete('{expense}', [App\Http\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
             
             // Expense Categories
-            Route::get('categories', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'categories'])->name('categories');
-            Route::get('monthly-summary', [\Foleybridge\Nestogy\Domains\Financial\Controllers\ExpenseController::class, 'monthlySummary'])->name('monthly-summary');
+            Route::get('categories', [App\Http\Controllers\ExpenseController::class, 'categories'])->name('categories');
+            Route::get('monthly-summary', [App\Http\Controllers\ExpenseController::class, 'monthlySummary'])->name('monthly-summary');
         });
     });
 
     // Project Management API
     Route::prefix('projects')->name('api.projects.')->group(function () {
         // Standard CRUD
-        Route::get('/', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'index'])->name('index');
-        Route::post('/', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'store'])->name('store');
-        Route::get('{project}', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'show'])->name('show');
-        Route::put('{project}', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'update'])->name('update');
-        Route::delete('{project}', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'destroy'])->name('destroy');
+        Route::get('/', [App\Http\Controllers\ProjectController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\ProjectController::class, 'store'])->name('store');
+        Route::get('{project}', [App\Http\Controllers\ProjectController::class, 'show'])->name('show');
+        Route::put('{project}', [App\Http\Controllers\ProjectController::class, 'update'])->name('update');
+        Route::delete('{project}', [App\Http\Controllers\ProjectController::class, 'destroy'])->name('destroy');
         
         // Project Actions
-        Route::patch('{project}/status', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'updateStatus'])->name('status.update');
-        Route::get('{project}/progress', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'getProgress'])->name('progress');
+        Route::patch('{project}/status', [App\Http\Controllers\ProjectController::class, 'updateStatus'])->name('status.update');
+        Route::get('{project}/progress', [App\Http\Controllers\ProjectController::class, 'getProgress'])->name('progress');
         
         // Project Tasks API
         Route::prefix('{project}/tasks')->name('tasks.')->group(function () {
-            Route::get('/', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'index'])->name('index');
-            Route::post('/', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'store'])->name('store');
-            Route::get('{task}', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'show'])->name('show');
-            Route::put('{task}', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'update'])->name('update');
-            Route::delete('{task}', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'destroy'])->name('destroy');
+            Route::get('/', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'index'])->name('index');
+            Route::post('/', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'store'])->name('store');
+            Route::get('{task}', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'show'])->name('show');
+            Route::put('{task}', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'update'])->name('update');
+            Route::delete('{task}', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'destroy'])->name('destroy');
             
-            Route::patch('{task}/status', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'updateStatus'])->name('status.update');
-            Route::patch('{task}/assign', [\Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'assign'])->name('assign');
+            Route::patch('{task}/status', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'updateStatus'])->name('status.update');
+            Route::patch('{task}/assign', [Foleybridge\Nestogy\Domains\Project\Controllers\TaskController::class, 'assign'])->name('assign');
         });
         
         // Quick Access
-        Route::get('active', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'active'])->name('active');
-        Route::get('my-projects', [\Foleybridge\Nestogy\Domains\Project\Controllers\ProjectController::class, 'myProjects'])->name('my-projects');
+        Route::get('active', [App\Http\Controllers\ProjectController::class, 'active'])->name('active');
+        Route::get('my-projects', [App\Http\Controllers\ProjectController::class, 'myProjects'])->name('my-projects');
     });
 
     // Reports API
     Route::prefix('reports')->name('api.reports.')->group(function () {
-        Route::get('dashboard', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'dashboard'])->name('dashboard');
-        Route::get('financial', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'financial'])->name('financial');
-        Route::get('tickets', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'tickets'])->name('tickets');
-        Route::get('assets', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'assets'])->name('assets');
-        Route::get('clients', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'clients'])->name('clients');
-        Route::get('projects', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'projects'])->name('projects');
-        Route::get('users', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'users'])->name('users');
+        Route::get('dashboard', [App\Http\Controllers\ReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('financial', [App\Http\Controllers\ReportController::class, 'financial'])->name('financial');
+        Route::get('tickets', [App\Http\Controllers\ReportController::class, 'tickets'])->name('tickets');
+        Route::get('assets', [App\Http\Controllers\ReportController::class, 'assets'])->name('assets');
+        Route::get('clients', [App\Http\Controllers\ReportController::class, 'clients'])->name('clients');
+        Route::get('projects', [App\Http\Controllers\ReportController::class, 'projects'])->name('projects');
+        Route::get('users', [App\Http\Controllers\ReportController::class, 'users'])->name('users');
         
         // Custom Reports
-        Route::post('custom', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'generateCustomReport'])->name('custom');
-        Route::get('export/{type}', [\Foleybridge\Nestogy\Domains\Report\Controllers\ReportController::class, 'exportReport'])->name('export');
+        Route::post('custom', [App\Http\Controllers\ReportController::class, 'generateCustomReport'])->name('custom');
+        Route::get('export/{type}', [App\Http\Controllers\ReportController::class, 'exportReport'])->name('export');
     });
 
     // User Management API
@@ -307,6 +358,8 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('invoices', [App\Http\Controllers\SearchController::class, 'invoices'])->name('invoices');
         Route::get('users', [App\Http\Controllers\SearchController::class, 'users'])->name('users');
         Route::get('projects', [App\Http\Controllers\SearchController::class, 'projects'])->name('projects');
+        Route::get('query', [App\Http\Controllers\SearchController::class, 'query'])->name('query');
+        Route::get('suggestions', [App\Http\Controllers\SearchController::class, 'suggestions'])->name('suggestions');
     });
     
     // Settings API (Admin Only)
@@ -331,10 +384,10 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
 // Integration Webhooks (No Authentication Required)
 Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->group(function () {
-    Route::post('stripe', [\Foleybridge\Nestogy\Domains\Integration\Controllers\StripeWebhookController::class, 'handle'])->name('stripe');
-    Route::post('plaid', [\Foleybridge\Nestogy\Domains\Integration\Controllers\PlaidWebhookController::class, 'handle'])->name('plaid');
-    Route::post('email', [\Foleybridge\Nestogy\Domains\Integration\Controllers\EmailWebhookController::class, 'handle'])->name('email');
-    Route::post('sms', [\Foleybridge\Nestogy\Domains\Integration\Controllers\SmsWebhookController::class, 'handle'])->name('sms');
+    Route::post('stripe', [App\Http\Controllers\Integration\Controllers\StripeWebhookController::class, 'handle'])->name('stripe');
+    Route::post('plaid', [App\Http\Controllers\Integration\Controllers\PlaidWebhookController::class, 'handle'])->name('plaid');
+    Route::post('email', [App\Http\Controllers\Integration\Controllers\EmailWebhookController::class, 'handle'])->name('email');
+    Route::post('sms', [App\Http\Controllers\Integration\Controllers\SmsWebhookController::class, 'handle'])->name('sms');
 });
 
 // Public API Endpoints (Rate Limited)

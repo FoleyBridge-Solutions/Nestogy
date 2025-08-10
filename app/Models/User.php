@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasPermissions;
 
     /**
      * The table associated with the model.

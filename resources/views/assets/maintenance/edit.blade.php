@@ -1,0 +1,444 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Edit Maintenance</h1>
+                    <p class="text-muted mb-0">Update maintenance task details</p>
+                </div>
+                <div>
+                    <a href="{{ route('assets.maintenance.show', $maintenance ?? 1) }}" class="btn btn-outline-info">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                    <a href="{{ route('assets.maintenance.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Maintenance Details</h5>
+                                <div class="d-flex gap-2">
+                                    @php
+                                        $status = $maintenance->status ?? 'scheduled';
+                                        $statusColors = [
+                                            'scheduled' => 'bg-primary',
+                                            'in_progress' => 'bg-info',
+                                            'completed' => 'bg-success',
+                                            'cancelled' => 'bg-secondary'
+                                        ];
+                                    @endphp
+                                    <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }}">
+                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('assets.maintenance.update', $maintenance ?? 1) }}" method="POST" id="maintenanceForm">
+                                @csrf
+                                @method('PUT')
+
+                                <!-- Asset Selection -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
+                                        <select name="asset_id" id="asset_id" class="form-select @error('asset_id') is-invalid @enderror" required>
+                                            <option value="">Select an asset...</option>
+                                            @foreach($assets ?? [] as $asset)
+                                                <option value="{{ $asset->id }}" 
+                                                    {{ (old('asset_id', $maintenance->asset_id ?? '') == $asset->id) ? 'selected' : '' }}>
+                                                    {{ $asset->name }} ({{ $asset->asset_tag }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('asset_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="maintenance_type" class="form-label">Maintenance Type <span class="text-danger">*</span></label>
+                                        <select name="maintenance_type" id="maintenance_type" class="form-select @error('maintenance_type') is-invalid @enderror" required>
+                                            <option value="">Select type...</option>
+                                            <option value="preventive" {{ old('maintenance_type', $maintenance->maintenance_type ?? '') === 'preventive' ? 'selected' : '' }}>Preventive</option>
+                                            <option value="corrective" {{ old('maintenance_type', $maintenance->maintenance_type ?? '') === 'corrective' ? 'selected' : '' }}>Corrective</option>
+                                            <option value="emergency" {{ old('maintenance_type', $maintenance->maintenance_type ?? '') === 'emergency' ? 'selected' : '' }}>Emergency</option>
+                                            <option value="routine" {{ old('maintenance_type', $maintenance->maintenance_type ?? '') === 'routine' ? 'selected' : '' }}>Routine</option>
+                                        </select>
+                                        @error('maintenance_type')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Title and Description -->
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                                    <input type="text" name="title" id="title" class="form-control @error('title') is-invalid @enderror" 
+                                           value="{{ old('title', $maintenance->title ?? 'Preventive maintenance for Sample Asset') }}" required 
+                                           placeholder="Brief description of maintenance task">
+                                    @error('title')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" 
+                                              rows="4" placeholder="Detailed description of maintenance task...">{{ old('description', $maintenance->description ?? 'Regular preventive maintenance to ensure optimal performance and prevent unexpected failures.') }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Scheduling -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="scheduled_date" class="form-label">Scheduled Date</label>
+                                        <input type="date" name="scheduled_date" id="scheduled_date" 
+                                               class="form-control @error('scheduled_date') is-invalid @enderror" 
+                                               value="{{ old('scheduled_date', isset($maintenance->scheduled_date) ? $maintenance->scheduled_date->format('Y-m-d') : now()->addDays(7)->format('Y-m-d')) }}">
+                                        @error('scheduled_date')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="estimated_duration" class="form-label">Estimated Duration (hours)</label>
+                                        <input type="number" name="estimated_duration" id="estimated_duration" 
+                                               class="form-control @error('estimated_duration') is-invalid @enderror" 
+                                               value="{{ old('estimated_duration', $maintenance->estimated_duration ?? '2.0') }}" 
+                                               min="0.5" step="0.5" placeholder="2.0">
+                                        @error('estimated_duration')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Status and Priority -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="status" class="form-label">Status</label>
+                                        <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
+                                            <option value="scheduled" {{ old('status', $maintenance->status ?? 'scheduled') === 'scheduled' ? 'selected' : '' }}>Scheduled</option>
+                                            <option value="in_progress" {{ old('status', $maintenance->status ?? '') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                            <option value="completed" {{ old('status', $maintenance->status ?? '') === 'completed' ? 'selected' : '' }}>Completed</option>
+                                            <option value="cancelled" {{ old('status', $maintenance->status ?? '') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                        </select>
+                                        @error('status')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
+                                        <select name="priority" id="priority" class="form-select @error('priority') is-invalid @enderror" required>
+                                            <option value="">Select priority...</option>
+                                            <option value="low" {{ old('priority', $maintenance->priority ?? 'medium') === 'low' ? 'selected' : '' }}>Low</option>
+                                            <option value="medium" {{ old('priority', $maintenance->priority ?? 'medium') === 'medium' ? 'selected' : '' }}>Medium</option>
+                                            <option value="high" {{ old('priority', $maintenance->priority ?? 'medium') === 'high' ? 'selected' : '' }}>High</option>
+                                            <option value="critical" {{ old('priority', $maintenance->priority ?? 'medium') === 'critical' ? 'selected' : '' }}>Critical</option>
+                                        </select>
+                                        @error('priority')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="assigned_to" class="form-label">Assign To</label>
+                                        <select name="assigned_to" id="assigned_to" class="form-select @error('assigned_to') is-invalid @enderror">
+                                            <option value="">Unassigned</option>
+                                            @foreach($technicians ?? [] as $user)
+                                                <option value="{{ $user->id }}" {{ old('assigned_to', $maintenance->assigned_to ?? '') == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('assigned_to')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Cost and Recurring -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="estimated_cost" class="form-label">Estimated Cost</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="estimated_cost" id="estimated_cost" 
+                                                   class="form-control @error('estimated_cost') is-invalid @enderror" 
+                                                   value="{{ old('estimated_cost', $maintenance->estimated_cost ?? '150.00') }}" 
+                                                   min="0" step="0.01" placeholder="0.00">
+                                        </div>
+                                        @error('estimated_cost')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="recurring_interval" class="form-label">Recurring Interval</label>
+                                        <select name="recurring_interval" id="recurring_interval" class="form-select @error('recurring_interval') is-invalid @enderror">
+                                            <option value="">One-time maintenance</option>
+                                            <option value="weekly" {{ old('recurring_interval', $maintenance->recurring_interval ?? '') === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                                            <option value="monthly" {{ old('recurring_interval', $maintenance->recurring_interval ?? '') === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                            <option value="quarterly" {{ old('recurring_interval', $maintenance->recurring_interval ?? '') === 'quarterly' ? 'selected' : '' }}>Quarterly</option>
+                                            <option value="semi_annually" {{ old('recurring_interval', $maintenance->recurring_interval ?? '') === 'semi_annually' ? 'selected' : '' }}>Semi-Annually</option>
+                                            <option value="annually" {{ old('recurring_interval', $maintenance->recurring_interval ?? '') === 'annually' ? 'selected' : '' }}>Annually</option>
+                                        </select>
+                                        @error('recurring_interval')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Completion Details (if completed) -->
+                                <div id="completionSection" style="{{ old('status', $maintenance->status ?? '') === 'completed' ? '' : 'display: none;' }}">
+                                    <h6 class="text-success mb-3">
+                                        <i class="fas fa-check-circle"></i> Completion Details
+                                    </h6>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="completed_at" class="form-label">Completion Date</label>
+                                            <input type="datetime-local" name="completed_at" id="completed_at" 
+                                                   class="form-control @error('completed_at') is-invalid @enderror" 
+                                                   value="{{ old('completed_at', isset($maintenance->completed_at) ? $maintenance->completed_at->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i')) }}">
+                                            @error('completed_at')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="actual_duration" class="form-label">Actual Duration (hours)</label>
+                                            <input type="number" name="actual_duration" id="actual_duration" 
+                                                   class="form-control @error('actual_duration') is-invalid @enderror" 
+                                                   value="{{ old('actual_duration', $maintenance->actual_duration ?? '') }}" 
+                                                   min="0.1" step="0.1" placeholder="2.5">
+                                            @error('actual_duration')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="actual_cost" class="form-label">Actual Cost</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" name="actual_cost" id="actual_cost" 
+                                                       class="form-control @error('actual_cost') is-invalid @enderror" 
+                                                       value="{{ old('actual_cost', $maintenance->actual_cost ?? '') }}" 
+                                                       min="0" step="0.01" placeholder="0.00">
+                                            </div>
+                                            @error('actual_cost')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="completed_by" class="form-label">Completed By</label>
+                                            <select name="completed_by" id="completed_by" class="form-select @error('completed_by') is-invalid @enderror">
+                                                <option value="">Select technician...</option>
+                                                @foreach($technicians ?? [] as $user)
+                                                    <option value="{{ $user->id }}" {{ old('completed_by', $maintenance->completed_by ?? auth()->id()) == $user->id ? 'selected' : '' }}>
+                                                        {{ $user->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('completed_by')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="completion_notes" class="form-label">Completion Notes</label>
+                                        <textarea name="completion_notes" id="completion_notes" class="form-control @error('completion_notes') is-invalid @enderror" 
+                                                  rows="3" placeholder="Notes about the completed maintenance...">{{ old('completion_notes', $maintenance->completion_notes ?? '') }}</textarea>
+                                        @error('completion_notes')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Instructions and Notes -->
+                                <div class="mb-3">
+                                    <label for="instructions" class="form-label">Maintenance Instructions</label>
+                                    <textarea name="instructions" id="instructions" class="form-control @error('instructions') is-invalid @enderror" 
+                                              rows="3" placeholder="Step-by-step instructions for performing this maintenance...">{{ old('instructions', $maintenance->instructions ?? "1. Power down the asset safely\n2. Perform visual inspection\n3. Clean components\n4. Check connections\n5. Test functionality\n6. Document findings") }}</textarea>
+                                    @error('instructions')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="notes" class="form-label">Notes</label>
+                                    <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" 
+                                              rows="3" placeholder="Additional notes or comments...">{{ old('notes', $maintenance->notes ?? '') }}</textarea>
+                                    @error('notes')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Submit Buttons -->
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Update Maintenance
+                                    </button>
+                                    @if($status !== 'completed')
+                                        <button type="submit" name="quick_complete" value="1" class="btn btn-success">
+                                            <i class="fas fa-check"></i> Save & Complete
+                                        </button>
+                                    @endif
+                                    <a href="{{ route('assets.maintenance.show', $maintenance ?? 1) }}" class="btn btn-outline-info">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    <a href="{{ route('assets.maintenance.index') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Info -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Maintenance Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Current Status:</strong>
+                                <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }} ms-2">
+                                    {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                </span>
+                            </div>
+                            @if(isset($maintenance->created_at))
+                                <div class="mb-2">
+                                    <strong>Created:</strong> {{ $maintenance->created_at->format('M d, Y g:i A') }}
+                                </div>
+                            @endif
+                            @if(isset($maintenance->updated_at))
+                                <div class="mb-2">
+                                    <strong>Last Updated:</strong> {{ $maintenance->updated_at->format('M d, Y g:i A') }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Asset Info -->
+                    <div id="assetInfo" class="card" style="{{ old('asset_id', $maintenance->asset_id ?? '') ? '' : 'display: none;' }}">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Asset Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="assetDetails">
+                                @if(isset($maintenance->asset))
+                                    <div class="mb-2">
+                                        <strong>{{ $maintenance->asset->name }}</strong>
+                                        <br><small class="text-muted">{{ $maintenance->asset->asset_tag }}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Category:</small> {{ $maintenance->asset->category }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Location:</small> {{ $maintenance->asset->location }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('status');
+    const completionSection = document.getElementById('completionSection');
+    
+    // Status change handler
+    statusSelect.addEventListener('change', function() {
+        if (this.value === 'completed') {
+            completionSection.style.display = 'block';
+            document.getElementById('completed_at').required = true;
+        } else {
+            completionSection.style.display = 'none';
+            document.getElementById('completed_at').required = false;
+        }
+    });
+    
+    // Form validation
+    const form = document.getElementById('maintenanceForm');
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Check required fields
+        const requiredFields = ['asset_id', 'maintenance_type', 'title', 'priority'];
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Check completion fields if status is completed
+        if (statusSelect.value === 'completed') {
+            const completedAt = document.getElementById('completed_at');
+            if (!completedAt.value) {
+                completedAt.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                completedAt.classList.remove('is-invalid');
+            }
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Quick complete button handler
+    const quickCompleteBtn = document.querySelector('button[name="quick_complete"]');
+    if (quickCompleteBtn) {
+        quickCompleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Set status to completed
+            statusSelect.value = 'completed';
+            statusSelect.dispatchEvent(new Event('change'));
+            
+            // Set completion date to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('completed_at').value = now.toISOString().slice(0, 16);
+            
+            // Set completed by to current user if not set
+            const completedBy = document.getElementById('completed_by');
+            if (!completedBy.value) {
+                const assignedTo = document.getElementById('assigned_to').value;
+                if (assignedTo) {
+                    completedBy.value = assignedTo;
+                }
+            }
+            
+            // Submit the form
+            form.submit();
+        });
+    }
+});
+</script>
+@endpush
