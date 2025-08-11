@@ -3,16 +3,17 @@
 @php
 // Get selected client and workflow context
 $selectedClient = \App\Services\NavigationService::getSelectedClient();
-$currentWorkflow = $selectedClient ? \App\Services\NavigationService::getWorkflowContext($selectedClient) : null;
+$currentWorkflow = \App\Services\NavigationService::getWorkflowContext(); // Get current workflow from session
 $urgentItems = \App\Services\NavigationService::getUrgentItems();
 $todaysWork = \App\Services\NavigationService::getTodaysWork();
+$workflowHighlights = \App\Services\NavigationService::getWorkflowNavigationHighlights($currentWorkflow);
 
 // Workflow-based navigation structure
 $workflowNavigation = [
     'urgent' => [
         'name' => 'Urgent',
         'icon' => '🔥',
-        'count' => $urgentItems['total'] ?? 0,
+        'count' => $workflowHighlights['badges']['urgent'] ?? $urgentItems['total'] ?? 0,
         'route' => 'dashboard',
         'params' => ['view' => 'urgent'],
         'color' => 'red',
@@ -21,7 +22,7 @@ $workflowNavigation = [
     'today' => [
         'name' => "Today's Work",
         'icon' => '⚡',
-        'count' => $todaysWork['total'] ?? 0,
+        'count' => $workflowHighlights['badges']['today'] ?? $todaysWork['total'] ?? 0,
         'route' => 'dashboard',
         'params' => ['view' => 'today'],
         'color' => 'blue',
@@ -30,18 +31,18 @@ $workflowNavigation = [
     'scheduled' => [
         'name' => 'Scheduled',
         'icon' => '📋',
-        'count' => $todaysWork['upcoming'] ?? 0,
-        'route' => 'tickets.calendar.index',
-        'params' => [],
+        'count' => $workflowHighlights['badges']['scheduled'] ?? $todaysWork['upcoming'] ?? 0,
+        'route' => 'dashboard',
+        'params' => ['view' => 'scheduled'],
         'color' => 'indigo',
         'description' => 'Upcoming work and appointments'
     ],
     'financial' => [
         'name' => 'Financial',
         'icon' => '💰',
-        'count' => $urgentItems['financial'] ?? 0,
-        'route' => 'financial.invoices.index',
-        'params' => [],
+        'count' => $workflowHighlights['badges']['financial'] ?? $urgentItems['financial'] ?? 0,
+        'route' => 'dashboard',
+        'params' => ['view' => 'financial'],
         'color' => 'green',
         'description' => 'Payments, invoices, and financial matters'
     ],
@@ -49,8 +50,8 @@ $workflowNavigation = [
         'name' => 'Reports',
         'icon' => '📊',
         'count' => 0,
-        'route' => 'reports.index',
-        'params' => [],
+        'route' => 'dashboard',
+        'params' => ['view' => 'reports'],
         'color' => 'purple',
         'description' => 'Analytics and business insights'
     ]
@@ -109,7 +110,24 @@ if ($selectedClient) {
                 <div class="flex items-center space-x-1 overflow-x-auto scrollbar-none">
                 @foreach($workflowNavigation as $key => $workflow)
                 @php
-                $isActive = $activeDomain === $key;
+                // Check if this workflow is active based on current route or workflow context
+                $isActive = false;
+                if ($currentWorkflow === $key) {
+                    $isActive = true;
+                } elseif (request()->get('view') === $key) {
+                    $isActive = true;
+                } elseif ($key === 'urgent' && request()->routeIs('dashboard') && request()->get('view') === 'urgent') {
+                    $isActive = true;
+                } elseif ($key === 'today' && request()->routeIs('dashboard') && request()->get('view') === 'today') {
+                    $isActive = true;
+                } elseif ($key === 'scheduled' && request()->routeIs('tickets.calendar.*')) {
+                    $isActive = true;
+                } elseif ($key === 'financial' && request()->routeIs('financial.*')) {
+                    $isActive = true;
+                } elseif ($key === 'reports' && request()->routeIs('reports.*')) {
+                    $isActive = true;
+                }
+                
                 $hasItems = $workflow['count'] > 0;
                 $tabClasses = $isActive
                     ? ($workflow['color'] === 'red' ? 'bg-red-50 text-red-700 border-red-200' :
