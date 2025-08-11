@@ -955,6 +955,34 @@ class ClientController extends Controller
     }
 
     /**
+     * Mark a client as recently accessed
+     */
+    public function markAsAccessed(Request $request, Client $client)
+    {
+        $this->authorize('view', $client);
+        
+        try {
+            $client->markAsAccessed();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Client marked as accessed'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to mark client as accessed', [
+                'client_id' => $client->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark client as accessed'
+            ], 500);
+        }
+    }
+
+    /**
      * Legacy client switch page - redirects to clients list
      */
     public function switch(Request $request)

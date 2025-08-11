@@ -4,7 +4,7 @@ namespace App\Domains\Knowledge\Models;
 
 use App\Models\BaseModel;
 use App\Models\User;
-use App\Domains\Client\Models\Client;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;

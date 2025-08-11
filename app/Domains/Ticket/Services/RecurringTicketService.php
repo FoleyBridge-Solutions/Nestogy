@@ -81,11 +81,11 @@ class RecurringTicketService
         $processedTemplate = $this->processTemplateVariables($recurringTicket->template, $variables);
 
         // Generate unique ticket number
-        $ticketNumber = $this->generateTicketNumber($recurringTicket->tenant_id);
+        $ticketNumber = $this->generateTicketNumber($recurringTicket->company_id);
 
         // Create the ticket
         $ticket = Ticket::create([
-            'tenant_id' => $recurringTicket->tenant_id,
+            'company_id' => $recurringTicket->company_id,
             'ticket_number' => $ticketNumber,
             'client_id' => $recurringTicket->client_id,
             'subject' => $processedTemplate['subject'],
@@ -426,7 +426,7 @@ class RecurringTicketService
         $year = date('Y');
         
         // Get the last ticket number for this year
-        $lastTicket = Ticket::where('tenant_id', $tenantId)
+        $lastTicket = Ticket::where('company_id', $tenantId)
                            ->where('ticket_number', 'like', "{$prefix}-{$year}-%")
                            ->orderBy('ticket_number', 'desc')
                            ->first();

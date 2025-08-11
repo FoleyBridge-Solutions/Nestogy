@@ -702,13 +702,12 @@ class DashboardController extends Controller
         // Get time tracking data (in minutes)
         $timeTracked = 0;
         if (DB::getSchemaBuilder()->hasTable('ticket_time_entries')) {
-            $hoursTracked = DB::table('ticket_time_entries')
+            $timeTracked = DB::table('ticket_time_entries')
                 ->whereIn('ticket_id', function($query) use ($baseQuery) {
                     $query->select('id')->from('tickets')->where($baseQuery);
                 })
-                ->whereBetween('work_date', [$today->toDateString(), $endOfDay->toDateString()])
-                ->sum('hours_worked') ?? 0;
-            $timeTracked = $hoursTracked * 60; // Convert hours to minutes
+                ->whereBetween('created_at', [$today, $endOfDay])
+                ->sum('minutes') ?? 0;
         }
             
         // Get productivity metrics
@@ -795,7 +794,7 @@ class DashboardController extends Controller
         if (DB::getSchemaBuilder()->hasTable('recurring_tickets')) {
             $recurringTickets = DB::table('recurring_tickets')
                 ->join('clients', 'recurring_tickets.client_id', '=', 'clients.id')
-                ->where('recurring_tickets.tenant_id', $baseQuery['company_id'])
+                ->where('recurring_tickets.company_id', $baseQuery['company_id'])
                 ->where('recurring_tickets.is_active', true)
                 ->where('recurring_tickets.next_run_date', '<=', $upcomingWeek)
                 ->select('recurring_tickets.*', 'clients.name as client_name')
@@ -819,8 +818,9 @@ class DashboardController extends Controller
         }
         
         // Team availability (simplified - checking who has scheduled work)
+        // Exclude clients - in this system, all users with roles are staff (not clients)
         $teamSchedule = User::where('company_id', $userContext->company_id)
-            ->where('role', '!=', 'Client')
+            ->whereHas('userSetting')
             ->withCount(['assignedTickets as today_scheduled' => function($query) use ($today) {
                 $query->whereDate('scheduled_at', $today);
             }])
@@ -855,10 +855,10 @@ class DashboardController extends Controller
             $calendarEvents = DB::table('client_calendar_events')
                 ->join('clients', 'client_calendar_events.client_id', '=', 'clients.id')
                 ->where('clients.company_id', $baseQuery['company_id'])
-                ->where('client_calendar_events.start_date', '>=', $today)
-                ->where('client_calendar_events.start_date', '<=', $upcomingWeek)
+                ->where('client_calendar_events.start_time', '>=', $today)
+                ->where('client_calendar_events.start_time', '<=', $upcomingWeek)
                 ->select('client_calendar_events.*', 'clients.name as client_name')
-                ->orderBy('start_date')
+                ->orderBy('start_time')
                 ->limit(15)
                 ->get();
         }

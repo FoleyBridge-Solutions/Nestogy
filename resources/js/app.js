@@ -103,11 +103,13 @@ window.FullCalendarPlugins = {
 import { modernDashboard } from './components/dashboard.js';
 import { modernLayout, layoutUtils } from './components/layout.js';
 import { clientSwitcher } from './components/client-switcher.js';
+import { clientSearchField } from './components/client-search-field.js';
 
 // Register components globally
 Alpine.data('modernDashboard', modernDashboard);
 Alpine.data('modernLayout', modernLayout);
 Alpine.data('clientSwitcher', clientSwitcher);
+Alpine.data('clientSearchField', clientSearchField);
 
 // Make utilities available globally
 window.layoutUtils = layoutUtils;

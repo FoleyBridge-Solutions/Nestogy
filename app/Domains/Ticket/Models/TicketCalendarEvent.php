@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,11 +17,11 @@ use Carbon\Carbon;
  */
 class TicketCalendarEvent extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use HasFactory, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'ticket_id',
-        'tenant_id',
+        'company_id',
         'title',
         'description',
         'start_time',
@@ -37,7 +37,7 @@ class TicketCalendarEvent extends Model
 
     protected $casts = [
         'ticket_id' => 'integer',
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'attendee_emails' => 'array',
@@ -294,7 +294,7 @@ class TicketCalendarEvent extends Model
     {
         return self::create(array_merge([
             'ticket_id' => $ticket->id,
-            'tenant_id' => $ticket->tenant_id,
+            'company_id' => $ticket->company_id,
             'title' => $data['title'] ?? "Service: {$ticket->subject}",
             'description' => $data['description'] ?? $ticket->details,
             'status' => self::STATUS_SCHEDULED,

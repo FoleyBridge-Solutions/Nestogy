@@ -25,7 +25,7 @@ class WorkflowController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TicketWorkflow::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketWorkflow::where('company_id', auth()->user()->company_id);
 
         // Apply search filters
         if ($search = $request->get('search')) {
@@ -51,7 +51,7 @@ class WorkflowController extends Controller
                           ->appends($request->query());
 
         // Get available categories
-        $categories = TicketWorkflow::where('tenant_id', auth()->user()->tenant_id)
+        $categories = TicketWorkflow::where('company_id', auth()->user()->company_id)
                                    ->whereNotNull('category')
                                    ->distinct()
                                    ->pluck('category');
@@ -75,7 +75,7 @@ class WorkflowController extends Controller
         $actionTypes = $this->getActionTypes();
         $conditionTypes = $this->getConditionTypes();
         
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
@@ -119,7 +119,7 @@ class WorkflowController extends Controller
         DB::transaction(function () use ($request) {
             // Create workflow
             $workflow = TicketWorkflow::create([
-                'tenant_id' => auth()->user()->tenant_id,
+                'company_id' => auth()->user()->company_id,
                 'name' => $request->name,
                 'description' => $request->description,
                 'category' => $request->category,
@@ -134,7 +134,7 @@ class WorkflowController extends Controller
             // Create transitions
             foreach ($request->transitions as $transitionData) {
                 $workflow->transitions()->create([
-                    'tenant_id' => auth()->user()->tenant_id,
+                    'company_id' => auth()->user()->company_id,
                     'from_status' => $transitionData['from_status'],
                     'to_status' => $transitionData['to_status'],
                     'name' => $transitionData['name'],
@@ -207,7 +207,7 @@ class WorkflowController extends Controller
         $actionTypes = $this->getActionTypes();
         $conditionTypes = $this->getConditionTypes();
         
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
@@ -287,7 +287,7 @@ class WorkflowController extends Controller
                 } else {
                     // Create new transition
                     $workflow->transitions()->create(array_merge($transitionData, [
-                        'tenant_id' => auth()->user()->tenant_id,
+                        'company_id' => auth()->user()->company_id,
                     ]));
                 }
             }
@@ -452,7 +452,7 @@ class WorkflowController extends Controller
 
         // Create a temporary workflow instance for testing
         $tempWorkflow = new TicketWorkflow([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
         ]);
 
         $result = $tempWorkflow->evaluateConditions($request->conditions, $request->ticket_data);
@@ -483,7 +483,7 @@ class WorkflowController extends Controller
 
         // Create a temporary workflow instance for preview
         $tempWorkflow = new TicketWorkflow([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
         ]);
 
         $preview = $tempWorkflow->previewActions($request->actions, $request->ticket_data);
@@ -578,7 +578,7 @@ class WorkflowController extends Controller
                 unset($workflowData['id'], $workflowData['created_at'], $workflowData['updated_at']);
                 
                 $workflow = TicketWorkflow::create(array_merge($workflowData, [
-                    'tenant_id' => auth()->user()->tenant_id,
+                    'company_id' => auth()->user()->company_id,
                     'name' => $request->name,
                     'created_by' => auth()->id(),
                     'is_active' => false, // Start as inactive
@@ -590,7 +590,7 @@ class WorkflowController extends Controller
                           $transitionData['created_at'], $transitionData['updated_at']);
                     
                     $workflow->transitions()->create(array_merge($transitionData, [
-                        'tenant_id' => auth()->user()->tenant_id,
+                        'company_id' => auth()->user()->company_id,
                     ]));
                 }
             });

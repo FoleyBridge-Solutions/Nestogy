@@ -24,6 +24,19 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Redirect /register to our SaaS signup form
+Route::get('/register', function () {
+    return redirect()->route('signup.form');
+});
+
+// Company Registration Routes (pre-login)
+Route::prefix('signup')->name('signup.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\CompanyRegistrationController::class, 'showRegistrationForm'])->name('form');
+    Route::post('/', [\App\Http\Controllers\CompanyRegistrationController::class, 'register'])->name('submit');
+    Route::get('plans', [\App\Http\Controllers\CompanyRegistrationController::class, 'getPlans'])->name('plans');
+    Route::post('validate-step', [\App\Http\Controllers\CompanyRegistrationController::class, 'validateStep'])->name('validate-step');
+});
+
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -140,6 +153,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Search route
     Route::get('/search', [\App\Http\Controllers\SearchController::class, 'search'])->name('search');
     
+    // Navigation API routes
+    Route::prefix('api/navigation')->name('api.navigation.')->group(function () {
+        Route::get('tree', [\App\Http\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
+        Route::get('badges', [\App\Http\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
+        Route::get('suggestions', [\App\Http\Controllers\NavigationController::class, 'getSuggestions'])->name('suggestions');
+        Route::get('recent', [\App\Http\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
+        Route::get('workflow-highlights', [\App\Http\Controllers\NavigationController::class, 'getWorkflowHighlights'])->name('workflow-highlights');
+        Route::post('command', [\App\Http\Controllers\NavigationController::class, 'executeCommand'])->name('command');
+        Route::post('workflow', [\App\Http\Controllers\NavigationController::class, 'setWorkflow'])->name('workflow');
+    });
+    
+    // Search API routes
+    Route::prefix('api/search')->name('api.search.')->group(function () {
+        Route::get('query', [\App\Http\Controllers\NavigationController::class, 'search'])->name('query');
+    });
+    
     // User routes
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/profile', [\App\Http\Controllers\UserController::class, 'profile'])->name('profile');
@@ -162,8 +191,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/integrations', fn() => view('settings.integrations'))->name('integrations');
     });
     
+    // Admin routes (Company 1 super-admins only)
+    Route::prefix('admin')->name('admin.')->middleware('can:manage-subscriptions')->group(function () {
+        Route::prefix('subscriptions')->name('subscriptions.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'index'])->name('index');
+            Route::get('/analytics', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'analytics'])->name('analytics');
+            Route::get('/export', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'export'])->name('export');
+            Route::get('/{client}', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'show'])->name('show');
+            Route::post('/{client}/create-tenant', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'createTenant'])->name('create-tenant');
+            Route::patch('/{client}/change-plan', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'changePlan'])->name('change-plan');
+            Route::delete('/{client}/cancel', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'cancel'])->name('cancel');
+            Route::patch('/{client}/reactivate', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'reactivate'])->name('reactivate');
+            Route::patch('/{client}/suspend-tenant', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'suspendTenant'])->name('suspend-tenant');
+            Route::patch('/{client}/reactivate-tenant', [\App\Http\Controllers\Admin\SubscriptionManagementController::class, 'reactivateTenant'])->name('reactivate-tenant');
+        });
+    });
+    
     // Collections Dashboard
     Route::get('/collections/dashboard', [\App\Http\Controllers\CollectionDashboardController::class, 'index'])->name('collections.dashboard');
+    
+    // Customer Billing Portal
+    Route::prefix('billing')->name('billing.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BillingController::class, 'index'])->name('index');
+        Route::get('/subscription', [\App\Http\Controllers\BillingController::class, 'subscription'])->name('subscription');
+        Route::get('/payment-methods', [\App\Http\Controllers\BillingController::class, 'paymentMethods'])->name('payment-methods');
+        Route::get('/change-plan', [\App\Http\Controllers\BillingController::class, 'changePlan'])->name('change-plan');
+        Route::patch('/update-plan', [\App\Http\Controllers\BillingController::class, 'updatePlan'])->name('update-plan');
+        Route::get('/invoices', [\App\Http\Controllers\BillingController::class, 'invoices'])->name('invoices');
+        Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\BillingController::class, 'downloadInvoice'])->name('invoices.download');
+        Route::get('/usage', [\App\Http\Controllers\BillingController::class, 'usage'])->name('usage');
+        Route::post('/cancel-subscription', [\App\Http\Controllers\BillingController::class, 'cancelSubscription'])->name('cancel-subscription');
+        Route::post('/reactivate-subscription', [\App\Http\Controllers\BillingController::class, 'reactivateSubscription'])->name('reactivate-subscription');
+        Route::get('/portal', [\App\Http\Controllers\BillingController::class, 'billingPortal'])->name('portal');
+    });
 });
 
 // Authentication routes will be handled by Laravel Fortify
@@ -262,6 +322,9 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
     Route::post('docusign', [ContractController::class, 'docusignWebhook'])->name('docusign');
     Route::post('hellosign', [ContractController::class, 'hellosignWebhook'])->name('hellosign');
     Route::post('adobe-sign', [ContractController::class, 'adobeSignWebhook'])->name('adobe-sign');
+    
+    // Stripe webhooks
+    Route::post('stripe', [\App\Http\Controllers\Api\Webhooks\StripeWebhookController::class, 'handle'])->name('stripe');
 });
 
 // Public routes for client portal

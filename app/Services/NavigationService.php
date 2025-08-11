@@ -32,8 +32,10 @@ class NavigationService
         'financial' => [
             'routes' => [
                 'financial.*',
+                'billing.*',
+                'collections.*',
             ],
-            'patterns' => ['financial']
+            'patterns' => ['financial', 'billing', 'collections']
         ],
         'projects' => [
             'routes' => [
@@ -46,6 +48,28 @@ class NavigationService
                 'reports.*',
             ],
             'patterns' => ['reports']
+        ],
+        'knowledge' => [
+            'routes' => [
+                'knowledge.*',
+            ],
+            'patterns' => ['knowledge']
+        ],
+        'integrations' => [
+            'routes' => [
+                'integrations.*',
+                'webhooks.*',
+                'api.*',
+            ],
+            'patterns' => ['integrations', 'webhooks', 'api']
+        ],
+        'settings' => [
+            'routes' => [
+                'settings.*',
+                'users.*',
+                'admin.*',
+            ],
+            'patterns' => ['settings', 'users', 'admin']
         ],
     ];
 
@@ -68,85 +92,117 @@ class NavigationService
             // Client-Specific Routes (client context required)
             'clients.show' => 'client-dashboard',
             'clients.edit' => 'client-dashboard',
+            'clients.tags' => 'client-dashboard',
+            'clients.update-notes' => 'client-dashboard',
+            'clients.archive' => 'client-dashboard',
+            'clients.restore' => 'client-dashboard',
+            
+            // Contacts
             'clients.contacts.index' => 'contacts',
             'clients.contacts.create' => 'contacts',
             'clients.contacts.show' => 'contacts',
             'clients.contacts.edit' => 'contacts',
             'clients.contacts.export' => 'contacts',
+            
+            // Locations
             'clients.locations.index' => 'locations',
             'clients.locations.create' => 'locations',
             'clients.locations.show' => 'locations',
             'clients.locations.edit' => 'locations',
             'clients.locations.export' => 'locations',
+            
+            // Documents & Files
             'clients.documents.index' => 'documents',
             'clients.documents.create' => 'documents',
             'clients.documents.show' => 'documents',
             'clients.documents.edit' => 'documents',
-            'clients.documents.export' => 'documents',
+            'clients.documents.destroy' => 'documents',
             'clients.files.index' => 'files',
             'clients.files.create' => 'files',
             'clients.files.show' => 'files',
-            'clients.files.export' => 'files',
+            'clients.files.edit' => 'files',
+            'clients.files.destroy' => 'files',
+            
+            // IT Documentation
+            'clients.it-documentation.index' => 'it-documentation',
+            'clients.it-documentation.create' => 'it-documentation',
+            'clients.it-documentation.show' => 'it-documentation',
+            'clients.it-documentation.edit' => 'it-documentation',
+            'clients.it-documentation.export' => 'it-documentation',
+            'clients.it-documentation.download' => 'it-documentation',
+            'clients.it-documentation.duplicate' => 'it-documentation',
+            'clients.it-documentation.create-version' => 'it-documentation',
+            'clients.it-documentation.complete-review' => 'it-documentation',
+            'clients.it-documentation.overdue-reviews' => 'it-documentation',
+            'clients.it-documentation.bulk-update-access' => 'it-documentation',
+            
+            // Infrastructure Management
             'clients.licenses.index' => 'licenses',
             'clients.licenses.create' => 'licenses',
             'clients.licenses.show' => 'licenses',
             'clients.licenses.edit' => 'licenses',
-            'clients.licenses.export' => 'licenses',
+            'clients.licenses.destroy' => 'licenses',
             'clients.credentials.index' => 'credentials',
             'clients.credentials.create' => 'credentials',
             'clients.credentials.show' => 'credentials',
             'clients.credentials.edit' => 'credentials',
-            'clients.credentials.export' => 'credentials',
+            'clients.credentials.destroy' => 'credentials',
             'clients.networks.index' => 'networks',
             'clients.networks.create' => 'networks',
             'clients.networks.show' => 'networks',
             'clients.networks.edit' => 'networks',
-            'clients.networks.export' => 'networks',
-            'clients.services.index' => 'services',
-            'clients.services.create' => 'services',
-            'clients.services.show' => 'services',
-            'clients.services.edit' => 'services',
-            'clients.services.export' => 'services',
-            'clients.vendors.index' => 'vendors',
-            'clients.vendors.create' => 'vendors',
-            'clients.vendors.show' => 'vendors',
-            'clients.vendors.edit' => 'vendors',
-            'clients.vendors.export' => 'vendors',
-            'clients.racks.index' => 'racks',
-            'clients.racks.create' => 'racks',
-            'clients.racks.show' => 'racks',
-            'clients.racks.edit' => 'racks',
-            'clients.racks.export' => 'racks',
+            'clients.networks.destroy' => 'networks',
             'clients.certificates.index' => 'certificates',
             'clients.certificates.create' => 'certificates',
             'clients.certificates.show' => 'certificates',
             'clients.certificates.edit' => 'certificates',
-            'clients.certificates.export' => 'certificates',
+            'clients.certificates.destroy' => 'certificates',
             'clients.domains.index' => 'domains',
             'clients.domains.create' => 'domains',
             'clients.domains.show' => 'domains',
             'clients.domains.edit' => 'domains',
-            'clients.domains.export' => 'domains',
+            'clients.domains.destroy' => 'domains',
+            'clients.racks.index' => 'racks',
+            'clients.racks.create' => 'racks',
+            'clients.racks.show' => 'racks',
+            'clients.racks.edit' => 'racks',
+            'clients.racks.destroy' => 'racks',
+            
+            // Service Management
+            'clients.services.index' => 'services',
+            'clients.services.create' => 'services',
+            'clients.services.show' => 'services',
+            'clients.services.edit' => 'services',
+            'clients.services.destroy' => 'services',
+            'clients.vendors.index' => 'vendors',
+            'clients.vendors.create' => 'vendors',
+            'clients.vendors.show' => 'vendors',
+            'clients.vendors.edit' => 'vendors',
+            'clients.vendors.destroy' => 'vendors',
+            
+            // Calendar & Scheduling
             'clients.calendar-events.index' => 'calendar-events',
             'clients.calendar-events.create' => 'calendar-events',
             'clients.calendar-events.show' => 'calendar-events',
             'clients.calendar-events.edit' => 'calendar-events',
-            'clients.calendar-events.export' => 'calendar-events',
-            'clients.recurring-invoices.index' => 'recurring-invoices',
-            'clients.recurring-invoices.create' => 'recurring-invoices',
-            'clients.recurring-invoices.show' => 'recurring-invoices',
-            'clients.recurring-invoices.edit' => 'recurring-invoices',
-            'clients.recurring-invoices.export' => 'recurring-invoices',
-            'clients.quotes.index' => 'quotes',
-            'clients.quotes.create' => 'quotes',
-            'clients.quotes.show' => 'quotes',
-            'clients.quotes.edit' => 'quotes',
-            'clients.quotes.export' => 'quotes',
+            'clients.calendar-events.destroy' => 'calendar-events',
             'clients.trips.index' => 'trips',
             'clients.trips.create' => 'trips',
             'clients.trips.show' => 'trips',
             'clients.trips.edit' => 'trips',
-            'clients.trips.export' => 'trips',
+            'clients.trips.destroy' => 'trips',
+            
+            // Financial
+            'clients.recurring-invoices.index' => 'recurring-invoices',
+            'clients.recurring-invoices.create' => 'recurring-invoices',
+            'clients.recurring-invoices.show' => 'recurring-invoices',
+            'clients.recurring-invoices.edit' => 'recurring-invoices',
+            'clients.recurring-invoices.destroy' => 'recurring-invoices',
+            'clients.quotes.index' => 'quotes',
+            'clients.quotes.create' => 'quotes',
+            'clients.quotes.show' => 'quotes',
+            'clients.quotes.edit' => 'quotes',
+            'clients.quotes.destroy' => 'quotes',
         ],
         'tickets' => [
             'tickets.index' => 'index',
@@ -194,7 +250,14 @@ class NavigationService
             'tickets.workflows.create' => 'workflows',
             'tickets.workflows.show' => 'workflows',
             'tickets.workflows.edit' => 'workflows',
+            'tickets.workflows.duplicate' => 'workflows',
             'tickets.workflows.export' => 'workflows',
+            'tickets.workflows.import' => 'workflows',
+            'tickets.workflows.toggleActive' => 'workflows',
+            'tickets.workflows.executeTransition' => 'workflows',
+            'tickets.workflows.getAvailableTransitions' => 'workflows',
+            'tickets.workflows.testConditions' => 'workflows',
+            'tickets.workflows.previewActions' => 'workflows',
             
             // Assignments
             'tickets.assignments.index' => 'assignments',
@@ -239,19 +302,101 @@ class NavigationService
             'assets.depreciations.recalculate' => 'depreciations',
         ],
         'financial' => [
+            // Invoices
             'financial.invoices.index' => 'invoices',
             'financial.invoices.create' => 'create-invoice',
             'financial.invoices.show' => 'invoices',
             'financial.invoices.edit' => 'invoices',
             'financial.invoices.export.csv' => 'export-invoices',
+            'financial.invoices.send' => 'invoices',
+            'financial.invoices.pdf' => 'invoices',
+            'financial.invoices.duplicate' => 'invoices',
+            'financial.invoices.items.store' => 'invoices',
+            'financial.invoices.items.update' => 'invoices',
+            'financial.invoices.items.destroy' => 'invoices',
+            'financial.invoices.payments.store' => 'invoices',
+            'financial.invoices.update-status' => 'invoices',
+            'financial.invoices.timeline' => 'invoices',
+            
+            // Payments
             'financial.payments.index' => 'payments',
             'financial.payments.create' => 'create-payment',
             'financial.payments.show' => 'payments',
             'financial.payments.edit' => 'payments',
+            'financial.payments.destroy' => 'payments',
+            
+            // Expenses
             'financial.expenses.index' => 'expenses',
             'financial.expenses.create' => 'create-expense',
             'financial.expenses.show' => 'expenses',
             'financial.expenses.edit' => 'expenses',
+            'financial.expenses.destroy' => 'expenses',
+            
+            // Quotes
+            'financial.quotes.index' => 'quotes',
+            'financial.quotes.create' => 'quotes',
+            'financial.quotes.show' => 'quotes',
+            'financial.quotes.edit' => 'quotes',
+            'financial.quotes.destroy' => 'quotes',
+            'financial.quotes.approve' => 'quotes',
+            'financial.quotes.reject' => 'quotes',
+            'financial.quotes.send' => 'quotes',
+            'financial.quotes.pdf' => 'quotes',
+            'financial.quotes.duplicate' => 'quotes',
+            'financial.quotes.convert-to-invoice' => 'quotes',
+            'financial.quotes.convert-to-contract' => 'quotes',
+            'financial.quotes.approval-history' => 'quotes',
+            'financial.quotes.versions' => 'quotes',
+            'financial.quotes.versions.restore' => 'quotes',
+            
+            // Contracts
+            'financial.contracts.index' => 'contracts',
+            'financial.contracts.create' => 'contracts',
+            'financial.contracts.show' => 'contracts',
+            'financial.contracts.edit' => 'contracts',
+            'financial.contracts.destroy' => 'contracts',
+            'financial.contracts.approve' => 'contracts',
+            'financial.contracts.reject' => 'contracts',
+            'financial.contracts.send-for-signature' => 'contracts',
+            'financial.contracts.activate' => 'contracts',
+            'financial.contracts.terminate' => 'contracts',
+            'financial.contracts.renew' => 'contracts',
+            'financial.contracts.pdf' => 'contracts',
+            'financial.contracts.duplicate' => 'contracts',
+            'financial.contracts.approval-history' => 'contracts',
+            'financial.contracts.audit-trail' => 'contracts',
+            'financial.contracts.milestones.store' => 'contracts',
+            'financial.contracts.milestones.update' => 'contracts',
+            'financial.contracts.milestones.destroy' => 'contracts',
+            'financial.contracts.milestones.complete' => 'contracts',
+            'financial.contracts.convert-to-invoice' => 'contracts',
+            'financial.contracts.compliance-status' => 'contracts',
+            
+            // Analytics
+            'financial.analytics.index' => 'analytics',
+            'financial.analytics.revenue' => 'analytics-revenue',
+            'financial.analytics.performance' => 'analytics-performance',
+            'financial.analytics.clients' => 'analytics-clients',
+            'financial.analytics.forecast' => 'analytics-forecast',
+            'financial.analytics.risk' => 'analytics-risk',
+            'financial.analytics.lifecycle' => 'analytics-lifecycle',
+            'financial.analytics.export' => 'analytics-export',
+            
+            // Collections (if implemented)
+            'collections.dashboard' => 'collections',
+            
+            // Billing Portal
+            'billing.index' => 'billing',
+            'billing.subscription' => 'billing-subscription',
+            'billing.payment-methods' => 'billing-payment-methods',
+            'billing.change-plan' => 'billing-change-plan',
+            'billing.update-plan' => 'billing-update-plan',
+            'billing.invoices' => 'billing-invoices',
+            'billing.invoices.download' => 'billing-invoices',
+            'billing.usage' => 'billing-usage',
+            'billing.cancel-subscription' => 'billing-subscription',
+            'billing.reactivate-subscription' => 'billing-subscription',
+            'billing.portal' => 'billing-portal',
         ],
         'projects' => [
             // Main project routes
@@ -311,6 +456,96 @@ class NavigationService
             'reports.clients' => 'clients',
             'reports.projects' => 'projects',
             'reports.users' => 'users',
+            'reports.category' => 'category',
+            'reports.builder' => 'builder',
+            'reports.generate' => 'generate',
+            'reports.save' => 'save',
+            'reports.schedule' => 'schedule',
+            'reports.scheduled' => 'scheduled',
+        ],
+        'knowledge' => [
+            // Main knowledge base routes
+            'knowledge.index' => 'index',
+            'knowledge.articles.index' => 'articles',
+            'knowledge.articles.create' => 'create-article',
+            'knowledge.articles.show' => 'articles',
+            'knowledge.articles.edit' => 'articles',
+            'knowledge.articles.destroy' => 'articles',
+            'knowledge.categories.index' => 'categories',
+            'knowledge.categories.create' => 'categories',
+            'knowledge.categories.show' => 'categories',
+            'knowledge.categories.edit' => 'categories',
+            'knowledge.categories.destroy' => 'categories',
+            // Search and analytics
+            'knowledge.search' => 'search',
+            'knowledge.popular' => 'popular',
+            'knowledge.recent' => 'recent',
+            'knowledge.analytics' => 'analytics',
+        ],
+        'integrations' => [
+            // Main integration routes
+            'integrations.index' => 'index',
+            'integrations.rmm.index' => 'rmm',
+            'integrations.rmm.create' => 'rmm',
+            'integrations.rmm.show' => 'rmm',
+            'integrations.rmm.edit' => 'rmm',
+            'integrations.rmm.destroy' => 'rmm',
+            'integrations.rmm.sync' => 'rmm',
+            'integrations.webhooks.index' => 'webhooks',
+            'integrations.webhooks.create' => 'webhooks',
+            'integrations.webhooks.show' => 'webhooks',
+            'integrations.webhooks.edit' => 'webhooks',
+            'integrations.webhooks.destroy' => 'webhooks',
+            'integrations.webhooks.test' => 'webhooks',
+            // API management
+            'integrations.api.tokens' => 'api-tokens',
+            'integrations.api.logs' => 'api-logs',
+            'integrations.api.documentation' => 'api-docs',
+        ],
+        'settings' => [
+            // Main settings
+            'settings.index' => 'index',
+            'settings.general' => 'general',
+            'settings.security' => 'security',
+            'settings.email' => 'email',
+            'settings.integrations' => 'integrations',
+            
+            // User management
+            'users.index' => 'users',
+            'users.create' => 'users',
+            'users.show' => 'users',
+            'users.edit' => 'users',
+            'users.destroy' => 'users',
+            'users.profile' => 'profile',
+            'users.profile.update' => 'profile',
+            
+            // Admin (super-admin only)
+            'admin.subscriptions.index' => 'subscriptions',
+            'admin.subscriptions.analytics' => 'subscriptions-analytics',
+            'admin.subscriptions.export' => 'subscriptions-export',
+            'admin.subscriptions.show' => 'subscriptions',
+            'admin.subscriptions.create-tenant' => 'subscriptions',
+            'admin.subscriptions.change-plan' => 'subscriptions',
+            'admin.subscriptions.cancel' => 'subscriptions',
+            'admin.subscriptions.reactivate' => 'subscriptions',
+            'admin.subscriptions.suspend-tenant' => 'subscriptions',
+            'admin.subscriptions.reactivate-tenant' => 'subscriptions',
+        ],
+        'portal' => [
+            // Client portal routes
+            'client.login' => 'login',
+            'client.dashboard' => 'dashboard',
+            'client.contracts' => 'contracts',
+            'client.contracts.show' => 'contracts',
+            'client.contracts.sign' => 'contracts',
+            'client.contracts.download' => 'contracts',
+            'client.milestones.show' => 'milestones',
+            'client.milestones.progress' => 'milestones',
+            'client.invoices.index' => 'invoices',
+            'client.invoices.show' => 'invoices',
+            'client.invoices.download' => 'invoices',
+            'client.profile' => 'profile',
+            'client.profile.update' => 'profile',
         ],
     ];
 
@@ -626,6 +861,15 @@ class NavigationService
             case 'reports':
                 return static::getFilteredReportsNavigation($user);
                 
+            case 'knowledge':
+                return static::getFilteredKnowledgeNavigation($user);
+                
+            case 'integrations':
+                return static::getFilteredIntegrationsNavigation($user);
+                
+            case 'settings':
+                return static::getFilteredSettingsNavigation($user);
+                
             default:
                 return [];
         }
@@ -752,6 +996,34 @@ class NavigationService
             $items['create'] = 'Create Ticket';
         }
 
+        if ($user->hasPermission('tickets.templates.view')) {
+            $items['templates'] = 'Templates';
+        }
+
+        if ($user->hasPermission('tickets.time-tracking.view')) {
+            $items['time-tracking'] = 'Time Tracking';
+        }
+
+        if ($user->hasPermission('tickets.calendar.view')) {
+            $items['calendar'] = 'Calendar';
+        }
+
+        if ($user->hasPermission('tickets.recurring.view')) {
+            $items['recurring'] = 'Recurring Tickets';
+        }
+
+        if ($user->hasPermission('tickets.priority-queue.view')) {
+            $items['priority-queue'] = 'Priority Queue';
+        }
+
+        if ($user->hasPermission('tickets.workflows.view')) {
+            $items['workflows'] = 'Workflows';
+        }
+
+        if ($user->hasPermission('tickets.assignments.view')) {
+            $items['assignments'] = 'Assignments';
+        }
+
         if ($user->hasPermission('tickets.export')) {
             $items['export'] = 'Export Tickets';
         }
@@ -792,6 +1064,123 @@ class NavigationService
 
         if ($user->hasPermission('reports.users')) {
             $items['users'] = 'User Reports';
+        }
+
+        if ($user->hasPermission('reports.schedule')) {
+            $items['scheduled'] = 'Scheduled Reports';
+        }
+
+        if ($user->hasPermission('reports.builder')) {
+            $items['builder'] = 'Report Builder';
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get filtered knowledge base navigation items
+     */
+    protected static function getFilteredKnowledgeNavigation($user): array
+    {
+        $items = [];
+
+        if ($user->hasPermission('knowledge.view')) {
+            $items['index'] = 'Browse Knowledge';
+        }
+
+        if ($user->hasPermission('knowledge.articles.view')) {
+            $items['articles'] = 'All Articles';
+        }
+
+        if ($user->hasPermission('knowledge.articles.create')) {
+            $items['create-article'] = 'Create Article';
+        }
+
+        if ($user->hasPermission('knowledge.categories.view')) {
+            $items['categories'] = 'Categories';
+        }
+
+        if ($user->hasPermission('knowledge.search')) {
+            $items['search'] = 'Search';
+        }
+
+        $items['popular'] = 'Popular Articles';
+        $items['recent'] = 'Recent Updates';
+
+        if ($user->hasPermission('knowledge.analytics')) {
+            $items['analytics'] = 'Analytics';
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get filtered integrations navigation items
+     */
+    protected static function getFilteredIntegrationsNavigation($user): array
+    {
+        $items = [];
+
+        if ($user->hasPermission('integrations.view')) {
+            $items['index'] = 'Integration Hub';
+        }
+
+        if ($user->hasPermission('integrations.rmm.view')) {
+            $items['rmm'] = 'RMM Integration';
+        }
+
+        if ($user->hasPermission('integrations.webhooks.view')) {
+            $items['webhooks'] = 'Webhooks';
+        }
+
+        if ($user->hasPermission('integrations.api.view')) {
+            $items['api-tokens'] = 'API Tokens';
+            $items['api-logs'] = 'API Logs';
+            $items['api-docs'] = 'API Documentation';
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get filtered settings navigation items
+     */
+    protected static function getFilteredSettingsNavigation($user): array
+    {
+        $items = [];
+
+        if ($user->hasPermission('settings.view')) {
+            $items['index'] = 'Settings Overview';
+        }
+
+        if ($user->hasPermission('settings.general')) {
+            $items['general'] = 'General Settings';
+        }
+
+        if ($user->hasPermission('settings.security')) {
+            $items['security'] = 'Security';
+        }
+
+        if ($user->hasPermission('settings.email')) {
+            $items['email'] = 'Email Configuration';
+        }
+
+        if ($user->hasPermission('settings.integrations')) {
+            $items['integrations'] = 'Integration Settings';
+        }
+
+        if ($user->hasPermission('users.view')) {
+            $items['users'] = 'User Management';
+        }
+
+        if ($user->hasPermission('users.profile')) {
+            $items['profile'] = 'My Profile';
+        }
+
+        // Super admin only
+        if ($user->company_id === 1 && $user->hasPermission('admin.subscriptions.view')) {
+            $items['subscriptions'] = 'Subscription Management';
+            $items['subscriptions-analytics'] = 'Subscription Analytics';
         }
 
         return $items;
@@ -899,6 +1288,13 @@ class NavigationService
         $itemPermissions = [
             'index' => 'tickets.view',
             'create' => 'tickets.create',
+            'templates' => 'tickets.templates.view',
+            'time-tracking' => 'tickets.time-tracking.view',
+            'calendar' => 'tickets.calendar.view',
+            'recurring' => 'tickets.recurring.view',
+            'priority-queue' => 'tickets.priority-queue.view',
+            'workflows' => 'tickets.workflows.view',
+            'assignments' => 'tickets.assignments.view',
             'export' => 'tickets.export',
         ];
 
@@ -930,22 +1326,22 @@ class NavigationService
     {
         try {
             return [
-                'contacts' => \App\Domains\Client\Models\ClientContact::where('company_id', $companyId)->count(),
-                'locations' => \App\Models\ClientAddress::where('company_id', $companyId)->count(),
-                'documents' => \App\Domains\Client\Models\ClientDocument::where('company_id', $companyId)->count(),
-                'files' => \App\Domains\Client\Models\ClientFile::where('company_id', $companyId)->count(),
-                'licenses' => \App\Domains\Client\Models\ClientLicense::where('company_id', $companyId)->count(),
-                'credentials' => \App\Domains\Client\Models\ClientCredential::where('company_id', $companyId)->count(),
-                'networks' => \App\Domains\Client\Models\ClientNetwork::where('company_id', $companyId)->count(),
-                'services' => \App\Domains\Client\Models\ClientService::where('company_id', $companyId)->count(),
-                'vendors' => \App\Domains\Client\Models\ClientVendor::where('company_id', $companyId)->count(),
-                'racks' => \App\Models\ClientRack::where('company_id', $companyId)->count(),
-                'certificates' => \App\Models\ClientCertificate::where('company_id', $companyId)->count(),
-                'domains' => \App\Models\ClientDomain::where('company_id', $companyId)->count(),
-                'recurring-invoices' => \App\Models\ClientRecurringInvoice::where('company_id', $companyId)->count(),
-                'quotes' => \App\Models\ClientQuote::where('company_id', $companyId)->count(),
-                'trips' => \App\Models\ClientTrip::where('company_id', $companyId)->count(),
-                'calendar-events' => \App\Models\ClientCalendarEvent::where('company_id', $companyId)->count(),
+                'contacts' => \App\Models\Contact::where('company_id', $companyId)->count(),
+                'locations' => \App\Models\Location::where('company_id', $companyId)->count(),
+                'documents' => 0, // Model not yet created
+                'files' => 0, // Model not yet created
+                'licenses' => 0, // Model not yet created
+                'credentials' => 0, // Model not yet created
+                'networks' => 0, // Model not yet created
+                'services' => 0, // Model not yet created
+                'vendors' => 0, // Model not yet created
+                'racks' => 0, // Model not yet created
+                'certificates' => 0, // Model not yet created
+                'domains' => 0, // Model not yet created
+                'recurring-invoices' => \App\Models\Recurring::where('company_id', $companyId)->count(),
+                'quotes' => \App\Models\Quote::where('company_id', $companyId)->count(),
+                'trips' => 0, // Model not yet created
+                'calendar-events' => 0, // Model not yet created
             ];
         } catch (\Exception $e) {
             // Return empty counts if any model doesn't exist yet
@@ -976,25 +1372,45 @@ class NavigationService
             
             // Add advanced functionality counts if models exist
             try {
-                $counts['templates'] = \App\Domains\Ticket\Models\TicketTemplate::where('company_id', $companyId)->where('is_active', true)->count();
+                $counts['templates'] = \App\Domains\Ticket\Models\TicketTemplate::where('company_id', $companyId)
+                    ->where('is_active', true)->count();
             } catch (\Exception $e) {
                 $counts['templates'] = 0;
             }
             
             try {
-                $counts['recurring'] = \App\Domains\Ticket\Models\RecurringTicket::where('company_id', $companyId)->where('is_active', true)->count();
+                $counts['time-tracking'] = \App\Domains\Ticket\Models\TicketTimeEntry::where('company_id', $companyId)
+                    ->whereNull('ended_at')->count();
+            } catch (\Exception $e) {
+                $counts['time-tracking'] = 0;
+            }
+            
+            try {
+                $counts['calendar'] = \App\Domains\Ticket\Models\TicketCalendarEvent::where('company_id', $companyId)
+                    ->where('start_date', '>=', now()->startOfDay())
+                    ->where('start_date', '<=', now()->addDays(7)->endOfDay())
+                    ->count();
+            } catch (\Exception $e) {
+                $counts['calendar'] = 0;
+            }
+            
+            try {
+                $counts['recurring'] = \App\Domains\Ticket\Models\RecurringTicket::where('company_id', $companyId)
+                    ->where('is_active', true)->count();
             } catch (\Exception $e) {
                 $counts['recurring'] = 0;
             }
             
             try {
-                $counts['workflows'] = \App\Domains\Ticket\Models\TicketWorkflow::where('company_id', $companyId)->where('is_active', true)->count();
+                $counts['workflows'] = \App\Domains\Ticket\Models\TicketWorkflow::where('company_id', $companyId)
+                    ->where('is_active', true)->count();
             } catch (\Exception $e) {
                 $counts['workflows'] = 0;
             }
             
             try {
-                $counts['priority-queue'] = \App\Domains\Ticket\Models\PriorityQueue::where('company_id', $companyId)->whereIn('status', ['pending', 'escalated'])->count();
+                $counts['priority-queue'] = \App\Domains\Ticket\Models\TicketPriorityQueue::where('company_id', $companyId)
+                    ->where('is_active', true)->count();
             } catch (\Exception $e) {
                 $counts['priority-queue'] = 0;
             }
@@ -1021,34 +1437,12 @@ class NavigationService
             ];
             
             // Add new asset domain functionality counts
-            try {
-                $counts['maintenance'] = \App\Domains\Asset\Models\AssetMaintenance::whereHas('asset', function($q) use ($companyId) {
-                    $q->where('company_id', $companyId);
-                })->where('status', 'scheduled')->count();
-                
-                $counts['maintenance-overdue'] = \App\Domains\Asset\Models\AssetMaintenance::whereHas('asset', function($q) use ($companyId) {
-                    $q->where('company_id', $companyId);
-                })->where('scheduled_date', '<', now())->where('status', '!=', 'completed')->where('status', '!=', 'cancelled')->count();
-                
-                $counts['warranties'] = \App\Domains\Asset\Models\AssetWarranty::whereHas('asset', function($q) use ($companyId) {
-                    $q->where('company_id', $companyId);
-                })->where('status', 'active')->count();
-                
-                $counts['warranties-expiring'] = \App\Domains\Asset\Models\AssetWarranty::whereHas('asset', function($q) use ($companyId) {
-                    $q->where('company_id', $companyId);
-                })->whereBetween('warranty_end_date', [now(), now()->addDays(30)])->where('status', 'active')->count();
-                
-                $counts['depreciations'] = \App\Domains\Asset\Models\AssetDepreciation::whereHas('asset', function($q) use ($companyId) {
-                    $q->where('company_id', $companyId);
-                })->count();
-            } catch (\Exception $e) {
-                // If new models don't exist yet, set counts to 0
-                $counts['maintenance'] = 0;
-                $counts['maintenance-overdue'] = 0;
-                $counts['warranties'] = 0;
-                $counts['warranties-expiring'] = 0;
-                $counts['depreciations'] = 0;
-            }
+            // Asset maintenance and warranty counts - models not yet created
+            $counts['maintenance'] = 0;
+            $counts['maintenance-overdue'] = 0;
+            $counts['warranties'] = 0;
+            $counts['warranties-expiring'] = 0;
+            $counts['depreciations'] = 0;
             
             return $counts;
         } catch (\Exception $e) {
@@ -1064,11 +1458,11 @@ class NavigationService
         try {
             return [
                 'invoices' => \App\Models\Invoice::where('company_id', $companyId)->count(),
-                'payments' => \App\Domains\Financial\Models\Payment::where('company_id', $companyId)->count(),
-                'expenses' => \App\Domains\Financial\Models\Expense::where('company_id', $companyId)->count(),
-                'pending-payments' => \App\Domains\Financial\Models\Payment::where('company_id', $companyId)->where('status', 'pending')->count(),
-                'pending-expenses' => \App\Domains\Financial\Models\Expense::where('company_id', $companyId)->where('status', 'pending_approval')->count(),
-                'approved-expenses' => \App\Domains\Financial\Models\Expense::where('company_id', $companyId)->where('status', 'approved')->count(),
+                'payments' => \App\Models\Payment::where('company_id', $companyId)->count(),
+                'expenses' => \App\Models\Expense::where('company_id', $companyId)->count(),
+                'pending-payments' => \App\Models\Payment::where('company_id', $companyId)->where('status', 'pending')->count(),
+                'pending-expenses' => \App\Models\Expense::where('company_id', $companyId)->where('status', 'pending_approval')->count(),
+                'approved-expenses' => \App\Models\Expense::where('company_id', $companyId)->where('status', 'approved')->count(),
             ];
         } catch (\Exception $e) {
             return [];
@@ -1357,45 +1751,27 @@ class NavigationService
         try {
             // Get counts scoped to specific client
             $counts = [
-                'contacts' => \App\Domains\Client\Models\ClientContact::where('company_id', $companyId)
+                'contacts' => \App\Models\Contact::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
-                'locations' => \App\Models\ClientAddress::where('company_id', $companyId)
+                'locations' => \App\Models\Location::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
-                'documents' => \App\Domains\Client\Models\ClientDocument::where('company_id', $companyId)
+                'documents' => 0, // ClientDocument model not yet created
+                'files' => 0, // ClientFile model not yet created
+                'licenses' => 0, // ClientLicense model not yet created
+                'credentials' => 0, // ClientCredential model not yet created
+                'networks' => 0, // ClientNetwork model not yet created
+                'services' => 0, // ClientService model not yet created
+                'vendors' => 0, // ClientVendor model not yet created
+                'racks' => 0, // ClientRack model not yet created
+                'certificates' => 0, // ClientCertificate model not yet created
+                'domains' => 0, // ClientDomain model not yet created
+                'recurring-invoices' => \App\Models\Recurring::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
-                'files' => \App\Domains\Client\Models\ClientFile::where('company_id', $companyId)
+                'quotes' => \App\Models\Quote::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
-                'licenses' => \App\Domains\Client\Models\ClientLicense::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count(),
-                'credentials' => \App\Domains\Client\Models\ClientCredential::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count(),
+                'trips' => 0, // ClientTrip model not yet created
+                'calendar-events' => 0, // ClientCalendarEvent model not yet created
             ];
-
-            // Add more specific counts as needed
-            try {
-                $counts['networks'] = \App\Domains\Client\Models\ClientNetwork::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['services'] = \App\Domains\Client\Models\ClientService::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['vendors'] = \App\Domains\Client\Models\ClientVendor::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['racks'] = \App\Models\ClientRack::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['certificates'] = \App\Models\ClientCertificate::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['domains'] = \App\Models\ClientDomain::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['recurring-invoices'] = \App\Models\ClientRecurringInvoice::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['quotes'] = \App\Models\ClientQuote::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['trips'] = \App\Models\ClientTrip::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-                $counts['calendar-events'] = \App\Models\ClientCalendarEvent::where('company_id', $companyId)
-                    ->where('client_id', $clientId)->count();
-            } catch (\Exception $e) {
-                // Models may not exist yet - ignore
-            }
 
             return $counts;
         } catch (\Exception $e) {

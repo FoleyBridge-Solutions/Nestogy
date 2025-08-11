@@ -5,6 +5,8 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\ClientITDocumentation;
 use App\Domains\Client\Services\ClientITDocumentationService;
+use App\Domains\Client\Services\DocumentationTemplateService;
+use App\Domains\Client\Services\ComplianceEngineService;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,10 +14,17 @@ use Illuminate\Support\Facades\Storage;
 class ITDocumentationController extends Controller
 {
     protected ClientITDocumentationService $service;
+    protected DocumentationTemplateService $templateService;
+    protected ComplianceEngineService $complianceService;
 
-    public function __construct(ClientITDocumentationService $service)
-    {
+    public function __construct(
+        ClientITDocumentationService $service,
+        DocumentationTemplateService $templateService,
+        ComplianceEngineService $complianceService
+    ) {
         $this->service = $service;
+        $this->templateService = $templateService;
+        $this->complianceService = $complianceService;
     }
 
     /**
@@ -28,7 +37,7 @@ class ITDocumentationController extends Controller
         
         $documentation = $this->service->searchDocumentation($filters);
         
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -75,7 +84,7 @@ class ITDocumentationController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -83,13 +92,21 @@ class ITDocumentationController extends Controller
         $categories = ClientITDocumentation::getITCategories();
         $accessLevels = ClientITDocumentation::getAccessLevels();
         $reviewSchedules = ClientITDocumentation::getReviewSchedules();
+        
+        // Get template data
+        $templates = $this->templateService->getTemplates();
+        $availableTabs = $this->templateService->getAvailableTabs();
+        $complianceFrameworks = $this->complianceService->getComplianceFrameworks();
 
         return view('clients.it-documentation.create', compact(
             'clients', 
             'selectedClientId', 
             'categories', 
             'accessLevels',
-            'reviewSchedules'
+            'reviewSchedules',
+            'templates',
+            'availableTabs',
+            'complianceFrameworks'
         ));
     }
 
@@ -110,18 +127,79 @@ class ITDocumentationController extends Controller
             'software_versions' => 'nullable|array',
             'compliance_requirements' => 'nullable|array',
             'procedure_steps' => 'nullable|array',
+            'network_diagram' => 'nullable|string',
             'related_entities' => 'nullable|array',
             'tags' => 'nullable|string',
             'file' => 'nullable|file|max:51200', // 50MB max
+            
+            // New tab configuration fields
+            'enabled_tabs' => 'nullable|array',
+            'template_used' => 'nullable|string',
+            
+            // Additional comprehensive fields
+            'status' => 'nullable|string|in:draft,review,approved,published',
+            'effective_date' => 'nullable|date',
+            'expiry_date' => 'nullable|date|after:effective_date',
+            'ports' => 'nullable|array',
+            'api_endpoints' => 'nullable|array',
+            'ssl_certificates' => 'nullable|array',
+            'dns_entries' => 'nullable|array',
+            'firewall_rules' => 'nullable|array',
+            'vpn_settings' => 'nullable|array',
+            'hardware_references' => 'nullable|array',
+            'environment_variables' => 'nullable|array',
+            'procedure_diagram' => 'nullable|string',
+            'rollback_procedures' => 'nullable|array',
+            'prerequisites' => 'nullable|array',
+            'data_classification' => 'nullable|string',
+            'encryption_required' => 'nullable|boolean',
+            'audit_requirements' => 'nullable|array',
+            'security_controls' => 'nullable|array',
+            'external_resources' => 'nullable|array',
+            'vendor_contacts' => 'nullable|array',
+            'support_contracts' => 'nullable|array',
+            'test_cases' => 'nullable|array',
+            'validation_checklist' => 'nullable|array',
+            'performance_benchmarks' => 'nullable|array',
+            'health_checks' => 'nullable|array',
+            'automation_scripts' => 'nullable|array',
+            'integrations' => 'nullable|array',
+            'webhooks' => 'nullable|array',
+            'scheduled_tasks' => 'nullable|array',
+            'uptime_requirement' => 'nullable|numeric|min:0|max:100',
+            'rto' => 'nullable|string',
+            'rpo' => 'nullable|string',
+            'performance_metrics' => 'nullable|array',
+            'alert_thresholds' => 'nullable|array',
+            'escalation_paths' => 'nullable|array',
         ]);
 
         // Process tags
-        if ($validated['tags']) {
+        if (isset($validated['tags']) && $validated['tags']) {
             $validated['tags'] = array_map('trim', explode(',', $validated['tags']));
+        }
+
+        // Process network diagram JSON
+        if (!empty($validated['network_diagram'])) {
+            $validated['network_diagram'] = json_decode($validated['network_diagram'], true);
+        }
+        
+        // Process procedure diagram JSON
+        if (!empty($validated['procedure_diagram'])) {
+            $validated['procedure_diagram'] = json_decode($validated['procedure_diagram'], true);
+        }
+
+        // If no enabled tabs specified, use defaults based on category
+        if (empty($validated['enabled_tabs'])) {
+            $validated['enabled_tabs'] = $this->templateService->getDefaultTabsForCategory($validated['it_category']);
         }
 
         $file = $request->file('file');
         $documentation = $this->service->createITDocumentation($validated, $file);
+        
+        // Calculate initial completeness
+        $documentation->documentation_completeness = $this->templateService->calculateCompleteness($documentation);
+        $documentation->save();
 
         return redirect()->route('clients.it-documentation.show', $documentation)
                         ->with('success', 'IT documentation created successfully.');
@@ -152,7 +230,7 @@ class ITDocumentationController extends Controller
     {
         $this->authorize('update', $itDocumentation);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 

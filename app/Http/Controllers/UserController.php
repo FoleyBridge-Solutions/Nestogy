@@ -68,7 +68,17 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
         
-        return view('users.create');
+        $user = Auth::user();
+        
+        // Super-admins can add users to any company
+        if ($user->canAccessCrossTenant()) {
+            $companies = Company::where('is_active', true)->orderBy('name')->get();
+        } else {
+            // Regular admins can only add users to their own company
+            $companies = collect([$user->company]);
+        }
+        
+        return view('users.create', compact('companies'));
     }
 
     /**

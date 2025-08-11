@@ -150,7 +150,7 @@ class UpdateTicketRequest extends FormRequest
 
             // Validate contact belongs to the selected client
             if ($this->filled('contact_id') && $this->filled('client_id')) {
-                $contact = \App\Models\Contact::find($this->contact_id);
+                $contact = \App\Domains\Client\Models\ClientContact::find($this->contact_id);
                 if ($contact && $contact->client_id != $this->client_id) {
                     $validator->errors()->add('contact_id', 'The selected contact does not belong to the selected client.');
                 }
@@ -158,7 +158,7 @@ class UpdateTicketRequest extends FormRequest
 
             // Validate asset belongs to the selected client
             if ($this->filled('asset_id') && $this->filled('client_id')) {
-                $asset = \App\Models\Asset::find($this->asset_id);
+                $asset = \App\Domains\Asset\Models\Asset::find($this->asset_id);
                 if ($asset && $asset->client_id != $this->client_id) {
                     $validator->errors()->add('asset_id', 'The selected asset does not belong to the selected client.');
                 }
@@ -166,7 +166,7 @@ class UpdateTicketRequest extends FormRequest
 
             // Validate vendor belongs to the selected client
             if ($this->filled('vendor_id') && $this->filled('client_id')) {
-                $vendor = \App\Models\Vendor::find($this->vendor_id);
+                $vendor = \App\Domains\Client\Models\ClientVendor::find($this->vendor_id);
                 if ($vendor && $vendor->client_id != $this->client_id) {
                     $validator->errors()->add('vendor_id', 'The selected vendor does not belong to the selected client.');
                 }
@@ -174,7 +174,7 @@ class UpdateTicketRequest extends FormRequest
 
             // Validate location belongs to the selected client
             if ($this->filled('location_id') && $this->filled('client_id')) {
-                $location = \App\Models\Location::find($this->location_id);
+                $location = \App\Domains\Client\Models\ClientAddress::find($this->location_id);
                 if ($location && $location->client_id != $this->client_id) {
                     $validator->errors()->add('location_id', 'The selected location does not belong to the selected client.');
                 }

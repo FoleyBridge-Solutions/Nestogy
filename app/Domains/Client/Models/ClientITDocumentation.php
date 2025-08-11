@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,12 +12,12 @@ use App\Models\User;
 
 class ClientITDocumentation extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $table = 'client_it_documentation';
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'client_id',
         'authored_by',
         'name',
@@ -32,6 +32,7 @@ class ClientITDocumentation extends Model
         'next_review_at',
         'access_level',
         'procedure_steps',
+        'network_diagram',
         'related_entities',
         'tags',
         'version',
@@ -45,10 +46,58 @@ class ClientITDocumentation extends Model
         'last_accessed_at',
         'access_count',
         'is_active',
+        'enabled_tabs',
+        'tab_configuration',
+        'status',
+        'effective_date',
+        'expiry_date',
+        'template_used',
+        'ports',
+        'api_endpoints',
+        'ssl_certificates',
+        'dns_entries',
+        'firewall_rules',
+        'vpn_settings',
+        'hardware_references',
+        'environment_variables',
+        'procedure_diagram',
+        'rollback_procedures',
+        'prerequisites',
+        'data_classification',
+        'encryption_required',
+        'audit_requirements',
+        'security_controls',
+        'external_resources',
+        'vendor_contacts',
+        'support_contracts',
+        'test_cases',
+        'validation_checklist',
+        'performance_benchmarks',
+        'health_checks',
+        'automation_scripts',
+        'integrations',
+        'webhooks',
+        'scheduled_tasks',
+        'uptime_requirement',
+        'rto',
+        'rpo',
+        'performance_metrics',
+        'alert_thresholds',
+        'escalation_paths',
+        'change_summary',
+        'change_log',
+        'requires_technical_review',
+        'requires_management_approval',
+        'approval_history',
+        'review_comments',
+        'custom_fields',
+        'documentation_completeness',
+        'is_template',
+        'template_category',
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'client_id' => 'integer',
         'authored_by' => 'integer',
         'system_references' => 'array',
@@ -56,6 +105,7 @@ class ClientITDocumentation extends Model
         'software_versions' => 'array',
         'compliance_requirements' => 'array',
         'procedure_steps' => 'array',
+        'network_diagram' => 'array',
         'related_entities' => 'array',
         'tags' => 'array',
         'parent_document_id' => 'integer',
@@ -65,6 +115,46 @@ class ClientITDocumentation extends Model
         'last_reviewed_at' => 'datetime',
         'next_review_at' => 'datetime',
         'last_accessed_at' => 'datetime',
+        'effective_date' => 'date',
+        'expiry_date' => 'date',
+        'enabled_tabs' => 'array',
+        'tab_configuration' => 'array',
+        'ports' => 'array',
+        'api_endpoints' => 'array',
+        'ssl_certificates' => 'array',
+        'dns_entries' => 'array',
+        'firewall_rules' => 'array',
+        'vpn_settings' => 'array',
+        'hardware_references' => 'array',
+        'environment_variables' => 'array',
+        'procedure_diagram' => 'array',
+        'rollback_procedures' => 'array',
+        'prerequisites' => 'array',
+        'audit_requirements' => 'array',
+        'security_controls' => 'array',
+        'external_resources' => 'array',
+        'vendor_contacts' => 'array',
+        'support_contracts' => 'array',
+        'test_cases' => 'array',
+        'validation_checklist' => 'array',
+        'performance_benchmarks' => 'array',
+        'health_checks' => 'array',
+        'automation_scripts' => 'array',
+        'integrations' => 'array',
+        'webhooks' => 'array',
+        'scheduled_tasks' => 'array',
+        'performance_metrics' => 'array',
+        'alert_thresholds' => 'array',
+        'escalation_paths' => 'array',
+        'approval_history' => 'array',
+        'review_comments' => 'array',
+        'custom_fields' => 'array',
+        'documentation_completeness' => 'integer',
+        'is_template' => 'boolean',
+        'encryption_required' => 'boolean',
+        'requires_technical_review' => 'boolean',
+        'requires_management_approval' => 'boolean',
+        'uptime_requirement' => 'decimal:2',
     ];
 
     /**

@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TicketPriorityQueue extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'ticket_id',
-        'tenant_id',
+        'company_id',
         'queue_position',
         'priority_score',
         'escalation_level',
@@ -33,7 +33,7 @@ class TicketPriorityQueue extends Model
 
     protected $casts = [
         'ticket_id' => 'integer',
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'queue_position' => 'integer',
         'priority_score' => 'decimal:2',
         'escalation_level' => 'integer',
@@ -200,7 +200,7 @@ class TicketPriorityQueue extends Model
      */
     public function moveDown(int $positions = 1): void
     {
-        $maxPosition = self::where('tenant_id', $this->tenant_id)
+        $maxPosition = self::where('company_id', $this->company_id)
             ->where('is_active', true)
             ->max('queue_position') ?? 1;
         
@@ -220,13 +220,13 @@ class TicketPriorityQueue extends Model
         
         if ($position < $oldPosition) {
             // Moving up - shift others down
-            self::where('tenant_id', $this->tenant_id)
+            self::where('company_id', $this->company_id)
                 ->where('is_active', true)
                 ->whereBetween('queue_position', [$position, $oldPosition - 1])
                 ->increment('queue_position');
         } elseif ($position > $oldPosition) {
             // Moving down - shift others up
-            self::where('tenant_id', $this->tenant_id)
+            self::where('company_id', $this->company_id)
                 ->where('is_active', true)
                 ->whereBetween('queue_position', [$oldPosition + 1, $position])
                 ->decrement('queue_position');
@@ -241,7 +241,7 @@ class TicketPriorityQueue extends Model
      */
     public function reorderQueue(): void
     {
-        $queueItems = self::where('tenant_id', $this->tenant_id)
+        $queueItems = self::where('company_id', $this->company_id)
             ->where('is_active', true)
             ->orderBy('priority_score', 'desc')
             ->orderBy('created_at', 'asc')
@@ -260,7 +260,7 @@ class TicketPriorityQueue extends Model
         $this->update(['is_active' => false]);
         
         // Shift remaining items up
-        self::where('tenant_id', $this->tenant_id)
+        self::where('company_id', $this->company_id)
             ->where('is_active', true)
             ->where('queue_position', '>', $this->queue_position)
             ->decrement('queue_position');
@@ -271,7 +271,7 @@ class TicketPriorityQueue extends Model
      */
     public static function getQueueStats(int $tenantId): array
     {
-        $queue = self::where('tenant_id', $tenantId)
+        $queue = self::where('company_id', $tenantId)
             ->where('is_active', true)
             ->with('ticket')
             ->get();
@@ -331,13 +331,13 @@ class TicketPriorityQueue extends Model
     public static function addTicket(Ticket $ticket, array $options = []): self
     {
         // Get next queue position
-        $nextPosition = self::where('tenant_id', $ticket->tenant_id)
+        $nextPosition = self::where('company_id', $ticket->company_id)
             ->where('is_active', true)
             ->max('queue_position') + 1;
 
         return self::create(array_merge([
             'ticket_id' => $ticket->id,
-            'tenant_id' => $ticket->tenant_id,
+            'company_id' => $ticket->company_id,
             'queue_position' => $nextPosition,
             'priority_score' => $ticket->calculatePriorityScore(),
             'is_active' => true,
@@ -374,7 +374,7 @@ class TicketPriorityQueue extends Model
         // Auto-assign queue position for new entries
         static::creating(function ($queueItem) {
             if (!$queueItem->queue_position) {
-                $queueItem->queue_position = self::where('tenant_id', $queueItem->tenant_id)
+                $queueItem->queue_position = self::where('company_id', $queueItem->company_id)
                     ->where('is_active', true)
                     ->max('queue_position') + 1;
             }

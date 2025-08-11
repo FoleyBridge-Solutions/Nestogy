@@ -27,7 +27,7 @@ class PriorityQueueController extends Controller
     {
         $view = $request->get('view', 'queue'); // queue, matrix, analytics
 
-        $query = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketPriorityQueue::where('company_id', auth()->user()->company_id);
 
         // Apply filters
         if ($search = $request->get('search')) {
@@ -74,7 +74,7 @@ class PriorityQueueController extends Controller
                            ->appends($request->query());
 
         // Get filter options
-        $assignees = User::where('tenant_id', auth()->user()->tenant_id)
+        $assignees = User::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
@@ -105,7 +105,7 @@ class PriorityQueueController extends Controller
     public function create(Request $request)
     {
         // Get tickets not currently in priority queue
-        $tickets = Ticket::where('tenant_id', auth()->user()->tenant_id)
+        $tickets = Ticket::where('company_id', auth()->user()->company_id)
                         ->where('status', '!=', 'closed')
                         ->whereDoesntHave('priorityQueue')
                         ->with(['client', 'assignee'])
@@ -133,11 +133,11 @@ class PriorityQueueController extends Controller
                 'required',
                 'integer',
                 Rule::exists('tickets', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id)
+                    $query->where('company_id', auth()->user()->company_id)
                           ->where('status', '!=', 'closed');
                 }),
                 Rule::unique('ticket_priority_queue')->where(function ($query) {
-                    return $query->where('tenant_id', auth()->user()->tenant_id);
+                    return $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'priority_level' => 'required|in:Critical,High,Medium,Low',
@@ -161,11 +161,11 @@ class PriorityQueueController extends Controller
         }
 
         // Get next queue position
-        $nextPosition = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id)
+        $nextPosition = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
                                           ->max('queue_position') + 1;
 
         $queueItem = TicketPriorityQueue::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'ticket_id' => $request->ticket_id,
             'priority_level' => $request->priority_level,
             'queue_position' => $nextPosition,
@@ -311,7 +311,7 @@ class PriorityQueueController extends Controller
         DB::transaction(function () use ($request) {
             foreach ($request->items as $item) {
                 TicketPriorityQueue::where('id', $item['id'])
-                                  ->where('tenant_id', auth()->user()->tenant_id)
+                                  ->where('company_id', auth()->user()->company_id)
                                   ->update(['queue_position' => $item['position']]);
             }
         });
@@ -344,7 +344,7 @@ class PriorityQueueController extends Controller
 
         foreach ($request->queue_item_ids as $id) {
             $queueItem = TicketPriorityQueue::where('id', $id)
-                                           ->where('tenant_id', auth()->user()->tenant_id)
+                                           ->where('company_id', auth()->user()->company_id)
                                            ->first();
 
             if ($queueItem && !$queueItem->is_escalated) {
@@ -366,7 +366,7 @@ class PriorityQueueController extends Controller
     {
         $method = $request->get('method', 'score'); // score, sla, age
 
-        $queueItems = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id)
+        $queueItems = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
                                         ->with('ticket')
                                         ->get();
 
@@ -426,7 +426,7 @@ class PriorityQueueController extends Controller
         }
 
         $queueItems = TicketPriorityQueue::whereIn('id', $request->queue_item_ids)
-                                        ->where('tenant_id', auth()->user()->tenant_id)
+                                        ->where('company_id', auth()->user()->company_id)
                                         ->get();
 
         $count = 0;
@@ -485,7 +485,7 @@ class PriorityQueueController extends Controller
      */
     public function getPriorityMatrix(Request $request)
     {
-        $queueItems = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id)
+        $queueItems = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
                                         ->with('ticket.client')
                                         ->get();
 
@@ -513,7 +513,7 @@ class PriorityQueueController extends Controller
      */
     public function export(Request $request)
     {
-        $query = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketPriorityQueue::where('company_id', auth()->user()->company_id);
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
@@ -586,7 +586,7 @@ class PriorityQueueController extends Controller
      */
     private function calculateQueueStats(): array
     {
-        $query = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketPriorityQueue::where('company_id', auth()->user()->company_id);
 
         $totalItems = $query->count();
         $escalatedItems = $query->where('is_escalated', true)->count();
@@ -614,7 +614,7 @@ class PriorityQueueController extends Controller
      */
     private function reorderQueue(): void
     {
-        $items = TicketPriorityQueue::where('tenant_id', auth()->user()->tenant_id)
+        $items = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
                                   ->orderBy('queue_position')
                                   ->get();
 

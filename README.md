@@ -11,7 +11,7 @@
   <a href="https://github.com/foleybridge/nestogy-erp/actions"><img src="https://img.shields.io/github/actions/workflow/status/foleybridge/nestogy-erp/tests.yml?branch=main" alt="Build Status"></a>
   <a href="https://github.com/foleybridge/nestogy-erp/releases"><img src="https://img.shields.io/github/v/release/foleybridge/nestogy-erp" alt="Latest Release"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-11.x-red.svg" alt="Laravel Version"></a>
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12.x-red.svg" alt="Laravel Version"></a>
   <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.2+-purple.svg" alt="PHP Version"></a>
 </p>
 
@@ -122,7 +122,7 @@ Nestogy combines the comprehensive features of enterprise platforms with modern 
 - **White-Label Portal**: Fully brandable client self-service experience
 
 #### 🚀 **Technical Excellence**
-- **Modern Architecture**: Laravel 11 with microservice-ready design patterns
+- **Modern Architecture**: Laravel 12 with microservice-ready design patterns
 - **API-First Platform**: Every feature accessible via comprehensive REST APIs
 - **Universal Integration Hub**: Bidirectional sync with 60+ platforms via unified API layer
 - **Domain-Driven Design**: Clean separation of business logic for maintainability

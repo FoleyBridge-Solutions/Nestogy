@@ -217,6 +217,20 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/disk-usage.log'));
+
+        // SaaS Subscription Management Jobs
+        // Check trial expirations and send notifications
+        $schedule->job(new \App\Jobs\CheckTrialExpirations())
+            ->daily()
+            ->at('10:00')
+            ->withoutOverlapping()
+            ->name('check-trial-expirations');
+
+        // Sync subscription statuses with Stripe
+        $schedule->job(new \App\Jobs\SyncStripeSubscriptions())
+            ->hourly()
+            ->withoutOverlapping()
+            ->name('sync-stripe-subscriptions');
     }
 
     /**

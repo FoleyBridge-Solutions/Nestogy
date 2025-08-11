@@ -116,6 +116,15 @@ class PdfService
     }
 
     /**
+     * Generate quote PDF
+     */
+    public function generateQuote(array $quoteData, array $options = []): string
+    {
+        $options['template'] = 'quote';
+        return $this->generate('pdf.quote', $quoteData, $options);
+    }
+
+    /**
      * Generate report PDF
      */
     public function generateReport(array $reportData, array $options = []): string

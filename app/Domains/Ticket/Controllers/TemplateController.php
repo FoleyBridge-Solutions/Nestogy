@@ -22,7 +22,7 @@ class TemplateController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TicketTemplate::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketTemplate::where('company_id', auth()->user()->company_id);
 
         // Apply search filters
         if ($search = $request->get('search')) {
@@ -55,7 +55,7 @@ class TemplateController extends Controller
                           ->appends($request->query());
 
         // Get filter options
-        $categories = TicketTemplate::where('tenant_id', auth()->user()->tenant_id)
+        $categories = TicketTemplate::where('company_id', auth()->user()->company_id)
                                    ->whereNotNull('category')
                                    ->distinct()
                                    ->pluck('category');
@@ -75,7 +75,7 @@ class TemplateController extends Controller
      */
     public function create()
     {
-        $assignees = User::where('tenant_id', auth()->user()->tenant_id)
+        $assignees = User::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
@@ -103,7 +103,7 @@ class TemplateController extends Controller
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'is_active' => 'boolean',
@@ -117,7 +117,7 @@ class TemplateController extends Controller
         }
 
         $template = TicketTemplate::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'name' => $request->name,
             'description' => $request->description,
             'subject_template' => $request->subject_template,
@@ -177,7 +177,7 @@ class TemplateController extends Controller
     {
         $this->authorize('update', $template);
 
-        $assignees = User::where('tenant_id', auth()->user()->tenant_id)
+        $assignees = User::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
@@ -207,7 +207,7 @@ class TemplateController extends Controller
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'is_active' => 'boolean',
@@ -385,7 +385,7 @@ class TemplateController extends Controller
      */
     public function export(Request $request)
     {
-        $query = TicketTemplate::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketTemplate::where('company_id', auth()->user()->company_id);
 
         // Apply same filters as index
         if ($search = $request->get('search')) {

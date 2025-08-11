@@ -1,6 +1,6 @@
 <?php
 
-namespace Foleybridge\Nestogy\Domains\Project\Models;
+namespace App\Domains\Project\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -208,7 +208,7 @@ class Project extends Model
      */
     public function tickets(): HasMany
     {
-        return $this->hasMany(\App\Models\Ticket::class);
+        return $this->hasMany(\App\Domains\Ticket\Models\Ticket::class);
     }
 
     /**

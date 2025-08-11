@@ -18,7 +18,7 @@ class DomainController extends Controller
     {
         $query = ClientDomain::with(['client'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
@@ -71,7 +71,7 @@ class DomainController extends Controller
                          ->paginate(20)
                          ->appends($request->query());
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -79,7 +79,7 @@ class DomainController extends Controller
         $registrars = ClientDomain::getRegistrars();
         
         // Get unique TLDs from existing domains
-        $tlds = ClientDomain::where('tenant_id', auth()->user()->tenant_id)
+        $tlds = ClientDomain::where('company_id', auth()->user()->company_id)
                            ->whereNotNull('tld')
                            ->distinct()
                            ->pluck('tld')
@@ -95,7 +95,7 @@ class DomainController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -118,7 +118,7 @@ class DomainController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -194,7 +194,7 @@ class DomainController extends Controller
             'notes' => $request->notes,
         ]);
         
-        $domain->tenant_id = auth()->user()->tenant_id;
+        $domain->company_id = auth()->user()->company_id;
         $domain->save();
 
         return redirect()->route('clients.domains.standalone.index')
@@ -223,7 +223,7 @@ class DomainController extends Controller
     {
         $this->authorize('update', $domain);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -247,7 +247,7 @@ class DomainController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -349,7 +349,7 @@ class DomainController extends Controller
     {
         $query = ClientDomain::with(['client'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index

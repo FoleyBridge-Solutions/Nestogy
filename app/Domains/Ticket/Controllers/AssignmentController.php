@@ -26,7 +26,7 @@ class AssignmentController extends Controller
     {
         $view = $request->get('view', 'my-tickets'); // my-tickets, team-tickets, unassigned, watchers
 
-        $query = Ticket::where('tenant_id', auth()->user()->tenant_id);
+        $query = Ticket::where('company_id', auth()->user()->company_id);
 
         // Apply view-specific filters
         switch ($view) {
@@ -77,7 +77,7 @@ class AssignmentController extends Controller
                         ->appends($request->query());
 
         // Get filter options
-        $assignees = User::where('tenant_id', auth()->user()->tenant_id)
+        $assignees = User::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
@@ -116,7 +116,7 @@ class AssignmentController extends Controller
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'notes' => 'nullable|string|max:500',
@@ -178,7 +178,7 @@ class AssignmentController extends Controller
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'notes' => 'nullable|string|max:500',
@@ -193,7 +193,7 @@ class AssignmentController extends Controller
         }
 
         $tickets = Ticket::whereIn('id', $request->ticket_ids)
-                        ->where('tenant_id', auth()->user()->tenant_id)
+                        ->where('company_id', auth()->user()->company_id)
                         ->get();
 
         $assignedCount = 0;
@@ -240,11 +240,11 @@ class AssignmentController extends Controller
                 'required',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
                 Rule::unique('ticket_watchers')->where(function ($query) use ($ticket) {
                     return $query->where('ticket_id', $ticket->id)
-                                 ->where('tenant_id', auth()->user()->tenant_id);
+                                 ->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'notification_preferences' => 'nullable|array',
@@ -262,7 +262,7 @@ class AssignmentController extends Controller
         }
 
         $watcher = TicketWatcher::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'ticket_id' => $ticket->id,
             'user_id' => $request->user_id,
             'added_by' => auth()->id(),
@@ -350,7 +350,7 @@ class AssignmentController extends Controller
             'user_ids.*' => [
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'notification_preferences' => 'nullable|array',
@@ -364,7 +364,7 @@ class AssignmentController extends Controller
         }
 
         $tickets = Ticket::whereIn('id', $request->ticket_ids)
-                        ->where('tenant_id', auth()->user()->tenant_id)
+                        ->where('company_id', auth()->user()->company_id)
                         ->get();
 
         $addedCount = 0;
@@ -380,7 +380,7 @@ class AssignmentController extends Controller
 
                         if (!$exists) {
                             TicketWatcher::create([
-                                'tenant_id' => auth()->user()->tenant_id,
+                                'company_id' => auth()->user()->company_id,
                                 'ticket_id' => $ticket->id,
                                 'user_id' => $userId,
                                 'added_by' => auth()->id(),
@@ -413,7 +413,7 @@ class AssignmentController extends Controller
         $period = $request->get('period', 'month'); // week, month, quarter
         $assigneeId = $request->get('assignee_id');
 
-        $query = Ticket::where('tenant_id', auth()->user()->tenant_id);
+        $query = Ticket::where('company_id', auth()->user()->company_id);
 
         // Apply period filter
         switch ($period) {
@@ -469,7 +469,7 @@ class AssignmentController extends Controller
      */
     public function getTeamOverview(Request $request)
     {
-        $teamMembers = User::where('tenant_id', auth()->user()->tenant_id)
+        $teamMembers = User::where('company_id', auth()->user()->company_id)
                           ->where('is_active', true)
                           ->withCount([
                               'assignedTickets',
@@ -529,7 +529,7 @@ class AssignmentController extends Controller
         }
 
         // Get tickets to assign
-        $query = Ticket::where('tenant_id', auth()->user()->tenant_id)
+        $query = Ticket::where('company_id', auth()->user()->company_id)
                       ->whereNull('assigned_to');
 
         if ($request->has('ticket_ids')) {
@@ -539,7 +539,7 @@ class AssignmentController extends Controller
         $tickets = $query->get();
 
         // Get available assignees
-        $assignees = User::where('tenant_id', auth()->user()->tenant_id)
+        $assignees = User::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true);
 
         if ($request->has('assignee_pool')) {
@@ -582,7 +582,7 @@ class AssignmentController extends Controller
      */
     public function exportAssignments(Request $request)
     {
-        $query = Ticket::where('tenant_id', auth()->user()->tenant_id);
+        $query = Ticket::where('company_id', auth()->user()->company_id);
 
         // Apply filters
         if ($assigneeId = $request->get('assignee_id')) {
@@ -648,7 +648,7 @@ class AssignmentController extends Controller
      */
     private function getAssignmentStats(): array
     {
-        $query = Ticket::where('tenant_id', auth()->user()->tenant_id);
+        $query = Ticket::where('company_id', auth()->user()->company_id);
 
         $total = $query->count();
         $assigned = $query->whereNotNull('assigned_to')->count();
@@ -675,7 +675,7 @@ class AssignmentController extends Controller
     {
         // This would typically get team members based on user's department/team
         // For now, return all active users in the tenant
-        return User::where('tenant_id', auth()->user()->tenant_id)
+        return User::where('company_id', auth()->user()->company_id)
                   ->where('is_active', true)
                   ->pluck('id')
                   ->toArray();

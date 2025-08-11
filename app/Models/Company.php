@@ -54,12 +54,19 @@ class Company extends Model
         'logo',
         'locale',
         'currency',
+        'client_record_id',
+        'is_active',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     /**
      * The attributes that should be cast.
      */
     protected $casts = [
+        'client_record_id' => 'integer',
+        'is_active' => 'boolean',
+        'suspended_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -103,6 +110,14 @@ class Company extends Model
     public function clients(): HasMany
     {
         return $this->hasMany(Client::class);
+    }
+
+    /**
+     * Get the client record in Company 1 for billing (for tenant companies).
+     */
+    public function clientRecord()
+    {
+        return $this->belongsTo(Client::class, 'client_record_id');
     }
 
     /**

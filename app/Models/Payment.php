@@ -56,6 +56,7 @@ class Payment extends Model
 
     public function account(): BelongsTo { return $this->belongsTo(Account::class); }
     public function invoice(): BelongsTo { return $this->belongsTo(Invoice::class); }
+    public function client(): BelongsTo { return $this->belongsTo(Client::class); }
 
     public function getFormattedAmount(): string
     {

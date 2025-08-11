@@ -5,12 +5,12 @@ namespace App\Domains\Client\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 
 class ClientRecurringInvoice extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
         'client_id',
@@ -460,7 +460,7 @@ class ClientRecurringInvoice extends Model
             'payment_instructions' => $this->payment_instructions,
             'line_items' => $this->line_items,
             'auto_send' => $this->auto_send,
-            'tenant_id' => $this->tenant_id
+            'company_id' => $this->company_id
         ];
 
         $invoice = ClientInvoice::create($invoiceData);

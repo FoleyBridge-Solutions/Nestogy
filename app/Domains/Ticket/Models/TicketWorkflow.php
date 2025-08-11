@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,10 +16,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class TicketWorkflow extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use HasFactory, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'name',
         'description',
         'is_default',
@@ -30,7 +30,7 @@ class TicketWorkflow extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'is_default' => 'boolean',
         'is_active' => 'boolean',
         'allowed_statuses' => 'array',
@@ -258,7 +258,7 @@ class TicketWorkflow extends Model
                 ['ticket_id' => $ticket->id],
                 [
                     'sla_deadline' => $dueDate,
-                    'tenant_id' => $ticket->tenant_id,
+                    'company_id' => $ticket->company_id,
                 ]
             );
         }
@@ -361,7 +361,7 @@ class TicketWorkflow extends Model
         // Ensure only one default workflow per tenant
         static::saving(function ($workflow) {
             if ($workflow->is_default) {
-                static::where('tenant_id', $workflow->tenant_id)
+                static::where('company_id', $workflow->company_id)
                     ->where('id', '!=', $workflow->id)
                     ->update(['is_default' => false]);
             }

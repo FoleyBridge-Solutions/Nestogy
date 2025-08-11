@@ -20,20 +20,13 @@
                             <div class="col-md-6">
                                 <h5 class="mb-3">Basic Information</h5>
                                 
-                                <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
-                                    <select name="client_id" id="client_id" class="form-select @error('client_id') is-invalid @enderror" required>
-                                        <option value="">Select Client</option>
-                                        @foreach($clients as $client)
-                                            <option value="{{ $client->id }}" {{ old('client_id', $selectedClientId) == $client->id ? 'selected' : '' }}>
-                                                {{ $client->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('client_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                <x-forms.client-search-field 
+                                    name="client_id" 
+                                    :required="true"
+                                    :selected="old('client_id', $selectedClientId ?? null) ? \App\Models\Client::find(old('client_id', $selectedClientId ?? null)) : null"
+                                    label="Client"
+                                    placeholder="Search for client..."
+                                    class="mb-3" />
 
                                 <div class="mb-3">
                                     <label for="type" class="form-label">Type <span class="text-danger">*</span></label>

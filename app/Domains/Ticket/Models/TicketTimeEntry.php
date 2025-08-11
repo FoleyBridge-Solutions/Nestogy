@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,12 +18,12 @@ use Carbon\Carbon;
  */
 class TicketTimeEntry extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use HasFactory, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'ticket_id',
         'user_id',
-        'tenant_id',
+        'company_id',
         'company_id',
         'description',
         'work_performed',
@@ -56,7 +56,7 @@ class TicketTimeEntry extends Model
     protected $casts = [
         'ticket_id' => 'integer',
         'user_id' => 'integer',
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'company_id' => 'integer',
         'hours_worked' => 'decimal:2',
         'minutes_worked' => 'integer',
@@ -216,7 +216,7 @@ class TicketTimeEntry extends Model
         return self::create(array_merge([
             'ticket_id' => $ticketId,
             'user_id' => $userId,
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'work_date' => $startTime->toDateString(),
             'start_time' => $startTime,
             'end_time' => $endTime,

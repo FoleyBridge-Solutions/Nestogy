@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,10 +19,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class RecurringTicket extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use HasFactory, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'template_id',
         'client_id',
         'name',
@@ -39,7 +39,7 @@ class RecurringTicket extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'template_id' => 'integer',
         'client_id' => 'integer',
         'interval_value' => 'integer',
@@ -200,7 +200,7 @@ class RecurringTicket extends Model
             'client_id' => $this->client_id,
             'template_id' => $this->template_id,
             'recurring_ticket_id' => $this->id,
-            'tenant_id' => $this->tenant_id,
+            'company_id' => $this->company_id,
         ]));
 
         // Update run tracking

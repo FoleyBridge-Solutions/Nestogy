@@ -19,7 +19,7 @@ class ServiceController extends Controller
     {
         $query = ClientService::with(['client', 'technician', 'backupTechnician'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
@@ -78,11 +78,11 @@ class ServiceController extends Controller
                          ->paginate(20)
                          ->appends($request->query());
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
-        $technicians = User::where('tenant_id', auth()->user()->tenant_id)
+        $technicians = User::where('company_id', auth()->user()->company_id)
                           ->orderBy('name')
                           ->get();
 
@@ -105,11 +105,11 @@ class ServiceController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
-        $technicians = User::where('tenant_id', auth()->user()->tenant_id)
+        $technicians = User::where('company_id', auth()->user()->company_id)
                           ->orderBy('name')
                           ->get();
 
@@ -144,7 +144,7 @@ class ServiceController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -169,14 +169,14 @@ class ServiceController extends Controller
                 'nullable',
                 'exists:users,id',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'backup_technician' => [
                 'nullable',
                 'exists:users,id',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'escalation_contact' => 'nullable|string|max:255',
@@ -217,7 +217,7 @@ class ServiceController extends Controller
         }
 
         $service = new ClientService($serviceData);
-        $service->tenant_id = auth()->user()->tenant_id;
+        $service->company_id = auth()->user()->company_id;
         $service->save();
 
         return redirect()->route('clients.services.standalone.index')
@@ -243,11 +243,11 @@ class ServiceController extends Controller
     {
         $this->authorize('update', $service);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
-        $technicians = User::where('tenant_id', auth()->user()->tenant_id)
+        $technicians = User::where('company_id', auth()->user()->company_id)
                           ->orderBy('name')
                           ->get();
 
@@ -283,7 +283,7 @@ class ServiceController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -308,14 +308,14 @@ class ServiceController extends Controller
                 'nullable',
                 'exists:users,id',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'backup_technician' => [
                 'nullable',
                 'exists:users,id',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'escalation_contact' => 'nullable|string|max:255',
@@ -382,7 +382,7 @@ class ServiceController extends Controller
     {
         $query = ClientService::with(['client', 'technician'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index

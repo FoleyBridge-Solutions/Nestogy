@@ -6,6 +6,12 @@ use Illuminate\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Collection;
+use App\Models\Quote;
+use App\Models\Invoice;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
+use Carbon\Carbon;
 
 class EmailService
 {
@@ -172,5 +178,137 @@ class EmailService
             logger()->error('Email connection test failed', ['error' => $e->getMessage()]);
             return false;
         }
+    }
+
+    /**
+     * Send quote email to client
+     */
+    public function sendQuoteEmail(Quote $quote): bool
+    {
+        try {
+            $client = $quote->client;
+            
+            if (!$client || !$client->email) {
+                Log::warning('Cannot send quote email - no client email', [
+                    'quote_id' => $quote->id,
+                    'client_id' => $client->id ?? null
+                ]);
+                return false;
+            }
+
+            $emailData = [
+                'quote' => $quote,
+                'client' => $client,
+                'viewUrl' => $this->generateSecureQuoteUrl($quote),
+                'expiryDate' => $quote->expire_date ?? $quote->valid_until,
+                'totalAmount' => $quote->getFormattedAmount(),
+            ];
+
+            Mail::send('emails.quotes.send', $emailData, function ($message) use ($client, $quote) {
+                $message->to($client->email, $client->name)
+                        ->subject("Quote #{$quote->getFullNumber()}")
+                        ->from(config('mail.from.address'), config('app.name'));
+            });
+
+            Log::info('Quote email sent successfully', [
+                'quote_id' => $quote->id,
+                'client_email' => $client->email
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote email', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send quote approval request email
+     */
+    public function sendQuoteApprovalRequest(Quote $quote, User $approver): bool
+    {
+        try {
+            if (!$approver->email) {
+                return false;
+            }
+
+            $emailData = [
+                'quote' => $quote,
+                'approver' => $approver,
+                'approvalUrl' => route('financial.quotes.approve', $quote),
+                'client' => $quote->client,
+                'totalAmount' => $quote->getFormattedAmount(),
+            ];
+
+            Mail::send('emails.quotes.approval-request', $emailData, function ($message) use ($approver, $quote) {
+                $message->to($approver->email, $approver->name)
+                        ->subject("Quote Approval Required: #{$quote->getFullNumber()}")
+                        ->priority(1);
+            });
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote approval request', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send quote expiry reminder
+     */
+    public function sendQuoteExpiryReminder(Quote $quote, int $daysUntilExpiry): bool
+    {
+        try {
+            $client = $quote->client;
+            
+            if (!$client || !$client->email) {
+                return false;
+            }
+
+            $emailData = [
+                'quote' => $quote,
+                'client' => $client,
+                'daysUntilExpiry' => $daysUntilExpiry,
+                'viewUrl' => $this->generateSecureQuoteUrl($quote),
+            ];
+
+            $subject = $daysUntilExpiry === 1 
+                ? "Quote #{$quote->getFullNumber()} expires tomorrow"
+                : "Quote #{$quote->getFullNumber()} expires in {$daysUntilExpiry} days";
+
+            Mail::send('emails.quotes.expiry-reminder', $emailData, function ($message) use ($client, $subject) {
+                $message->to($client->email, $client->name)
+                        ->subject($subject);
+            });
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote expiry reminder', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Generate secure URL for quote viewing
+     */
+    private function generateSecureQuoteUrl(Quote $quote): string
+    {
+        if (!$quote->url_key) {
+            $quote->generateUrlKey();
+        }
+
+        return url('/quote/' . $quote->url_key);
     }
 }

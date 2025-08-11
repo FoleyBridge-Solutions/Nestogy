@@ -18,7 +18,7 @@ class NetworkController extends Controller
     {
         $query = ClientNetwork::with('client')
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
@@ -76,13 +76,13 @@ class NetworkController extends Controller
                          ->paginate(20)
                          ->appends($request->query());
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
         // Get unique providers for filter
         $providers = ClientNetwork::whereHas('client', function($q) {
-                       $q->where('tenant_id', auth()->user()->tenant_id);
+                       $q->where('company_id', auth()->user()->company_id);
                      })
                      ->whereNotNull('provider')
                      ->distinct()
@@ -99,7 +99,7 @@ class NetworkController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -121,7 +121,7 @@ class NetworkController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -182,7 +182,7 @@ class NetworkController extends Controller
         }
 
         $network = new ClientNetwork($networkData);
-        $network->tenant_id = auth()->user()->tenant_id;
+        $network->company_id = auth()->user()->company_id;
         $network->save();
 
         return redirect()->route('clients.networks.standalone.index')
@@ -208,7 +208,7 @@ class NetworkController extends Controller
     {
         $this->authorize('update', $network);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -231,7 +231,7 @@ class NetworkController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -318,7 +318,7 @@ class NetworkController extends Controller
     {
         $query = ClientNetwork::with('client')
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index

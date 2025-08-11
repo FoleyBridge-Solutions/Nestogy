@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
             'company' => \App\Http\Middleware\CompanyMiddleware::class,
             'remember' => \App\Http\Middleware\RememberTokenMiddleware::class,
+            'tenant' => \App\Http\Middleware\EnforceTenantBoundaries::class,
+            'super-admin' => \App\Http\Middleware\RequireSuperAdmin::class,
         ]);
 
         // Add remember token middleware to web group

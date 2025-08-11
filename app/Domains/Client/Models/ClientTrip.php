@@ -5,12 +5,12 @@ namespace App\Domains\Client\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 
 class ClientTrip extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
         'client_id',

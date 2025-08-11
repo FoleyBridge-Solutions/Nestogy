@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,10 +18,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class TicketTemplate extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use HasFactory, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'name',
         'description',
         'subject_template',
@@ -35,7 +35,7 @@ class TicketTemplate extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'estimated_hours' => 'decimal:2',
         'default_assignee_id' => 'integer',
         'is_active' => 'boolean',

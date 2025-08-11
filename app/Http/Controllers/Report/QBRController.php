@@ -291,7 +291,7 @@ class QBRController extends Controller
             'service_data' => \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
                 ->whereBetween('created_at', [$start, $end])
                 ->exists(),
-            'client_data' => \App\Domains\Client\Models\Client::where('company_id', $companyId)
+            'client_data' => \App\Models\Client::where('company_id', $companyId)
                 ->whereBetween('created_at', [$start, $end])
                 ->exists(),
         ];

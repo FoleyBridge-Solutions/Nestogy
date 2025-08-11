@@ -2,7 +2,7 @@
 
 namespace App\Domains\Report\Services;
 
-use App\Domains\Client\Models\Client;
+use App\Models\Client;
 use App\Domains\Financial\Models\Payment;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Knowledge\Models\KbArticleView;

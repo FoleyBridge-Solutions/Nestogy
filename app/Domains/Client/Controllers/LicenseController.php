@@ -18,7 +18,7 @@ class LicenseController extends Controller
     {
         $query = ClientLicense::with('client')
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
@@ -72,13 +72,13 @@ class LicenseController extends Controller
                          ->paginate(20)
                          ->appends($request->query());
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
         // Get unique vendors for filter
         $vendors = ClientLicense::whereHas('client', function($q) {
-                     $q->where('tenant_id', auth()->user()->tenant_id);
+                     $q->where('company_id', auth()->user()->company_id);
                    })
                    ->whereNotNull('vendor')
                    ->distinct()
@@ -95,7 +95,7 @@ class LicenseController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -116,7 +116,7 @@ class LicenseController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -145,7 +145,7 @@ class LicenseController extends Controller
         }
 
         $license = new ClientLicense($request->all());
-        $license->tenant_id = auth()->user()->tenant_id;
+        $license->company_id = auth()->user()->company_id;
         $license->save();
 
         return redirect()->route('clients.licenses.standalone.index')
@@ -171,7 +171,7 @@ class LicenseController extends Controller
     {
         $this->authorize('update', $license);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -193,7 +193,7 @@ class LicenseController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -248,7 +248,7 @@ class LicenseController extends Controller
     {
         $query = ClientLicense::with('client')
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index

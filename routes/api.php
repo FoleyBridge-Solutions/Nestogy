@@ -135,8 +135,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('{client}/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
         
         // Quick Access
-        Route::get('active', [App\Http\Controllers\ClientController::class, 'getActiveClients'])->name('active');
+        Route::get('active', [App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('active');
         Route::get('search', [App\Http\Controllers\SearchController::class, 'clients'])->name('search');
+        Route::post('{client}/mark-accessed', [App\Domains\Client\Controllers\ClientController::class, 'markAsAccessed'])->name('mark-accessed');
     });
 
     // Ticket System API
@@ -321,6 +322,13 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('export/{type}', [App\Http\Controllers\ReportController::class, 'exportReport'])->name('export');
     });
 
+    // Documentation Template API
+    Route::prefix('documentation-templates')->name('api.documentation-templates.')->group(function () {
+        Route::get('/tabs', [\App\Http\Controllers\Api\DocumentationTemplateController::class, 'getAvailableTabs'])->name('tabs');
+        Route::get('/tabs/{category}', [\App\Http\Controllers\Api\DocumentationTemplateController::class, 'getDefaultTabs'])->name('tabs.category');
+        Route::get('/{templateKey}', [\App\Http\Controllers\Api\DocumentationTemplateController::class, 'getTemplate'])->name('template');
+    });
+
     // User Management API
     Route::prefix('users')->name('api.users.')->group(function () {
         // Profile Routes (All Users)
@@ -361,6 +369,17 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::delete('bulk-delete', [\Foleybridge\Nestogy\Http\Controllers\FileController::class, 'bulkDelete'])->name('bulk-delete');
     });
     
+    // Navigation API (for command palette and workflow navigation)
+    Route::prefix('navigation')->name('api.navigation.')->group(function () {
+        Route::get('tree', [App\Http\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
+        Route::get('badges', [App\Http\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
+        Route::get('suggestions', [App\Http\Controllers\NavigationController::class, 'getSuggestions'])->name('suggestions');
+        Route::post('command', [App\Http\Controllers\NavigationController::class, 'executeCommand'])->name('command');
+        Route::post('workflow', [App\Http\Controllers\NavigationController::class, 'setWorkflow'])->name('workflow');
+        Route::get('workflow-highlights', [App\Http\Controllers\NavigationController::class, 'getWorkflowHighlights'])->name('workflow-highlights');
+        Route::get('recent', [App\Http\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
+    });
+    
     // Search API
     Route::prefix('search')->name('api.search.')->group(function () {
         Route::get('global', [App\Http\Controllers\SearchController::class, 'global'])->name('global');
@@ -370,7 +389,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('invoices', [App\Http\Controllers\SearchController::class, 'invoices'])->name('invoices');
         Route::get('users', [App\Http\Controllers\SearchController::class, 'users'])->name('users');
         Route::get('projects', [App\Http\Controllers\SearchController::class, 'projects'])->name('projects');
-        Route::get('query', [App\Http\Controllers\SearchController::class, 'query'])->name('query');
+        Route::get('query', [App\Http\Controllers\NavigationController::class, 'search'])->name('query');
         Route::get('suggestions', [App\Http\Controllers\SearchController::class, 'suggestions'])->name('suggestions');
     });
     

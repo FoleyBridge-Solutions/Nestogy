@@ -140,7 +140,7 @@ class ExecutiveDashboardController extends Controller
      */
     public function clientDashboard(Request $request, int $clientId): View
     {
-        $client = \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)
+        $client = \App\Models\Client::where('company_id', auth()->user()->company_id)
             ->findOrFail($clientId);
 
         $startDate = $request->input('start_date') 

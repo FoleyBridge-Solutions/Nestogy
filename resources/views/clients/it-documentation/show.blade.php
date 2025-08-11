@@ -111,6 +111,27 @@
                 </div>
             @endif
 
+            <!-- Network Diagram -->
+            @if($itDocumentation->network_diagram && count($itDocumentation->network_diagram) > 0)
+                <div class="bg-white shadow rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                        <h2 class="text-lg font-medium text-gray-900">Network Infrastructure Diagram</h2>
+                    </div>
+                    <div class="px-4 py-5 sm:px-6">
+                        <div id="network-diagram-viewer" class="border border-gray-300 rounded-lg bg-gray-50" style="height: 600px;"></div>
+                        <div class="mt-3 flex justify-end">
+                            <button type="button" onclick="exportDiagram()" 
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Export Diagram
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- System References -->
             @if($itDocumentation->system_references && count($itDocumentation->system_references) > 0)
                 <div class="bg-white shadow rounded-lg">
@@ -344,4 +365,48 @@
         </div>
     </div>
 </div>
+@push('styles')
+<style>
+    .joint-paper {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+</style>
+@endpush
+
+@push('scripts')
+@if($itDocumentation->network_diagram && count($itDocumentation->network_diagram) > 0)
+@vite(['resources/js/it-documentation-diagram.js'])
+<script type="module">
+    let diagram = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait for the module to load
+        if (window.ITDocumentationDiagram) {
+            // Initialize the diagram in read-only mode
+            diagram = new window.ITDocumentationDiagram('network-diagram-viewer');
+            
+            // Load the saved diagram data
+            const diagramData = @json($itDocumentation->network_diagram);
+            if (diagramData) {
+                diagram.importDiagram(diagramData);
+                
+                // Make it read-only
+                if (diagram.paper) {
+                    diagram.paper.setInteractivity(false);
+                }
+            }
+        }
+    });
+    
+    // Export diagram function
+    window.exportDiagram = function() {
+        if (diagram) {
+            diagram.exportDiagram();
+        }
+    };
+</script>
+@endif
+@endpush
 @endsection

@@ -33,6 +33,17 @@ class Client extends Model
         'lead',
         'type',
         'accessed_at',
+        // Subscription fields
+        'company_link_id',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'subscription_status',
+        'subscription_plan_id',
+        'trial_ends_at',
+        'next_billing_date',
+        'subscription_started_at',
+        'subscription_canceled_at',
+        'current_user_count',
     ];
 
     protected $casts = [
@@ -43,6 +54,14 @@ class Client extends Model
         'contract_end_date' => 'datetime',
         'lead' => 'boolean',
         'accessed_at' => 'datetime',
+        // Subscription field casts
+        'company_link_id' => 'integer',
+        'subscription_plan_id' => 'integer',
+        'trial_ends_at' => 'datetime',
+        'next_billing_date' => 'datetime',
+        'subscription_started_at' => 'datetime',
+        'subscription_canceled_at' => 'datetime',
+        'current_user_count' => 'integer',
     ];
 
     protected $dates = [
@@ -50,7 +69,38 @@ class Client extends Model
         'contract_end_date',
         'accessed_at',
         'deleted_at',
+        'trial_ends_at',
+        'next_billing_date',
+        'subscription_started_at',
+        'subscription_canceled_at',
     ];
+
+    /**
+     * Scope to get recently accessed clients
+     */
+    public function scopeRecentlyAccessed($query, $limit = 5)
+    {
+        return $query->whereNotNull('accessed_at')
+                     ->orderBy('accessed_at', 'desc')
+                     ->limit($limit);
+    }
+
+    /**
+     * Scope to get active clients
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active')
+                     ->whereNull('archived_at');
+    }
+
+    /**
+     * Mark this client as recently accessed
+     */
+    public function markAsAccessed()
+    {
+        $this->update(['accessed_at' => now()]);
+    }
 
     /**
      * Get the client's contacts.
@@ -133,6 +183,14 @@ class Client extends Model
     }
 
     /**
+     * Get the client's payments.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
      * Get the client's projects.
      */
     public function projects()
@@ -149,11 +207,35 @@ class Client extends Model
     }
 
     /**
-     * Scope a query to only include active clients.
+     * Get the subscription plan for this client.
      */
-    public function scopeActive($query)
+    public function subscriptionPlan()
     {
-        return $query->where('status', 'active');
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    /**
+     * Get the linked company (tenant) for this client.
+     */
+    public function linkedCompany()
+    {
+        return $this->belongsTo(Company::class, 'company_link_id');
+    }
+
+    /**
+     * Get the payment methods for this client.
+     */
+    public function paymentMethods()
+    {
+        return $this->hasMany(PaymentMethod::class, 'client_id');
+    }
+
+    /**
+     * Get the default payment method for this client.
+     */
+    public function defaultPaymentMethod()
+    {
+        return $this->hasOne(PaymentMethod::class, 'client_id')->where('is_default', true);
     }
 
     /**

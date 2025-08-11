@@ -168,7 +168,7 @@
                             <dd class="text-lg font-medium text-gray-900">
                                 @php
                                     $itDocCount = \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)
-                                        ->where('tenant_id', auth()->user()->tenant_id)
+                                        ->where('company_id', auth()->user()->company_id)
                                         ->count();
                                 @endphp
                                 {{ $itDocCount }}
@@ -638,16 +638,16 @@
 
                 @php
                     $itDocumentation = \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)
-                        ->where('tenant_id', auth()->user()->tenant_id)
+                        ->where('company_id', auth()->user()->company_id)
                         ->active()
                         ->with(['author'])
                         ->latest()
                         ->take(10)
                         ->get();
                     $itStats = [
-                        'total' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('tenant_id', auth()->user()->tenant_id)->count(),
-                        'needs_review' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('tenant_id', auth()->user()->tenant_id)->whereDate('next_review_at', '<=', now())->count(),
-                        'categories' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('tenant_id', auth()->user()->tenant_id)->groupBy('it_category')->pluck('it_category')->count()
+                        'total' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('company_id', auth()->user()->company_id)->count(),
+                        'needs_review' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('company_id', auth()->user()->company_id)->whereDate('next_review_at', '<=', now())->count(),
+                        'categories' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('company_id', auth()->user()->company_id)->distinct('it_category')->count('it_category')
                     ];
                 @endphp
 

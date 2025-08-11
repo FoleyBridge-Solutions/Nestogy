@@ -150,19 +150,65 @@ class SearchController extends Controller
     public function clients(Request $request)
     {
         $query = $request->get('q', '');
+        $limit = $request->get('limit', 20);
         $companyId = Auth::user()->company_id;
 
-        $clients = Client::where('company_id', $companyId)
+        // Build query
+        $clientsQuery = Client::where('company_id', $companyId)
             ->whereNull('archived_at')
-            ->where(function ($q) use ($query) {
+            ->where('lead', false); // Only show customers, not leads
+
+        // Apply search filter if provided
+        if (!empty($query)) {
+            $clientsQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('email', 'like', "%{$query}%")
-                  ->orWhere('phone', 'like', "%{$query}%");
-            })
-            ->limit(20)
+                  ->orWhere('phone', 'like', "%{$query}%")
+                  ->orWhere('company_name', 'like', "%{$query}%");
+            });
+        }
+
+        // Get clients with only necessary fields for performance
+        $clients = $clientsQuery
+            ->select('id', 'name', 'company_name', 'email', 'phone', 'status', 'accessed_at')
+            ->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$query . '%']) // Prioritize exact matches
+            ->orderBy('name')
+            ->limit($limit)
             ->get();
 
-        return response()->json($clients);
+        // Format response for frontend
+        $formattedClients = $clients->map(function ($client) {
+            return [
+                'id' => $client->id,
+                'name' => $client->name,
+                'company_name' => $client->company_name,
+                'email' => $client->email,
+                'phone' => $client->phone,
+                'status' => $client->status,
+                'initials' => $this->getInitials($client->name),
+            ];
+        });
+
+        return response()->json($formattedClients);
+    }
+    
+    /**
+     * Get initials from a name
+     */
+    private function getInitials($name)
+    {
+        if (empty($name)) return '?';
+        
+        $words = explode(' ', $name);
+        $initials = '';
+        
+        foreach (array_slice($words, 0, 2) as $word) {
+            if (!empty($word)) {
+                $initials .= strtoupper($word[0]);
+            }
+        }
+        
+        return $initials ?: '?';
     }
 
     public function tickets(Request $request)

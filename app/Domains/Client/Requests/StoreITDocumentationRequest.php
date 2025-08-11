@@ -26,7 +26,7 @@ class StoreITDocumentationRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',

@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Storage;
 
 class ClientFile extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'client_id',
         'uploaded_by',
         'name',
@@ -32,7 +32,7 @@ class ClientFile extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'client_id' => 'integer',
         'uploaded_by' => 'integer',
         'file_size' => 'integer',

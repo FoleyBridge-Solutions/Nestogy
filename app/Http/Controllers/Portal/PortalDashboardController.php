@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
-use App\Models\Invoice;
-use App\Models\Contract;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Contract;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Asset;
-use App\Models\Project;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Project\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;

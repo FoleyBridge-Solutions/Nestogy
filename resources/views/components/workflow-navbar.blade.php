@@ -1,732 +1,357 @@
 @props(['activeDomain' => null])
 
 @php
-// Get selected client and workflow context
+// Get navigation context
 $selectedClient = \App\Services\NavigationService::getSelectedClient();
-$currentWorkflow = \App\Services\NavigationService::getWorkflowContext(); // Get current workflow from session
-$urgentItems = \App\Services\NavigationService::getUrgentItems();
-$todaysWork = \App\Services\NavigationService::getTodaysWork();
+$currentWorkflow = \App\Services\NavigationService::getWorkflowContext(); 
 $workflowHighlights = \App\Services\NavigationService::getWorkflowNavigationHighlights($currentWorkflow);
 
-// Workflow-based navigation structure
-$workflowNavigation = [
-    'urgent' => [
-        'name' => 'Urgent',
-        'icon' => '🔥',
-        'count' => $workflowHighlights['badges']['urgent'] ?? $urgentItems['total'] ?? 0,
-        'route' => 'dashboard',
-        'params' => ['view' => 'urgent'],
-        'color' => 'red',
-        'description' => 'Critical items requiring immediate attention'
-    ],
-    'today' => [
-        'name' => "Today's Work",
-        'icon' => '⚡',
-        'count' => $workflowHighlights['badges']['today'] ?? $todaysWork['total'] ?? 0,
-        'route' => 'dashboard',
-        'params' => ['view' => 'today'],
-        'color' => 'blue',
-        'description' => 'Scheduled tasks and appointments for today'
-    ],
-    'scheduled' => [
-        'name' => 'Scheduled',
-        'icon' => '📋',
-        'count' => $workflowHighlights['badges']['scheduled'] ?? $todaysWork['upcoming'] ?? 0,
-        'route' => 'dashboard',
-        'params' => ['view' => 'scheduled'],
-        'color' => 'indigo',
-        'description' => 'Upcoming work and appointments'
-    ],
-    'financial' => [
-        'name' => 'Financial',
-        'icon' => '💰',
-        'count' => $workflowHighlights['badges']['financial'] ?? $urgentItems['financial'] ?? 0,
-        'route' => 'dashboard',
-        'params' => ['view' => 'financial'],
-        'color' => 'green',
-        'description' => 'Payments, invoices, and financial matters'
-    ],
-    'reports' => [
-        'name' => 'Reports',
-        'icon' => '📊',
-        'count' => 0,
-        'route' => 'dashboard',
-        'params' => ['view' => 'reports'],
-        'color' => 'purple',
-        'description' => 'Analytics and business insights'
-    ]
+// Prepare badge counts
+$badges = [
+    'urgent' => $workflowHighlights['badges']['urgent'] ?? 0,
+    'today' => $workflowHighlights['badges']['today'] ?? 0,
+    'scheduled' => $workflowHighlights['badges']['scheduled'] ?? 0,
+    'financial' => $workflowHighlights['badges']['financial'] ?? 0,
 ];
 
-// Client workflow status detection
-$workflowStatus = 'idle';
-$statusColor = 'gray';
-$statusText = 'Ready to work';
+// Recent clients query removed - now handled by client-switcher component
 
-if ($selectedClient) {
-    if ($urgentItems['client'][$selectedClient->id]['critical'] ?? 0 > 0) {
-        $workflowStatus = 'critical';
-        $statusColor = 'red';
-        $statusText = 'Critical issues need attention';
-    } elseif ($urgentItems['client'][$selectedClient->id]['urgent'] ?? 0 > 0) {
-        $workflowStatus = 'urgent';
-        $statusColor = 'orange';
-        $statusText = 'Urgent items pending';
-    } elseif ($todaysWork['client'][$selectedClient->id] ?? 0 > 0) {
-        $workflowStatus = 'active';
-        $statusColor = 'green';
-        $statusText = 'Active work in progress';
-    } elseif ($todaysWork['scheduled'][$selectedClient->id] ?? 0 > 0) {
-        $workflowStatus = 'scheduled';
-        $statusColor = 'blue';
-        $statusText = 'Scheduled work upcoming';
-    }
-}
+// Workflow items configuration
+$workflowItems = [
+    [
+        'key' => 'urgent',
+        'label' => 'Urgent',
+        'icon' => '🔥',
+        'color' => 'red',
+        'count' => $badges['urgent'],
+        'route' => route('dashboard', ['view' => 'urgent']),
+        'description' => 'Critical items requiring immediate attention'
+    ],
+    [
+        'key' => 'today',
+        'label' => "Today",
+        'icon' => '⚡',
+        'color' => 'blue',
+        'count' => $badges['today'],
+        'route' => route('dashboard', ['view' => 'today']),
+        'description' => 'Scheduled tasks for today'
+    ],
+    [
+        'key' => 'scheduled',
+        'label' => 'Scheduled',
+        'icon' => '📋',
+        'color' => 'indigo',
+        'count' => $badges['scheduled'],
+        'route' => route('dashboard', ['view' => 'scheduled']),
+        'description' => 'Upcoming work and appointments'
+    ],
+    [
+        'key' => 'financial',
+        'label' => 'Financial',
+        'icon' => '💰',
+        'color' => 'green',
+        'count' => $badges['financial'],
+        'route' => route('dashboard', ['view' => 'financial']),
+        'description' => 'Invoices and payments'
+    ],
+];
 @endphp
 
-<nav class="bg-gradient-to-r from-white via-slate-50 to-white backdrop-blur-md border-b border-gray-200/30 shadow-sm fixed w-full top-0 z-50" 
-     x-data="modernNavbar()" x-init="init()">
-    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center h-16 gap-4">
-            <!-- Left Section: Logo & Workflow Context -->
-            <div class="flex items-center space-x-3 flex-shrink-0 min-w-0">
+<!-- Main Navigation Bar -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm"
+     x-data="{ 
+         mobileMenuOpen: false,
+         userMenuOpen: false,
+         notificationsOpen: false,
+         clientSwitcherOpen: false
+     }">
+    
+    <!-- Primary Navigation Bar -->
+    <div class="mx-auto max-w-full">
+        <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            
+            <!-- Left Section: Logo & Client Context -->
+            <div class="flex items-center space-x-4">
                 <!-- Logo -->
-                <div class="flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center group">
-                        <x-application-logo class="block h-8 w-auto fill-current text-gray-800 group-hover:text-indigo-600 transition duration-150" />
-                        <span class="ml-2 text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition duration-150 hidden sm:block">{{ config('app.name', 'Nestogy') }}</span>
-                    </a>
-                </div>
-
-                <!-- Modern Client Switcher -->
-                <div class="hidden xl:flex items-center">
-                    <x-client-switcher :currentClient="$selectedClient" 
-                                      placement="bottom-start"
-                                      class="mr-4" />
+                <a href="{{ route('dashboard') }}" class="flex items-center group">
+                    <x-application-logo class="h-8 w-auto text-gray-800 group-hover:text-indigo-600 transition-colors" />
+                    <span class="ml-2 text-lg font-semibold text-gray-900 hidden sm:block">
+                        {{ config('app.name', 'Nestogy') }}
+                    </span>
+                </a>
+                
+                <!-- Divider -->
+                <div class="hidden lg:block h-6 w-px bg-gray-300"></div>
+                
+                <!-- Client Switcher Component -->
+                <div class="hidden lg:block">
+                    <x-client-switcher :current-client="$selectedClient" />
                 </div>
             </div>
-
-            <!-- Center Section: Workflow Navigation -->
-            <div class="hidden lg:flex bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-1.5 flex-1 items-center justify-center min-w-0 max-w-3xl mx-auto border border-blue-100/50 backdrop-blur-sm shadow-inner">
-                <div class="flex items-center space-x-1 overflow-x-auto scrollbar-none">
-                @foreach($workflowNavigation as $key => $workflow)
-                @php
-                // Check if this workflow is active based on current route or workflow context
-                $isActive = false;
-                if ($currentWorkflow === $key) {
-                    $isActive = true;
-                } elseif (request()->get('view') === $key) {
-                    $isActive = true;
-                } elseif ($key === 'urgent' && request()->routeIs('dashboard') && request()->get('view') === 'urgent') {
-                    $isActive = true;
-                } elseif ($key === 'today' && request()->routeIs('dashboard') && request()->get('view') === 'today') {
-                    $isActive = true;
-                } elseif ($key === 'scheduled' && request()->routeIs('tickets.calendar.*')) {
-                    $isActive = true;
-                } elseif ($key === 'financial' && request()->routeIs('financial.*')) {
-                    $isActive = true;
-                } elseif ($key === 'reports' && request()->routeIs('reports.*')) {
-                    $isActive = true;
-                }
-                
-                $hasItems = $workflow['count'] > 0;
-                $tabClasses = $isActive
-                    ? ($workflow['color'] === 'red' ? 'bg-red-50 text-red-700 border-red-200' :
-                       ($workflow['color'] === 'orange' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                        ($workflow['color'] === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                         ($workflow['color'] === 'indigo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                          ($workflow['color'] === 'green' ? 'bg-green-50 text-green-700 border-green-200' :
-                           ($workflow['color'] === 'purple' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                            'bg-gray-50 text-gray-700 border-gray-200'))))))
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent';
-                @endphp
-                
-                <a href="{{ route($workflow['route'], $workflow['params']) }}"
-                   class="relative group flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border {{ $tabClasses }} hover:shadow-sm whitespace-nowrap flex-shrink-0"
-                   title="{{ $workflow['description'] }}"
-                    
-                    <!-- Icon -->
-                    <span class="text-sm mr-1.5">{{ $workflow['icon'] }}</span>
-                    
-                    <!-- Label -->
-                    <span class="hidden sm:inline">{{ $workflow['name'] }}</span>
-                    
-                    <!-- Count Badge -->
-                    @if($hasItems)
-                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
-                                {{ $workflow['color'] === 'red' ? 'bg-red-100 text-red-800' :
-                                   ($workflow['color'] === 'orange' ? 'bg-orange-100 text-orange-800' :
-                                    ($workflow['color'] === 'blue' ? 'bg-blue-100 text-blue-800' :
-                                     ($workflow['color'] === 'indigo' ? 'bg-indigo-100 text-indigo-800' :
-                                      ($workflow['color'] === 'green' ? 'bg-green-100 text-green-800' :
-                                       ($workflow['color'] === 'purple' ? 'bg-purple-100 text-purple-800' :
-                                        'bg-gray-100 text-gray-800'))))) }}">
-                        {{ $workflow['count'] }}
+            
+            <!-- Center Section: Workflow Pills -->
+            <div class="hidden lg:flex items-center space-x-2">
+                @foreach($workflowItems as $item)
+                <a href="{{ $item['route'] }}"
+                   class="group relative flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all duration-200
+                          {{ $currentWorkflow === $item['key'] 
+                             ? 'bg-' . $item['color'] . '-50 text-' . $item['color'] . '-700 ring-1 ring-' . $item['color'] . '-200' 
+                             : 'text-gray-600 hover:bg-gray-50' }}">
+                    <span class="text-lg">{{ $item['icon'] }}</span>
+                    <span class="font-medium text-sm">{{ $item['label'] }}</span>
+                    @if($item['count'] > 0)
+                    <span class="ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full
+                                bg-{{ $item['color'] }}-100 text-{{ $item['color'] }}-800">
+                        {{ $item['count'] > 99 ? '99+' : $item['count'] }}
                     </span>
                     @endif
-
-                    <!-- Simplified Tooltip -->
-                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                        {{ $workflow['description'] }}
+                    
+                    <!-- Tooltip -->
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                        {{ $item['description'] }}
+                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                            <div class="border-4 border-transparent border-t-gray-900"></div>
+                        </div>
                     </div>
                 </a>
                 @endforeach
-                </div>
             </div>
-
-            <!-- Right Section: Search, Notifications, User Menu -->
-            <div class="flex items-center space-x-2 flex-shrink-0">
-                <!-- Modern Smart Search -->
-                <div class="relative hidden md:block"
-                     x-data="smartSearch()"
-                     x-init="init()"
-                     @click.away="closeResults()">
-                    <div class="relative">
-                        <input type="text"
-                               placeholder="{{ $selectedClient ? 'Search...' : 'Search...' }}"
-                               class="w-32 lg:w-48 pl-9 pr-3 py-2 border border-gray-200/60 rounded-lg text-sm bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all duration-200 placeholder-gray-400"
-                               x-model="query"
-                               @input.debounce.300ms="search()"
-                               @focus="showResults = true; loadSuggestions(); searchFocused = true"
-                               @blur="searchFocused = false"
-                               @keydown.escape="closeResults()"
-                               @keydown.arrow-down.prevent="navigateDown()"
-                               @keydown.arrow-up.prevent="navigateUp()"
-                               @keydown.enter.prevent="selectResult()">
-                        
-                        <!-- Enhanced Search Icon / Loading Indicator -->
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <div class="relative">
-                                <svg x-show="!loading" class="h-5 w-5 transition-colors duration-200" :class="searchFocused ? 'text-indigo-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                <svg x-show="loading" class="h-5 w-5 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        
-                        <!-- Search Context Indicator -->
-                        @if($selectedClient)
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <span class="text-xs text-indigo-600 bg-gradient-to-r from-indigo-50 to-indigo-100 px-2 py-1 rounded-full hidden lg:inline font-medium border border-indigo-200/50">Client</span>
-                            <div class="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full lg:hidden animate-pulse"></div>
-                        </div>
-                        @endif
-                    </div>
-
-                    <!-- Enhanced Search Results Dropdown -->
-                    <div x-show="showResults && (results.length > 0 || suggestions.length > 0 || query.length > 0)"
-                         x-transition:enter="transition ease-out duration-300"
-                         x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-200"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 py-2 z-50 max-h-96 overflow-y-auto"
-                         style="display: none;">
-                        
-                        <!-- Search Results -->
-                        <template x-if="query.length > 0 && results.length > 0">
-                            <div>
-                                <div class="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                                    Search Results
-                                </div>
-                                <template x-for="(result, index) in results" :key="result.type + '-' + index">
-                                    <a :href="result.url"
-                                       class="block px-3 py-2 hover:bg-gray-50 cursor-pointer transition duration-150"
-                                       :class="{ 'bg-indigo-50': selectedIndex === index }"
-                                       @click="selectResult(result)">
-                                        <div class="flex items-center">
-                                            <span class="text-lg mr-3" x-text="result.icon"></span>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="text-sm font-medium text-gray-900 truncate" x-text="result.title"></div>
-                                                <div class="text-xs text-gray-500 truncate" x-text="result.subtitle"></div>
-                                            </div>
-                                            <template x-if="result.meta && result.meta.status">
-                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                                                      :class="{
-                                                          'bg-red-100 text-red-800': result.meta.priority === 'critical',
-                                                          'bg-orange-100 text-orange-800': result.meta.priority === 'urgent',
-                                                          'bg-green-100 text-green-800': result.meta.status === 'completed',
-                                                          'bg-blue-100 text-blue-800': result.meta.status === 'active',
-                                                          'bg-gray-100 text-gray-800': true
-                                                      }"
-                                                      x-text="result.meta.status"></span>
-                                            </template>
-                                        </div>
-                                    </a>
-                                </template>
-                            </div>
-                        </template>
-
-                        <!-- Suggestions (when no query or no results) -->
-                        <template x-if="(query.length === 0 || results.length === 0) && suggestions.length > 0">
-                            <div>
-                                <div class="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                                    <template x-if="query.length === 0">Quick Actions</template>
-                                    <template x-if="query.length > 0 && results.length === 0">No Results - Try These</template>
-                                </div>
-                                <template x-for="(suggestion, index) in suggestions" :key="suggestion.type + '-' + index">
-                                    <a :href="suggestion.url"
-                                       class="block px-3 py-2 hover:bg-gray-50 cursor-pointer transition duration-150"
-                                       :class="{ 'bg-indigo-50': selectedIndex === (results.length + index) }"
-                                       @click="selectResult(suggestion)">
-                                        <div class="flex items-center">
-                                            <span class="text-lg mr-3" x-text="suggestion.icon"></span>
-                                            <div class="flex-1">
-                                                <div class="text-sm font-medium text-gray-900" x-text="suggestion.title"></div>
-                                                <template x-if="suggestion.context">
-                                                    <div class="text-xs text-indigo-600" x-text="suggestion.context + ' context'"></div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </template>
-                            </div>
-                        </template>
-
-                        <!-- No Results State -->
-                        <template x-if="query.length > 0 && results.length === 0 && suggestions.length === 0 && !loading">
-                            <div class="px-3 py-4 text-center text-sm text-gray-500">
-                                <div class="mb-2">🔍</div>
-                                <div>No results found for "<span x-text="query"></span>"</div>
-                                <div class="text-xs text-gray-400 mt-1">Try a different search term</div>
-                            </div>
-                        </template>
-
-                        <!-- Loading State -->
-                        <template x-if="loading">
-                            <div class="px-3 py-4 text-center text-sm text-gray-500">
-                                <div class="flex items-center justify-center">
-                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Searching...
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Enhanced Smart Notifications -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" 
-                            class="relative p-2.5 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-all duration-200 ease-in-out rounded-xl hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 hover:shadow-sm transform hover:scale-105">
-                        <svg class="h-6 w-6 transition-transform duration-200 hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5V9a7 7 0 00-14 0v3l-5 5h5a7 7 0 1014 0z"></path>
+            
+            <!-- Right Section: Actions -->
+            <div class="flex items-center space-x-3">
+                <!-- Command Palette Button -->
+                <button onclick="window.dispatchEvent(new CustomEvent('open-command-palette'))"
+                        class="hidden md:flex items-center space-x-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
+                    <svg class="w-4 h-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <span class="text-sm text-gray-600 group-hover:text-gray-900">Search</span>
+                    <kbd class="hidden lg:inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-white border border-gray-300 rounded">
+                        Ctrl+/
+                    </kbd>
+                </button>
+                
+                <!-- Notifications -->
+                <div class="relative">
+                    <button @click="notificationsOpen = !notificationsOpen"
+                            class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
-                        
-                        <!-- Notification Badge -->
-                        @if($urgentItems['notifications'] ?? 0 > 0)
-                        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full animate-pulse shadow-lg ring-2 ring-red-100">
-                            {{ min($urgentItems['notifications'], 9) }}@if($urgentItems['notifications'] > 9)+@endif
+                        @if($badges['urgent'] > 0)
+                        <span class="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                            {{ min($badges['urgent'], 9) }}{{ $badges['urgent'] > 9 ? '+' : '' }}
                         </span>
                         @endif
                     </button>
-
-                    <!-- Enhanced Notifications Dropdown -->
-                    <div x-show="open"
-                         x-transition:enter="transition ease-out duration-300"
-                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-200"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         @click.away="open = false"
-                         class="absolute right-0 top-full mt-3 w-80 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 py-3 z-50"
-                         style="display: none;">
-                        
-                        <div class="px-4 py-3 border-b border-gray-100/60">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
-                                <h3 class="text-sm font-semibold text-gray-900">Smart Notifications</h3>
-                            </div>
-                        </div>
-                        
-                        <div class="max-h-64 overflow-y-auto">
-                            <!-- Placeholder notifications -->
-                            <div class="px-4 py-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-50/30 cursor-pointer border-l-4 border-red-400 transition-all duration-200 rounded-r-lg mx-1">
-                                <div class="flex items-start">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-3 h-3 bg-gradient-to-r from-red-400 to-red-500 rounded-full mt-1.5 animate-pulse"></div>
-                                    </div>
-                                    <div class="ml-3 flex-1">
-                                        <p class="text-sm font-semibold text-gray-900">SLA Breach Alert</p>
-                                        <p class="text-xs text-gray-600 mt-1">Ticket #1234 exceeds response time</p>
-                                        <p class="text-xs text-gray-400 mt-1 flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            2 minutes ago
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="px-4 py-2 text-center text-sm text-gray-500">
-                                Smart notifications will appear here...
-                            </div>
-                        </div>
-                        
-                        <div class="px-4 py-3 border-t border-gray-100/60">
-                            <a href="#" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200 flex items-center group">
-                                View all notifications
-                                <svg class="w-3 h-3 ml-1 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </a>
+                    
+                    <!-- Notifications Dropdown -->
+                    <div x-show="notificationsOpen"
+                     @click.away="notificationsOpen = false"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="transform opacity-100 scale-100"
+                     x-transition:leave-end="transform opacity-0 scale-95"
+                     class="absolute right-0 top-full mt-2 w-96 max-h-[70vh] bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                     x-cloak>
+                    <div class="p-4 border-b border-gray-200">
+                        <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto">
+                        <div class="p-4 text-sm text-gray-500 text-center">
+                            No new notifications
                         </div>
                     </div>
+                    <div class="p-3 border-t border-gray-200">
+                        <a href="#" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                            View all notifications →
+                        </a>
+                    </div>
                 </div>
-
-                <!-- User Profile Menu -->
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-xl text-gray-600 bg-white/80 backdrop-blur-sm hover:text-gray-800 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 focus:outline-none transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105">
-                            <div class="flex items-center">
-                                <img class="h-8 w-8 rounded-full mr-2 ring-2 ring-white/60 shadow-sm"
-                                     src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF"
-                                     alt="{{ Auth::user()->name }}">
-                                <div class="hidden lg:block text-sm truncate max-w-24">{{ Str::limit(Auth::user()->name, 15) }}</div>
-                            </div>
-
-                            <div class="ml-1 hidden lg:block">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('dashboard')">
-                            {{ __('Dashboard') }}
-                        </x-dropdown-link>
-                        
-                        <x-dropdown-link :href="route('users.profile')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        @can('access', 'settings')
-                            <x-dropdown-link :href="route('settings.index')">
-                                {{ __('Settings') }}
-                            </x-dropdown-link>
-                        @endcan
-
-                        <div class="border-t border-gray-100"></div>
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault(); this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-
-                <!-- Mobile Menu Button -->
-                <div class="lg:hidden">
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" 
-                            class="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path :class="{'hidden': mobileMenuOpen, 'inline-flex': !mobileMenuOpen }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path :class="{'hidden': !mobileMenuOpen, 'inline-flex': mobileMenuOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </div>
+                
+                <!-- User Menu -->
+                <div class="relative">
+                    <button @click="userMenuOpen = !userMenuOpen"
+                            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <img class="h-8 w-8 rounded-full ring-2 ring-white shadow-sm"
+                             src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF"
+                             alt="{{ Auth::user()->name }}">
+                        <svg class="hidden lg:block w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
+                    
+                    <!-- User Dropdown -->
+                    <div x-show="userMenuOpen"
+                         @click.away="userMenuOpen = false"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute right-0 top-full mt-2 w-64 max-h-[60vh] overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
+                         x-cloak>
+                        <div class="px-4 py-2 border-b border-gray-200">
+                            <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
+                            <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
+                        </div>
+                        <a href="{{ route('users.profile') }}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Profile
+                            </div>
+                        </a>
+                        <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Settings
+                            </div>
+                        </a>
+                        <div class="border-t border-gray-200 my-2"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Sign out
+                                </div>
+                            </button>
+                        </form>
+                    </div>
                 </div>
+                
+                <!-- Mobile Menu Button -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="lg:hidden p-2 text-gray-600 hover:text-gray-900">
+                    <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- Mobile Navigation Menu -->
+    
+    <!-- Mobile Workflow Pills -->
+    <div class="lg:hidden border-t border-gray-200 bg-gray-50">
+        <div class="flex overflow-x-auto px-4 py-2 space-x-2">
+            @foreach($workflowItems as $item)
+            <a href="{{ $item['route'] }}"
+               class="flex-shrink-0 flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap
+                      {{ $currentWorkflow === $item['key'] 
+                         ? 'bg-' . $item['color'] . '-100 text-' . $item['color'] . '-700' 
+                         : 'text-gray-600 bg-white' }}">
+                <span>{{ $item['icon'] }}</span>
+                <span>{{ $item['label'] }}</span>
+                @if($item['count'] > 0)
+                <span class="ml-1 text-xs font-bold">{{ $item['count'] }}</span>
+                @endif
+            </a>
+            @endforeach
+        </div>
+    </div>
+    
+    <!-- Mobile Menu -->
     <div x-show="mobileMenuOpen"
          x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-75"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="xl:hidden bg-white border-t border-gray-200"
-         style="display: none;">
-        
-        <!-- Mobile Client Switcher -->
-        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <x-client-switcher :currentClient="$selectedClient" 
-                              placement="bottom-start" />
-        </div>
-
-        <!-- Mobile Workflow Navigation -->
-        <div class="px-4 py-3 space-y-2">
-            @foreach($workflowNavigation as $key => $workflow)
-            <a href="{{ route($workflow['route'], $workflow['params']) }}"
-               class="flex items-center justify-between w-full px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition duration-150">
-                <div class="flex items-center">
-                    <span class="text-lg mr-3">{{ $workflow['icon'] }}</span>
-                    <span>{{ $workflow['name'] }}</span>
-                </div>
-                @if($workflow['count'] > 0)
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $workflow['color'] === 'red' ? 'bg-red-100 text-red-800' : ($workflow['color'] === 'orange' ? 'bg-orange-100 text-orange-800' : ($workflow['color'] === 'blue' ? 'bg-blue-100 text-blue-800' : ($workflow['color'] === 'indigo' ? 'bg-indigo-100 text-indigo-800' : ($workflow['color'] === 'green' ? 'bg-green-100 text-green-800' : ($workflow['color'] === 'purple' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'))))) }}">
-                    {{ $workflow['count'] }}
-                </span>
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         class="lg:hidden border-t border-gray-200 bg-white"
+         x-cloak>
+        <div class="px-4 py-3 space-y-3">
+            <!-- Mobile Search -->
+            <button onclick="window.dispatchEvent(new CustomEvent('open-command-palette'))"
+                    class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <span>Quick Search</span>
+            </button>
+            
+            <!-- Mobile Client Switcher -->
+            <div class="border rounded-lg p-3 {{ $selectedClient ? 'bg-indigo-50' : 'bg-gray-50' }}">
+                @if($selectedClient)
+                    <p class="text-xs text-gray-500 mb-1">Current Client</p>
+                    <p class="font-medium text-gray-900">{{ $selectedClient->name }}</p>
+                    <a href="{{ route('clients.clear-selection') }}" class="text-xs text-indigo-600 hover:text-indigo-800">
+                        Clear Selection →
+                    </a>
+                @else
+                    <p class="text-xs text-gray-500 mb-2">No Client Selected</p>
                 @endif
-            </a>
-            @endforeach
-        </div>
-
-        <!-- Mobile User Menu -->
-        <div class="border-t border-gray-200 px-4 py-3">
-            <div class="flex items-center mb-3">
-                <img class="h-10 w-10 rounded-full" 
-                     src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF" 
-                     alt="{{ Auth::user()->name }}">
-                <div class="ml-3">
-                    <div class="text-base font-medium text-gray-800">{{ Auth::user()->name }}</div>
-                    <div class="text-sm text-gray-500">{{ Auth::user()->email }}</div>
-                </div>
+                <a href="{{ route('clients.index') }}" 
+                   class="block mt-2 text-center px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">
+                    {{ $selectedClient ? 'Change Client' : 'Select Client' }}
+                </a>
             </div>
             
-            <div class="space-y-1">
-                <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition duration-150">
+            <!-- Mobile Navigation Links -->
+            <nav class="space-y-1">
+                <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                     Dashboard
                 </a>
-                <a href="{{ route('users.profile') }}" class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition duration-150">
-                    Profile
+                <a href="{{ route('tickets.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                    Tickets
                 </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition duration-150">
-                        Sign out
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Workflow Navigation (hidden on desktop) -->
-    <div class="lg:hidden bg-white border-b border-gray-200/60 px-4 py-2">
-        <div class="flex items-center space-x-2 overflow-x-auto scrollbar-none">
-            @foreach($workflowNavigation as $key => $workflow)
-            @php
-            $isActive = $activeDomain === $key;
-            $hasItems = $workflow['count'] > 0;
-            $mobileClasses = $isActive
-                ? 'bg-indigo-100 text-indigo-700 border-indigo-200'
-                : 'text-gray-600 hover:bg-gray-100 border-transparent';
-            @endphp
-            
-            <a href="{{ route($workflow['route'], $workflow['params']) }}"
-               class="flex items-center px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border whitespace-nowrap flex-shrink-0 {{ $mobileClasses }}">
-                <span class="text-sm mr-1.5">{{ $workflow['icon'] }}</span>
-                <span>{{ $workflow['name'] }}</span>
-                @if($hasItems)
-                <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium {{ $workflow['color'] === 'red' ? 'bg-red-100 text-red-800' : ($workflow['color'] === 'orange' ? 'bg-orange-100 text-orange-800' : ($workflow['color'] === 'blue' ? 'bg-blue-100 text-blue-800' : ($workflow['color'] === 'indigo' ? 'bg-indigo-100 text-indigo-800' : ($workflow['color'] === 'green' ? 'bg-green-100 text-green-800' : ($workflow['color'] === 'purple' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'))))) }}">
-                    {{ $workflow['count'] }}
-                </span>
-                @endif
-            </a>
-            @endforeach
+                <a href="{{ route('clients.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                    Clients
+                </a>
+                <a href="{{ route('financial.invoices.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                    Billing
+                </a>
+            </nav>
         </div>
     </div>
 </nav>
 
-<!-- Modern Navbar Alpine.js Component -->
-<script>
-function modernNavbar() {
-    return {
-        searchFocused: false,
-        darkMode: localStorage.getItem('darkMode') === 'true' || false,
-        
-        init() {
-            this.applyTheme();
-            this.setupKeyboardShortcuts();
-        },
-        
-        applyTheme() {
-            if (this.darkMode) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        },
-        
-        toggleTheme() {
-            this.darkMode = !this.darkMode;
-            localStorage.setItem('darkMode', this.darkMode);
-            this.applyTheme();
-            
-            // Emit theme change event
-            window.dispatchEvent(new CustomEvent('theme-changed', { 
-                detail: { darkMode: this.darkMode }
-            }));
-        },
-        
-        setupKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                // Ctrl/Cmd + K for search
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    const searchInput = document.querySelector('input[type="text"]');
-                    if (searchInput) {
-                        searchInput.focus();
-                    }
-                }
-            });
-        }
-    };
-}
+<!-- Spacer for fixed navbar -->
+<div class="h-16 lg:h-16"></div>
+@if(!request()->routeIs('dashboard'))
+<div class="lg:hidden h-12"></div>
+@endif
 
-function smartSearch() {
-    return {
-        query: '',
-        results: [],
-        suggestions: [],
-        showResults: false,
-        loading: false,
-        selectedIndex: -1,
-        selectedClient: @json($selectedClient ? $selectedClient->id : null),
-        
-        init() {
-            // Initialize search functionality
-            this.$nextTick(() => {
-                this.loadSuggestions();
-            });
-        },
-        
-        async search() {
-            if (this.query.length < 2) {
-                this.results = [];
-                this.showResults = this.suggestions.length > 0;
-                return;
-            }
-            
-            this.loading = true;
-            this.showResults = true;
-            
-            try {
-                const params = new URLSearchParams({
-                    query: this.query,
-                    context: this.selectedClient ? 'client' : 'global',
-                    client_id: this.selectedClient || '',
-                    domain: this.getCurrentDomain()
-                });
-                
-                const response = await fetch(`/api/search/query?${params}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    this.results = data.results || [];
-                    this.selectedIndex = -1;
-                } else {
-                    console.error('Search request failed:', response.statusText);
-                    this.results = [];
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                this.results = [];
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        async loadSuggestions() {
-            // Disable search suggestions for now
-            this.suggestions = [
-                {
-                    title: 'Create New Ticket',
-                    url: '/tickets/create',
-                    icon: '🎫',
-                    type: 'action'
-                },
-                {
-                    title: 'View Invoices',
-                    url: '/financial/invoices',
-                    icon: '💰',
-                    type: 'action'
-                },
-                {
-                    title: 'Client List',
-                    url: '/clients',
-                    icon: '👥',
-                    type: 'action'
-                }
-            ];
-        },
-        
-        getCurrentDomain() {
-            // Detect current domain from URL or route
-            const path = window.location.pathname;
-            if (path.includes('/tickets')) return 'tickets';
-            if (path.includes('/clients')) return 'clients';
-            if (path.includes('/assets')) return 'assets';
-            if (path.includes('/financial')) return 'financial';
-            if (path.includes('/projects')) return 'projects';
-            if (path.includes('/reports')) return 'reports';
-            return 'global';
-        },
-        
-        navigateDown() {
-            const totalItems = this.results.length + this.suggestions.length;
-            if (totalItems > 0) {
-                this.selectedIndex = Math.min(this.selectedIndex + 1, totalItems - 1);
-            }
-        },
-        
-        navigateUp() {
-            if (this.selectedIndex > -1) {
-                this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
-            }
-        },
-        
-        selectResult(result = null) {
-            if (result) {
-                // Direct result selection
-                window.location.href = result.url;
-                return;
-            }
-            
-            // Keyboard selection
-            const totalResults = this.results.length;
-            let selectedResult = null;
-            
-            if (this.selectedIndex >= 0 && this.selectedIndex < totalResults) {
-                selectedResult = this.results[this.selectedIndex];
-            } else if (this.selectedIndex >= totalResults) {
-                const suggestionIndex = this.selectedIndex - totalResults;
-                if (suggestionIndex < this.suggestions.length) {
-                    selectedResult = this.suggestions[suggestionIndex];
-                }
-            }
-            
-            if (selectedResult) {
-                window.location.href = selectedResult.url;
-            }
-        },
-        
-        closeResults() {
-            this.showResults = false;
-            this.selectedIndex = -1;
-        },
-        
-        handleResultClick(result) {
-            // Track search analytics (placeholder)
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'search_result_click', {
-                    'search_term': this.query,
-                    'result_type': result.type,
-                    'result_title': result.title
-                });
-            }
-            
-            window.location.href = result.url;
-        }
-    }
-}
-</script>
+<style>
+/* Hide x-cloak elements until Alpine loads */
+[x-cloak] { display: none !important; }
+
+/* Fix for Tailwind color classes that might be purged */
+.bg-red-50 { background-color: rgb(254 242 242); }
+.text-red-700 { color: rgb(185 28 28); }
+.ring-red-200 { --tw-ring-color: rgb(254 202 202); }
+.bg-red-100 { background-color: rgb(254 226 226); }
+.text-red-800 { color: rgb(153 27 27); }
+
+.bg-blue-50 { background-color: rgb(239 246 255); }
+.text-blue-700 { color: rgb(29 78 216); }
+.ring-blue-200 { --tw-ring-color: rgb(191 219 254); }
+.bg-blue-100 { background-color: rgb(219 234 254); }
+.text-blue-800 { color: rgb(30 64 175); }
+
+.bg-indigo-50 { background-color: rgb(238 242 255); }
+.text-indigo-700 { color: rgb(67 56 202); }
+.ring-indigo-200 { --tw-ring-color: rgb(199 210 254); }
+.bg-indigo-100 { background-color: rgb(224 231 255); }
+.text-indigo-800 { color: rgb(55 48 163); }
+
+.bg-green-50 { background-color: rgb(240 253 244); }
+.text-green-700 { color: rgb(21 128 61); }
+.ring-green-200 { --tw-ring-color: rgb(187 247 208); }
+.bg-green-100 { background-color: rgb(220 252 231); }
+.text-green-800 { color: rgb(22 101 52); }
+</style>

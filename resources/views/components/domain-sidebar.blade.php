@@ -624,18 +624,53 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
 @endphp
 
 @if($currentSidebar)
-<aside class="w-64 bg-gradient-to-b from-white via-slate-50/30 to-white shadow-xl border-r border-gray-200/50 backdrop-blur-sm flex-shrink-0" x-data="modernSidebar()" x-init="init()">
+<aside x-data="sidebarManager()" 
+       x-init="init()"
+       x-cloak
+       data-sidebar
+       :class="{
+           'w-52': mode === 'expanded',
+           'w-16': mode === 'compact', 
+           'w-12': mode === 'mini'
+       }"
+       class="sidebar-loading bg-gradient-to-b from-white via-slate-50/30 to-white shadow-xl border-r border-gray-200/50 backdrop-blur-sm flex-shrink-0 transition-all duration-300 ease-in-out"
+       style="min-width: 48px;">
     <div class="h-full flex flex-col">
-        <!-- Modern Sidebar Header -->
-        <div class="px-6 py-5 border-b border-gray-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50">
-            <div class="flex items-center space-x-3">
-                <div class="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
-                <h2 class="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{{ $currentSidebar['title'] }}</h2>
+        <!-- Ultra-Compact Sidebar Header -->
+        <div class="border-b border-gray-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 transition-all duration-300"
+             :class="{
+                 'px-3 py-2': mode === 'expanded',
+                 'px-2 py-1.5': mode === 'compact',
+                 'px-1 py-1': mode === 'mini'
+             }">
+            <div class="flex items-center" :class="mode === 'expanded' ? 'space-x-2' : 'justify-center'">
+                <div class="w-1.5 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse flex-shrink-0"></div>
+                <h2 x-show="mode === 'expanded'" 
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 -translate-x-2"
+                    x-transition:enter-end="opacity-100 translate-x-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-x-0"
+                    x-transition:leave-end="opacity-0 -translate-x-2"
+                    class="text-sm font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent truncate">
+                    {{ $currentSidebar['title'] }}
+                </h2>
+                <!-- Compact title tooltip -->
+                <div x-show="mode !== 'expanded'" class="group relative">
+                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {{ $currentSidebar['title'] }}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Modern Sidebar Navigation -->
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <!-- Ultra-Compact Sidebar Navigation -->
+        <nav class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transition-all duration-300"
+             :class="{
+                 'px-2 py-2 space-y-0.5': mode === 'expanded',
+                 'px-1 py-1 space-y-0': mode === 'compact',
+                 'px-0.5 py-1 space-y-0': mode === 'mini'
+             }">
             @foreach($currentSidebar['items'] as $item)
                 @if(($item['type'] ?? null) === 'divider')
                     <hr class="my-3 border-gray-200">
@@ -659,18 +694,37 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                     $isDefaultCollapsed = ($item['default_collapsed'] ?? false);
                     @endphp
                     
-                    <div class="{{ $sectionClasses }} mx-1 mb-3" @if($isCollapsible) data-collapsible data-section-id="{{ \Illuminate\Support\Str::slug($item['title']) }}" @if($isDefaultCollapsed) data-default-collapsed @endif @endif>
-                        <h3 class="{{ $titleClasses }} flex items-center space-x-2">
+                    <div class="transition-all duration-300 mb-1" 
+                         :class="{
+                             'mx-0.5 {{ $sectionClasses }}': mode === 'expanded',
+                             'mx-0 px-1 py-0.5 text-center': mode !== 'expanded'
+                         }"
+                         @if($isCollapsible) data-collapsible data-section-id="{{ \Illuminate\Support\Str::slug($item['title']) }}" @if($isDefaultCollapsed) data-default-collapsed @endif @endif>
+                        <h3 class="{{ $titleClasses }}" :class="mode === 'expanded' ? 'flex items-center space-x-1' : 'text-center'">
                             @if($isCollapsible)
-                                <button class="flex items-center w-full text-left focus:outline-none section-toggle hover:opacity-80 transition-opacity duration-200" onclick="toggleSection(this)">
-                                    <span class="transition-transform duration-300 mr-2 text-sm" data-toggle-icon>
+                                <button class="focus:outline-none section-toggle hover:opacity-80 transition-opacity duration-200" 
+                                        :class="mode === 'expanded' ? 'flex items-center w-full text-left' : 'w-full'"
+                                        onclick="toggleSection(this)">
+                                    <span x-show="mode === 'expanded'" class="transition-transform duration-300 mr-1 text-xs" data-toggle-icon>
                                         @if($isDefaultCollapsed) ▶ @else ▼ @endif
                                     </span>
-                                    <span class="flex-1">{{ $item['title'] }}</span>
+                                    <span x-show="mode === 'expanded'" class="flex-1 text-xs">{{ $item['title'] }}</span>
+                                    <div x-show="mode !== 'expanded'" class="w-1 h-1 bg-gray-400 rounded-full mx-auto"></div>
                                 </button>
+                                <!-- Section tooltip for compact modes -->
+                                <div x-show="mode !== 'expanded'" class="group relative">
+                                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                        {{ $item['title'] }}
+                                    </div>
+                                </div>
                             @else
-                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                <span>{{ $item['title'] }}</span>
+                                <span x-show="mode === 'expanded'" class="w-0.5 h-0.5 bg-gray-400 rounded-full"></span>
+                                <span x-show="mode === 'expanded'" class="text-xs">{{ $item['title'] }}</span>
+                                <div x-show="mode !== 'expanded'" class="w-0.5 h-0.5 bg-gray-400 rounded-full mx-auto group relative">
+                                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                        {{ $item['title'] }}
+                                    </div>
+                                </div>
                             @endif
                         </h3>
                     </div>
@@ -780,54 +834,127 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                     $itemClasses = $parentSection ? "collapsible-item parent-{$parentSection}" : '';
                     @endphp
                     
-                    <div class="{{ $itemClasses }} mx-1 mb-1" @if($parentSection) data-parent-section="{{ $parentSection }}" @endif>
-                        <a href="{{ route($item['route'], $routeParams) }}" class="{{ $classes }}" @if($item['description'] ?? false) title="{{ $item['description'] }}" @endif>
-                            <span class="{{ $isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-600' }} mr-3 flex-shrink-0 h-5 w-5 flex items-center justify-center transition-colors duration-200">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="{{ $itemClasses }} mb-0.5 relative group" @if($parentSection) data-parent-section="{{ $parentSection }}" @endif
+                         :class="{
+                             'mx-0.5': mode === 'expanded',
+                             'mx-0': mode !== 'expanded'
+                         }">
+                        <a href="{{ route($item['route'], $routeParams) }}" 
+                           class="relative flex items-center rounded-lg transition-all duration-200 group {{ $isActive ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-500 text-indigo-700 border-l-2 shadow-sm' : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 hover:shadow-sm' }}" 
+                           :class="{
+                               'px-2 py-1.5': mode === 'expanded',
+                               'px-1.5 py-1 justify-center': mode === 'compact',
+                               'px-1 py-0.5 justify-center': mode === 'mini'
+                           }"
+                           @if($item['description'] ?? false) title="{{ $item['description'] }}" @endif>
+                            
+                            <!-- Icon -->
+                            <span class="{{ $isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-600' }} flex-shrink-0 h-4 w-4 flex items-center justify-center transition-colors duration-200">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <circle cx="10" cy="10" r="3"></circle>
                                 </svg>
                             </span>
-                            <span class="flex-1 font-medium">{{ $item['name'] }}</span>
                             
+                            <!-- Text (expanded mode only) -->
+                            <span x-show="mode === 'expanded'" 
+                                  x-transition:enter="transition ease-out duration-200 delay-75"
+                                  x-transition:enter-start="opacity-0 -translate-x-1"
+                                  x-transition:enter-end="opacity-100 translate-x-0"
+                                  x-transition:leave="transition ease-in duration-150"
+                                  x-transition:leave-start="opacity-100 translate-x-0"
+                                  x-transition:leave-end="opacity-0 -translate-x-1"
+                                  class="flex-1 font-medium ml-2 text-sm">
+                                {{ $item['name'] }}
+                            </span>
+                            
+                            <!-- Badge (expanded mode) -->
                             @if($badgeCount > 0)
-                                <span class="{{ $badgeClasses }} ring-1 ring-white shadow-sm transform hover:scale-110 transition-transform duration-200">
+                                <span x-show="mode === 'expanded'" x-transition
+                                      class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium {{ $badgeType === 'urgent' ? 'bg-red-100 text-red-800' : ($badgeType === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-indigo-100 text-indigo-800') }}">
                                     @if($badgeType === 'urgent' && $badgeCount > 0)
-                                        <span class="flex items-center space-x-1">
-                                            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                                            <span>{{ $badgeCount }}</span>
+                                        <span class="flex items-center space-x-0.5">
+                                            <span class="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span>
+                                            <span class="text-xs">{{ $badgeCount }}</span>
                                         </span>
                                     @elseif($badgeType === 'warning' && $badgeCount > 0)
-                                        <span class="flex items-center space-x-1">
-                                            <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                                            <span>{{ $badgeCount }}</span>
+                                        <span class="flex items-center space-x-0.5">
+                                            <span class="w-1 h-1 bg-yellow-500 rounded-full"></span>
+                                            <span class="text-xs">{{ $badgeCount }}</span>
                                         </span>
                                     @else
-                                        {{ $badgeCount }}
+                                        <span class="text-xs">{{ $badgeCount }}</span>
                                     @endif
                                 </span>
+                                
+                                <!-- Badge indicator for compact modes -->
+                                <div x-show="mode !== 'expanded'" class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-gradient-to-r {{ $badgeType === 'urgent' ? 'from-red-500 to-red-600' : ($badgeType === 'warning' ? 'from-yellow-500 to-yellow-600' : 'from-indigo-500 to-indigo-600') }} rounded-full text-white text-xs flex items-center justify-center">
+                                    <span class="text-xs font-bold" style="font-size: 8px;">{{ $badgeCount > 9 ? '9' : $badgeCount }}</span>
+                                </div>
                             @endif
                         </a>
+                        
+                        <!-- Hover tooltip for compact modes -->
+                        <div x-show="mode !== 'expanded'" 
+                             class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 top-1/2 transform -translate-y-1/2">
+                            {{ $item['name'] }}
+                            @if($badgeCount > 0)
+                                <span class="ml-1 px-1 py-0.5 bg-gray-700 rounded text-xs">{{ $badgeCount }}</span>
+                            @endif
+                        </div>
                     </div>
                 @endif
             @endforeach
         </nav>
 
-        <!-- Modern Sidebar Footer -->
-        <div class="px-6 py-4 border-t border-gray-200/60 bg-gradient-to-r from-gray-50 to-gray-50/30">
-            <div class="flex items-center justify-between text-xs text-gray-500">
-                <div class="flex items-center space-x-2">
-                    <div class="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
-                        <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+        <!-- Ultra-Compact Sidebar Footer -->
+        <div class="border-t border-gray-200/60 bg-gradient-to-r from-gray-50 to-gray-50/30 transition-all duration-300"
+             :class="{
+                 'px-2 py-1.5': mode === 'expanded',
+                 'px-1 py-1': mode === 'compact', 
+                 'px-0.5 py-0.5': mode === 'mini'
+             }">
+            <div class="flex items-center text-xs text-gray-500" :class="mode === 'expanded' ? 'justify-between' : 'justify-center'">
+                <div class="flex items-center" :class="mode === 'expanded' ? 'space-x-1.5' : 'justify-center'">
+                    <div class="w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-1.5 h-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                         </svg>
                     </div>
-                    <span class="font-medium">{{ ucfirst($activeDomain) }} Module</span>
+                    <span x-show="mode === 'expanded'" 
+                          x-transition:enter="transition ease-out duration-200 delay-100"
+                          x-transition:enter-start="opacity-0 -translate-x-1"
+                          x-transition:enter-end="opacity-100 translate-x-0"
+                          x-transition:leave="transition ease-in duration-150"
+                          x-transition:leave-start="opacity-100 translate-x-0"
+                          x-transition:leave-end="opacity-0 -translate-x-1"
+                          class="font-medium text-xs">{{ ucfirst($activeDomain) }}</span>
                 </div>
-                <button @click="toggleCompact()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200" title="Toggle compact view">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                
+                <!-- Mode Toggle Button -->
+                <button @click="cycleMode()" 
+                        class="text-gray-400 hover:text-gray-600 transition-colors duration-200 flex-shrink-0 p-0.5" 
+                        :class="mode === 'expanded' ? '' : 'mt-1'"
+                        :title="'Switch to ' + getNextModeLabel() + ' mode'">
+                    <!-- Expanded mode icon -->
+                    <svg x-show="mode === 'expanded'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
+                    <!-- Compact mode icon -->
+                    <svg x-show="mode === 'compact'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                    <!-- Mini mode icon -->
+                    <svg x-show="mode === 'mini'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                    </svg>
                 </button>
+                
+                <!-- Mode tooltip for compact modes -->
+                <div x-show="mode !== 'expanded'" class="group relative">
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {{ ucfirst($activeDomain) }} - Click to cycle
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -847,6 +974,21 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
 
 .scrollbar-track-gray-100::-webkit-scrollbar-track {
     background-color: #f3f4f6;
+}
+
+/* Prevent flash of unstyled content */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Smooth loading state */
+.sidebar-loading {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.sidebar-loaded {
+    opacity: 1;
 }
 
 /* Enhanced transitions */
@@ -941,42 +1083,158 @@ a:hover {
 }
 </style>
 
-<!-- Modern Sidebar Alpine.js Component -->
+<!-- Sidebar Manager Alpine.js Component -->
 <script>
-function modernSidebar() {
+function sidebarManager() {
     return {
-        compact: localStorage.getItem('sidebarCompact') === 'true' || false,
+        mode: 'expanded', // 'expanded', 'compact', 'mini'
+        initialized: false,
         
         init() {
+            // Load preferences immediately before Alpine renders
             this.loadPreferences();
-            this.setupAnimations();
+            this.setupResponsiveMode();
+            
+            // Mark as initialized and setup animations
+            this.$nextTick(() => {
+                this.initialized = true;
+                this.setupAnimations();
+                
+                // Add loaded class for additional styling
+                this.$el.classList.add('sidebar-loaded');
+                this.$el.classList.remove('sidebar-loading');
+            });
+            
+            // Listen for window resize to adjust mode automatically
+            window.addEventListener('resize', () => {
+                if (this.initialized) {
+                    this.setupResponsiveMode();
+                }
+            });
         },
         
-        toggleCompact() {
-            this.compact = !this.compact;
-            localStorage.setItem('sidebarCompact', this.compact);
+        cycleMode() {
+            const modes = ['expanded', 'compact', 'mini'];
+            const currentIndex = modes.indexOf(this.mode);
+            const nextIndex = (currentIndex + 1) % modes.length;
+            this.mode = modes[nextIndex];
+            this.savePreferences();
+        },
+        
+        setMode(newMode) {
+            if (['expanded', 'compact', 'mini'].includes(newMode)) {
+                this.mode = newMode;
+                this.savePreferences();
+            }
+        },
+        
+        getNextModeLabel() {
+            const labels = {
+                expanded: 'compact',
+                compact: 'mini',
+                mini: 'expanded'
+            };
+            return labels[this.mode] || 'expanded';
+        },
+        
+        setupResponsiveMode() {
+            const width = window.innerWidth;
+            const savedMode = localStorage.getItem('sidebarMode');
             
-            // Add/remove compact class for styling
-            const sidebar = this.$el;
-            if (this.compact) {
-                sidebar.classList.add('compact');
+            // Use saved preference if available, otherwise auto-adjust
+            if (savedMode && ['expanded', 'compact', 'mini'].includes(savedMode)) {
+                this.mode = savedMode;
             } else {
-                sidebar.classList.remove('compact');
+                // Auto-adjust mode based on screen size
+                if (width < 768) {
+                    this.mode = 'mini'; // Mobile
+                } else if (width < 1024) {
+                    this.mode = 'compact'; // Tablet
+                } else if (width < 1280) {
+                    this.mode = 'compact'; // Small desktop
+                } else {
+                    this.mode = 'expanded'; // Large desktop
+                }
+                // Save the auto-selected mode
+                this.savePreferences();
             }
         },
         
         loadPreferences() {
-            if (this.compact) {
-                this.$el.classList.add('compact');
+            try {
+                const savedMode = localStorage.getItem('sidebarMode');
+                if (savedMode && ['expanded', 'compact', 'mini'].includes(savedMode)) {
+                    this.mode = savedMode;
+                    return;
+                }
+            } catch (e) {
+                console.warn('Could not load sidebar preferences:', e);
+            }
+            
+            // Fallback to responsive mode if no saved preference
+            this.setDefaultMode();
+        },
+        
+        setDefaultMode() {
+            const width = window.innerWidth;
+            if (width < 768) {
+                this.mode = 'mini';
+            } else if (width < 1280) {
+                this.mode = 'compact';
+            } else {
+                this.mode = 'expanded';
+            }
+        },
+        
+        savePreferences() {
+            try {
+                localStorage.setItem('sidebarMode', this.mode);
+            } catch (e) {
+                console.warn('Could not save sidebar preferences:', e);
+            }
+            
+            // Emit event for other components
+            if (this.initialized) {
+                window.dispatchEvent(new CustomEvent('sidebar-mode-changed', {
+                    detail: { mode: this.mode }
+                }));
             }
         },
         
         setupAnimations() {
-            // Add stagger animation to sidebar items
-            const items = this.$el.querySelectorAll('a');
-            items.forEach((item, index) => {
-                item.style.animationDelay = `${index * 0.05}s`;
+            // Add stagger animation to sidebar items with fade-in effect
+            this.$nextTick(() => {
+                const items = this.$el.querySelectorAll('a');
+                items.forEach((item, index) => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-10px)';
+                    item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    item.style.animationDelay = `${index * 0.05}s`;
+                    
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateX(0)';
+                    }, index * 20);
+                });
+                
+                // Remove x-cloak after animations start
+                setTimeout(() => {
+                    this.$el.removeAttribute('x-cloak');
+                }, 50);
             });
+        },
+        
+        // Utility methods for mode checking
+        isExpanded() {
+            return this.mode === 'expanded';
+        },
+        
+        isCompact() {
+            return this.mode === 'compact';
+        },
+        
+        isMini() {
+            return this.mode === 'mini';
         }
     };
 }

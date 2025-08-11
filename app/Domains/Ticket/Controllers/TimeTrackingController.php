@@ -25,7 +25,7 @@ class TimeTrackingController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TicketTimeEntry::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketTimeEntry::where('company_id', auth()->user()->company_id);
 
         // Apply search filters
         if ($search = $request->get('search')) {
@@ -83,12 +83,12 @@ class TimeTrackingController extends Controller
                             ->appends($request->query());
 
         // Get filter options
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
 
-        $tickets = Ticket::where('tenant_id', auth()->user()->tenant_id)
+        $tickets = Ticket::where('company_id', auth()->user()->company_id)
                         ->where('status', '!=', 'closed')
                         ->orderBy('created_at', 'desc')
                         ->limit(50)
@@ -116,12 +116,12 @@ class TimeTrackingController extends Controller
      */
     public function create(Request $request)
     {
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
 
-        $tickets = Ticket::where('tenant_id', auth()->user()->tenant_id)
+        $tickets = Ticket::where('company_id', auth()->user()->company_id)
                         ->where('status', '!=', 'closed')
                         ->with('client')
                         ->orderBy('created_at', 'desc')
@@ -146,14 +146,14 @@ class TimeTrackingController extends Controller
                 'required',
                 'integer',
                 Rule::exists('tickets', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'user_id' => [
                 'required',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'description' => 'required|string|max:500',
@@ -180,7 +180,7 @@ class TimeTrackingController extends Controller
         }
 
         $timeEntry = TicketTimeEntry::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'ticket_id' => $request->ticket_id,
             'user_id' => $request->user_id,
             'description' => $request->description,
@@ -231,12 +231,12 @@ class TimeTrackingController extends Controller
     {
         $this->authorize('update', $timeEntry);
 
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
 
-        $tickets = Ticket::where('tenant_id', auth()->user()->tenant_id)
+        $tickets = Ticket::where('company_id', auth()->user()->company_id)
                         ->where('status', '!=', 'closed')
                         ->with('client')
                         ->orderBy('created_at', 'desc')
@@ -257,14 +257,14 @@ class TimeTrackingController extends Controller
                 'required',
                 'integer',
                 Rule::exists('tickets', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'user_id' => [
                 'required',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'description' => 'required|string|max:500',
@@ -348,7 +348,7 @@ class TimeTrackingController extends Controller
                 'required',
                 'integer',
                 Rule::exists('tickets', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'description' => 'required|string|max:500',
@@ -376,7 +376,7 @@ class TimeTrackingController extends Controller
         }
 
         $timeEntry = TicketTimeEntry::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'ticket_id' => $request->ticket_id,
             'user_id' => auth()->id(),
             'description' => $request->description,
@@ -451,7 +451,7 @@ class TimeTrackingController extends Controller
         }
 
         $count = TicketTimeEntry::whereIn('id', $request->time_entry_ids)
-                               ->where('tenant_id', auth()->user()->tenant_id)
+                               ->where('company_id', auth()->user()->company_id)
                                ->update([
                                    'is_approved' => true,
                                    'approved_by' => auth()->id(),
@@ -483,7 +483,7 @@ class TimeTrackingController extends Controller
         }
 
         $timeEntries = TicketTimeEntry::whereIn('id', $request->time_entry_ids)
-                                     ->where('tenant_id', auth()->user()->tenant_id)
+                                     ->where('company_id', auth()->user()->company_id)
                                      ->get();
 
         foreach ($timeEntries as $entry) {
@@ -506,7 +506,7 @@ class TimeTrackingController extends Controller
      */
     public function report(Request $request)
     {
-        $query = TicketTimeEntry::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketTimeEntry::where('company_id', auth()->user()->company_id);
 
         // Apply date range (required for reports)
         $startDate = $request->get('start_date', now()->startOfMonth()->toDateString());
@@ -575,7 +575,7 @@ class TimeTrackingController extends Controller
      */
     public function export(Request $request)
     {
-        $query = TicketTimeEntry::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketTimeEntry::where('company_id', auth()->user()->company_id);
 
         // Apply same filters as index
         if ($startDate = $request->get('start_date')) {
@@ -648,7 +648,7 @@ class TimeTrackingController extends Controller
      */
     private function calculateSummaryStats(Request $request): array
     {
-        $query = TicketTimeEntry::where('tenant_id', auth()->user()->tenant_id);
+        $query = TicketTimeEntry::where('company_id', auth()->user()->company_id);
 
         // Apply same filters as main query
         if ($startDate = $request->get('start_date')) {

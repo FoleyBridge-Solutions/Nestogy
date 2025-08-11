@@ -2,7 +2,7 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TicketWatcher extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, BelongsToCompany;
 
     protected $fillable = [
         'ticket_id',
-        'tenant_id',
+        'company_id',
         'email',
         'user_id',
         'notification_preferences',
@@ -28,7 +28,7 @@ class TicketWatcher extends Model
 
     protected $casts = [
         'ticket_id' => 'integer',
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'user_id' => 'integer',
         'notification_preferences' => 'array',
         'is_active' => 'boolean',
@@ -172,7 +172,7 @@ class TicketWatcher extends Model
             'ticket_id' => $ticketId,
             'email' => $email,
         ], [
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'user_id' => $user?->id,
             'is_active' => true,
         ]);
@@ -189,7 +189,7 @@ class TicketWatcher extends Model
             'ticket_id' => $ticketId,
             'user_id' => $userId,
         ], [
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'email' => $user->email,
             'is_active' => true,
         ]);

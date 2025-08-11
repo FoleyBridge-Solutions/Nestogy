@@ -37,6 +37,7 @@ class UserSetting extends Model
      */
     protected $fillable = [
         'user_id',
+        'company_id',
         'role',
         'remember_me_token',
         'force_mfa',
@@ -57,6 +58,7 @@ class UserSetting extends Model
      */
     protected $casts = [
         'user_id' => 'integer',
+        'company_id' => 'integer',
         'role' => 'integer',
         'force_mfa' => 'boolean',
         'records_per_page' => 'integer',
@@ -71,7 +73,8 @@ class UserSetting extends Model
      */
     const ROLE_ACCOUNTANT = 1;
     const ROLE_TECH = 2;
-    const ROLE_ADMIN = 3;
+    const ROLE_ADMIN = 3;           // Tenant administrator
+    const ROLE_SUPER_ADMIN = 4;     // Platform operator (Company 1 only)
 
     /**
      * Role labels mapping
@@ -80,6 +83,7 @@ class UserSetting extends Model
         self::ROLE_ACCOUNTANT => 'Accountant',
         self::ROLE_TECH => 'Technician',
         self::ROLE_ADMIN => 'Administrator',
+        self::ROLE_SUPER_ADMIN => 'Super Administrator',
     ];
 
     /**
@@ -99,11 +103,27 @@ class UserSetting extends Model
     }
 
     /**
-     * Check if user has admin role.
+     * Check if user has admin role (tenant administrator).
      */
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Check if user has super admin role (platform operator).
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPER_ADMIN;
+    }
+
+    /**
+     * Check if user has any admin role (tenant or super).
+     */
+    public function isAnyAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN || $this->role === self::ROLE_SUPER_ADMIN;
     }
 
     /**
@@ -163,11 +183,27 @@ class UserSetting extends Model
     }
 
     /**
-     * Scope to get admin users.
+     * Scope to get admin users (tenant administrators).
      */
     public function scopeAdmins($query)
     {
         return $query->where('role', self::ROLE_ADMIN);
+    }
+
+    /**
+     * Scope to get super admin users (platform operators).
+     */
+    public function scopeSuperAdmins($query)
+    {
+        return $query->where('role', self::ROLE_SUPER_ADMIN);
+    }
+
+    /**
+     * Scope to get any admin users (tenant or super).
+     */
+    public function scopeAnyAdmins($query)
+    {
+        return $query->whereIn('role', [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]);
     }
 
     /**
@@ -201,7 +237,7 @@ class UserSetting extends Model
     {
         return [
             'user_id' => 'required|integer|exists:users,id',
-            'role' => 'required|integer|in:1,2,3',
+            'role' => 'required|integer|in:1,2,3,4',
             'force_mfa' => 'boolean',
             'records_per_page' => 'integer|min:5|max:100',
             'dashboard_financial_enable' => 'boolean',
@@ -220,15 +256,22 @@ class UserSetting extends Model
     /**
      * Create default settings for a user.
      */
-    public static function createDefaultForUser(int $userId, int $role = self::ROLE_ACCOUNTANT): self
+    public static function createDefaultForUser(int $userId, int $role = self::ROLE_ACCOUNTANT, int $companyId = null): self
     {
+        // If no company ID provided, try to get it from the user
+        if (!$companyId) {
+            $user = User::find($userId);
+            $companyId = $user ? $user->company_id : null;
+        }
+        
         return self::create([
             'user_id' => $userId,
+            'company_id' => $companyId,
             'role' => $role,
             'force_mfa' => false,
             'records_per_page' => 10,
-            'dashboard_financial_enable' => $role === self::ROLE_ACCOUNTANT || $role === self::ROLE_ADMIN,
-            'dashboard_technical_enable' => $role === self::ROLE_TECH || $role === self::ROLE_ADMIN,
+            'dashboard_financial_enable' => in_array($role, [self::ROLE_ACCOUNTANT, self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]),
+            'dashboard_technical_enable' => in_array($role, [self::ROLE_TECH, self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]),
         ]);
     }
 }

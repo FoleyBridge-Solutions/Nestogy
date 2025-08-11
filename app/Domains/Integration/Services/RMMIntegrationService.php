@@ -250,7 +250,7 @@ class RMMIntegrationService
         
         // Try as direct ID first
         if (is_numeric($rmmClientId)) {
-            $client = \App\Models\Client::forCompany($integration->company_id)
+            $client = \App\Models\Client::where('company_id', $integration->company_id)
                 ->where('id', $rmmClientId)
                 ->first();
             if ($client) {
@@ -259,7 +259,7 @@ class RMMIntegrationService
         }
         
         // Try matching by name or RMM ID
-        $client = \App\Models\Client::forCompany($integration->company_id)
+        $client = \App\Models\Client::where('company_id', $integration->company_id)
             ->where(function ($query) use ($rmmClientId) {
                 $query->where('name', $rmmClientId)
                       ->orWhere('company_name', $rmmClientId)

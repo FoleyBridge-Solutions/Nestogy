@@ -612,7 +612,7 @@ class TicketNotificationService
     {
         // TODO: Implement actual supervisor lookup
         // For now, return users with supervisor role
-        return User::where('tenant_id', auth()->user()->tenant_id)
+        return User::where('company_id', auth()->user()->company_id)
                   ->where('role', 'supervisor')
                   ->where('is_active', true)
                   ->get();

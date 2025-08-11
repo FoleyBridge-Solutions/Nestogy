@@ -38,9 +38,9 @@
                             <a href="{{ route('login') }}" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
                                 {{ __('Login') }}
                             </a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                                    {{ __('Register') }}
+                            @if (Route::has('signup.form'))
+                                <a href="{{ route('signup.form') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                                    {{ __('Start Free Trial') }}
                                 </a>
                             @endif
                         @endguest
@@ -71,9 +71,9 @@
                         <a href="{{ route('login') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
                             {{ __('Login') }}
                         </a>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
-                                {{ __('Register') }}
+                        @if (Route::has('signup.form'))
+                            <a href="{{ route('signup.form') }}" class="text-gray-500 hover:text-gray-700 block px-3 py-2 rounded-md text-base font-medium">
+                                {{ __('Start Free Trial') }}
                             </a>
                         @endif
                     @endguest

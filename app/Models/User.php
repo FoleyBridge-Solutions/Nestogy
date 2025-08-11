@@ -92,7 +92,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     const ROLE_ACCOUNTANT = 1;
     const ROLE_TECH = 2;
-    const ROLE_ADMIN = 3;
+    const ROLE_ADMIN = 3;           // Tenant administrator
+    const ROLE_SUPER_ADMIN = 4;     // Platform operator (Company 1 only)
 
     /**
      * Get the user's settings.
@@ -175,11 +176,35 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user has admin role.
+     * Check if user has admin role (tenant administrator).
      */
     public function isAdmin(): bool
     {
         return $this->getRole() === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Check if user has super admin role (platform operator).
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->getRole() === self::ROLE_SUPER_ADMIN;
+    }
+
+    /**
+     * Check if user has any admin role (tenant or super).
+     */
+    public function isAnyAdmin(): bool
+    {
+        return in_array($this->getRole(), [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]);
+    }
+
+    /**
+     * Check if user can access cross-tenant features.
+     */
+    public function canAccessCrossTenant(): bool
+    {
+        return $this->isSuperAdmin() && $this->company_id === 1;
     }
 
     /**

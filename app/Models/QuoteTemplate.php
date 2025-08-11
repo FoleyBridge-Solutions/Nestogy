@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * QuoteTemplate Model
  * 
  * Reusable quote templates with predefined items and configurations.
- * Specialized for VoIP services with equipment, lines, and features.
+ * Generic implementation supporting any service type (VoIP, cloud, hosting, etc.).
  * 
  * @property int $id
  * @property int $company_id
@@ -21,8 +21,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $description
  * @property string $category
  * @property array|null $template_items
- * @property array|null $voip_config
- * @property array|null $default_pricing
+ * @property array|null $service_config
+ * @property array|null $pricing_config
+ * @property array|null $tax_config
  * @property string|null $terms_conditions
  * @property bool $is_active
  * @property int|null $created_by
@@ -48,8 +49,9 @@ class QuoteTemplate extends Model
         'description',
         'category',
         'template_items',
-        'voip_config',
-        'default_pricing',
+        'service_config',
+        'pricing_config',
+        'tax_config',
         'terms_conditions',
         'is_active',
         'created_by',
@@ -61,8 +63,9 @@ class QuoteTemplate extends Model
     protected $casts = [
         'company_id' => 'integer',
         'template_items' => 'array',
-        'voip_config' => 'array',
-        'default_pricing' => 'array',
+        'service_config' => 'array',
+        'pricing_config' => 'array',
+        'tax_config' => 'array',
         'is_active' => 'boolean',
         'created_by' => 'integer',
         'created_at' => 'datetime',
@@ -76,16 +79,17 @@ class QuoteTemplate extends Model
     const DELETED_AT = 'archived_at';
 
     /**
-     * Template categories
+     * Template categories - Generic for any service type
      */
-    const CATEGORY_VOIP_BASIC = 'voip_basic';
-    const CATEGORY_VOIP_PREMIUM = 'voip_premium';
-    const CATEGORY_VOIP_ENTERPRISE = 'voip_enterprise';
-    const CATEGORY_PHONE_SYSTEMS = 'phone_systems';
-    const CATEGORY_SIP_TRUNKS = 'sip_trunks';
+    const CATEGORY_BASIC = 'basic';
+    const CATEGORY_STANDARD = 'standard';
+    const CATEGORY_PREMIUM = 'premium';
+    const CATEGORY_ENTERPRISE = 'enterprise';
+    const CATEGORY_CUSTOM = 'custom';
     const CATEGORY_EQUIPMENT = 'equipment';
     const CATEGORY_MAINTENANCE = 'maintenance';
-    const CATEGORY_CUSTOM = 'custom';
+    const CATEGORY_PROFESSIONAL = 'professional';
+    const CATEGORY_MANAGED = 'managed';
 
     /**
      * Get the user who created this template.
@@ -117,58 +121,55 @@ class QuoteTemplate extends Model
     public function getCategoryLabel(): string
     {
         $labels = [
-            self::CATEGORY_VOIP_BASIC => 'VoIP Basic',
-            self::CATEGORY_VOIP_PREMIUM => 'VoIP Premium',
-            self::CATEGORY_VOIP_ENTERPRISE => 'VoIP Enterprise',
-            self::CATEGORY_PHONE_SYSTEMS => 'Phone Systems',
-            self::CATEGORY_SIP_TRUNKS => 'SIP Trunks',
+            self::CATEGORY_BASIC => 'Basic',
+            self::CATEGORY_STANDARD => 'Standard',
+            self::CATEGORY_PREMIUM => 'Premium',
+            self::CATEGORY_ENTERPRISE => 'Enterprise',
+            self::CATEGORY_CUSTOM => 'Custom',
             self::CATEGORY_EQUIPMENT => 'Equipment',
             self::CATEGORY_MAINTENANCE => 'Maintenance',
-            self::CATEGORY_CUSTOM => 'Custom',
+            self::CATEGORY_PROFESSIONAL => 'Professional Services',
+            self::CATEGORY_MANAGED => 'Managed Services',
         ];
 
         return $labels[$this->category] ?? 'Unknown';
     }
 
     /**
-     * Get default VoIP configuration.
+     * Get service configuration.
      */
-    public function getVoipConfig(): array
+    public function getServiceConfig(): array
     {
-        return $this->voip_config ?: [
-            'extensions' => 10,
-            'concurrent_calls' => 5,
-            'features' => [
-                'voicemail' => true,
-                'call_forwarding' => true,
-                'conference_calling' => false,
-                'auto_attendant' => false,
-            ],
-            'equipment' => [
-                'desk_phones' => 5,
-                'wireless_phones' => 2,
-                'conference_phone' => 0,
-            ],
-            'monthly_allowances' => [
-                'local_minutes' => 'unlimited',
-                'long_distance_minutes' => 500,
-                'international_minutes' => 0,
-            ],
+        return $this->service_config ?: [];
+    }
+
+    /**
+     * Get service type from configuration.
+     */
+    public function getServiceType(): string
+    {
+        return $this->service_config['service_type'] ?? 'general';
+    }
+
+    /**
+     * Get pricing configuration.
+     */
+    public function getPricingConfig(): array
+    {
+        return $this->pricing_config ?: [
+            'setup_fee' => 0.00,
+            'recurring_fee' => 0.00,
+            'per_unit_fee' => 0.00,
+            'overage_rate' => 0.00,
         ];
     }
 
     /**
-     * Get default pricing structure.
+     * Get tax configuration.
      */
-    public function getDefaultPricing(): array
+    public function getTaxConfig(): array
     {
-        return $this->default_pricing ?: [
-            'setup_fee' => 0.00,
-            'monthly_recurring' => 0.00,
-            'per_extension' => 0.00,
-            'per_minute_overage' => 0.05,
-            'equipment_lease' => 0.00,
-        ];
+        return $this->tax_config ?: [];
     }
 
     /**
@@ -185,14 +186,15 @@ class QuoteTemplate extends Model
             'currency_code' => 'USD',
             'status' => Quote::STATUS_DRAFT,
             'approval_status' => Quote::APPROVAL_PENDING,
-            'voip_config' => array_merge($this->getVoipConfig(), $customizations['voip_config'] ?? []),
-            'pricing_model' => array_merge($this->getDefaultPricing(), $customizations['pricing'] ?? []),
+            'service_config' => array_merge($this->getServiceConfig(), $customizations['service_config'] ?? []),
+            'pricing_model' => array_merge($this->getPricingConfig(), $customizations['pricing'] ?? []),
+            'tax_config' => array_merge($this->getTaxConfig(), $customizations['tax_config'] ?? []),
             'terms_conditions' => $this->terms_conditions,
         ];
 
         // Apply customizations
         foreach ($customizations as $key => $value) {
-            if ($key !== 'voip_config' && $key !== 'pricing') {
+            if ($key !== 'service_config' && $key !== 'pricing' && $key !== 'tax_config') {
                 $quoteData[$key] = $value;
             }
         }
@@ -278,8 +280,9 @@ class QuoteTemplate extends Model
             'template_items.*.quantity' => 'required|numeric|min:0.01',
             'template_items.*.price' => 'required|numeric|min:0',
             'template_items.*.discount' => 'nullable|numeric|min:0',
-            'voip_config' => 'nullable|array',
-            'default_pricing' => 'nullable|array',
+            'service_config' => 'nullable|array',
+            'pricing_config' => 'nullable|array',
+            'tax_config' => 'nullable|array',
             'terms_conditions' => 'nullable|string',
             'is_active' => 'boolean',
         ];
@@ -301,107 +304,95 @@ class QuoteTemplate extends Model
     public static function getAvailableCategories(): array
     {
         return [
-            self::CATEGORY_VOIP_BASIC,
-            self::CATEGORY_VOIP_PREMIUM,
-            self::CATEGORY_VOIP_ENTERPRISE,
-            self::CATEGORY_PHONE_SYSTEMS,
-            self::CATEGORY_SIP_TRUNKS,
+            self::CATEGORY_BASIC,
+            self::CATEGORY_STANDARD,
+            self::CATEGORY_PREMIUM,
+            self::CATEGORY_ENTERPRISE,
+            self::CATEGORY_CUSTOM,
             self::CATEGORY_EQUIPMENT,
             self::CATEGORY_MAINTENANCE,
-            self::CATEGORY_CUSTOM,
+            self::CATEGORY_PROFESSIONAL,
+            self::CATEGORY_MANAGED,
         ];
     }
 
     /**
-     * Create default VoIP templates.
+     * Create default service templates.
      */
     public static function createDefaultTemplates(int $companyId): void
     {
         $templates = [
             [
-                'name' => 'Basic VoIP Package',
-                'description' => 'Entry-level VoIP solution for small businesses',
-                'category' => self::CATEGORY_VOIP_BASIC,
+                'name' => 'Basic Telecom Package',
+                'description' => 'Entry-level telecommunications solution for small businesses',
+                'category' => self::CATEGORY_BASIC,
                 'template_items' => [
                     [
-                        'name' => 'VoIP Service Setup',
+                        'name' => 'Service Setup',
                         'description' => 'Initial setup and configuration',
                         'quantity' => 1,
                         'price' => 199.00,
                         'discount' => 0,
                     ],
                     [
-                        'name' => 'Monthly VoIP Service',
-                        'description' => 'Up to 5 extensions with basic features',
+                        'name' => 'Monthly Service',
+                        'description' => 'Basic service package',
                         'quantity' => 1,
                         'price' => 89.00,
                         'discount' => 0,
                     ],
-                    [
-                        'name' => 'IP Desk Phone',
-                        'description' => 'Standard business IP phone',
-                        'quantity' => 5,
-                        'price' => 89.00,
-                        'discount' => 0,
-                    ],
                 ],
-                'voip_config' => [
-                    'extensions' => 5,
-                    'concurrent_calls' => 3,
+                'service_config' => [
+                    'service_type' => 'voip',
+                    'units' => 5,
                     'features' => [
-                        'voicemail' => true,
-                        'call_forwarding' => true,
-                        'conference_calling' => false,
-                        'auto_attendant' => false,
+                        'basic_features' => true,
+                        'premium_features' => false,
                     ],
                 ],
-                'default_pricing' => [
+                'pricing_config' => [
                     'setup_fee' => 199.00,
-                    'monthly_recurring' => 89.00,
-                    'per_extension' => 18.00,
+                    'recurring_fee' => 89.00,
+                    'per_unit_fee' => 18.00,
+                ],
+                'tax_config' => [
+                    'apply_regulatory_fees' => true,
+                    'tax_exempt' => false,
                 ],
             ],
             [
-                'name' => 'Premium VoIP Package',
-                'description' => 'Full-featured VoIP solution for medium businesses',
-                'category' => self::CATEGORY_VOIP_PREMIUM,
+                'name' => 'Managed IT Services',
+                'description' => 'Comprehensive IT management for businesses',
+                'category' => self::CATEGORY_MANAGED,
                 'template_items' => [
                     [
-                        'name' => 'VoIP Service Setup',
-                        'description' => 'Professional setup and configuration',
+                        'name' => 'Managed Service Setup',
+                        'description' => 'Initial assessment and configuration',
                         'quantity' => 1,
-                        'price' => 399.00,
+                        'price' => 999.00,
                         'discount' => 0,
                     ],
                     [
-                        'name' => 'Monthly VoIP Service',
-                        'description' => 'Up to 20 extensions with premium features',
-                        'quantity' => 1,
-                        'price' => 199.00,
-                        'discount' => 0,
-                    ],
-                    [
-                        'name' => 'IP Desk Phone Premium',
-                        'description' => 'Advanced business IP phone with color display',
-                        'quantity' => 10,
-                        'price' => 149.00,
+                        'name' => 'Monthly Management Fee',
+                        'description' => 'Per device management',
+                        'quantity' => 20,
+                        'price' => 49.00,
                         'discount' => 0,
                     ],
                 ],
-                'voip_config' => [
-                    'extensions' => 20,
-                    'concurrent_calls' => 10,
-                    'features' => [
-                        'voicemail' => true,
-                        'call_forwarding' => true,
-                        'conference_calling' => true,
-                        'auto_attendant' => true,
-                    ],
+                'service_config' => [
+                    'service_type' => 'managed_services',
+                    'device_count' => 20,
+                    'support_level' => 'premium',
                 ],
-                'default_pricing' => [
-                    'setup_fee' => 399.00,
-                    'monthly_recurring' => 199.00,
-                    'per_extension' => 15.00,
+                'pricing_config' => [
+                    'setup_fee' => 999.00,
+                    'recurring_fee' => 980.00,
+                    'per_unit_fee' => 49.00,
+                ],
+                'tax_config' => [
+                    'apply_regulatory_fees' => false,
+                    'tax_exempt' => false,
                 ],
             ],
         ];

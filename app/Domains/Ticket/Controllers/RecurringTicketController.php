@@ -25,7 +25,7 @@ class RecurringTicketController extends Controller
      */
     public function index(Request $request)
     {
-        $query = RecurringTicket::where('tenant_id', auth()->user()->tenant_id);
+        $query = RecurringTicket::where('company_id', auth()->user()->company_id);
 
         // Apply search filters
         if ($search = $request->get('search')) {
@@ -68,12 +68,12 @@ class RecurringTicketController extends Controller
                                  ->appends($request->query());
 
         // Get filter options
-        $templates = TicketTemplate::where('tenant_id', auth()->user()->tenant_id)
+        $templates = TicketTemplate::where('company_id', auth()->user()->company_id)
                                   ->where('is_active', true)
                                   ->orderBy('name')
                                   ->get();
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
@@ -99,17 +99,17 @@ class RecurringTicketController extends Controller
      */
     public function create()
     {
-        $templates = TicketTemplate::where('tenant_id', auth()->user()->tenant_id)
+        $templates = TicketTemplate::where('company_id', auth()->user()->company_id)
                                   ->where('is_active', true)
                                   ->orderBy('name')
                                   ->get();
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
 
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
@@ -134,14 +134,14 @@ class RecurringTicketController extends Controller
                 'required',
                 'integer',
                 Rule::exists('ticket_templates', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'client_id' => [
                 'required',
                 'integer',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'frequency' => 'required|in:daily,weekly,monthly,yearly',
@@ -152,7 +152,7 @@ class RecurringTicketController extends Controller
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'is_active' => 'boolean',
@@ -175,7 +175,7 @@ class RecurringTicketController extends Controller
         $frequencyConfig = $this->buildFrequencyConfig($request);
 
         $recurringTicket = RecurringTicket::create([
-            'tenant_id' => auth()->user()->tenant_id,
+            'company_id' => auth()->user()->company_id,
             'name' => $request->name,
             'description' => $request->description,
             'template_id' => $request->template_id,
@@ -251,17 +251,17 @@ class RecurringTicketController extends Controller
     {
         $this->authorize('update', $recurringTicket);
 
-        $templates = TicketTemplate::where('tenant_id', auth()->user()->tenant_id)
+        $templates = TicketTemplate::where('company_id', auth()->user()->company_id)
                                   ->where('is_active', true)
                                   ->orderBy('name')
                                   ->get();
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
 
-        $users = User::where('tenant_id', auth()->user()->tenant_id)
+        $users = User::where('company_id', auth()->user()->company_id)
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
@@ -288,14 +288,14 @@ class RecurringTicketController extends Controller
                 'required',
                 'integer',
                 Rule::exists('ticket_templates', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'client_id' => [
                 'required',
                 'integer',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'frequency' => 'required|in:daily,weekly,monthly,yearly',
@@ -306,7 +306,7 @@ class RecurringTicketController extends Controller
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'is_active' => 'boolean',
@@ -531,7 +531,7 @@ class RecurringTicketController extends Controller
      */
     public function export(Request $request)
     {
-        $query = RecurringTicket::where('tenant_id', auth()->user()->tenant_id);
+        $query = RecurringTicket::where('company_id', auth()->user()->company_id);
 
         // Apply same filters as index
         if ($search = $request->get('search')) {

@@ -11,14 +11,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Run seeders in the correct order to respect foreign key constraints
+        // Run essential seeders for v1
         $this->call([
+            SubscriptionPlansSeeder::class,
             CompanySeeder::class,
             UserSeeder::class,
             UserSettingsSeeder::class,
-            CategorySeeder::class,
-            AccountSeeder::class,
-            SettingsSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            ClientSeeder::class,
         ]);
     }
 }

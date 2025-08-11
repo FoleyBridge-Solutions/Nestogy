@@ -12,7 +12,7 @@ class StoreTicketRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->can('create', \App\Models\Ticket::class);
+        return Auth::check() && Auth::user()->can('create', \App\Domains\Ticket\Models\Ticket::class);
     }
 
     /**
@@ -131,7 +131,7 @@ class StoreTicketRequest extends FormRequest
 
         // If use_primary_contact is true, find and set the primary contact
         if ($this->boolean('use_primary_contact') && $this->filled('client_id')) {
-            $primaryContact = \App\Models\Contact::where('client_id', $this->client_id)
+            $primaryContact = \App\Domains\Client\Models\ClientContact::where('client_id', $this->client_id)
                 ->where('primary', true)
                 ->first();
             
@@ -159,7 +159,7 @@ class StoreTicketRequest extends FormRequest
 
             // Validate contact belongs to the selected client
             if ($this->filled('contact_id') && $this->filled('client_id')) {
-                $contact = \App\Models\Contact::find($this->contact_id);
+                $contact = \App\Domains\Client\Models\ClientContact::find($this->contact_id);
                 if ($contact && $contact->client_id != $this->client_id) {
                     $validator->errors()->add('contact_id', 'The selected contact does not belong to the selected client.');
                 }
@@ -167,7 +167,7 @@ class StoreTicketRequest extends FormRequest
 
             // Validate asset belongs to the selected client
             if ($this->filled('asset_id') && $this->filled('client_id')) {
-                $asset = \App\Models\Asset::find($this->asset_id);
+                $asset = \App\Domains\Asset\Models\Asset::find($this->asset_id);
                 if ($asset && $asset->client_id != $this->client_id) {
                     $validator->errors()->add('asset_id', 'The selected asset does not belong to the selected client.');
                 }
@@ -175,7 +175,7 @@ class StoreTicketRequest extends FormRequest
 
             // Validate vendor belongs to the selected client
             if ($this->filled('vendor_id') && $this->filled('client_id')) {
-                $vendor = \App\Models\Vendor::find($this->vendor_id);
+                $vendor = \App\Domains\Client\Models\ClientVendor::find($this->vendor_id);
                 if ($vendor && $vendor->client_id != $this->client_id) {
                     $validator->errors()->add('vendor_id', 'The selected vendor does not belong to the selected client.');
                 }
@@ -183,7 +183,7 @@ class StoreTicketRequest extends FormRequest
 
             // Validate location belongs to the selected client
             if ($this->filled('location_id') && $this->filled('client_id')) {
-                $location = \App\Models\Location::find($this->location_id);
+                $location = \App\Domains\Client\Models\ClientAddress::find($this->location_id);
                 if ($location && $location->client_id != $this->client_id) {
                     $validator->errors()->add('location_id', 'The selected location does not belong to the selected client.');
                 }

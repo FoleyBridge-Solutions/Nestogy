@@ -13,8 +13,8 @@ class ClientITDocumentationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_client_it_documentation') || 
-               $user->hasRole(['admin', 'manager', 'technician']);
+        return $user->hasPermission('clients.documents.view') || 
+               $user->hasAnyRole(['admin', 'technician']);
     }
 
     /**
@@ -22,8 +22,8 @@ class ClientITDocumentationPolicy
      */
     public function view(User $user, ClientITDocumentation $documentation): bool
     {
-        // Check tenant isolation
-        if ($user->tenant_id !== $documentation->tenant_id) {
+        // Check company isolation
+        if ($user->company_id !== $documentation->company_id) {
             return false;
         }
 
@@ -36,8 +36,8 @@ class ClientITDocumentationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('create_client_it_documentation') || 
-               $user->hasRole(['admin', 'manager', 'technician']);
+        return $user->hasPermission('clients.documents.manage') || 
+               $user->hasAnyRole(['admin', 'technician']);
     }
 
     /**
@@ -45,13 +45,13 @@ class ClientITDocumentationPolicy
      */
     public function update(User $user, ClientITDocumentation $documentation): bool
     {
-        // Check tenant isolation
-        if ($user->tenant_id !== $documentation->tenant_id) {
+        // Check company isolation
+        if ($user->company_id !== $documentation->company_id) {
             return false;
         }
 
-        // Admins and managers can always update
-        if ($user->hasRole(['admin', 'manager'])) {
+        // Admins can always update
+        if ($user->hasRole('admin')) {
             return true;
         }
 
@@ -61,7 +61,7 @@ class ClientITDocumentationPolicy
         }
 
         // Technicians can update if they have specific permission and access level allows
-        if ($user->hasPermissionTo('update_client_it_documentation')) {
+        if ($user->hasPermission('clients.documents.manage')) {
             return $this->canAccessLevel($user, $documentation->access_level);
         }
 
@@ -73,14 +73,14 @@ class ClientITDocumentationPolicy
      */
     public function delete(User $user, ClientITDocumentation $documentation): bool
     {
-        // Check tenant isolation
-        if ($user->tenant_id !== $documentation->tenant_id) {
+        // Check company isolation
+        if ($user->company_id !== $documentation->company_id) {
             return false;
         }
 
-        // Only admins and managers can delete, or authors of their own docs
-        return $user->hasRole(['admin', 'manager']) || 
-               ($documentation->authored_by === $user->id && $user->hasPermissionTo('delete_client_it_documentation'));
+        // Only admins can delete, or authors of their own docs
+        return $user->hasRole('admin') || 
+               ($documentation->authored_by === $user->id && $user->hasPermission('clients.documents.manage'));
     }
 
     /**
@@ -88,13 +88,13 @@ class ClientITDocumentationPolicy
      */
     public function restore(User $user, ClientITDocumentation $documentation): bool
     {
-        // Check tenant isolation
-        if ($user->tenant_id !== $documentation->tenant_id) {
+        // Check company isolation
+        if ($user->company_id !== $documentation->company_id) {
             return false;
         }
 
-        // Only admins and managers can restore
-        return $user->hasRole(['admin', 'manager']);
+        // Only admins can restore
+        return $user->hasRole('admin');
     }
 
     /**
@@ -102,8 +102,8 @@ class ClientITDocumentationPolicy
      */
     public function forceDelete(User $user, ClientITDocumentation $documentation): bool
     {
-        // Check tenant isolation
-        if ($user->tenant_id !== $documentation->tenant_id) {
+        // Check company isolation
+        if ($user->company_id !== $documentation->company_id) {
             return false;
         }
 
@@ -141,8 +141,8 @@ class ClientITDocumentationPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermissionTo('export_client_it_documentation') || 
-               $user->hasRole(['admin', 'manager']);
+        return $user->hasPermission('clients.documents.export') || 
+               $user->hasRole('admin');
     }
 
     /**
@@ -150,7 +150,7 @@ class ClientITDocumentationPolicy
      */
     public function bulkUpdate(User $user): bool
     {
-        return $user->hasRole(['admin', 'manager']);
+        return $user->hasRole('admin');
     }
 
     /**
@@ -168,12 +168,11 @@ class ClientITDocumentationPolicy
     {
         return match($accessLevel) {
             'public' => true,
-            'confidential' => $user->hasRole(['admin', 'manager', 'technician']) || 
-                            $user->hasPermissionTo('view_confidential_documentation'),
-            'restricted' => $user->hasRole(['admin', 'manager']) || 
-                          $user->hasPermissionTo('view_restricted_documentation'),
-            'admin_only' => $user->hasRole(['admin']) || 
-                           $user->hasPermissionTo('view_admin_only_documentation'),
+            'confidential' => $user->hasAnyRole(['admin', 'technician']) || 
+                            $user->hasPermission('clients.documents.view'),
+            'restricted' => $user->hasRole('admin') || 
+                          $user->hasPermission('clients.documents.manage'),
+            'admin_only' => $user->hasRole('admin'),
             default => false,
         };
     }

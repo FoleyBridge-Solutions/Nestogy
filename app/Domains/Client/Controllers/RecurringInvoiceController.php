@@ -18,7 +18,7 @@ class RecurringInvoiceController extends Controller
     {
         $query = ClientRecurringInvoice::with(['client', 'creator'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
@@ -73,7 +73,7 @@ class RecurringInvoiceController extends Controller
                          ->paginate(20)
                          ->appends($request->query());
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -89,7 +89,7 @@ class RecurringInvoiceController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -111,7 +111,7 @@ class RecurringInvoiceController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'template_name' => 'required|string|max:255',
@@ -187,7 +187,7 @@ class RecurringInvoiceController extends Controller
             'created_by' => auth()->id(),
         ]);
         
-        $invoice->tenant_id = auth()->user()->tenant_id;
+        $invoice->company_id = auth()->user()->company_id;
         
         // Calculate initial next invoice date
         $invoice->next_invoice_date = $invoice->calculateNextInvoiceDate($invoice->start_date);
@@ -217,7 +217,7 @@ class RecurringInvoiceController extends Controller
     {
         $this->authorize('update', $recurringInvoice);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -240,7 +240,7 @@ class RecurringInvoiceController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'template_name' => 'required|string|max:255',
@@ -408,7 +408,7 @@ class RecurringInvoiceController extends Controller
     {
         $query = ClientRecurringInvoice::with(['client', 'creator'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index

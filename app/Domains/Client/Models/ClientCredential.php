@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Crypt;
 
 class ClientCredential extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'client_id',
         'name',
         'description',
@@ -43,7 +43,7 @@ class ClientCredential extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'client_id' => 'integer',
         'created_by' => 'integer',
         'port' => 'integer',

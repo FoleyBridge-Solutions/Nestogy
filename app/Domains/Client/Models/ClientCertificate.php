@@ -2,17 +2,17 @@
 
 namespace App\Domains\Client\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientCertificate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
-        'tenant_id',
+        'company_id',
         'client_id',
         'name',
         'description',
@@ -45,7 +45,7 @@ class ClientCertificate extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'integer',
+        'company_id' => 'integer',
         'client_id' => 'integer',
         'key_size' => 'integer',
         'is_wildcard' => 'boolean',

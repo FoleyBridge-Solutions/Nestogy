@@ -15,20 +15,12 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="client_id">Client <span class="text-danger">*</span></label>
-                                    <select name="client_id" id="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
-                                        <option value="">Select Client</option>
-                                        @foreach(\App\Models\Client::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $client)
-                                            <option value="{{ $client->id }}" {{ old('client_id', request('client_id')) == $client->id ? 'selected' : '' }}>
-                                                {{ $client->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('client_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
+                                <x-forms.client-search-field 
+                                    name="client_id" 
+                                    :required="true"
+                                    :selected="old('client_id', request('client_id')) ? \App\Models\Client::find(old('client_id', request('client_id'))) : null"
+                                    label="Client"
+                                    placeholder="Search for client..." />
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -168,38 +160,65 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Load contacts when client is selected
-    $('#client_id').on('change', function() {
-        var clientId = $(this).val();
-        var contactSelect = $('#contact_id');
-        var assetSelect = $('#asset_id');
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for client selection events from the Alpine component
+    window.addEventListener('client-selected', function(event) {
+        const client = event.detail.client;
+        const contactSelect = document.getElementById('contact_id');
+        const assetSelect = document.getElementById('asset_id');
         
-        // Clear and reset contacts
-        contactSelect.html('<option value="">Select Contact</option>');
-        assetSelect.html('<option value="">Select Asset</option>');
+        // Clear and reset selects
+        contactSelect.innerHTML = '<option value="">Select Contact</option>';
+        assetSelect.innerHTML = '<option value="">Select Asset</option>';
         
-        if (clientId) {
+        if (client && client.id) {
             // Load contacts
-            $.get('/api/clients/' + clientId + '/contacts', function(data) {
-                $.each(data, function(index, contact) {
-                    contactSelect.append('<option value="' + contact.id + '">' + contact.name + '</option>');
+            fetch('/api/clients/' + client.id + '/contacts', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(contact => {
+                    const option = document.createElement('option');
+                    option.value = contact.id;
+                    option.textContent = contact.name;
+                    contactSelect.appendChild(option);
                 });
-            });
+            })
+            .catch(error => console.error('Error loading contacts:', error));
             
             // Load assets
-            $.get('/api/clients/' + clientId + '/assets', function(data) {
-                $.each(data, function(index, asset) {
-                    assetSelect.append('<option value="' + asset.id + '">' + asset.name + ' (' + asset.type + ')</option>');
+            fetch('/api/clients/' + client.id + '/assets', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(asset => {
+                    const option = document.createElement('option');
+                    option.value = asset.id;
+                    option.textContent = asset.name + ' (' + asset.type + ')';
+                    assetSelect.appendChild(option);
                 });
-            });
+            })
+            .catch(error => console.error('Error loading assets:', error));
         }
     });
     
-    // Trigger change if client is pre-selected
-    if ($('#client_id').val()) {
-        $('#client_id').trigger('change');
-    }
+    // Listen for client cleared event
+    window.addEventListener('client-cleared', function(event) {
+        const contactSelect = document.getElementById('contact_id');
+        const assetSelect = document.getElementById('asset_id');
+        
+        // Clear selects
+        contactSelect.innerHTML = '<option value="">Select Contact</option>';
+        assetSelect.innerHTML = '<option value="">Select Asset</option>';
+    });
 });
 </script>
 @endpush

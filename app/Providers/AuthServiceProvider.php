@@ -76,24 +76,38 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function defineRoleGates(): void
     {
-        // Admin role gate
+        // Admin role gate (tenant admin)
         Gate::define('admin', function (User $user) {
             return $user->isAdmin();
         });
 
-        // Tech role gate (includes admin)
-        Gate::define('tech', function (User $user) {
-            return $user->getRole() >= UserSetting::ROLE_TECH;
+        // Super admin role gate (platform operator)
+        Gate::define('super-admin', function (User $user) {
+            return $user->isSuperAdmin();
         });
 
-        // Accountant role gate (includes tech and admin)
+        // Any admin role gate (tenant or super)
+        Gate::define('any-admin', function (User $user) {
+            return $user->isAnyAdmin();
+        });
+
+        // Tech role gate (includes admin and super admin)
+        Gate::define('tech', function (User $user) {
+            return $user->getRole() >= UserSetting::ROLE_TECH || $user->isSuperAdmin();
+        });
+
+        // Accountant role gate (includes tech, admin, and super admin)
         Gate::define('accountant', function (User $user) {
-            return $user->getRole() >= UserSetting::ROLE_ACCOUNTANT;
+            return $user->getRole() >= UserSetting::ROLE_ACCOUNTANT || $user->isSuperAdmin();
         });
 
         // Specific role checks
         Gate::define('is-admin', function (User $user) {
             return $user->getRole() === UserSetting::ROLE_ADMIN;
+        });
+
+        Gate::define('is-super-admin', function (User $user) {
+            return $user->getRole() === UserSetting::ROLE_SUPER_ADMIN;
         });
 
         Gate::define('is-tech', function (User $user) {
@@ -110,21 +124,21 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function defineFeatureGates(): void
     {
-        // User management
+        // User management (tenant admins can manage users in their tenant)
         Gate::define('manage-users', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAnyAdmin();
         });
 
         Gate::define('create-users', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAnyAdmin();
         });
 
         Gate::define('edit-users', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAnyAdmin();
         });
 
         Gate::define('delete-users', function (User $user) {
-            return $user->isAdmin();
+            return $user->isAnyAdmin();
         });
 
         // Client management
@@ -141,7 +155,7 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('delete-clients', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin(); // Only super admins can delete clients
         });
 
         // Ticket management
@@ -193,40 +207,57 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function defineAdminGates(): void
     {
-        // System settings
+        // System settings (super admin only for platform settings)
         Gate::define('manage-settings', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
         Gate::define('view-system-logs', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
         Gate::define('manage-companies', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
-        // Database operations
+        // Database operations (super admin only)
         Gate::define('backup-database', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
         Gate::define('restore-database', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
-        // Integration management
+        // Integration management (super admin only)
         Gate::define('manage-integrations', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
-        // Advanced reporting
+        // Advanced reporting (super admin can view all tenant reports)
         Gate::define('view-all-reports', function (User $user) {
-            return $user->isAdmin();
+            return $user->isSuperAdmin();
         });
 
         Gate::define('export-data', function (User $user) {
             return $user->getRole() >= UserSetting::ROLE_TECH;
+        });
+
+        // Cross-tenant and subscription management gates
+        Gate::define('manage-subscriptions', function (User $user) {
+            return $user->canAccessCrossTenant();
+        });
+
+        Gate::define('access-cross-tenant', function (User $user) {
+            return $user->canAccessCrossTenant();
+        });
+
+        Gate::define('manage-subscription-plans', function (User $user) {
+            return $user->canAccessCrossTenant();
+        });
+
+        Gate::define('impersonate-tenant', function (User $user) {
+            return $user->canAccessCrossTenant();
         });
     }
 

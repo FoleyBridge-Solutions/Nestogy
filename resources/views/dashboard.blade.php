@@ -4,16 +4,16 @@
 <div 
     x-data="modernDashboard()" 
     x-init="init()"
-    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500"
+    class="min-h-screen transition-all duration-500"
 >
     <!-- Dashboard Header -->
-    <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/60 dark:border-slate-700/60">
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm border-b border-gray-200/60 dark:border-slate-700/60">
         <div class="px-6 py-4">
             <div class="flex items-center justify-between">
                 <!-- Title & Time -->
                 <div class="flex items-center space-x-6">
                     <div>
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                             @php
                                 $workflowTitles = [
                                     'urgent' => 'Urgent Items Dashboard',

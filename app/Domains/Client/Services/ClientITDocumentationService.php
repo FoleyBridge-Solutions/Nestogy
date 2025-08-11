@@ -28,8 +28,8 @@ class ClientITDocumentationService
             $data['next_review_at'] = $this->calculateNextReviewDate($data['review_schedule']);
         }
 
-        // Set tenant_id from authenticated user
-        $data['tenant_id'] = auth()->user()->tenant_id;
+        // Set company_id from authenticated user
+        $data['company_id'] = auth()->user()->company_id;
         $data['authored_by'] = auth()->id();
 
         return ClientITDocumentation::create($data);
@@ -110,7 +110,7 @@ class ClientITDocumentationService
     public function searchDocumentation(array $filters): Collection
     {
         $query = ClientITDocumentation::with(['client', 'author'])
-            ->where('tenant_id', auth()->user()->tenant_id);
+            ->where('company_id', auth()->user()->company_id);
 
         // Apply filters
         if (!empty($filters['search'])) {
@@ -149,7 +149,7 @@ class ClientITDocumentationService
     public function getRelatedDocuments(ClientITDocumentation $documentation, int $limit = 5): Collection
     {
         return ClientITDocumentation::where('id', '!=', $documentation->id)
-            ->where('tenant_id', $documentation->tenant_id)
+            ->where('company_id', $documentation->company_id)
             ->where(function($query) use ($documentation) {
                 $query->where('client_id', $documentation->client_id)
                       ->orWhere('it_category', $documentation->it_category);
@@ -195,7 +195,7 @@ class ClientITDocumentationService
     public function getClientStatistics(int $clientId): array
     {
         $query = ClientITDocumentation::where('client_id', $clientId)
-            ->where('tenant_id', auth()->user()->tenant_id);
+            ->where('company_id', auth()->user()->company_id);
 
         return [
             'total' => $query->count(),
@@ -275,7 +275,7 @@ class ClientITDocumentationService
     public function getOverdueReviews(?int $clientId = null): Collection
     {
         $query = ClientITDocumentation::with(['client', 'author'])
-            ->where('tenant_id', auth()->user()->tenant_id)
+            ->where('company_id', auth()->user()->company_id)
             ->needsReview()
             ->active();
 
@@ -292,7 +292,7 @@ class ClientITDocumentationService
     public function bulkUpdateAccessLevel(array $documentationIds, string $accessLevel): int
     {
         return ClientITDocumentation::whereIn('id', $documentationIds)
-            ->where('tenant_id', auth()->user()->tenant_id)
+            ->where('company_id', auth()->user()->company_id)
             ->update(['access_level' => $accessLevel]);
     }
 

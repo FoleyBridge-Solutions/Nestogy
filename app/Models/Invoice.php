@@ -304,6 +304,11 @@ class Invoice extends Model
      */
     public function isOverdue(): bool
     {
+        // If no due_date is set, invoice cannot be overdue
+        if (!$this->due_date) {
+            return false;
+        }
+        
         return $this->status !== self::STATUS_PAID &&
                $this->status !== self::STATUS_CANCELLED &&
                Carbon::now()->gt($this->due_date);

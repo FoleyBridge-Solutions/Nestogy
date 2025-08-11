@@ -18,7 +18,7 @@ class CredentialController extends Controller
     {
         $query = ClientCredential::with(['client', 'creator'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
@@ -78,7 +78,7 @@ class CredentialController extends Controller
                             ->paginate(20)
                             ->appends($request->query());
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -93,7 +93,7 @@ class CredentialController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -115,7 +115,7 @@ class CredentialController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -150,7 +150,7 @@ class CredentialController extends Controller
         }
 
         $credential = new ClientCredential($request->all());
-        $credential->tenant_id = auth()->user()->tenant_id;
+        $credential->company_id = auth()->user()->company_id;
         $credential->created_by = auth()->id();
         $credential->save();
 
@@ -177,7 +177,7 @@ class CredentialController extends Controller
     {
         $this->authorize('update', $credential);
 
-        $clients = Client::where('tenant_id', auth()->user()->tenant_id)
+        $clients = Client::where('company_id', auth()->user()->company_id)
                         ->orderBy('name')
                         ->get();
 
@@ -200,7 +200,7 @@ class CredentialController extends Controller
                 'required',
                 'exists:clients,id',
                 Rule::exists('clients', 'id')->where(function ($query) {
-                    $query->where('tenant_id', auth()->user()->tenant_id);
+                    $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'name' => 'required|string|max:255',
@@ -278,7 +278,7 @@ class CredentialController extends Controller
     {
         $query = ClientCredential::with(['client', 'creator'])
             ->whereHas('client', function($q) {
-                $q->where('tenant_id', auth()->user()->tenant_id);
+                $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index (excluding sensitive fields)
