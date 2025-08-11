@@ -22,6 +22,13 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/email-processing.log'));
 
+        // SLA Breach Detection - Check for SLA breaches every 15 minutes
+        $schedule->command('tickets:check-sla-breaches')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/sla-breaches.log'));
+
         // Ticket Escalation - Check for tickets that need escalation every 30 minutes
         $schedule->command('tickets:escalate')
             ->everyThirtyMinutes()
@@ -49,6 +56,13 @@ class Kernel extends ConsoleKernel
             ->at('00:30')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/recurring-invoices.log'));
+
+        // Process Failed Payments - Retry failed payments hourly
+        $schedule->command('payments:retry-failed')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/failed-payments.log'));
 
         // Database Backup - Backup database daily
         $schedule->command('backup:database')
@@ -168,6 +182,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/search-index.log'));
+
+        // CRITICAL: Process contract renewals and send notifications
+        // This protects MSP revenue by ensuring contracts auto-renew
+        $schedule->command('contracts:process-renewals')
+            ->daily()
+            ->at('01:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/contract-renewals.log'));
 
         // Check and notify about expiring contracts
         $schedule->command('contracts:check-expiring')

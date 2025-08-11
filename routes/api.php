@@ -142,11 +142,11 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     // Ticket System API
     Route::prefix('tickets')->name('api.tickets.')->group(function () {
         // Standard CRUD
-        Route::get('/', [App\Http\Controllers\TicketController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\TicketController::class, 'store'])->name('store');
-        Route::get('{ticket}', [App\Http\Controllers\TicketController::class, 'show'])->name('show');
-        Route::put('{ticket}', [App\Http\Controllers\TicketController::class, 'update'])->name('update');
-        Route::delete('{ticket}', [App\Http\Controllers\TicketController::class, 'destroy'])->name('destroy');
+        Route::get('/', [App\Http\Controllers\Api\TicketsController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Api\TicketsController::class, 'store'])->name('store');
+        Route::get('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'show'])->name('show');
+        Route::put('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'update'])->name('update');
+        Route::delete('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'destroy'])->name('destroy');
         
         // Ticket Actions
         Route::post('{ticket}/replies', [App\Http\Controllers\TicketController::class, 'addReply'])->name('replies.store');
@@ -178,6 +178,12 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // Quick Access
         Route::get('search', [App\Http\Controllers\SearchController::class, 'tickets'])->name('search');
         Route::get('my-tickets', [App\Http\Controllers\TicketController::class, 'myTickets'])->name('my-tickets');
+        
+        // New SLA and Bulk Operations
+        Route::post('bulk-assign', [App\Http\Controllers\Api\TicketsController::class, 'bulkAssign'])->name('bulk-assign');
+        Route::post('bulk-status', [App\Http\Controllers\Api\TicketsController::class, 'bulkUpdateStatus'])->name('bulk-status');
+        Route::get('sla-performance', [App\Http\Controllers\Api\TicketsController::class, 'slaPerformance'])->name('sla-performance');
+        Route::post('check-escalations', [App\Http\Controllers\Api\TicketsController::class, 'checkEscalations'])->name('check-escalations');
     });
 
     // Asset Management API
@@ -210,11 +216,11 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // Invoice API
         Route::prefix('invoices')->name('invoices.')->group(function () {
             // Standard CRUD
-            Route::get('/', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('index');
-            Route::post('/', [App\Domains\Financial\Controllers\InvoiceController::class, 'store'])->name('store');
-            Route::get('{invoice}', [App\Domains\Financial\Controllers\InvoiceController::class, 'show'])->name('show');
-            Route::put('{invoice}', [App\Domains\Financial\Controllers\InvoiceController::class, 'update'])->name('update');
-            Route::delete('{invoice}', [App\Domains\Financial\Controllers\InvoiceController::class, 'destroy'])->name('destroy');
+            Route::get('/', [App\Http\Controllers\Api\InvoicesController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\Api\InvoicesController::class, 'store'])->name('store');
+            Route::get('{invoice}', [App\Http\Controllers\Api\InvoicesController::class, 'show'])->name('show');
+            Route::put('{invoice}', [App\Http\Controllers\Api\InvoicesController::class, 'update'])->name('update');
+            Route::delete('{invoice}', [App\Http\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
 
             // Invoice Items
             Route::post('{invoice}/items', [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
@@ -235,6 +241,12 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::get('overdue', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('overdue');
             Route::get('draft', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('draft');
             Route::get('search', [App\Http\Controllers\SearchController::class, 'invoices'])->name('search');
+            
+            // New Recurring and Automation
+            Route::post('generate-recurring', [App\Http\Controllers\Api\InvoicesController::class, 'generateRecurring'])->name('generate-recurring');
+            Route::post('{invoice}/retry-payment', [App\Http\Controllers\Api\InvoicesController::class, 'retryPayment'])->name('retry-payment');
+            Route::get('forecast', [App\Http\Controllers\Api\InvoicesController::class, 'forecast'])->name('forecast');
+            Route::post('{invoice}/send-email', [App\Http\Controllers\Api\InvoicesController::class, 'sendEmail'])->name('send-email');
         });
         
         // Payment API
@@ -380,14 +392,81 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::post('backup', [App\Http\Controllers\SettingsController::class, 'createBackup'])->name('backup.create');
         Route::get('logs', [App\Http\Controllers\SettingsController::class, 'logs'])->name('logs');
     });
+    
+    // RMM Integration Management API (Admin Only)
+    Route::prefix('integrations')->name('api.integrations.')->middleware('role:admin')->group(function () {
+        // Integration CRUD
+        Route::get('/', [App\Domains\Integration\Controllers\IntegrationController::class, 'index'])->name('index');
+        Route::post('/', [App\Domains\Integration\Controllers\IntegrationController::class, 'store'])->name('store');
+        Route::get('{integration}', [App\Domains\Integration\Controllers\IntegrationController::class, 'show'])->name('show');
+        Route::put('{integration}', [App\Domains\Integration\Controllers\IntegrationController::class, 'update'])->name('update');
+        Route::delete('{integration}', [App\Domains\Integration\Controllers\IntegrationController::class, 'destroy'])->name('destroy');
+        
+        // Integration actions
+        Route::patch('{integration}/toggle', [App\Domains\Integration\Controllers\IntegrationController::class, 'toggle'])->name('toggle');
+        Route::post('{integration}/test', [App\Domains\Integration\Controllers\IntegrationController::class, 'testConnection'])->name('test');
+        Route::post('{integration}/sync', [App\Domains\Integration\Controllers\IntegrationController::class, 'syncDevices'])->name('sync');
+        
+        // Alert management
+        Route::get('{integration}/alerts', [App\Domains\Integration\Controllers\AlertController::class, 'index'])->name('alerts.index');
+        Route::get('{integration}/alerts/{alert}', [App\Domains\Integration\Controllers\AlertController::class, 'show'])->name('alerts.show');
+        Route::delete('{integration}/alerts/{alert}', [App\Domains\Integration\Controllers\AlertController::class, 'destroy'])->name('alerts.destroy');
+        Route::post('{integration}/alerts/{alert}/reprocess', [App\Domains\Integration\Controllers\AlertController::class, 'reprocess'])->name('alerts.reprocess');
+        
+        // Device mappings
+        Route::get('{integration}/devices', [App\Domains\Integration\Controllers\DeviceMappingController::class, 'index'])->name('devices.index');
+        Route::post('{integration}/devices/{device}/link', [App\Domains\Integration\Controllers\DeviceMappingController::class, 'linkToAsset'])->name('devices.link');
+        Route::delete('{integration}/devices/{device}/unlink', [App\Domains\Integration\Controllers\DeviceMappingController::class, 'unlinkFromAsset'])->name('devices.unlink');
+        
+        // Provider information
+        Route::get('providers', [App\Domains\Integration\Controllers\IntegrationController::class, 'getProviders'])->name('providers');
+        Route::get('providers/{provider}/defaults', [App\Domains\Integration\Controllers\IntegrationController::class, 'getProviderDefaults'])->name('provider-defaults');
+        
+        // Statistics and monitoring
+        Route::get('stats', [App\Domains\Integration\Controllers\IntegrationController::class, 'getStats'])->name('stats');
+        Route::get('{integration}/stats', [App\Domains\Integration\Controllers\IntegrationController::class, 'getIntegrationStats'])->name('integration-stats');
+    });
 });
 
 // Integration Webhooks (No Authentication Required)
 Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->group(function () {
+    // Legacy webhooks
     Route::post('stripe', [App\Http\Controllers\Integration\Controllers\StripeWebhookController::class, 'handle'])->name('stripe');
     Route::post('plaid', [App\Http\Controllers\Integration\Controllers\PlaidWebhookController::class, 'handle'])->name('plaid');
     Route::post('email', [App\Http\Controllers\Integration\Controllers\EmailWebhookController::class, 'handle'])->name('email');
     Route::post('sms', [App\Http\Controllers\Integration\Controllers\SmsWebhookController::class, 'handle'])->name('sms');
+    
+    // RMM Integration Webhooks - High rate limit for production workloads
+    Route::middleware('throttle:1000,1')->group(function () {
+        // ConnectWise Automate webhooks
+        Route::prefix('connectwise')->name('connectwise.')->group(function () {
+            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\ConnectWiseWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\ConnectWiseWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\ConnectWiseWebhookController::class, 'test'])->name('test');
+        });
+        
+        // Datto RMM webhooks
+        Route::prefix('datto')->name('datto.')->group(function () {
+            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\DattoWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\DattoWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\DattoWebhookController::class, 'test'])->name('test');
+        });
+        
+        // NinjaOne webhooks
+        Route::prefix('ninja')->name('ninja.')->group(function () {
+            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\NinjaOneWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\NinjaOneWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\NinjaOneWebhookController::class, 'test'])->name('test');
+        });
+        
+        // Generic RMM webhooks
+        Route::prefix('generic')->name('generic.')->group(function () {
+            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'test'])->name('test');
+            Route::post('{integration}/suggest-mappings', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'suggestFieldMappings'])->name('suggest-mappings');
+        });
+    });
 });
 
 // Public API Endpoints (Rate Limited)

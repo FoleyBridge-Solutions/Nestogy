@@ -81,7 +81,7 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
@@ -153,6 +153,31 @@
                 </div>
             </div>
         </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">IT Docs</dt>
+                            <dd class="text-lg font-medium text-gray-900">
+                                @php
+                                    $itDocCount = \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)
+                                        ->where('tenant_id', auth()->user()->tenant_id)
+                                        ->count();
+                                @endphp
+                                {{ $itDocCount }}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Main Content Tabs -->
@@ -177,6 +202,12 @@
                 </button>
                 <button @click="activeTab = 'locations'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'locations', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'locations' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                     Locations
+                </button>
+                <button @click="activeTab = 'it-documentation'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'it-documentation', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'it-documentation' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    IT Documentation
                 </button>
             </nav>
         </div>
@@ -588,6 +619,164 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900">No locations</h3>
                     <p class="mt-1 text-sm text-gray-500">Get started by adding a location for this client.</p>
                 </div>
+                @endif
+            </div>
+
+            <!-- IT Documentation Tab -->
+            <div x-show="activeTab === 'it-documentation'" class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">IT Documentation</h3>
+                    @can('create', \App\Domains\Client\Models\ClientITDocumentation::class)
+                        <a href="{{ route('clients.it-documentation.create', ['client_id' => $client->id]) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            New Documentation
+                        </a>
+                    @endcan
+                </div>
+
+                @php
+                    $itDocumentation = \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)
+                        ->where('tenant_id', auth()->user()->tenant_id)
+                        ->active()
+                        ->with(['author'])
+                        ->latest()
+                        ->take(10)
+                        ->get();
+                    $itStats = [
+                        'total' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('tenant_id', auth()->user()->tenant_id)->count(),
+                        'needs_review' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('tenant_id', auth()->user()->tenant_id)->whereDate('next_review_at', '<=', now())->count(),
+                        'categories' => \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)->where('tenant_id', auth()->user()->tenant_id)->groupBy('it_category')->pluck('it_category')->count()
+                    ];
+                @endphp
+
+                <!-- IT Documentation Stats -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-blue-900">Total Documents</p>
+                                <p class="text-2xl font-semibold text-blue-600">{{ $itStats['total'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-yellow-900">Need Review</p>
+                                <p class="text-2xl font-semibold text-yellow-600">{{ $itStats['needs_review'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-green-900">Categories</p>
+                                <p class="text-2xl font-semibold text-green-600">{{ $itStats['categories'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if($itDocumentation->count() > 0)
+                    <div class="bg-white border border-gray-200 rounded-lg">
+                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <h4 class="text-sm font-medium text-gray-900">Recent Documentation</h4>
+                            <a href="{{ route('clients.it-documentation.index', ['client_id' => $client->id]) }}" 
+                               class="text-sm text-blue-600 hover:text-blue-800">View All</a>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            @foreach($itDocumentation as $doc)
+                                <div class="p-4 hover:bg-gray-50">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-lg">{{ $doc->category_icon }}</span>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center space-x-2">
+                                                <h5 class="text-sm font-medium text-gray-900 truncate">
+                                                    <a href="{{ route('clients.it-documentation.show', $doc) }}" 
+                                                       class="hover:text-blue-600">{{ $doc->name }}</a>
+                                                </h5>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    {{ \App\Domains\Client\Models\ClientITDocumentation::getITCategories()[$doc->it_category] }}
+                                                </span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $doc->access_level_color }}-100 text-{{ $doc->access_level_color }}-800">
+                                                    {{ \App\Domains\Client\Models\ClientITDocumentation::getAccessLevels()[$doc->access_level] }}
+                                                </span>
+                                                @if($doc->needsReview())
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        Review Due
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="flex items-center space-x-4 mt-1">
+                                                <span class="text-xs text-gray-500">v{{ $doc->version }}</span>
+                                                <span class="text-xs text-gray-500">{{ $doc->author->name }}</span>
+                                                <span class="text-xs text-gray-500">{{ $doc->updated_at->format('M j, Y') }}</span>
+                                                @if($doc->hasFile())
+                                                    <span class="text-xs text-gray-500">{{ $doc->file_size_human }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            @can('view', $doc)
+                                                <a href="{{ route('clients.it-documentation.show', $doc) }}" 
+                                                   class="text-blue-600 hover:text-blue-800 text-xs font-medium">View</a>
+                                            @endcan
+                                            @can('update', $doc)
+                                                <a href="{{ route('clients.it-documentation.edit', $doc) }}" 
+                                                   class="text-gray-600 hover:text-gray-800 text-xs font-medium">Edit</a>
+                                            @endcan
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @if($itStats['total'] > 10)
+                            <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-center">
+                                <a href="{{ route('clients.it-documentation.index', ['client_id' => $client->id]) }}" 
+                                   class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                    View all {{ $itStats['total'] }} documents →
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No IT documentation</h3>
+                        <p class="mt-1 text-sm text-gray-500">Get started by creating technical documentation for this client.</p>
+                        @can('create', \App\Domains\Client\Models\ClientITDocumentation::class)
+                            <div class="mt-6">
+                                <a href="{{ route('clients.it-documentation.create', ['client_id' => $client->id]) }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Create IT Documentation
+                                </a>
+                            </div>
+                        @endcan
+                    </div>
                 @endif
             </div>
         </div>

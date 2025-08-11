@@ -547,7 +547,7 @@ class DashboardController extends Controller
             ->with(['client', 'assignee'])
             ->orderBy('priority')
             ->orderBy('created_at')
-            ->limit(10)
+            ->limit(20)
             ->get();
             
         $overdueInvoices = Invoice::where($baseQuery)
@@ -555,7 +555,7 @@ class DashboardController extends Controller
             ->where('due_date', '<', now())
             ->with('client')
             ->orderBy('due_date')
-            ->limit(5)
+            ->limit(10)
             ->get();
             
         // Check for tickets that have been open for more than 24 hours (simplified SLA check)
@@ -564,17 +564,77 @@ class DashboardController extends Controller
             ->where('created_at', '<', now()->subHours(24))
             ->with(['client', 'assignee'])
             ->orderBy('created_at')
-            ->limit(5)
+            ->limit(10)
+            ->get();
+            
+        // Get escalation data - tickets approaching SLA breach
+        $escalations = Ticket::where($baseQuery)
+            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereBetween('created_at', [now()->subHours(23), now()->subHours(20)])
+            ->with(['client', 'assignee'])
+            ->orderBy('created_at')
+            ->get();
+            
+        // Get team workload
+        $teamWorkload = User::where('company_id', $userContext->company_id)
+            ->withCount(['assignedTickets as active_tickets' => function($query) {
+                $query->whereIn('status', ['Open', 'In Progress']);
+            }])
+            ->orderBy('active_tickets', 'desc')
+            ->limit(10)
+            ->get();
+            
+        // Get client impact analysis
+        $clientImpact = Client::where('company_id', $userContext->company_id)
+            ->withCount(['tickets as critical_tickets' => function($query) {
+                $query->whereIn('priority', ['Critical', 'High'])
+                      ->whereIn('status', ['Open', 'In Progress']);
+            }])
+            ->having('critical_tickets', '>', 0)
+            ->orderBy('critical_tickets', 'desc')
+            ->limit(10)
+            ->get();
+            
+        // Get recent activity
+        $recentActivity = Ticket::where($baseQuery)
+            ->whereIn('priority', ['Critical', 'High'])
+            ->where('updated_at', '>', now()->subHours(1))
+            ->with(['client', 'assignee'])
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+            
+        // Calculate financial impact
+        $revenueAtRisk = Invoice::where($baseQuery)
+            ->where('status', 'Sent')
+            ->where('due_date', '<', now()->subDays(30))
+            ->sum('amount');
+            
+        // Get 7-day trend
+        $sevenDayTrend = Ticket::where($baseQuery)
+            ->whereIn('priority', ['Critical', 'High'])
+            ->where('created_at', '>', now()->subDays(7))
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
             ->get();
             
         return [
             'urgent_tickets' => $urgentTickets,
             'overdue_invoices' => $overdueInvoices,
             'sla_breaches' => $slaBreaches,
+            'escalations' => $escalations,
+            'team_workload' => $teamWorkload,
+            'client_impact' => $clientImpact,
+            'recent_activity' => $recentActivity,
+            'revenue_at_risk' => $revenueAtRisk,
+            'seven_day_trend' => $sevenDayTrend,
             'counts' => [
                 'urgent_tickets' => $urgentTickets->count(),
                 'overdue_invoices' => $overdueInvoices->count(),
-                'sla_breaches' => $slaBreaches->count()
+                'sla_breaches' => $slaBreaches->count(),
+                'escalations' => $escalations->count(),
+                'revenue_at_risk' => number_format($revenueAtRisk, 2)
             ]
         ];
     }
@@ -616,16 +676,83 @@ class DashboardController extends Controller
                 ->get();
         }
         
+        // Get team availability
+        $teamAvailability = User::where('company_id', $userContext->company_id)
+            ->withCount(['assignedTickets as today_tickets' => function($query) use ($today, $endOfDay) {
+                $query->whereIn('status', ['Open', 'In Progress'])
+                      ->whereBetween('scheduled_at', [$today, $endOfDay]);
+            }])
+            ->get()
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'status' => $user->today_tickets > 3 ? 'busy' : ($user->today_tickets > 0 ? 'working' : 'available'),
+                    'tickets_today' => $user->today_tickets
+                ];
+            });
+            
+        // Get completed tasks today
+        $completedToday = Ticket::where($baseQuery)
+            ->where('status', 'Closed')
+            ->whereBetween('updated_at', [$today, $endOfDay])
+            ->with(['client', 'assignee'])
+            ->get();
+            
+        // Get time tracking data (in minutes)
+        $timeTracked = 0;
+        if (DB::getSchemaBuilder()->hasTable('ticket_time_entries')) {
+            $hoursTracked = DB::table('ticket_time_entries')
+                ->whereIn('ticket_id', function($query) use ($baseQuery) {
+                    $query->select('id')->from('tickets')->where($baseQuery);
+                })
+                ->whereBetween('work_date', [$today->toDateString(), $endOfDay->toDateString()])
+                ->sum('hours_worked') ?? 0;
+            $timeTracked = $hoursTracked * 60; // Convert hours to minutes
+        }
+            
+        // Get productivity metrics
+        $productivityMetrics = [
+            'tickets_opened' => $todaysTickets->count(),
+            'tickets_closed' => $completedToday->count(),
+            'resolution_rate' => $todaysTickets->count() > 0 ? 
+                round(($completedToday->count() / $todaysTickets->count()) * 100) : 0,
+            'avg_response_time' => 0 // Will calculate if column exists
+        ];
+        
+        // Get hourly breakdown
+        $hourlyBreakdown = Ticket::where($baseQuery)
+            ->whereBetween('created_at', [$today, $endOfDay])
+            ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count, AVG(CASE WHEN priority = "Critical" THEN 3 WHEN priority = "High" THEN 2 ELSE 1 END) as avg_priority')
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get();
+            
+        // Get recent solutions/knowledge base (recently closed tickets)
+        $recentSolutions = Ticket::where($baseQuery)
+            ->where('status', 'Closed')
+            ->orderBy('updated_at', 'desc')
+            ->limit(5)
+            ->get(['id', 'subject', 'updated_at', 'priority']);
+            
         return [
             'todays_tickets' => $todaysTickets,
             'scheduled_tickets' => $scheduledTickets,
             'todays_invoices' => $todaysInvoices,
             'my_assigned_tickets' => $myAssignedTickets,
+            'team_availability' => $teamAvailability,
+            'completed_today' => $completedToday,
+            'time_tracked_minutes' => $timeTracked,
+            'productivity_metrics' => $productivityMetrics,
+            'hourly_breakdown' => $hourlyBreakdown,
+            'recent_solutions' => $recentSolutions,
             'counts' => [
                 'todays_tickets' => $todaysTickets->count(),
                 'scheduled_tickets' => $scheduledTickets->count(),
                 'todays_invoices' => $todaysInvoices->count(),
-                'my_assigned_tickets' => count($myAssignedTickets)
+                'my_assigned_tickets' => count($myAssignedTickets),
+                'completed_today' => $completedToday->count(),
+                'time_tracked_hours' => round($timeTracked / 60, 1)
             ]
         ];
     }
@@ -635,31 +762,140 @@ class DashboardController extends Controller
      */
     private function getScheduledWorkflowData($baseQuery, $userContext)
     {
+        $today = now()->startOfDay();
+        $tomorrow = now()->addDay()->startOfDay();
         $upcomingWeek = now()->addWeek();
+        $endOfMonth = now()->endOfMonth();
         
-        $scheduledTickets = Ticket::where($baseQuery)
+        // Scheduled tickets for different periods
+        $todayTickets = Ticket::where($baseQuery)
             ->whereNotNull('scheduled_at')
-            ->where('scheduled_at', '>=', now())
+            ->whereDate('scheduled_at', $today)
+            ->with(['client', 'assignee'])
+            ->orderBy('scheduled_at')
+            ->get();
+            
+        $tomorrowTickets = Ticket::where($baseQuery)
+            ->whereNotNull('scheduled_at')
+            ->whereDate('scheduled_at', $tomorrow)
+            ->with(['client', 'assignee'])
+            ->orderBy('scheduled_at')
+            ->get();
+            
+        $weekTickets = Ticket::where($baseQuery)
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '>', $tomorrow)
             ->where('scheduled_at', '<=', $upcomingWeek)
             ->with(['client', 'assignee'])
             ->orderBy('scheduled_at')
             ->get();
             
+        // Recurring tickets
         $recurringTickets = [];
         if (DB::getSchemaBuilder()->hasTable('recurring_tickets')) {
             $recurringTickets = DB::table('recurring_tickets')
-                ->where('company_id', $baseQuery['company_id'])
-                ->where('is_active', true)
+                ->join('clients', 'recurring_tickets.client_id', '=', 'clients.id')
+                ->where('recurring_tickets.tenant_id', $baseQuery['company_id'])
+                ->where('recurring_tickets.is_active', true)
+                ->where('recurring_tickets.next_run_date', '<=', $upcomingWeek)
+                ->select('recurring_tickets.*', 'clients.name as client_name')
+                ->orderBy('next_run_date')
                 ->get();
         }
         
+        // Maintenance schedules from assets
+        $maintenanceSchedules = [];
+        if (DB::getSchemaBuilder()->hasTable('asset_maintenance')) {
+            $maintenanceSchedules = DB::table('asset_maintenance')
+                ->join('assets', 'asset_maintenance.asset_id', '=', 'assets.id')
+                ->where('assets.company_id', $baseQuery['company_id'])
+                ->where('asset_maintenance.scheduled_date', '>=', $today)
+                ->where('asset_maintenance.scheduled_date', '<=', $upcomingWeek)
+                ->whereNull('asset_maintenance.completed_date')
+                ->select('asset_maintenance.*', 'assets.name as asset_name', 'assets.asset_tag')
+                ->orderBy('scheduled_date')
+                ->limit(10)
+                ->get();
+        }
+        
+        // Team availability (simplified - checking who has scheduled work)
+        $teamSchedule = User::where('company_id', $userContext->company_id)
+            ->where('role', '!=', 'Client')
+            ->withCount(['assignedTickets as today_scheduled' => function($query) use ($today) {
+                $query->whereDate('scheduled_at', $today);
+            }])
+            ->withCount(['assignedTickets as tomorrow_scheduled' => function($query) use ($tomorrow) {
+                $query->whereDate('scheduled_at', $tomorrow);
+            }])
+            ->withCount(['assignedTickets as week_scheduled' => function($query) use ($tomorrow, $upcomingWeek) {
+                $query->where('scheduled_at', '>', $tomorrow)
+                      ->where('scheduled_at', '<=', $upcomingWeek);
+            }])
+            ->orderBy('name')
+            ->get();
+            
+        // Project milestones
+        $projectMilestones = [];
+        if (DB::getSchemaBuilder()->hasTable('project_milestones')) {
+            $projectMilestones = DB::table('project_milestones')
+                ->join('projects', 'project_milestones.project_id', '=', 'projects.id')
+                ->where('projects.company_id', $baseQuery['company_id'])
+                ->where('project_milestones.due_date', '>=', $today)
+                ->where('project_milestones.due_date', '<=', $endOfMonth)
+                ->whereNull('project_milestones.completed_at')
+                ->select('project_milestones.*', 'projects.name as project_name')
+                ->orderBy('due_date')
+                ->limit(10)
+                ->get();
+        }
+        
+        // Calendar events  
+        $calendarEvents = [];
+        if (DB::getSchemaBuilder()->hasTable('client_calendar_events')) {
+            $calendarEvents = DB::table('client_calendar_events')
+                ->join('clients', 'client_calendar_events.client_id', '=', 'clients.id')
+                ->where('clients.company_id', $baseQuery['company_id'])
+                ->where('client_calendar_events.start_date', '>=', $today)
+                ->where('client_calendar_events.start_date', '<=', $upcomingWeek)
+                ->select('client_calendar_events.*', 'clients.name as client_name')
+                ->orderBy('start_date')
+                ->limit(15)
+                ->get();
+        }
+        
+        // Capacity planning - hours available vs scheduled
+        $capacityData = [
+            'today' => [
+                'available_hours' => $teamSchedule->count() * 8, // 8 hours per person
+                'scheduled_hours' => $todayTickets->sum('estimated_hours') ?? $todayTickets->count() * 2
+            ],
+            'tomorrow' => [
+                'available_hours' => $teamSchedule->count() * 8,
+                'scheduled_hours' => $tomorrowTickets->sum('estimated_hours') ?? $tomorrowTickets->count() * 2
+            ],
+            'week' => [
+                'available_hours' => $teamSchedule->count() * 40, // 40 hours per person per week
+                'scheduled_hours' => $weekTickets->sum('estimated_hours') ?? $weekTickets->count() * 2
+            ]
+        ];
+        
         return [
-            'scheduled_tickets' => $scheduledTickets,
+            'today_tickets' => $todayTickets,
+            'tomorrow_tickets' => $tomorrowTickets,
+            'week_tickets' => $weekTickets,
             'recurring_tickets' => $recurringTickets,
-            'calendar_events' => $this->getCalendarEvents($baseQuery, $upcomingWeek),
+            'maintenance_schedules' => $maintenanceSchedules,
+            'team_schedule' => $teamSchedule,
+            'project_milestones' => $projectMilestones,
+            'calendar_events' => $calendarEvents,
+            'capacity_data' => $capacityData,
             'counts' => [
-                'scheduled_tickets' => $scheduledTickets->count(),
-                'recurring_tickets' => count($recurringTickets)
+                'today_tickets' => $todayTickets->count(),
+                'tomorrow_tickets' => $tomorrowTickets->count(),
+                'week_tickets' => $weekTickets->count(),
+                'recurring_tickets' => count($recurringTickets),
+                'maintenance_due' => count($maintenanceSchedules),
+                'milestones_due' => count($projectMilestones)
             ]
         ];
     }
@@ -676,6 +912,13 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
             
+        $overdueInvoices = Invoice::where($baseQuery)
+            ->where('status', 'Sent')
+            ->where('due_date', '<', now())
+            ->with('client')
+            ->orderBy('due_date')
+            ->get();
+            
         $recentPayments = Payment::where($baseQuery)
             ->with(['invoice', 'client'])
             ->orderBy('created_at', 'desc')
@@ -689,14 +932,65 @@ class DashboardController extends Controller
             ->with('client')
             ->orderBy('due_date')
             ->get();
+            
+        // Calculate financial metrics
+        $totalRevenue = Payment::where($baseQuery)
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+            
+        $totalOutstanding = Invoice::where($baseQuery)
+            ->where('status', 'Sent')
+            ->sum('amount');
+            
+        $monthlyRecurring = 0;
+        if (DB::getSchemaBuilder()->hasTable('recurring')) {
+            $monthlyRecurring = DB::table('recurring')
+                ->where('company_id', $baseQuery['company_id'])
+                ->where('status', 'Active')
+                ->sum('amount');
+        }
+        
+        // Get 30-day revenue trend
+        $revenueeTrend = Payment::where($baseQuery)
+            ->where('created_at', '>', now()->subDays(30))
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+            
+        // Get payment methods breakdown
+        $paymentMethods = Payment::where($baseQuery)
+            ->whereMonth('created_at', now()->month)
+            ->selectRaw('payment_method, COUNT(*) as count, SUM(amount) as total')
+            ->groupBy('payment_method')
+            ->get();
+            
+        // Get top clients by revenue
+        $topClients = Client::where('company_id', $baseQuery['company_id'])
+            ->withSum(['payments' => function($query) {
+                $query->whereMonth('created_at', now()->month);
+            }], 'amount')
+            ->orderBy('payments_sum_amount', 'desc')
+            ->limit(5)
+            ->get();
         
         return [
             'pending_invoices' => $pendingInvoices,
+            'overdue_invoices' => $overdueInvoices,
             'recent_payments' => $recentPayments,
             'upcoming_invoices' => $upcomingInvoices,
-            'financial_summary' => $this->getFinancialSummary($baseQuery),
+            'revenue_trend' => $revenueeTrend,
+            'payment_methods' => $paymentMethods,
+            'top_clients' => $topClients,
+            'metrics' => [
+                'total_revenue' => $totalRevenue,
+                'total_outstanding' => $totalOutstanding,
+                'monthly_recurring' => $monthlyRecurring,
+                'overdue_amount' => $overdueInvoices->sum('amount')
+            ],
             'counts' => [
                 'pending_invoices' => $pendingInvoices->count(),
+                'overdue_invoices' => $overdueInvoices->count(),
                 'recent_payments' => $recentPayments->count(),
                 'upcoming_invoices' => $upcomingInvoices->count()
             ]
