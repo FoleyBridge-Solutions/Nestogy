@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 

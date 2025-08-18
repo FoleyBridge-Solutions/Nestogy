@@ -3,17 +3,17 @@
 @section('title', 'Calendar Event Details')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Calendar Event Details</h1>
                 <div class="btn-group">
-                    <a href="{{ route('clients.calendar-events.standalone.edit', $calendarEvent) }}" class="btn btn-primary">
-                        <i class="fas fa-edit me-2"></i>Edit Event
+                    <a href="{{ route('clients.calendar-events.standalone.edit', $calendarEvent) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-edit mr-2"></i>Edit Event
                     </a>
                     <a href="{{ route('clients.calendar-events.standalone.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Events
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Events
                     </a>
                     <button type="button" 
                             class="btn btn-outline-danger" 
@@ -23,19 +23,19 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8">
                     <!-- Main Event Details -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">
                                     @switch($calendarEvent->event_type)
                                         @case('meeting')
-                                            <i class="fas fa-users text-primary me-2"></i>
+                                            <i class="fas fa-users text-blue-600 me-2"></i>
                                             @break
                                         @case('appointment')
-                                            <i class="fas fa-calendar-check text-success me-2"></i>
+                                            <i class="fas fa-calendar-check text-green-600 me-2"></i>
                                             @break
                                         @case('consultation')
                                             <i class="fas fa-comments text-info me-2"></i>
@@ -47,20 +47,20 @@
                                             <i class="fas fa-tools text-secondary me-2"></i>
                                             @break
                                         @case('support')
-                                            <i class="fas fa-headset text-primary me-2"></i>
+                                            <i class="fas fa-headset text-blue-600 me-2"></i>
                                             @break
                                         @case('follow_up')
                                             <i class="fas fa-phone text-info me-2"></i>
                                             @break
                                         @default
-                                            <i class="fas fa-calendar-alt text-muted me-2"></i>
+                                            <i class="fas fa-calendar-alt text-gray-600 me-2"></i>
                                     @endswitch
                                     {{ $calendarEvent->title }}
                                 </h5>
                                 <div class="d-flex gap-2">
                                     @switch($calendarEvent->status)
                                         @case('scheduled')
-                                            <span class="badge bg-primary">Scheduled</span>
+                                            <span class="badge bg-blue-600">Scheduled</span>
                                             @break
                                         @case('confirmed')
                                             <span class="badge bg-success">Confirmed</span>
@@ -75,13 +75,13 @@
                                             <span class="badge bg-danger">Cancelled</span>
                                             @break
                                         @case('no_show')
-                                            <span class="badge bg-secondary">No Show</span>
+                                            <span class="badge bg-gray-600">No Show</span>
                                             @break
                                         @case('rescheduled')
                                             <span class="badge bg-info">Rescheduled</span>
                                             @break
                                         @default
-                                            <span class="badge bg-secondary">{{ ucfirst($calendarEvent->status) }}</span>
+                                            <span class="badge bg-gray-600">{{ ucfirst($calendarEvent->status) }}</span>
                                     @endswitch
 
                                     @switch($calendarEvent->priority)
@@ -98,10 +98,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-muted">Event Type</h6>
+                                <div class="md:w-1/2 px-4">
+                                    <h6 class="text-gray-600">Event Type</h6>
                                     <p class="mb-3">{{ ucfirst(str_replace('_', ' ', $calendarEvent->event_type)) }}</p>
 
                                     <h6 class="text-muted">Client</h6>
@@ -120,13 +120,13 @@
                                     @endif
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="md:w-1/2 px-4">
                                     <h6 class="text-muted">Date & Time</h6>
                                     @if($calendarEvent->all_day)
                                         <p class="mb-2">
                                             <i class="fas fa-calendar text-muted me-2"></i>
                                             {{ $calendarEvent->start_datetime->format('l, F j, Y') }}
-                                            <span class="badge bg-info ms-2">All Day</span>
+                                            <span class="badge bg-info ml-2">All Day</span>
                                         </p>
                                     @else
                                         <p class="mb-2">
@@ -141,12 +141,12 @@
                                     @endif
 
                                     @if($calendarEvent->is_today)
-                                        <div class="alert alert-warning py-2 mb-2">
+                                        <div class="px-4 py-3 rounded bg-yellow-100 border border-yellow-400 text-yellow-700 py-2 mb-2">
                                             <i class="fas fa-exclamation-triangle me-2"></i>
                                             <strong>Today!</strong> This event is scheduled for today.
                                         </div>
                                     @elseif($calendarEvent->is_upcoming)
-                                        <div class="alert alert-info py-2 mb-2">
+                                        <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700 py-2 mb-2">
                                             <i class="fas fa-clock me-2"></i>
                                             <strong>Upcoming:</strong> {{ $calendarEvent->time_until }}
                                         </div>
@@ -180,7 +180,7 @@
                                 <h6 class="text-muted">Attendees</h6>
                                 <div class="mb-3">
                                     @foreach($calendarEvent->attendees as $attendee)
-                                        <span class="badge bg-light text-dark me-2 mb-1">
+                                        <span class="badge bg-gray-100 text-dark me-2 mb-1">
                                             <i class="fas fa-user me-1"></i>{{ $attendee }}
                                         </span>
                                     @endforeach
@@ -190,7 +190,7 @@
                             @if($calendarEvent->notes)
                                 <hr>
                                 <h6 class="text-muted">Notes</h6>
-                                <div class="bg-light p-3 rounded">
+                                <div class="bg-gray-100 p-3 rounded">
                                     {!! nl2br(e($calendarEvent->notes)) !!}
                                 </div>
                             @endif
@@ -201,12 +201,12 @@
                 <div class="col-lg-4">
                     <!-- Event Metadata -->
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-info-circle me-2"></i>Event Information
                             </h5>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <div class="text-center p-2 bg-light rounded">
@@ -216,7 +216,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="text-center p-2 bg-light rounded">
-                                        <div class="fw-bold text-success">{{ count($calendarEvent->attendees ?? []) }}</div>
+                                        <div class="fw-bold text-green-600">{{ count($calendarEvent->attendees ?? []) }}</div>
                                         <small class="text-muted">Attendees</small>
                                     </div>
                                 </div>
@@ -344,17 +344,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Delete Calendar Event</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this calendar event? This action cannot be undone.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="deleteEventForm" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Event</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Event</button>
                 </form>
             </div>
         </div>
@@ -367,18 +367,18 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Update Event Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 <p id="statusUpdateMessage"></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="statusUpdateForm" method="POST" class="d-inline">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="status" id="newStatus">
-                    <button type="submit" class="btn btn-primary" id="statusUpdateButton">Update Status</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="statusUpdateButton">Update Status</button>
                 </form>
             </div>
         </div>

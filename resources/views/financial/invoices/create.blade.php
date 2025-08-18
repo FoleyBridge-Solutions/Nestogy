@@ -3,205 +3,422 @@
 @section('title', 'Create Invoice')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Invoice</h1>
-                <p class="text-gray-600 mt-1">Create a new invoice for billing</p>
-            </div>
-            <a href="{{ route('financial.invoices.index') }}" 
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Invoices
-            </a>
+<div class="w-full px-4 px-4 py-4">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Create Invoice</h1>
+            <p class="text-gray-600 mb-0">Create a new invoice for billing</p>
         </div>
+        <a href="{{ route('financial.invoices.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Invoices
+        </a>
+    </div>
 
-        <div class="bg-white shadow rounded-lg">
-            <form method="POST" action="{{ route('financial.invoices.store') }}" class="space-y-6 p-6">
-                @csrf
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Client -->
-                    <div>
-                        <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</label>
-                        <select name="client_id" id="client_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md @error('client_id') border-red-300 @enderror">
-                            <option value="">Select client</option>
-                            @foreach($clients as $client)
-                                <option value="{{ $client->id }}" {{ (old('client_id', $selectedClient?->id) == $client->id) ? 'selected' : '' }}>
-                                    {{ $client->name }}{{ $client->company_name ? ' (' . $client->company_name . ')' : '' }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('client_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Category -->
-                    <div>
-                        <label for="category_id" class="block text-sm font-medium text-gray-700">Category *</label>
-                        <select name="category_id" id="category_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md @error('category_id') border-red-300 @enderror">
-                            <option value="">Select category</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('category_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Currency -->
-                    <div>
-                        <label for="currency_code" class="block text-sm font-medium text-gray-700">Currency *</label>
-                        <select name="currency_code" id="currency_code" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md @error('currency_code') border-red-300 @enderror">
-                            <option value="USD" {{ old('currency_code', 'USD') == 'USD' ? 'selected' : '' }}>USD - US Dollar</option>
-                            <option value="EUR" {{ old('currency_code') == 'EUR' ? 'selected' : '' }}>EUR - Euro</option>
-                            <option value="GBP" {{ old('currency_code') == 'GBP' ? 'selected' : '' }}>GBP - British Pound</option>
-                            <option value="CAD" {{ old('currency_code') == 'CAD' ? 'selected' : '' }}>CAD - Canadian Dollar</option>
-                            <option value="AUD" {{ old('currency_code') == 'AUD' ? 'selected' : '' }}>AUD - Australian Dollar</option>
-                        </select>
-                        @error('currency_code')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Invoice Date -->
-                    <div>
-                        <label for="date" class="block text-sm font-medium text-gray-700">Invoice Date *</label>
-                        <input type="date" name="date" id="date" required
-                               value="{{ old('date', now()->format('Y-m-d')) }}"
-                               class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('date') border-red-300 @enderror">
-                        @error('date')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Due Date -->
-                    <div>
-                        <label for="due_date" class="block text-sm font-medium text-gray-700">Due Date *</label>
-                        <input type="date" name="due_date" id="due_date" required
-                               value="{{ old('due_date', now()->addDays(30)->format('Y-m-d')) }}"
-                               class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('due_date') border-red-300 @enderror">
-                        @error('due_date')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Scope/Description -->
-                    <div class="md:col-span-2">
-                        <label for="scope" class="block text-sm font-medium text-gray-700">Invoice Scope</label>
-                        <input type="text" name="scope" id="scope" maxlength="255"
-                               value="{{ old('scope') }}"
-                               placeholder="Brief description of services or products"
-                               class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('scope') border-red-300 @enderror">
-                        @error('scope')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Discount Amount -->
-                    <div>
-                        <label for="discount_amount" class="block text-sm font-medium text-gray-700">Discount Amount</label>
-                        <div class="mt-1 relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
+    <!-- Invoice Form -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden border-0 shadow-sm"
+         x-data="{
+             document: {
+                 client_id: '{{ session('selected_client_id') }}',
+                 category_id: '',
+                 date: new Date().toISOString().split('T')[0],
+                 due_date: '',
+                 currency_code: 'USD',
+                 scope: '',
+                 note: '',
+                 terms_conditions: '',
+                 discount_amount: 0,
+                 discount_type: 'fixed',
+                 tax_rate: 0
+             },
+             clients: @js($clients->map(function($client) {
+                 return [
+                     'id' => $client->id,
+                     'name' => $client->name,
+                     'company_name' => $client->company_name,
+                     'currency_code' => $client->currency_code ?? 'USD',
+                     'net_terms' => $client->net_terms ?? 30,
+                     'display_name' => $client->name . ($client->company_name ? ' (' . $client->company_name . ')' : '')
+                 ];
+             })),
+             categories: @js($categories->map(function($category) {
+                 return ['id' => $category->id, 'name' => $category->name];
+             })),
+             currentStep: 1,
+             totalSteps: 4,
+             selectedItems: [],
+             pricing: {},
+             billingConfig: {},
+             errors: {},
+             saving: false,
+             
+             selectClient(clientId) {
+                 const client = this.clients.find(c => c.id == clientId);
+                 if (client) {
+                     this.document.currency_code = client.currency_code;
+                     const dueDate = new Date();
+                     dueDate.setDate(dueDate.getDate() + client.net_terms);
+                     this.document.due_date = dueDate.toISOString().split('T')[0];
+                     
+                     // Notify product selector of client selection
+                     this.$dispatch('client-selected', { 
+                         clientId: clientId,
+                         client: client 
+                     });
+                 }
+             },
+             
+             nextStep() {
+                 if (this.currentStep < this.totalSteps) {
+                     this.currentStep++;
+                 }
+             },
+             
+             prevStep() {
+                 if (this.currentStep > 1) {
+                     this.currentStep--;
+                 }
+             },
+             
+             async save() {
+                 this.saving = true;
+                 try {
+                     const formData = {
+                         ...this.document,
+                         items: this.selectedItems,
+                         pricing: this.pricing,
+                         billing_config: this.billingConfig
+                     };
+                     
+                     const response = await fetch('/api/financial/invoices', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json',
+                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                         },
+                         body: JSON.stringify(formData)
+                     });
+                     
+                     if (response.ok) {
+                         window.location.href = '/financial/invoices';
+                     } else {
+                         const data = await response.json();
+                         this.errors = data.errors || {};
+                     }
+                 } catch (error) {
+                     console.error('Error saving invoice:', error);
+                 } finally {
+                     this.saving = false;
+                 }
+             },
+             
+             formatCurrency(amount) {
+                 return new Intl.NumberFormat('en-US', {
+                     style: 'currency',
+                     currency: this.document.currency_code
+                 }).format(amount || 0);
+             },
+             
+             init() {
+                 // If a client is pre-selected, notify the product selector
+                 if (this.document.client_id) {
+                     this.$nextTick(() => {
+                         this.selectClient(this.document.client_id);
+                     });
+                 }
+                 
+                 // Trigger product selector initialization
+                 this.$nextTick(() => {
+                     this.$dispatch('invoice-initialized');
+                 });
+             }
+         }"
+         x-init="init()"
+         @products-selected.window="selectedItems = $event.detail.items; pricing = $event.detail;"
+         @billing-configured.window="billingConfig = $event.detail.configuration"
+         @pricing-calculated.window="pricing = $event.detail">
+        
+        <form @submit.prevent="save()">
+            <!-- Step Indicator -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 bg-gray-100">
+                <div class="flex justify-between items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-full d-flex align-items-center justify-center"
+                                     :class="currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'"
+                                     style="width: 32px; height: 32px;">
+                                    <span class="block text-center w-100">1</span>
+                                </div>
+                                <span class="ml-2" :class="currentStep >= 1 ? 'fw-semibold' : ''">Details</span>
                             </div>
-                            <input type="number" name="discount_amount" id="discount_amount" step="0.01" min="0"
-                                   value="{{ old('discount_amount', '0.00') }}"
-                                   class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md @error('discount_amount') border-red-300 @enderror"
-                                   placeholder="0.00">
                         </div>
-                        @error('discount_amount')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Status (hidden, will be set to Draft) -->
-                    <input type="hidden" name="status" value="Draft">
-                </div>
-
-                <!-- Notes -->
-                <div>
-                    <label for="note" class="block text-sm font-medium text-gray-700">Invoice Notes</label>
-                    <textarea name="note" id="note" rows="3"
-                              class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('note') border-red-300 @enderror"
-                              placeholder="Additional notes or terms for this invoice...">{{ old('note') }}</textarea>
-                    @error('note')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                @if(isset($ticket))
-                    <!-- Associated Ticket -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                        <div class="me-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-full d-flex align-items-center justify-center"
+                                     :class="currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'"
+                                     style="width: 32px; height: 32px;">
+                                    <span class="block text-center w-100">2</span>
+                                </div>
+                                <span class="ml-2" :class="currentStep >= 2 ? 'fw-semibold' : ''">Products & Services</span>
                             </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-blue-800">Associated with Ticket</h3>
-                                <div class="mt-2 text-sm text-blue-700">
-                                    <p>Ticket #{{ $ticket->id }}: {{ $ticket->subject }}</p>
+                        </div>
+                        <div class="me-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-center"
+                                     :class="currentStep >= 3 ? 'bg-primary text-white' : 'bg-secondary text-white'"
+                                     style="width: 32px; height: 32px;">
+                                    <span class="d-block text-center w-100">3</span>
+                                </div>
+                                <span class="ms-2" :class="currentStep >= 3 ? 'fw-semibold' : ''">Billing Config</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-center"
+                                     :class="currentStep >= 4 ? 'bg-primary text-white' : 'bg-secondary text-white'"
+                                     style="width: 32px; height: 32px;">
+                                    <span class="d-block text-center w-100">4</span>
+                                </div>
+                                <span class="ms-2" :class="currentStep >= 4 ? 'fw-semibold' : ''">Review</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="saving" class="text-gray-600">
+                        <i class="fas fa-spinner fa-spin me-1"></i> Saving...
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Step 1: Invoice Details -->
+                <div x-show="currentStep === 1">
+                    <h5 class="mb-4">Invoice Details</h5>
+                    
+                    <div class="flex flex-wrap -mx-4 g-3">
+                        <div class="md:w-1/2 px-4">
+                            <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client <span class="text-red-600">*</span></label>
+                            <select id="client_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                    x-model="document.client_id" 
+                                    @change="selectClient($event.target.value)"
+                                    :class="errors.client_id ? 'is-invalid' : ''">
+                                <option value="">Select a client...</option>
+                                <template x-for="client in clients" :key="client.id">
+                                    <option :value="client.id" x-text="client.display_name"></option>
+                                </template>
+                            </select>
+                            <div class="invalid-feedback" x-text="errors.client_id"></div>
+                        </div>
+                        
+                        <div class="md:w-1/2 px-4">
+                            <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-600">*</span></label>
+                            <select id="category_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                    x-model="document.category_id"
+                                    :class="errors.category_id ? 'is-invalid' : ''">
+                                <option value="">Select a category...</option>
+                                <template x-for="category in categories" :key="category.id">
+                                    <option :value="category.id" x-text="category.name"></option>
+                                </template>
+                            </select>
+                            <div class="invalid-feedback" x-text="errors.category_id"></div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="date" class="form-label">Invoice Date</label>
+                            <input type="date" id="date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" x-model="document.date">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            <input type="date" id="due_date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" x-model="document.due_date">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="currency_code" class="form-label">Currency</label>
+                            <select id="currency_code" class="form-select" x-model="document.currency_code">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="scope" class="form-label">Description / Scope</label>
+                            <textarea id="scope" class="form-control" rows="2" 
+                                      x-model="document.scope" 
+                                      placeholder="Brief description of the invoice..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Products & Services Selection -->
+                <div x-show="currentStep === 2">
+                    <h5 class="mb-4">Select Products & Services</h5>
+                    
+                    <div class="flex flex-wrap -mx-4">
+                        <div class="col-lg-8">
+                            <x-product-selector />
+                        </div>
+                        <div class="col-lg-4">
+                            <x-pricing-display />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Billing Configuration -->
+                <div x-show="currentStep === 3">
+                    <h5 class="mb-4">Billing Configuration</h5>
+                    
+                    <x-billing-configuration />
+                </div>
+
+                <!-- Step 4: Review & Finalize -->
+                <div x-show="currentStep === 4">
+                    <h5 class="mb-4">Review Invoice</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <!-- Selected Items Summary -->
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden mb-3">
+                                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                                    <h6 class="mb-0">Selected Items (<span x-text="selectedItems.length"></span>)</h6>
+                                </div>
+                                <div class="p-6">
+                                    <div x-show="selectedItems.length === 0" class="text-muted text-center py-3">
+                                        No items selected
+                                    </div>
+                                    <template x-for="item in selectedItems" :key="item.id">
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <div>
+                                                <strong x-text="item.name"></strong>
+                                                <div class="small text-muted">
+                                                    Qty: <span x-text="item.quantity"></span> × 
+                                                    <span x-text="formatCurrency(item.unit_price)"></span>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <strong x-text="formatCurrency(item.subtotal)"></strong>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <!-- Billing Configuration Summary -->
+                            <div class="card mb-3" x-show="billingConfig.billing_options">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Billing Configuration</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">Billing Model:</dt>
+                                        <dd class="col-sm-8" x-text="billingConfig.billing_options?.model"></dd>
+                                        
+                                        <dt class="col-sm-4" x-show="billingConfig.billing_options?.cycle">Billing Cycle:</dt>
+                                        <dd class="col-sm-8" x-show="billingConfig.billing_options?.cycle" x-text="billingConfig.billing_options?.cycle"></dd>
+                                        
+                                        <dt class="col-sm-4">Payment Terms:</dt>
+                                        <dd class="col-sm-8"><span x-text="billingConfig.billing_options?.paymentTerms || 30"></span> days</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Notes</label>
+                                <textarea id="note" class="form-control" rows="3" 
+                                          x-model="document.note" 
+                                          placeholder="Additional notes (optional)..."></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="terms_conditions" class="form-label">Terms & Conditions</label>
+                                <textarea id="terms_conditions" class="form-control" rows="3" 
+                                          x-model="document.terms_conditions" 
+                                          placeholder="Payment terms and conditions (optional)..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <!-- Pricing Summary -->
+                            <div class="card bg-gray-100">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Invoice Summary</h6>
+                                    
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <strong x-text="formatCurrency(pricing.subtotal || 0)"></strong>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-2" x-show="pricing.discount > 0">
+                                        <span>Discount:</span>
+                                        <span class="text-green-600">-<span x-text="formatCurrency(pricing.discount || 0)"></span></span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-2" x-show="pricing.savings > 0">
+                                        <span>Savings:</span>
+                                        <span class="text-green-600">-<span x-text="formatCurrency(pricing.savings || 0)"></span></span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tax:</span>
+                                        <span x-text="formatCurrency(pricing.tax || 0)"></span>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <strong class="text-blue-600" x-text="formatCurrency(pricing.total || 0)"></strong>
+                                    </div>
+                                    
+                                    <!-- Recurring Revenue Display -->
+                                    <div x-show="pricing.recurring" class="mt-3 pt-3 border-top">
+                                        <h6 class="small mb-2">Recurring Revenue</h6>
+                                        <div class="d-flex justify-content-between small">
+                                            <span>Monthly (MRR):</span>
+                                            <span x-text="formatCurrency(pricing.recurring?.monthly || 0)"></span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small">
+                                            <span>Annual (ARR):</span>
+                                            <span x-text="formatCurrency(pricing.recurring?.annual || 0)"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
                     </div>
-                @endif
-
-                <!-- Submit Buttons -->
-                <div class="flex flex-col sm:flex-row justify-end items-center pt-6 border-t border-gray-200 gap-3">
-                    <a href="{{ route('financial.invoices.index') }}"
-                       class="w-full sm:w-auto inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Cancel
-                    </a>
-                    <button type="submit"
-                            class="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Create Invoice
-                    </button>
                 </div>
-            </form>
-        </div>
+
+                <!-- Navigation Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary" 
+                            @click="prevStep()" 
+                            :disabled="currentStep === 1">
+                        <i class="fas fa-arrow-left me-2"></i>Previous
+                    </button>
+                    
+                    <div>
+                        <button type="button" class="btn btn-outline-primary me-2" 
+                                @click="saveAsDraft()">
+                            Save as Draft
+                        </button>
+                        
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" 
+                                @click="nextStep()" 
+                                x-show="currentStep < totalSteps">
+                            Next<i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                        
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" 
+                                x-show="currentStep === totalSteps"
+                                :disabled="saving">
+                            <i class="fas fa-save me-2"></i>Create Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set due date automatically when invoice date changes
-    const invoiceDate = document.getElementById('date');
-    const dueDate = document.getElementById('due_date');
-    
-    invoiceDate.addEventListener('change', function() {
-        if (this.value) {
-            const date = new Date(this.value);
-            date.setDate(date.getDate() + 30); // Default 30 days payment terms
-            dueDate.value = date.toISOString().split('T')[0];
-        }
-    });
-    
-    // Validate due date is not before invoice date
-    dueDate.addEventListener('change', function() {
-        const invDate = new Date(invoiceDate.value);
-        const dueDateVal = new Date(this.value);
-        
-        if (dueDateVal < invDate) {
-            alert('Due date cannot be before invoice date');
-            this.value = invoiceDate.value;
-        }
-    });
-});
-</script>
-@endpush
 @endsection

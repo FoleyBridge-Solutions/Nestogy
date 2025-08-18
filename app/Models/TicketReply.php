@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domains\Ticket\Models\Ticket;
+use App\Traits\BelongsToCompany;
 
 /**
  * TicketReply Model
@@ -25,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class TicketReply extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -42,6 +44,11 @@ class TicketReply extends Model
         'time_worked',
         'replied_by',
         'ticket_id',
+        // Sentiment analysis fields
+        'sentiment_score',
+        'sentiment_label',
+        'sentiment_analyzed_at',
+        'sentiment_confidence',
     ];
 
     /**
@@ -53,6 +60,9 @@ class TicketReply extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'archived_at' => 'datetime',
+        'sentiment_analyzed_at' => 'datetime',
+        'sentiment_score' => 'decimal:2',
+        'sentiment_confidence' => 'decimal:2',
     ];
 
     /**
@@ -75,6 +85,15 @@ class TicketReply extends Model
         self::TYPE_PRIVATE => 'Private',
         self::TYPE_INTERNAL => 'Internal',
     ];
+
+    /**
+     * Sentiment constants
+     */
+    const SENTIMENT_POSITIVE = 'POSITIVE';
+    const SENTIMENT_WEAK_POSITIVE = 'WEAK_POSITIVE';
+    const SENTIMENT_NEUTRAL = 'NEUTRAL';
+    const SENTIMENT_WEAK_NEGATIVE = 'WEAK_NEGATIVE';
+    const SENTIMENT_NEGATIVE = 'NEGATIVE';
 
     /**
      * Get the ticket this reply belongs to.
@@ -272,6 +291,100 @@ class TicketReply extends Model
     }
 
     /**
+     * Get text content for sentiment analysis
+     */
+    public function getSentimentAnalysisText(): string
+    {
+        return trim(strip_tags($this->reply));
+    }
+
+    /**
+     * Check if reply has sentiment analysis
+     */
+    public function hasSentimentAnalysis(): bool
+    {
+        return !is_null($this->sentiment_score) && !is_null($this->sentiment_analyzed_at);
+    }
+
+    /**
+     * Get sentiment interpretation
+     */
+    public function getSentimentInterpretation(): array
+    {
+        if (!$this->hasSentimentAnalysis()) {
+            return [
+                'interpretation' => 'Not Analyzed',
+                'color' => '#94a3b8', // slate-400
+                'confidence_level' => 'N/A'
+            ];
+        }
+
+        return \App\Services\TaxEngine\SentimentAnalysisService::interpretSentimentScore($this->sentiment_score);
+    }
+
+    /**
+     * Check if reply sentiment is negative
+     */
+    public function hasNegativeSentiment(): bool
+    {
+        return in_array($this->sentiment_label, [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE]);
+    }
+
+    /**
+     * Check if reply sentiment is positive  
+     */
+    public function hasPositiveSentiment(): bool
+    {
+        return in_array($this->sentiment_label, [self::SENTIMENT_POSITIVE, self::SENTIMENT_WEAK_POSITIVE]);
+    }
+
+    /**
+     * Check if reply sentiment needs attention (negative with high confidence)
+     */
+    public function sentimentNeedsAttention(): bool
+    {
+        return $this->hasNegativeSentiment() && ($this->sentiment_confidence ?? 0) > 0.6;
+    }
+
+    /**
+     * Get sentiment color for UI display
+     */
+    public function getSentimentColor(): string
+    {
+        if (!$this->hasSentimentAnalysis()) {
+            return '#94a3b8'; // slate-400
+        }
+
+        return match($this->sentiment_label) {
+            self::SENTIMENT_POSITIVE => '#10b981', // emerald-500
+            self::SENTIMENT_WEAK_POSITIVE => '#84cc16', // lime-500  
+            self::SENTIMENT_NEUTRAL => '#64748b', // slate-500
+            self::SENTIMENT_WEAK_NEGATIVE => '#f97316', // orange-500
+            self::SENTIMENT_NEGATIVE => '#ef4444', // red-500
+            default => '#94a3b8' // slate-400
+        };
+    }
+
+    /**
+     * Get sentiment icon for UI display
+     */
+    public function getSentimentIcon(): string
+    {
+        if (!$this->hasSentimentAnalysis()) {
+            return 'fas fa-question-circle';
+        }
+
+        return match($this->sentiment_label) {
+            self::SENTIMENT_POSITIVE => 'fas fa-smile',
+            self::SENTIMENT_WEAK_POSITIVE => 'fas fa-smile-wink',
+            self::SENTIMENT_NEUTRAL => 'fas fa-meh',
+            self::SENTIMENT_WEAK_NEGATIVE => 'fas fa-frown',
+            self::SENTIMENT_NEGATIVE => 'fas fa-angry',
+            default => 'fas fa-question-circle'
+        };
+    }
+
+    /**
      * Scope to get public replies.
      */
     public function scopePublic($query)
@@ -333,6 +446,43 @@ class TicketReply extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where('reply', 'like', '%' . $search . '%');
+    }
+
+    // Sentiment-related scopes
+    public function scopeWithSentimentAnalysis($query)
+    {
+        return $query->whereNotNull('sentiment_analyzed_at');
+    }
+
+    public function scopeWithoutSentimentAnalysis($query)
+    {
+        return $query->whereNull('sentiment_analyzed_at');
+    }
+
+    public function scopeBySentiment($query, string $sentiment)
+    {
+        return $query->where('sentiment_label', $sentiment);
+    }
+
+    public function scopePositiveSentiment($query)
+    {
+        return $query->whereIn('sentiment_label', [self::SENTIMENT_POSITIVE, self::SENTIMENT_WEAK_POSITIVE]);
+    }
+
+    public function scopeNegativeSentiment($query)
+    {
+        return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE]);
+    }
+
+    public function scopeNeutralSentiment($query)
+    {
+        return $query->where('sentiment_label', self::SENTIMENT_NEUTRAL);
+    }
+
+    public function scopeSentimentNeedsAttention($query)
+    {
+        return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE])
+                    ->where('sentiment_confidence', '>', 0.6);
     }
 
     /**

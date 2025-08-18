@@ -3,19 +3,19 @@
 @section('title', 'Trip Details')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Trip Details</h1>
                 <div class="btn-group">
                     @if(!in_array($trip->status, ['completed', 'cancelled']))
-                        <a href="{{ route('clients.trips.standalone.edit', $trip) }}" class="btn btn-primary">
-                            <i class="fas fa-edit me-2"></i>Edit Trip
+                        <a href="{{ route('clients.trips.standalone.edit', $trip) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-edit mr-2"></i>Edit Trip
                         </a>
                         @if($trip->requiresApproval())
-                            <button type="button" class="btn btn-success" onclick="approveTrip({{ $trip->id }})">
-                                <i class="fas fa-check me-2"></i>Approve
+                            <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="approveTrip({{ $trip->id }})">
+                                <i class="fas fa-check mr-2"></i>Approve
                             </button>
                         @endif
                         @if($trip->status === 'approved')
@@ -24,7 +24,7 @@
                             </button>
                         @endif
                         @if($trip->status === 'in_progress')
-                            <button type="button" class="btn btn-success" onclick="completeTrip({{ $trip->id }})">
+                            <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="completeTrip({{ $trip->id }})">
                                 <i class="fas fa-flag-checkered me-2"></i>Complete Trip
                             </button>
                         @endif
@@ -48,25 +48,25 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8">
                     <!-- Main Trip Details -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">
                                     <i class="fas fa-route me-2"></i>{{ $trip->trip_number }}
                                 </h5>
                                 <div class="d-flex gap-2">
                                     @switch($trip->status)
                                         @case('planned')
-                                            <span class="badge bg-secondary">Planned</span>
+                                            <span class="badge bg-gray-600">Planned</span>
                                             @break
                                         @case('approved')
                                             <span class="badge bg-success">Approved</span>
                                             @break
                                         @case('in_progress')
-                                            <span class="badge bg-primary">In Progress</span>
+                                            <span class="badge bg-blue-600">In Progress</span>
                                             @break
                                         @case('completed')
                                             <span class="badge bg-success">Completed</span>
@@ -89,13 +89,13 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-muted">Trip Title</h6>
+                                <div class="md:w-1/2 px-4">
+                                    <h6 class="text-gray-600">Trip Title</h6>
                                     <p class="mb-3 fw-bold">{{ $trip->title }}</p>
 
-                                    <h6 class="text-muted">Client</h6>
+                                    <h6 class="text-gray-600">Client</h6>
                                     <p class="mb-3">
                                         <a href="{{ route('clients.show', $trip->client) }}" class="text-decoration-none">
                                             {{ $trip->client->display_name }}
@@ -118,7 +118,7 @@
                                     @endif
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="md:w-1/2 px-4">
                                     <h6 class="text-muted">Destination</h6>
                                     <div class="mb-3">
                                         <div class="fw-bold">{{ $trip->full_destination }}</div>
@@ -161,7 +161,7 @@
                                     </div>
 
                                     @if($trip->days_until_trip !== null)
-                                        <div class="alert alert-info py-2">
+                                        <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700 py-2">
                                             <i class="fas fa-clock me-2"></i>
                                             <strong>{{ $trip->time_until_trip }}</strong>
                                         </div>
@@ -172,7 +172,7 @@
                             @if($trip->accommodation_details)
                                 <hr>
                                 <h6 class="text-muted">Accommodation</h6>
-                                <div class="mb-3 p-3 bg-light rounded">
+                                <div class="mb-3 p-3 bg-gray-100 rounded">
                                     {!! nl2br(e($trip->accommodation_details)) !!}
                                 </div>
                             @endif
@@ -182,7 +182,7 @@
                                 <h6 class="text-muted">Attendees</h6>
                                 <div class="mb-3">
                                     @foreach($trip->attendees as $attendee)
-                                        <span class="badge bg-light text-dark me-2 mb-1">
+                                        <span class="badge bg-gray-100 text-dark me-2 mb-1">
                                             <i class="fas fa-user me-1"></i>{{ $attendee }}
                                         </span>
                                     @endforeach
@@ -201,12 +201,12 @@
 
                     <!-- Expense Details -->
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-calculator me-2"></i>Expense Details
                             </h5>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="text-center p-3 bg-light rounded">
@@ -216,14 +216,14 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="text-center p-3 bg-light rounded">
-                                        <div class="fw-bold text-primary fs-5">{{ $trip->formatted_actual_expenses }}</div>
+                                        <div class="fw-bold text-blue-600 fs-5">{{ $trip->formatted_actual_expenses }}</div>
                                         <small class="text-muted">Actual Expenses</small>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="text-center p-3 bg-light rounded">
                                         @if($trip->expense_variance !== null)
-                                            <div class="fw-bold fs-5 {{ $trip->expense_variance > 0 ? 'text-danger' : ($trip->expense_variance < 0 ? 'text-success' : 'text-info') }}">
+                                            <div class="fw-bold fs-5 {{ $trip->expense_variance > 0 ? 'text-red-600' : ($trip->expense_variance < 0 ? 'text-green-600' : 'text-info') }}">
                                                 {{ $trip->formatted_expense_variance }}
                                             </div>
                                         @else
@@ -254,8 +254,8 @@
                             @if($trip->expense_breakdown && count($trip->expense_breakdown) > 0)
                                 <hr>
                                 <h6 class="text-muted">Expense Breakdown</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
+                                <div class="min-w-full divide-y divide-gray-200-responsive">
+                                    <table class="table min-w-full divide-y divide-gray-200-sm">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Category</th>
@@ -307,8 +307,8 @@
                                         @for($i = 1; $i <= 5; $i++)
                                             <i class="fas fa-star {{ $i <= $trip->internal_rating ? 'text-warning' : 'text-muted' }}"></i>
                                         @endfor
-                                        <span class="ms-2">{{ $trip->internal_rating }}/5</span>
-                                        <span class="text-muted ms-2">
+                                        <span class="ml-2">{{ $trip->internal_rating }}/5</span>
+                                        <span class="text-muted ml-2">
                                             @switch($trip->internal_rating)
                                                 @case(5) (Excellent) @break
                                                 @case(4) (Very Good) @break
@@ -438,7 +438,7 @@
                             </div>
                             <div class="card-body">
                                 @if($trip->submitted_for_reimbursement)
-                                    <div class="alert alert-success">
+                                    <div class="px-4 py-3 rounded bg-green-100 border border-green-400 text-green-700">
                                         <i class="fas fa-check-circle me-2"></i>
                                         Submitted for reimbursement
                                         @if($trip->reimbursement_amount)
@@ -451,7 +451,7 @@
                                         </div>
                                     @endif
                                 @elseif($trip->isCompleted())
-                                    <div class="alert alert-warning">
+                                    <div class="px-4 py-3 rounded bg-yellow-100 border border-yellow-400 text-yellow-700">
                                         <i class="fas fa-exclamation-triangle me-2"></i>
                                         Ready for reimbursement submission
                                     </div>
@@ -477,17 +477,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Delete Trip</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this trip? This action cannot be undone.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="deleteTripForm" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Trip</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Trip</button>
                 </form>
             </div>
         </div>
@@ -500,13 +500,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Approve Trip</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Approve this trip? This will change the status to approved.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="approveTripForm" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-success">Approve Trip</button>
@@ -522,16 +522,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Start Trip</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Start this trip? This will change the status to in progress.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="startTripForm" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-primary">Start Trip</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Start Trip</button>
                 </form>
             </div>
         </div>
@@ -544,7 +544,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Complete Trip</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <form id="completeTripForm" method="POST">
                 @csrf
@@ -552,18 +552,18 @@
                     <p>Complete this trip by providing final details:</p>
                     
                     <div class="mb-3">
-                        <label for="actual_expenses" class="form-label">Actual Expenses</label>
-                        <input type="number" class="form-control" name="actual_expenses" id="actual_expenses" step="0.01" min="0" value="{{ $trip->actual_expenses }}">
+                        <label for="actual_expenses" class="block text-sm font-medium text-gray-700 mb-1">Actual Expenses</label>
+                        <input type="number" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" name="actual_expenses" id="actual_expenses" step="0.01" min="0" value="{{ $trip->actual_expenses }}">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="client_feedback" class="form-label">Client Feedback</label>
-                        <textarea class="form-control" name="client_feedback" id="client_feedback" rows="3">{{ $trip->client_feedback }}</textarea>
+                        <label for="client_feedback" class="block text-sm font-medium text-gray-700 mb-1">Client Feedback</label>
+                        <textarea class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" name="client_feedback" id="client_feedback" rows="3">{{ $trip->client_feedback }}</textarea>
                     </div>
                     
                     <div class="mb-3">
                         <label for="internal_rating" class="form-label">Internal Rating (1-5)</label>
-                        <select class="form-select" name="internal_rating" id="internal_rating">
+                        <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" name="internal_rating" id="internal_rating">
                             <option value="">Select rating...</option>
                             <option value="5" {{ $trip->internal_rating == 5 ? 'selected' : '' }}>5 - Excellent</option>
                             <option value="4" {{ $trip->internal_rating == 4 ? 'selected' : '' }}>4 - Very Good</option>
@@ -581,7 +581,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                     <button type="submit" class="btn btn-success">Complete Trip</button>
                 </div>
             </form>
@@ -595,7 +595,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Cancel Trip</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <form id="cancelTripForm" method="POST">
                 @csrf
@@ -607,7 +607,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                     <button type="submit" class="btn btn-warning">Cancel Trip</button>
                 </div>
             </form>
@@ -621,7 +621,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Submit for Reimbursement</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <form id="submitReimbursementForm" method="POST">
                 @csrf

@@ -200,6 +200,9 @@ class InvoiceController extends Controller
             },
             'payments' => function ($query) {
                 $query->orderBy('payment_date', 'desc');
+            },
+            'taxCalculations' => function($query) {
+                $query->where('status', '!=', 'voided')->latest();
             }
         ]);
 

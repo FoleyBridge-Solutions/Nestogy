@@ -2,7 +2,7 @@
 
 ## Integration Overview
 
-The Nestogy MSP platform uses event-driven architecture and service layer patterns to enable seamless communication and data sharing between domains while maintaining clear boundaries and responsibilities.
+The Nestogy MSP platform uses event-driven architecture, standardized base class patterns, and service layer integration to enable seamless communication and data sharing between domains while maintaining clear boundaries and responsibilities with consistent multi-tenancy security.
 
 ## Integration Patterns
 
@@ -75,7 +75,103 @@ class CreateWelcomeTicket
 }
 ```
 
-### 2. Service Layer Integration
+### 2. Base Class Integration Patterns
+
+#### Base Service Communication
+
+All domain services extend domain-specific base services, providing consistent integration patterns:
+
+```php
+// Example: Cross-domain base service communication
+class TicketService extends ClientBaseService
+{
+    protected function initializeService(): void
+    {
+        $this->modelClass = Ticket::class;
+        $this->defaultEagerLoad = ['client', 'user', 'replies'];
+        $this->searchableFields = ['title', 'description'];
+    }
+    
+    public function createTicketFromAsset(Asset $asset, array $data): Ticket
+    {
+        // Asset domain integration - automatic client scoping via base service
+        $data['client_id'] = $asset->client_id;
+        $data['asset_id'] = $asset->id;
+        
+        // Base service handles company scoping automatically
+        return $this->create($data);
+    }
+    
+    public function createInvoiceForTicket(Ticket $ticket, array $data): Invoice
+    {
+        // Financial domain integration via service injection
+        $financialService = app(InvoiceService::class);
+        
+        $data['client_id'] = $ticket->client_id; // Maintained scoping
+        $data['description'] = "Support work for ticket #{$ticket->id}";
+        
+        return $financialService->create($data);
+    }
+}
+```
+
+#### Base Controller Integration
+
+Controllers use BaseResourceController for consistent API responses across domains:
+
+```php
+class TicketController extends BaseResourceController
+{
+    use HasClientRelation;
+    
+    protected function initializeController(): void
+    {
+        $this->service = app(TicketService::class);
+        $this->resourceName = 'ticket';
+        $this->viewPath = 'tickets';
+        $this->routePrefix = 'tickets';
+    }
+    
+    // Automatic JSON/HTML responses for cross-domain API calls
+    public function createFromAsset(Asset $asset, StoreTicketRequest $request)
+    {
+        $ticket = $this->service->createTicketFromAsset($asset, $request->validated());
+        
+        // BaseResourceController handles response format automatically
+        return $this->handleStoreResponse($ticket, 'Ticket created from asset successfully');
+    }
+}
+```
+
+#### Base Request Validation Integration
+
+Standardized validation ensures consistent data integrity across domains:
+
+```php
+class StoreTicketFromAssetRequest extends BaseStoreRequest
+{
+    protected function getModelClass(): string { return Ticket::class; }
+    
+    protected function getValidationRules(): array
+    {
+        return $this->mergeRules([
+            'asset_id' => 'required|exists:assets,id|client_scoped', // Cross-domain validation
+            'title' => 'required|string|max:255',
+            'priority' => 'required|in:low,normal,high,urgent',
+        ], $this->getStandardTextRules());
+    }
+    
+    // Automatic validation that asset belongs to same company as user
+    protected function getCustomValidationMessages(): array
+    {
+        return [
+            'asset_id.client_scoped' => 'The selected asset must belong to your company.'
+        ];
+    }
+}
+```
+
+### 3. Service Layer Integration
 
 #### Cross-Domain Services
 
@@ -589,4 +685,4 @@ This cross-domain integration architecture ensures that all domains work togethe
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: January 2024 | **Platform**: Laravel 11 + PHP 8.2+
+**Version**: 2.0.0 | **Last Updated**: August 2024 | **Platform**: Laravel 12 + PHP 8.2+ + Modern Base Class Architecture

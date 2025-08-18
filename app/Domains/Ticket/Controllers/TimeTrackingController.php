@@ -25,6 +25,9 @@ class TimeTrackingController extends Controller
      */
     public function index(Request $request)
     {
+        // Get view type from request, default to 'entries'
+        $view = $request->get('view', 'entries');
+        
         $query = TicketTimeEntry::where('company_id', auth()->user()->company_id);
 
         // Apply search filters
@@ -84,7 +87,7 @@ class TimeTrackingController extends Controller
 
         // Get filter options
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
+                    ->where('status', true)
                     ->orderBy('name')
                     ->get();
 
@@ -94,20 +97,30 @@ class TimeTrackingController extends Controller
                         ->limit(50)
                         ->get();
 
+        // Get active timers
+        $activeTimers = TicketTimeEntry::where('company_id', auth()->user()->company_id)
+                                      ->whereNull('ended_at')
+                                      ->whereNotNull('started_at')
+                                      ->where('entry_type', TicketTimeEntry::TYPE_TIMER)
+                                      ->with(['ticket', 'user'])
+                                      ->orderBy('started_at', 'desc')
+                                      ->get();
+
         // Calculate summary statistics
-        $summaryStats = $this->calculateSummaryStats($request);
+        $timeStats = $this->calculateSummaryStats($request);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'time_entries' => $timeEntries,
                 'users' => $users,
                 'tickets' => $tickets,
-                'summary_stats' => $summaryStats,
+                'summary_stats' => $timeStats,
+                'active_timers' => $activeTimers,
             ]);
         }
 
         return view('tickets.time-tracking.index', compact(
-            'timeEntries', 'users', 'tickets', 'summaryStats'
+            'timeEntries', 'users', 'tickets', 'timeStats', 'view', 'activeTimers'
         ));
     }
 
@@ -117,7 +130,7 @@ class TimeTrackingController extends Controller
     public function create(Request $request)
     {
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
+                    ->where('status', true)
                     ->orderBy('name')
                     ->get();
 
@@ -232,7 +245,7 @@ class TimeTrackingController extends Controller
         $this->authorize('update', $timeEntry);
 
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
+                    ->where('status', true)
                     ->orderBy('name')
                     ->get();
 
@@ -382,8 +395,18 @@ class TimeTrackingController extends Controller
             'description' => $request->description,
             'task_category' => $request->task_category,
             'started_at' => now(),
-            'is_billable' => true,
-            'is_approved' => false,
+            'entry_type' => TicketTimeEntry::TYPE_TIMER,
+            'status' => 'draft',
+            'work_date' => now()->toDateString(),
+            'billable' => true,
+            'rate_type' => 'after_hours', // or determine based on time/settings
+            'hourly_rate' => 225, // or get from user profile/settings
+            'work_type' => 'general_support', // or get from request
+            'metadata' => [
+                'auto_started' => true,
+                'location' => 'remote',
+                'client_visible' => true
+            ],
         ]);
 
         return response()->json([
@@ -396,8 +419,42 @@ class TimeTrackingController extends Controller
     /**
      * Stop the current timer
      */
-    public function stopTimer(TicketTimeEntry $timeEntry)
+    public function stopTimer(Request $request, ?TicketTimeEntry $timeEntry = null)
     {
+        // If specific time entry ID provided in request, use that
+        if ($request->has('time_entry_id')) {
+            $timeEntry = TicketTimeEntry::where('id', $request->time_entry_id)
+                                       ->where('company_id', auth()->user()->company_id)
+                                       ->first();
+            
+            if (!$timeEntry) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Time entry not found'
+                    ], 404);
+                }
+                return redirect()->back()->with('error', 'Time entry not found');
+            }
+        }
+        // If no specific time entry provided, find the user's active timer
+        elseif (!$timeEntry) {
+            $timeEntry = TicketTimeEntry::where('user_id', auth()->id())
+                                       ->where('company_id', auth()->user()->company_id)
+                                       ->whereNull('ended_at')
+                                       ->first();
+            
+            if (!$timeEntry) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No active timer found'
+                    ], 404);
+                }
+                return redirect()->back()->with('error', 'No active timer found');
+            }
+        }
+
         $this->authorize('update', $timeEntry);
 
         if ($timeEntry->ended_at || $timeEntry->user_id !== auth()->id()) {
@@ -409,12 +466,16 @@ class TimeTrackingController extends Controller
 
         $timeEntry->stopTimer();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Timer stopped successfully',
-            'time_entry' => $timeEntry->fresh()->load('ticket'),
-            'duration' => $timeEntry->formatted_duration
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Timer stopped successfully',
+                'time_entry' => $timeEntry->fresh()->load('ticket'),
+                'duration' => $timeEntry->formatted_duration
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Timer stopped successfully');
     }
 
     /**
@@ -668,13 +729,20 @@ class TimeTrackingController extends Controller
 
         $entries = $query->get();
 
+        $totalHours = $entries->sum('hours_worked') ?: 0;
+        $billableEntries = $entries->where('billable', true);
+        $billableHours = $billableEntries->sum('hours_worked') ?: 0;
+        $totalRevenue = $billableEntries->sum('amount') ?: 0;
+        $avgHourlyRate = $billableHours > 0 ? ($totalRevenue / $billableHours) : 0;
+
         return [
             'total_entries' => $entries->count(),
-            'total_hours' => round($entries->sum('duration_minutes') / 60, 2),
-            'billable_hours' => round($entries->where('is_billable', true)->sum('duration_minutes') / 60, 2),
-            'total_cost' => $entries->sum('cost'),
-            'approved_entries' => $entries->where('is_approved', true)->count(),
-            'pending_approval' => $entries->where('is_approved', false)->count(),
+            'total_hours' => round($totalHours, 2),
+            'billable_hours' => round($billableHours, 2),
+            'total_revenue' => round($totalRevenue, 2),
+            'avg_hourly_rate' => round($avgHourlyRate, 2),
+            'approved_entries' => $entries->whereNotNull('approved_at')->count(),
+            'pending_approval' => $entries->whereNull('approved_at')->whereNotNull('submitted_at')->count(),
         ];
     }
 }

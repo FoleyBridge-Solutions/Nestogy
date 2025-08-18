@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\HasPermissions;
+use Silber\Bouncer\Database\HasRolesAndAbilities;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, SoftDeletes, HasPermissions;
+    use HasFactory, Notifiable, SoftDeletes, HasRolesAndAbilities;
 
     /**
      * The table associated with the model.
@@ -177,18 +177,20 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Check if user has admin role (tenant administrator).
+     * Uses Bouncer for role checking.
      */
     public function isAdmin(): bool
     {
-        return $this->getRole() === self::ROLE_ADMIN;
+        return $this->isA('admin');
     }
 
     /**
      * Check if user has super admin role (platform operator).
+     * For backward compatibility - checks if admin in company 1.
      */
     public function isSuperAdmin(): bool
     {
-        return $this->getRole() === self::ROLE_SUPER_ADMIN;
+        return $this->isA('admin') && $this->company_id === 1;
     }
 
     /**
@@ -196,7 +198,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isAnyAdmin(): bool
     {
-        return in_array($this->getRole(), [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]);
+        return $this->isAdmin();
     }
 
     /**
@@ -204,23 +206,25 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function canAccessCrossTenant(): bool
     {
-        return $this->isSuperAdmin() && $this->company_id === 1;
+        return $this->isSuperAdmin();
     }
 
     /**
      * Check if user has tech role.
+     * Uses Bouncer for role checking.
      */
     public function isTech(): bool
     {
-        return $this->getRole() === self::ROLE_TECH;
+        return $this->isA('tech');
     }
 
     /**
      * Check if user has accountant role.
+     * Uses Bouncer for role checking.
      */
     public function isAccountant(): bool
     {
-        return $this->getRole() === self::ROLE_ACCOUNTANT;
+        return $this->isA('accountant');
     }
 
     /**
@@ -232,7 +236,8 @@ class User extends Authenticatable implements MustVerifyEmail
             return asset('storage/users/' . $this->avatar);
         }
         
-        return 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($this->email))) . '?d=identicon&s=150';
+        // Use ui-avatars.com for consistency with navbar
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF&size=150';
     }
 
     /**
@@ -289,5 +294,186 @@ class User extends Authenticatable implements MustVerifyEmail
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'extension_key' => 'nullable|string|max:18',
         ];
+    }
+
+    /**
+     * Bouncer Integration & Backward Compatibility Methods
+     */
+    
+    /**
+     * Get the scope for Bouncer (company-based multi-tenancy).
+     */
+    public function getBouncerScope()
+    {
+        return $this->company_id;
+    }
+    
+    /**
+     * Bouncer-compatible permission checking (backward compatibility).
+     */
+    public function hasPermission(string $ability, ?int $companyId = null): bool
+    {
+        // If checking for a different company, temporarily set scope
+        if ($companyId && $companyId !== $this->company_id) {
+            return \Bouncer::scope()->to($companyId)->can($this, $ability);
+        }
+        
+        // Use Laravel's built-in can() method which works with Bouncer
+        return $this->can($ability);
+    }
+    
+    /**
+     * Check if user has any of the given permissions.
+     */
+    public function hasAnyPermission(array $abilities, ?int $companyId = null): bool
+    {
+        foreach ($abilities as $ability) {
+            if ($this->hasPermission($ability, $companyId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Check if user has all of the given permissions.
+     */
+    public function hasAllPermissions(array $abilities, ?int $companyId = null): bool
+    {
+        foreach ($abilities as $ability) {
+            if (!$this->hasPermission($ability, $companyId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Bouncer-compatible role checking (backward compatibility).
+     */
+    public function hasRole(string|array $role, ?int $companyId = null): bool
+    {
+        $roles = is_array($role) ? $role : [$role];
+        
+        // If checking for a different company, temporarily set scope
+        if ($companyId && $companyId !== $this->company_id) {
+            $originalScope = \Bouncer::scope();
+            \Bouncer::scope()->to($companyId);
+            
+            foreach ($roles as $roleName) {
+                if ($this->isA($roleName)) {
+                    \Bouncer::scope($originalScope);
+                    return true;
+                }
+            }
+            \Bouncer::scope($originalScope);
+            return false;
+        }
+        
+        // Use Bouncer's isA method which works with current scope
+        foreach ($roles as $roleName) {
+            if ($this->isA($roleName)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Assign role using Bouncer.
+     */
+    public function assignRole(string $role, ?int $companyId = null): self
+    {
+        $scope = $companyId ?? $this->company_id;
+        
+        if ($scope) {
+            \Bouncer::scope()->to($scope)->dontCache();
+        }
+        
+        $this->assign($role);
+        
+        return $this;
+    }
+    
+    /**
+     * Remove role using Bouncer.
+     */
+    public function removeRole(string $role, ?int $companyId = null): self
+    {
+        $scope = $companyId ?? $this->company_id;
+        
+        if ($scope) {
+            \Bouncer::scope()->to($scope)->dontCache();
+        }
+        
+        $this->retract($role);
+        
+        return $this;
+    }
+    
+    /**
+     * Give permission directly using Bouncer.
+     */
+    public function givePermissionTo(string $ability, ?int $companyId = null): self
+    {
+        $scope = $companyId ?? $this->company_id;
+        
+        if ($scope) {
+            \Bouncer::scope()->to($scope)->dontCache();
+        }
+        
+        \Bouncer::allow($this)->to($ability);
+        
+        return $this;
+    }
+    
+    /**
+     * Revoke permission using Bouncer.
+     */
+    public function revokePermissionTo(string $ability, ?int $companyId = null): self
+    {
+        $scope = $companyId ?? $this->company_id;
+        
+        if ($scope) {
+            \Bouncer::scope()->to($scope)->dontCache();
+        }
+        
+        \Bouncer::disallow($this)->to($ability);
+        
+        return $this;
+    }
+    
+    /**
+     * Get all permissions for user (Bouncer integration).
+     */
+    public function getAllPermissions(?int $companyId = null)
+    {
+        $scope = $companyId ?? $this->company_id;
+        
+        // Set scope if different from current user's company
+        if ($scope && $scope !== $this->company_id) {
+            \Bouncer::scope()->to($scope);
+        }
+        
+        // Get abilities using Bouncer's built-in method
+        return $this->getAbilities();
+    }
+    
+    
+    /**
+     * Check domain access using Bouncer.
+     */
+    public function canAccessDomain(string $domain, ?int $companyId = null): bool
+    {
+        return $this->hasPermission($domain . '.view', $companyId);
+    }
+    
+    /**
+     * Check domain action using Bouncer.
+     */
+    public function canPerformAction(string $domain, string $action, ?int $companyId = null): bool
+    {
+        return $this->hasPermission($domain . '.' . $action, $companyId);
     }
 }

@@ -1,0 +1,250 @@
+{{-- Pricing Display Component --}}
+<div x-data="{
+    subtotal: 0,
+    discount: 0,
+    savings: 0,
+    tax: 0,
+    total: 0,
+    recurring: {
+        monthly: 0,
+        annual: 0
+    },
+    showDetails: false,
+    appliedRules: [],
+    
+    init() {
+        // Listen for pricing updates from parent
+        this.$watch('$root.pricing', (newPricing) => {
+            if (newPricing) {
+                this.updatePricing(newPricing);
+            }
+        });
+    },
+    
+    updatePricing(pricing) {
+        this.subtotal = pricing.subtotal || 0;
+        this.discount = pricing.discount || 0;
+        this.savings = pricing.savings || 0;
+        this.tax = pricing.tax || 0;
+        this.total = pricing.total || 0;
+        this.recurring = pricing.recurring || { monthly: 0, annual: 0 };
+        this.appliedRules = pricing.applied_rules || [];
+        
+        // Dispatch pricing calculated event
+        this.$dispatch('pricing-calculated', pricing);
+    },
+    
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: $root.document?.currency_code || 'USD'
+        }).format(amount || 0);
+    }
+}"
+@products-selected.window="
+    // Calculate pricing based on selected items
+    const items = $event.detail.items || [];
+    let subtotal = 0;
+    let discount = 0;
+    let savings = 0;
+    
+    items.forEach(item => {
+        subtotal += (item.base_price * item.quantity);
+        if (item.savings) savings += item.savings;
+    });
+    
+    // Apply any global discounts
+    if ($root.document?.discount_amount) {
+        if ($root.document.discount_type === 'percentage') {
+            discount = subtotal * ($root.document.discount_amount / 100);
+        } else {
+            discount = $root.document.discount_amount;
+        }
+    }
+    
+    // Calculate tax
+    const taxableAmount = subtotal - discount - savings;
+    const taxRate = $root.document?.tax_rate || 0;
+    const tax = taxableAmount * (taxRate / 100);
+    
+    // Calculate total
+    const total = taxableAmount + tax;
+    
+    // Calculate recurring revenue
+    let monthlyRevenue = 0;
+    let annualRevenue = 0;
+    
+    items.forEach(item => {
+        if (item.billing_cycle === 'monthly') {
+            monthlyRevenue += (item.unit_price * item.quantity);
+            annualRevenue += (item.unit_price * item.quantity * 12);
+        } else if (item.billing_cycle === 'annually') {
+            annualRevenue += (item.unit_price * item.quantity);
+            monthlyRevenue += (item.unit_price * item.quantity / 12);
+        } else if (item.billing_cycle === 'quarterly') {
+            monthlyRevenue += (item.unit_price * item.quantity / 3);
+            annualRevenue += (item.unit_price * item.quantity * 4);
+        }
+    });
+    
+    // Update pricing
+    updatePricing({
+        subtotal: subtotal,
+        discount: discount,
+        savings: savings,
+        tax: tax,
+        total: total,
+        recurring: {
+            monthly: monthlyRevenue,
+            annual: annualRevenue
+        }
+    });
+    
+    // Update root pricing for other components
+    $root.pricing = {
+        subtotal: subtotal,
+        discount: discount,
+        savings: savings,
+        tax: tax,
+        total: total,
+        recurring: {
+            monthly: monthlyRevenue,
+            annual: annualRevenue
+        }
+    };
+"
+class="pricing-display">
+    
+    <!-- Pricing Summary Card -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 bg-gray-100">
+            <div class="flex justify-between items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-calculator mr-2"></i>Pricing Summary
+                </h6>
+                <button @click="showDetails = !showDetails" 
+                        class="btn btn-sm btn-link text-decoration-none">
+                    <i class="fas" :class="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Basic Pricing -->
+            <div class="pricing-lines">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="fw-semibold" x-text="formatCurrency(subtotal)"></span>
+                </div>
+                
+                <div x-show="discount > 0" class="d-flex justify-content-between mb-2">
+                    <span class="text-gray-600">Discount:</span>
+                    <span class="text-green-600">
+                        -<span x-text="formatCurrency(discount)"></span>
+                    </span>
+                </div>
+                
+                <div x-show="savings > 0" class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Volume Savings:</span>
+                    <span class="text-green-600">
+                        -<span x-text="formatCurrency(savings)"></span>
+                    </span>
+                </div>
+                
+                <div x-show="tax > 0" class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">
+                        Tax (<span x-text="$root.document?.tax_rate || 0"></span>%):
+                    </span>
+                    <span x-text="formatCurrency(tax)"></span>
+                </div>
+                
+                <hr class="my-2">
+                
+                <div class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong class="text-blue-600 fs-5" x-text="formatCurrency(total)"></strong>
+                </div>
+            </div>
+            
+            <!-- Recurring Revenue (if applicable) -->
+            <div x-show="recurring.monthly > 0 || recurring.annual > 0" 
+                 class="mt-3 pt-3 border-top">
+                <h6 class="small text-muted mb-2">
+                    <i class="fas fa-sync-alt mr-1"></i>Recurring Revenue
+                </h6>
+                
+                <div x-show="recurring.monthly > 0" 
+                     class="d-flex justify-content-between small">
+                    <span class="text-muted">Monthly (MRR):</span>
+                    <span class="text-info" x-text="formatCurrency(recurring.monthly)"></span>
+                </div>
+                
+                <div x-show="recurring.annual > 0" 
+                     class="d-flex justify-content-between small">
+                    <span class="text-muted">Annual (ARR):</span>
+                    <span class="text-info" x-text="formatCurrency(recurring.annual)"></span>
+                </div>
+            </div>
+            
+            <!-- Pricing Details (collapsible) -->
+            <div x-show="showDetails && appliedRules.length > 0" 
+                 x-transition
+                 class="mt-3 pt-3 border-top">
+                <h6 class="small text-muted mb-2">Applied Pricing Rules</h6>
+                <ul class="list-unstyled small">
+                    <template x-for="rule in appliedRules" :key="rule.id">
+                        <li class="mb-1">
+                            <i class="fas fa-check-circle text-success me-1"></i>
+                            <span x-text="rule.name"></span>
+                            <span class="text-muted" x-text="`(${rule.discount}% off)`"></span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden-footer bg-gray-100">
+            <div class="d-flex justify-content-between items-center">
+                <small class="text-muted">
+                    <span x-text="$root.selectedItems?.length || 0"></span> items selected
+                </small>
+                
+                <div class="btn-group btn-group-sm">
+                    <button @click="$dispatch('apply-discount')" 
+                            class="btn btn-outline-secondary"
+                            title="Apply Discount">
+                        <i class="fas fa-percentage"></i>
+                    </button>
+                    
+                    <button @click="$dispatch('add-tax-exemption')" 
+                            class="btn btn-outline-secondary"
+                            title="Tax Exemption">
+                        <i class="fas fa-file-invoice"></i>
+                    </button>
+                    
+                    <button @click="$dispatch('recalculate-pricing')" 
+                            class="btn btn-outline-secondary"
+                            title="Recalculate">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Savings Badge (if applicable) -->
+    <div x-show="(discount + savings) > 0" 
+         class="px-4 py-3 rounded bg-green-100 border border-green-400 text-green-700 mt-3">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-piggy-bank me-2"></i>
+            <div>
+                <strong>Total Savings: </strong>
+                <span x-text="formatCurrency(discount + savings)"></span>
+                <span class="text-muted ml-2">
+                    (<span x-text="Math.round(((discount + savings) / subtotal) * 100)"></span>% off)
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

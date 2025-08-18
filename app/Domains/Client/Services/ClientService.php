@@ -5,20 +5,169 @@ namespace App\Domains\Client\Services;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\BaseService;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Location;
 
-class ClientService
+class ClientService extends BaseService
 {
+    protected function initializeService(): void
+    {
+        $this->modelClass = Client::class;
+        $this->defaultEagerLoad = ['primaryContact', 'primaryLocation'];
+        $this->searchableFields = ['name', 'type', 'website', 'email'];
+        $this->defaultSortField = 'accessed_at';
+        $this->defaultSortDirection = 'desc';
+    }
+
+    protected function applyCustomFilters($query, array $filters)
+    {
+        // Override default to exclude leads unless specifically requested
+        if (!isset($filters['include_leads'])) {
+            $query->where('lead', false);
+        }
+        
+        return $query;
+    }
+
+    protected function afterCreate(\Illuminate\Database\Eloquent\Model $model, array $data): void
+    {
+        // Create primary location if provided
+        if (!empty($data['location_address']) || !empty($data['location_city']) || !empty($data['address'])) {
+            Location::create([
+                'company_id' => Auth::user()->company_id,
+                'client_id' => $model->id,
+                'name' => $data['location_name'] ?? 'Primary Location',
+                'address' => $data['location_address'] ?? $data['address'] ?? null,
+                'city' => $data['location_city'] ?? $data['city'] ?? null,
+                'state' => $data['location_state'] ?? $data['state'] ?? null,
+                'zip' => $data['location_zip'] ?? $data['zip_code'] ?? null,
+                'country' => $data['location_country'] ?? $data['country'] ?? null,
+                'phone' => $data['location_phone'] ?? null,
+                'primary' => true,
+            ]);
+        }
+
+        // Create primary contact if provided
+        if (!empty($data['contact_name']) || !empty($data['contact_email'])) {
+            Contact::create([
+                'company_id' => Auth::user()->company_id,
+                'client_id' => $model->id,
+                'location_id' => $location->id ?? null,
+                'name' => $data['contact_name'] ?? null,
+                'title' => $data['contact_title'] ?? null,
+                'phone' => $data['contact_phone'] ?? null,
+                'extension' => $data['contact_extension'] ?? null,
+                'mobile' => $data['contact_mobile'] ?? null,
+                'email' => $data['contact_email'] ?? null,
+                'primary' => true,
+                'technical' => $data['contact_technical'] ?? false,
+                'billing' => $data['contact_billing'] ?? false,
+            ]);
+        }
+
+        // Sync tags if provided
+        if (!empty($data['tags'])) {
+            $tags = is_string($data['tags']) ? json_decode($data['tags'], true) : $data['tags'];
+            if (is_array($tags) && count($tags) > 0) {
+                $model->syncTagsByName($tags);
+            }
+        }
+    }
+
+    protected function beforeArchive(\Illuminate\Database\Eloquent\Model $model): void
+    {
+        // Archive related records
+        $model->contacts()->update(['archived_at' => now()]);
+        $model->locations()->update(['archived_at' => now()]);
+        $model->assets()->update(['archived_at' => now()]);
+    }
+
+    protected function beforeRestore(\Illuminate\Database\Eloquent\Model $model): void
+    {
+        // Restore related records
+        $model->contacts()->update(['archived_at' => null]);
+        $model->locations()->update(['archived_at' => null]);
+        $model->assets()->update(['archived_at' => null]);
+    }
+
+    protected function beforeDelete(\Illuminate\Database\Eloquent\Model $model): void
+    {
+        // Delete related records in proper order
+        $model->ticketReplies()->delete();
+        $model->tickets()->delete();
+        $model->invoiceItems()->delete();
+        $model->payments()->delete();
+        $model->invoices()->delete();
+        $model->assets()->delete();
+        $model->networks()->delete();
+        $model->certificates()->delete();
+        $model->domains()->delete();
+        $model->logins()->delete();
+        $model->documents()->delete();
+        $model->files()->delete();
+        $model->contacts()->delete();
+        $model->locations()->delete();
+        $model->vendors()->delete();
+    }
+
     /**
-     * Create a new client with primary contact and location
+     * Create a new client with primary contact and location (legacy method name)
      */
     public function createClient(array $data)
     {
-        return DB::transaction(function () use ($data) {
-            $user = Auth::user();
-            
+        $client = $this->create($data);
+        
+        return [
+            'client_id' => $client->id,
+            'name' => $client->name,
+            'client' => $client,
+            'location' => $client->primaryLocation,
+            'contact' => $client->primaryContact,
+        ];
+    }
+
+    /**
+     * Update an existing client (legacy method name)
+     */
+    public function updateClient(Client $client, array $data)
+    {
+        return $this->update($client, $data);
+    }
+
+    /**
+     * Archive a client (legacy method name)
+     */
+    public function archiveClient(Client $client)
+    {
+        return $this->archive($client);
+    }
+
+    /**
+     * Restore an archived client (legacy method name)
+     */
+    public function restoreClient(Client $client)
+    {
+        return $this->restore($client);
+    }
+
+    /**
+     * Permanently delete a client (legacy method name)
+     */
+    public function deleteClient(Client $client)
+    {
+        return $this->delete($client);
+    }
+
+    /**
+     * Create client with location and contact details
+     */
+    protected function createClientWithDetails(array $data)
+    {
+        $user = Auth::user();
+        
+        return DB::transaction(function () use ($data, $user) {
             // Create client
             $client = Client::create([
                 'company_id' => $user->company_id,
@@ -105,145 +254,7 @@ class ClientService
         });
     }
 
-    /**
-     * Update an existing client
-     */
-    public function updateClient(Client $client, array $data)
-    {
-        return DB::transaction(function () use ($client, $data) {
-            $updateData = array_filter([
-                'lead' => $data['lead'] ?? $client->lead,
-                'name' => $data['name'] ?? $client->name,
-                'company_name' => $data['company_name'] ?? $client->company_name,
-                'type' => $data['type'] ?? $client->type,
-                'email' => $data['email'] ?? $client->email,
-                'phone' => $data['phone'] ?? $client->phone,
-                'address' => $data['address'] ?? $client->address,
-                'city' => $data['city'] ?? $client->city,
-                'state' => $data['state'] ?? $client->state,
-                'zip_code' => $data['zip_code'] ?? $client->zip_code,
-                'country' => $data['country'] ?? $client->country,
-                'website' => $data['website'] ?? $client->website,
-                'referral' => $data['referral'] ?? $client->referral,
-                'rate' => $data['rate'] ?? $client->rate,
-                'currency_code' => $data['currency_code'] ?? $client->currency_code,
-                'net_terms' => $data['net_terms'] ?? $client->net_terms,
-                'tax_id_number' => $data['tax_id_number'] ?? $client->tax_id_number,
-                'rmm_id' => $data['rmm_id'] ?? $client->rmm_id,
-                'notes' => $data['notes'] ?? $client->notes,
-                'status' => $data['status'] ?? $client->status,
-                'hourly_rate' => $data['hourly_rate'] ?? $client->hourly_rate,
-            ], function ($value) {
-                return $value !== null;
-            });
 
-            $client->update($updateData);
-
-            // Update access timestamp
-            $client->touch('accessed_at');
-
-            // Sync tags if provided
-            if (isset($data['tags'])) {
-                $tags = is_string($data['tags']) ? json_decode($data['tags'], true) : $data['tags'];
-                if (is_array($tags)) {
-                    $client->syncTagsByName($tags);
-                }
-            }
-
-            Log::info('Client updated via service', [
-                'client_id' => $client->id,
-                'client_name' => $client->name,
-                'user_id' => Auth::id()
-            ]);
-
-            return $client->fresh();
-        });
-    }
-
-    /**
-     * Archive a client (soft delete)
-     */
-    public function archiveClient(Client $client)
-    {
-        return DB::transaction(function () use ($client) {
-            $client->update(['archived_at' => now()]);
-
-            // Archive related records
-            $client->contacts()->update(['archived_at' => now()]);
-            $client->locations()->update(['archived_at' => now()]);
-            $client->assets()->update(['archived_at' => now()]);
-
-            Log::info('Client archived via service', [
-                'client_id' => $client->id,
-                'client_name' => $client->name,
-                'user_id' => Auth::id()
-            ]);
-
-            return $client;
-        });
-    }
-
-    /**
-     * Restore an archived client
-     */
-    public function restoreClient(Client $client)
-    {
-        return DB::transaction(function () use ($client) {
-            $client->update(['archived_at' => null]);
-
-            // Restore related records
-            $client->contacts()->update(['archived_at' => null]);
-            $client->locations()->update(['archived_at' => null]);
-            $client->assets()->update(['archived_at' => null]);
-
-            Log::info('Client restored via service', [
-                'client_id' => $client->id,
-                'client_name' => $client->name,
-                'user_id' => Auth::id()
-            ]);
-
-            return $client;
-        });
-    }
-
-    /**
-     * Permanently delete a client and all related data
-     */
-    public function deleteClient(Client $client)
-    {
-        return DB::transaction(function () use ($client) {
-            $clientName = $client->name;
-            $clientId = $client->id;
-
-            // Delete related records in proper order
-            $client->ticketReplies()->delete();
-            $client->tickets()->delete();
-            $client->invoiceItems()->delete();
-            $client->payments()->delete();
-            $client->invoices()->delete();
-            $client->assets()->delete();
-            $client->networks()->delete();
-            $client->certificates()->delete();
-            $client->domains()->delete();
-            $client->logins()->delete();
-            $client->documents()->delete();
-            $client->files()->delete();
-            $client->contacts()->delete();
-            $client->locations()->delete();
-            $client->vendors()->delete();
-
-            // Finally delete the client
-            $client->delete();
-
-            Log::warning('Client permanently deleted via service', [
-                'client_id' => $clientId,
-                'client_name' => $clientName,
-                'user_id' => Auth::id()
-            ]);
-
-            return true;
-        });
-    }
 
     /**
      * Get client statistics
@@ -444,26 +455,26 @@ class ClientService
     public function getClientFinancialSummary(Client $client)
     {
         $invoices = $client->invoices()
-            ->selectRaw('
+            ->selectRaw("
                 COUNT(*) as total_count,
-                SUM(CASE WHEN status = "Paid" THEN 1 ELSE 0 END) as paid_count,
-                SUM(CASE WHEN status IN ("Sent", "Viewed") THEN 1 ELSE 0 END) as unpaid_count,
-                SUM(CASE WHEN status = "Draft" THEN 1 ELSE 0 END) as draft_count,
+                SUM(CASE WHEN status = 'Paid' THEN 1 ELSE 0 END) as paid_count,
+                SUM(CASE WHEN status IN ('Sent', 'Viewed') THEN 1 ELSE 0 END) as unpaid_count,
+                SUM(CASE WHEN status = 'Draft' THEN 1 ELSE 0 END) as draft_count,
                 SUM(amount) as total_amount,
-                SUM(CASE WHEN status = "Paid" THEN amount ELSE 0 END) as paid_amount,
-                SUM(CASE WHEN status IN ("Sent", "Viewed") THEN amount ELSE 0 END) as unpaid_amount,
-                SUM(CASE WHEN status IN ("Sent", "Viewed") AND due < CURDATE() THEN amount ELSE 0 END) as past_due_amount
-            ')
+                SUM(CASE WHEN status = 'Paid' THEN amount ELSE 0 END) as paid_amount,
+                SUM(CASE WHEN status IN ('Sent', 'Viewed') THEN amount ELSE 0 END) as unpaid_amount,
+                SUM(CASE WHEN status IN ('Sent', 'Viewed') AND due_date < CURRENT_DATE THEN amount ELSE 0 END) as past_due_amount
+            ")
             ->first();
 
         $recurring = $client->recurringInvoices()
             ->where('status', true)
-            ->selectRaw('
+            ->selectRaw("
                 COUNT(*) as active_count,
                 SUM(amount) as total_amount,
-                SUM(CASE WHEN frequency = "month" THEN amount ELSE 0 END) as monthly_amount,
-                SUM(CASE WHEN frequency = "year" THEN amount/12 ELSE 0 END) as yearly_monthly_amount
-            ')
+                SUM(CASE WHEN frequency = 'month' THEN amount ELSE 0 END) as monthly_amount,
+                SUM(CASE WHEN frequency = 'year' THEN amount/12 ELSE 0 END) as yearly_monthly_amount
+            ")
             ->first();
 
         return [

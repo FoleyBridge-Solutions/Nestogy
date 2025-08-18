@@ -170,13 +170,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            @if($warranty->status_color === 'success') bg-green-100 text-green-800
-                                            @elseif($warranty->status_color === 'danger') bg-red-100 text-red-800
-                                            @elseif($warranty->status_color === 'warning') bg-yellow-100 text-yellow-800
-                                            @elseif($warranty->status_color === 'info') bg-blue-100 text-blue-800
-                                            @else bg-gray-100 text-gray-800
-                                            @endif">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($warranty->status_color === 'success') bg-green-100 text-green-800 @elseif($warranty->status_color === 'danger') bg-red-100 text-red-800 @elseif($warranty->status_color === 'warning') bg-yellow-100 text-yellow-800 @elseif($warranty->status_color === 'info') bg-blue-100 text-blue-800 @else bg-gray-100 text-gray-800 @endif">
                                             {{ $warranty->status_label }}
                                         </span>
                                         @if($warranty->auto_renewal)
@@ -271,7 +265,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-flex flex-wrap -mx-4-reverse">
                     <button type="submit" 
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Renew Warranty

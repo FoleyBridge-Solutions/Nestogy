@@ -202,6 +202,22 @@ return new class extends Migration
             $table->boolean('important')->default(false);
             $table->boolean('billing')->default(false);
             $table->boolean('technical')->default(false);
+            
+            // Portal access fields
+            $table->boolean('has_portal_access')->default(false);
+            $table->json('portal_permissions')->nullable();
+            $table->timestamp('last_login_at')->nullable();
+            $table->string('last_login_ip', 45)->nullable();
+            $table->integer('login_count')->default(0);
+            $table->integer('failed_login_count')->default(0);
+            $table->timestamp('locked_until')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('remember_token', 100)->nullable();
+            $table->timestamp('password_changed_at')->nullable();
+            $table->boolean('must_change_password')->default(false);
+            $table->integer('session_timeout_minutes')->default(30);
+            $table->json('allowed_ip_addresses')->nullable();
+            
             $table->string('department')->nullable();
             $table->timestamps();
             $table->timestamp('archived_at')->nullable();
@@ -222,6 +238,8 @@ return new class extends Migration
             $table->index(['client_id', 'technical']);
             $table->index(['company_id', 'client_id']);
             $table->index('archived_at');
+            $table->index(['company_id', 'email', 'has_portal_access'], 'idx_portal_access');
+            $table->index(['company_id', 'client_id', 'has_portal_access'], 'idx_client_portal');
         });
 
         Schema::create('locations', function (Blueprint $table) {

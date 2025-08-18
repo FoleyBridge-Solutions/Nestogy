@@ -3,18 +3,18 @@
 @section('title', 'Register User - Nestogy ERP')
 
 @section('content')
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
+<div class="w-full px-4 py-4">
+    <div class="flex flex-wrap -mx-4 justify-center">
         <div class="col-lg-8">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden shadow-lg border-0">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 bg-blue-600 text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-user-plus me-2"></i>Register New User
+                        <i class="fas fa-user-plus mr-2"></i>Register New User
                     </h4>
                 </div>
-                <div class="card-body p-4">
+                <div class="p-6 p-4">
                     @if ($errors->any())
-                        <div class="alert alert-danger">
+                        <div class="px-4 py-3 rounded bg-red-100 border border-red-400 text-red-700">
                             <h6 class="alert-heading">Please correct the following errors:</h6>
                             <ul class="mb-0">
                                 @foreach ($errors->all() as $error)
@@ -25,26 +25,26 @@
                     @endif
 
                     @if (session('success'))
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <div class="px-4 py-3 rounded bg-green-100 border border-green-400 text-green-700">
+                            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
                         </div>
                     @endif
 
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
-                        <div class="row">
+                        <div class="flex flex-wrap -mx-4">
                             <!-- Personal Information -->
-                            <div class="col-md-6">
-                                <h5 class="text-primary mb-3">
+                            <div class="md:w-1/2 px-4">
+                                <h5 class="text-blue-600 mb-3">
                                     <i class="fas fa-user me-2"></i>Personal Information
                                 </h5>
 
                                 <!-- Name -->
                                 <div class="mb-3">
-                                    <label for="name" class="form-label">Full Name *</label>
+                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                                     <input type="text" 
-                                           class="form-control @error('name') is-invalid @enderror" 
+                                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('name') is-invalid @enderror" 
                                            id="name" 
                                            name="name" 
                                            value="{{ old('name') }}" 
@@ -59,9 +59,9 @@
 
                                 <!-- Email -->
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">Email Address *</label>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
                                     <input type="email" 
-                                           class="form-control @error('email') is-invalid @enderror" 
+                                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('email') is-invalid @enderror" 
                                            id="email" 
                                            name="email" 
                                            value="{{ old('email') }}" 
@@ -90,15 +90,15 @@
                             </div>
 
                             <!-- Account Settings -->
-                            <div class="col-md-6">
-                                <h5 class="text-primary mb-3">
+                            <div class="md:w-1/2 px-4">
+                                <h5 class="text-blue-600 mb-3">
                                     <i class="fas fa-cog me-2"></i>Account Settings
                                 </h5>
 
                                 <!-- Company -->
                                 <div class="mb-3">
                                     <label for="company_id" class="form-label">Company *</label>
-                                    <select class="form-select @error('company_id') is-invalid @enderror" 
+                                    <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('company_id') is-invalid @enderror" 
                                             id="company_id" name="company_id" required>
                                         <option value="">Select Company</option>
                                         @foreach($companies as $company)
@@ -115,7 +115,7 @@
                                 <!-- Role -->
                                 <div class="mb-3">
                                     <label for="role" class="form-label">User Role *</label>
-                                    <select class="form-select @error('role') is-invalid @enderror" 
+                                    <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('role') is-invalid @enderror" 
                                             id="role" name="role" required>
                                         <option value="">Select Role</option>
                                         @foreach($roles as $roleId => $roleLabel)
@@ -217,11 +217,11 @@
                         </div>
 
                         <!-- Submit Buttons -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('users.index') }}" class="btn btn-secondary">
+                        <div class="flex justify-between mt-4">
+                            <a href="{{ route('users.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                 <i class="fas fa-arrow-left me-1"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 <i class="fas fa-user-plus me-1"></i>Create User
                             </button>
                         </div>

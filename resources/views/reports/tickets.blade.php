@@ -5,8 +5,8 @@
 @section('page-actions')
 <div class="flex items-center space-x-4">
     <div class="flex items-center space-x-2">
-        <label for="report-type" class="text-sm font-medium text-gray-700">Type:</label>
-        <select id="report-type" class="form-select rounded-md border-gray-300 text-sm">
+        <label for="report-type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</label>
+        <select id="report-type" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border-gray-300 dark:border-gray-600 text-sm">
             <option value="overview" selected>Overview</option>
             <option value="sla">SLA Compliance</option>
             <option value="performance">Performance</option>
@@ -17,8 +17,8 @@
     </div>
     
     <div class="flex items-center space-x-2">
-        <label for="date-preset" class="text-sm font-medium text-gray-700">Period:</label>
-        <select id="date-preset" class="form-select rounded-md border-gray-300 text-sm">
+        <label for="date-preset" class="text-sm font-medium text-gray-700 dark:text-gray-300">Period:</label>
+        <select id="date-preset" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border-gray-300 dark:border-gray-600 text-sm">
             <option value="last_7_days">Last 7 days</option>
             <option value="last_30_days" selected>Last 30 days</option>
             <option value="last_90_days">Last 90 days</option>
@@ -30,31 +30,31 @@
     </div>
     
     <div id="custom-date-range" class="hidden flex items-center space-x-2">
-        <input type="date" id="start-date" class="form-input rounded-md border-gray-300 text-sm">
+        <input type="date" id="start-date" class="form-input rounded-md border-gray-300 dark:border-gray-600 text-sm">
         <span class="text-gray-500">to</span>
-        <input type="date" id="end-date" class="form-input rounded-md border-gray-300 text-sm">
+        <input type="date" id="end-date" class="form-input rounded-md border-gray-300 dark:border-gray-600 text-sm">
     </div>
     
-    <button id="refresh-data" class="btn btn-secondary">
+    <button id="refresh-data" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
         <i class="fas fa-sync-alt mr-2"></i>
         Refresh
     </button>
     
     <div class="relative">
-        <button id="export-dropdown-btn" class="btn btn-primary">
+        <button id="export-dropdown-btn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <i class="fas fa-download mr-2"></i>
             Export
             <i class="fas fa-chevron-down ml-2"></i>
         </button>
-        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10">
             <div class="py-1">
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="pdf">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="pdf">
                     <i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF Report
                 </button>
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="xlsx">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="xlsx">
                     <i class="fas fa-file-excel mr-2 text-green-500"></i>Excel Report
                 </button>
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="csv">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="csv">
                     <i class="fas fa-file-csv mr-2 text-blue-500"></i>CSV Data
                 </button>
             </div>
@@ -66,28 +66,28 @@
 @section('content')
 <!-- Loading Overlay -->
 <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 shadow-xl">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
         <div class="flex items-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-4"></div>
-            <span class="text-gray-700">Loading ticket analytics...</span>
+            <span class="text-gray-700 dark:text-gray-300">Loading ticket analytics...</span>
         </div>
     </div>
 </div>
 
 <!-- Page Header -->
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Ticket Analytics</h1>
-    <p class="text-gray-600 mt-2">Support ticket performance, SLA compliance, and customer satisfaction metrics</p>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Ticket Analytics</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-2">Support ticket performance, SLA compliance, and customer satisfaction metrics</p>
     
     <div id="last-updated" class="text-sm text-gray-500 mt-1"></div>
 </div>
 
 <!-- Ticket KPIs -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Total Tickets</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tickets</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-total-tickets" class="text-2xl font-bold text-blue-600">0</span>
                     <span id="kpi-total-tickets-trend" class="ml-2 text-sm"></span>
@@ -100,10 +100,10 @@
         <div id="kpi-total-tickets-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Avg Resolution Time</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Resolution Time</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-resolution-time" class="text-2xl font-bold text-green-600">0h</span>
                     <span id="kpi-resolution-time-trend" class="ml-2 text-sm"></span>
@@ -116,10 +116,10 @@
         <div id="kpi-resolution-time-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">SLA Compliance</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">SLA Compliance</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-sla-compliance" class="text-2xl font-bold text-yellow-600">0%</span>
                     <span id="kpi-sla-compliance-trend" class="ml-2 text-sm"></span>
@@ -132,10 +132,10 @@
         <div id="kpi-sla-compliance-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Customer Satisfaction</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Customer Satisfaction</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-satisfaction" class="text-2xl font-bold text-purple-600">0.0</span>
                     <span id="kpi-satisfaction-trend" class="ml-2 text-sm"></span>
@@ -152,9 +152,9 @@
 <!-- Main Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Ticket Volume Trend -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Ticket Volume Trend</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ticket Volume Trend</h3>
             <div class="flex items-center space-x-2">
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md bg-indigo-100 text-indigo-700" data-chart="volume" data-period="7d">7D</button>
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md text-gray-500" data-chart="volume" data-period="30d">30D</button>
@@ -167,9 +167,9 @@
     </div>
 
     <!-- Resolution Time Trend -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Resolution Time Trend</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Resolution Time Trend</h3>
             <div class="flex items-center space-x-2">
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md bg-indigo-100 text-indigo-700" data-chart="resolution" data-period="7d">7D</button>
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md text-gray-500" data-chart="resolution" data-period="30d">30D</button>
@@ -185,24 +185,24 @@
 <!-- Secondary Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     <!-- Status Distribution -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Ticket Status</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ticket Status</h3>
         <div class="h-64">
             <canvas id="status-distribution-chart"></canvas>
         </div>
     </div>
 
     <!-- Priority Breakdown -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Priority Breakdown</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Priority Breakdown</h3>
         <div class="h-64">
             <canvas id="priority-breakdown-chart"></canvas>
         </div>
     </div>
 
     <!-- SLA Performance -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">SLA Performance</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">SLA Performance</h3>
         <div class="h-64">
             <canvas id="sla-performance-chart"></canvas>
         </div>
@@ -212,11 +212,11 @@
 <!-- Performance Tables -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Top Performers -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Performers</h3>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tickets</th>
@@ -224,7 +224,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
                     </tr>
                 </thead>
-                <tbody id="top-performers-table" class="bg-white divide-y divide-gray-200">
+                <tbody id="top-performers-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                     <!-- Data will be loaded dynamically -->
                 </tbody>
             </table>
@@ -232,8 +232,8 @@
     </div>
 
     <!-- SLA Violations -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent SLA Violations</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent SLA Violations</h3>
         <div id="sla-violations" class="space-y-4 max-h-96 overflow-y-auto">
             <!-- Violations will be loaded dynamically -->
         </div>

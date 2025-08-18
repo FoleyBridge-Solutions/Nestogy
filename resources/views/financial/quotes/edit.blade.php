@@ -3,7 +3,7 @@
 @section('title', 'Edit Quote #' . $quote->getFullNumber())
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>

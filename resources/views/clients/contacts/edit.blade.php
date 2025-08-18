@@ -3,18 +3,47 @@
 @section('title', 'Edit Contact - ' . $contact->name)
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gray-50" x-data="contactEditForm()">
+    <div class="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="bg-white shadow rounded-lg mb-6">
             <div class="px-4 py-5 sm:px-6">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Edit Contact</h3>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Update contact information for {{ $contact->name }}.</p>
+                    <div class="flex items-center space-x-4">
+                        <!-- Contact Photo -->
+                        <div class="flex-shrink-0">
+                            <img class="h-16 w-16 rounded-full object-cover" 
+                                 src="{{ $contact->getPhotoUrl() }}" 
+                                 alt="{{ $contact->name }}">
+                        </div>
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Edit Contact</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Update contact information for {{ $contact->name }}.</p>
+                            <div class="mt-2 flex items-center space-x-4">
+                                <!-- Contact Status Indicators -->
+                                @if($contact->has_portal_access)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <svg class="-ml-0.5 mr-1.5 h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
+                                            <circle cx="4" cy="4" r="3" />
+                                        </svg>
+                                        Portal Access
+                                    </span>
+                                @endif
+                                @if($contact->primary)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        Primary Contact
+                                    </span>
+                                @endif
+                                @if($contact->isLocked())
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Account Locked
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                     <div class="flex space-x-3">
-                        <a href="{{ route('clients.contacts.standalone.show', $contact) }}" 
+                        <a href="{{ route('clients.contacts.show', [$client, $contact]) }}" 
                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -22,7 +51,7 @@
                             Back to Contact
                         </a>
                         <form method="POST" 
-                              action="{{ route('clients.contacts.standalone.destroy', $contact) }}" 
+                              action="{{ route('clients.contacts.destroy', [$client, $contact]) }}" 
                               class="inline"
                               onsubmit="return confirm('Are you sure you want to delete this contact? This action cannot be undone.')">
                             @csrf
@@ -40,31 +69,65 @@
             </div>
         </div>
 
+        <!-- Quick Actions Bar -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm font-medium text-gray-900">Quick Actions</h4>
+                    <div class="flex space-x-3">
+                        <button @click="openModal('portalAccess')" 
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-3.586l4.293-4.293a1 1 0 011.414 0L9 13l4.293-4.293A2.5 2.5 0 0115 7z" />
+                            </svg>
+                            Portal Access
+                        </button>
+                        <button @click="openModal('security')" 
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            Security
+                        </button>
+                        <button @click="openModal('permissions')" 
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                            </svg>
+                            Permissions
+                        </button>
+                        <button @click="openModal('locations')" 
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Locations
+                        </button>
+                        <button @click="openModal('relatedData')" 
+                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Related Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Form -->
         <div class="bg-white shadow rounded-lg">
-            <form method="POST" action="{{ route('clients.contacts.standalone.update', $contact) }}" class="space-y-6">
+            <form method="POST" action="{{ route('clients.contacts.update', [$client, $contact]) }}" class="space-y-6" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 
                 <div class="px-4 py-5 sm:p-6">
-                    <!-- Client Selection -->
+                    <!-- Client Information -->
                     <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</label>
-                            <select name="client_id" 
-                                    id="client_id" 
-                                    required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('client_id') border-red-300 @enderror">
-                                <option value="">Select a client...</option>
-                                @foreach($clients as $client)
-                                    <option value="{{ $client->id }}" {{ (old('client_id', $contact->client_id) == $client->id) ? 'selected' : '' }}>
-                                        {{ $client->display_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('client_id')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                        <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                            <p class="text-sm font-medium text-gray-700">Client</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ $client->name }}</p>
                         </div>
                     </div>
 
@@ -123,9 +186,76 @@
                         </div>
                     </div>
 
-                    <!-- Phone Numbers -->
+                    <!-- Photo Upload -->
                     <div class="mt-6">
-                        <h4 class="text-md font-medium text-gray-900 mb-4">Phone Numbers</h4>
+                        <h4 class="text-md font-medium text-gray-900 mb-4">Contact Photo</h4>
+                        <div class="flex items-start space-x-6">
+                            <div class="flex-shrink-0">
+                                <img class="h-20 w-20 rounded-full object-cover" 
+                                     src="{{ $contact->getPhotoUrl() }}" 
+                                     alt="{{ $contact->name }}"
+                                     id="photo-preview">
+                            </div>
+                            <div class="flex-1">
+                                <label for="photo" class="block text-sm font-medium text-gray-700">Upload New Photo</label>
+                                <input type="file" 
+                                       name="photo" 
+                                       id="photo" 
+                                       accept="image/*"
+                                       @change="previewPhoto($event)"
+                                       class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                <p class="mt-1 text-xs text-gray-500">JPG, PNG up to 2MB. Recommended size: 150x150px</p>
+                                @error('photo')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location & Vendor Assignment -->
+                    <div class="mt-6">
+                        <h4 class="text-md font-medium text-gray-900 mb-4">Location & Vendor Assignment</h4>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label for="location_id" class="block text-sm font-medium text-gray-700">Associated Location</label>
+                                <select name="location_id" 
+                                        id="location_id" 
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('location_id') border-red-300 @enderror">
+                                    <option value="">No specific location</option>
+                                    @foreach($client->locations ?? [] as $location)
+                                        <option value="{{ $location->id }}" {{ old('location_id', $contact->location_id) == $location->id ? 'selected' : '' }}>
+                                            {{ $location->name ?? $location->address }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('location_id')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="vendor_id" class="block text-sm font-medium text-gray-700">Associated Vendor</label>
+                                <select name="vendor_id" 
+                                        id="vendor_id" 
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('vendor_id') border-red-300 @enderror">
+                                    <option value="">No vendor association</option>
+                                    {{-- Vendors would be populated from controller --}}
+                                    @foreach($vendors ?? [] as $vendor)
+                                        <option value="{{ $vendor->id }}" {{ old('vendor_id', $contact->vendor_id) == $vendor->id ? 'selected' : '' }}>
+                                            {{ $vendor->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('vendor_id')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Communication -->
+                    <div class="mt-6">
+                        <h4 class="text-md font-medium text-gray-900 mb-4">Communication</h4>
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
                             <div>
                                 <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
@@ -133,6 +263,7 @@
                                        name="phone" 
                                        id="phone" 
                                        value="{{ old('phone', $contact->phone) }}"
+                                       placeholder="(555) 123-4567"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('phone') border-red-300 @enderror">
                                 @error('phone')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -145,6 +276,7 @@
                                        name="extension" 
                                        id="extension" 
                                        value="{{ old('extension', $contact->extension) }}"
+                                       placeholder="1234"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('extension') border-red-300 @enderror">
                                 @error('extension')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -157,18 +289,26 @@
                                        name="mobile" 
                                        id="mobile" 
                                        value="{{ old('mobile', $contact->mobile) }}"
+                                       placeholder="(555) 987-6543"
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('mobile') border-red-300 @enderror">
                                 @error('mobile')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
+                        @if($contact->getFormattedPhone())
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-500">
+                                    <span class="font-medium">Primary Phone:</span> {{ $contact->getFormattedPhone() }}
+                                </p>
+                            </div>
+                        @endif
                     </div>
 
-                    <!-- Contact Types -->
+                    <!-- Contact Roles & Types -->
                     <div class="mt-6">
-                        <h4 class="text-md font-medium text-gray-900 mb-4">Contact Types</h4>
-                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        <h4 class="text-md font-medium text-gray-900 mb-4">Contact Roles & Types</h4>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
                                     <input id="primary" 
@@ -229,6 +369,13 @@
                                 </div>
                             </div>
                         </div>
+                        @if($contact->getRoles())
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-500">
+                                    <span class="font-medium">Current Roles:</span> {{ $contact->getRolesString() }}
+                                </p>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Notes -->
@@ -247,7 +394,7 @@
 
                 <!-- Form Actions -->
                 <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
-                    <a href="{{ route('clients.contacts.standalone.show', $contact) }}" 
+                    <a href="{{ route('clients.contacts.show', [$client, $contact]) }}" 
                        class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </a>
@@ -258,6 +405,653 @@
                 </div>
             </form>
         </div>
+
+        <!-- Portal Access Management Modal -->
+        <div x-show="currentModal === 'portalAccess'" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 z-50 overflow-y-auto" 
+             style="display: none;">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <form @submit.prevent="savePortalAccess()">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-3.586l4.293-4.293a1 1 0 011.414 0L9 13l4.293-4.293A2.5 2.5 0 0115 7z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Portal Access Management</h3>
+                                    <div class="mt-4 space-y-4">
+                                        <!-- Portal Access Toggle -->
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <label class="text-sm font-medium text-gray-700">Enable Portal Access</label>
+                                                <p class="text-xs text-gray-500">Allow this contact to login to the client portal</p>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" 
+                                                       name="has_portal_access" 
+                                                       id="has_portal_access"
+                                                       x-model="portalData.has_portal_access" 
+                                                       class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                                                <label for="has_portal_access" class="ml-2 text-sm text-gray-700">
+                                                    <span x-text="portalData.has_portal_access ? 'Enabled' : 'Disabled'"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Current Status Debug -->
+                                        <div class="mt-2 p-2 bg-gray-100 rounded text-xs">
+                                            <strong>Debug:</strong> has_portal_access = <span x-text="portalData.has_portal_access"></span>, 
+                                            auth_method = <span x-text="portalData.auth_method"></span>
+                                        </div>
+                                        
+                                        <!-- Authentication Method -->
+                                        <div x-show="portalData.has_portal_access">
+                                            <label class="block text-sm font-medium text-gray-700">Authentication Method</label>
+                                            <div class="mt-2 space-y-2">
+                                                <div class="flex items-center">
+                                                    <input id="auth_password" 
+                                                           name="auth_method" 
+                                                           type="radio" 
+                                                           value="password" 
+                                                           x-model="portalData.auth_method"
+                                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                                    <label for="auth_password" class="ml-3 block text-sm font-medium text-gray-700">Password</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input id="auth_pin" 
+                                                           name="auth_method" 
+                                                           type="radio" 
+                                                           value="pin" 
+                                                           x-model="portalData.auth_method"
+                                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                                    <label for="auth_pin" class="ml-3 block text-sm font-medium text-gray-700">PIN (4-10 digits)</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Password Setup -->
+                                        <div x-show="portalData.has_portal_access && portalData.auth_method === 'password'">
+                                            <label class="block text-sm font-medium text-gray-700">New Password</label>
+                                            <input type="password" 
+                                                   x-model="portalData.password"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                   placeholder="Leave blank to keep current password">
+                                            <div class="flex items-center mt-1">
+                                                <input type="checkbox" 
+                                                       x-model="portalData.must_change_password"
+                                                       class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                                <label class="ml-2 text-sm text-gray-700">Must change password on next login</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- PIN Setup -->
+                                        <div x-show="portalData.has_portal_access && portalData.auth_method === 'pin'">
+                                            <label class="block text-sm font-medium text-gray-700">New PIN</label>
+                                            <input type="password" 
+                                                   x-model="portalData.pin"
+                                                   maxlength="10"
+                                                   pattern="[0-9]{4,10}"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                   placeholder="4-10 digits">
+                                        </div>
+
+                                        <!-- Email Verification -->
+                                        <div x-show="portalData.has_portal_access">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" 
+                                                       x-model="portalData.email_verified"
+                                                       class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                                <label class="ml-2 text-sm text-gray-700">Email address verified</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-flex flex-wrap -mx-4-reverse">
+                            <button type="submit" 
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Save Changes
+                            </button>
+                            <button type="button" 
+                                    @click="closeModal()" 
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings Modal -->
+        <div x-show="currentModal === 'security'" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 z-50 overflow-y-auto" 
+             style="display: none;">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                    <form @submit.prevent="saveSecuritySettings()">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Security Settings</h3>
+                                    <div class="mt-4 space-y-6">
+                                        <!-- Account Status -->
+                                        <div>
+                                            <h4 class="text-sm font-medium text-gray-900">Account Status</h4>
+                                            <div class="mt-2 grid grid-cols-2 gap-4">
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <p class="text-xs text-gray-500">Last Login</p>
+                                                    <p class="text-sm font-medium">{{ $contact->last_login_at ? $contact->last_login_at->format('M j, Y g:i A') : 'Never' }}</p>
+                                                </div>
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <p class="text-xs text-gray-500">Login Count</p>
+                                                    <p class="text-sm font-medium">{{ $contact->login_count ?? 0 }}</p>
+                                                </div>
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <p class="text-xs text-gray-500">Failed Attempts</p>
+                                                    <p class="text-sm font-medium text-red-600">{{ $contact->failed_login_count ?? 0 }}</p>
+                                                </div>
+                                                <div class="bg-gray-50 p-3 rounded">
+                                                    <p class="text-xs text-gray-500">Account Status</p>
+                                                    <p class="text-sm font-medium {{ $contact->isLocked() ? 'text-red-600' : 'text-green-600' }}">
+                                                        {{ $contact->isLocked() ? 'Locked' : 'Active' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Session Timeout -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Session Timeout (minutes)</label>
+                                            <input type="number" 
+                                                   x-model="securityData.session_timeout_minutes"
+                                                   min="5" 
+                                                   max="480"
+                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+                                            <p class="mt-1 text-xs text-gray-500">Auto-logout after this many minutes of inactivity (5-480 minutes)</p>
+                                        </div>
+
+                                        <!-- IP Restrictions -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">IP Address Restrictions</label>
+                                            <div class="mt-2">
+                                                <template x-for="(ip, index) in securityData.allowed_ips" :key="index">
+                                                    <div class="flex items-center space-x-2 mb-2">
+                                                        <input type="text" 
+                                                               x-model="securityData.allowed_ips[index]"
+                                                               placeholder="192.168.1.0/24 or 10.0.0.1"
+                                                               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+                                                        <button type="button" 
+                                                                @click="securityData.allowed_ips.splice(index, 1)"
+                                                                class="text-red-600 hover:text-red-800">
+                                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <button type="button" 
+                                                        @click="securityData.allowed_ips.push('')"
+                                                        class="text-sm text-orange-600 hover:text-orange-800">
+                                                    + Add IP Address
+                                                </button>
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-500">Leave empty to allow access from any IP. Supports CIDR notation (192.168.1.0/24)</p>
+                                        </div>
+
+                                        <!-- Account Management -->
+                                        <div>
+                                            <h4 class="text-sm font-medium text-gray-900">Account Management</h4>
+                                            <div class="mt-2 space-y-2">
+                                                @if($contact->isLocked())
+                                                    <button type="button" 
+                                                            @click="unlockAccount()"
+                                                            class="w-full text-left px-3 py-2 border border-green-300 rounded-md text-sm text-green-700 bg-green-50 hover:bg-green-100">
+                                                        🔓 Unlock Account
+                                                    </button>
+                                                @else
+                                                    <button type="button" 
+                                                            @click="lockAccount()"
+                                                            class="w-full text-left px-3 py-2 border border-red-300 rounded-md text-sm text-red-700 bg-red-50 hover:bg-red-100">
+                                                        🔒 Lock Account
+                                                    </button>
+                                                @endif
+                                                <button type="button" 
+                                                        @click="resetFailedAttempts()"
+                                                        class="w-full text-left px-3 py-2 border border-yellow-300 rounded-md text-sm text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
+                                                    🔄 Reset Failed Login Attempts
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-flex flex-wrap -mx-4-reverse">
+                            <button type="submit" 
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Save Changes
+                            </button>
+                            <button type="button" 
+                                    @click="closeModal()" 
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Modal -->
+        <div x-show="currentModal === 'permissions'" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100" 
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0" 
+             class="fixed inset-0 z-50 overflow-y-auto" 
+             style="display: none;">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <form @submit.prevent="savePermissions()">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Portal Permissions</h3>
+                                    <div class="mt-4 space-y-4">
+                                        <!-- Portal Section Permissions -->
+                                        <div>
+                                            <h4 class="text-sm font-medium text-gray-900 mb-3">Portal Access Permissions</h4>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_view_invoices"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">View Invoices & Billing</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_view_tickets"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">View Support Tickets</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_create_tickets"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">Create Support Tickets</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_view_assets"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">View IT Assets</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_view_contracts"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">View Contracts</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_view_projects"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">View Projects</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_view_reports"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">View Reports</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.can_approve_quotes"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">Approve Quotes</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Notification Preferences -->
+                                        <div>
+                                            <h4 class="text-sm font-medium text-gray-900 mb-3">Notification Preferences</h4>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.email_notifications"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">Email Notifications</label>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" 
+                                                           x-model="permissionsData.portal_notifications"
+                                                           class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                                    <label class="ml-3 text-sm text-gray-700">Portal Notifications</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button type="submit" 
+                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Save Permissions
+                            </button>
+                            <button type="button" 
+                                    @click="closeModal()" 
+                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional modals would continue here... -->
+        
     </div>
 </div>
+
+<style>
+.toggle-checkbox {
+    transition: all 0.3s ease;
+    top: 0;
+    left: 0;
+}
+.toggle-checkbox:checked {
+    right: 0;
+    left: auto;
+    border-color: #667eea;
+}
+.toggle-checkbox:checked + .toggle-label {
+    background-color: #667eea;
+}
+.toggle-label {
+    transition: all 0.3s ease;
+}
+</style>
+
+<script>
+function contactEditForm() {
+    return {
+        currentModal: '',
+        
+        // Portal Access Data
+        portalData: {
+            has_portal_access: {{ $contact->has_portal_access ? 'true' : 'false' }},
+            auth_method: '{{ $contact->auth_method ?? "none" }}',
+            password: '',
+            pin: '',
+            must_change_password: {{ $contact->must_change_password ? 'true' : 'false' }},
+            email_verified: {{ $contact->email_verified_at ? 'true' : 'false' }}
+        },
+        
+        // Security Data
+        securityData: {
+            session_timeout_minutes: {{ $contact->session_timeout_minutes ?? 30 }},
+            allowed_ips: {!! json_encode($contact->allowed_ip_addresses ?? []) !!}.length ? {!! json_encode($contact->allowed_ip_addresses ?? []) !!} : ['']
+        },
+        
+        // Permissions Data
+        permissionsData: {
+            @php
+                $permissions = $contact->portal_permissions ?? [];
+            @endphp
+            can_view_invoices: {{ in_array('can_view_invoices', $permissions) ? 'true' : 'false' }},
+            can_view_tickets: {{ in_array('can_view_tickets', $permissions) ? 'true' : 'false' }},
+            can_create_tickets: {{ in_array('can_create_tickets', $permissions) ? 'true' : 'false' }},
+            can_view_assets: {{ in_array('can_view_assets', $permissions) ? 'true' : 'false' }},
+            can_view_contracts: {{ in_array('can_view_contracts', $permissions) ? 'true' : 'false' }},
+            can_view_projects: {{ in_array('can_view_projects', $permissions) ? 'true' : 'false' }},
+            can_view_reports: {{ in_array('can_view_reports', $permissions) ? 'true' : 'false' }},
+            can_approve_quotes: {{ in_array('can_approve_quotes', $permissions) ? 'true' : 'false' }},
+            email_notifications: {{ in_array('email_notifications', $permissions) ? 'true' : 'false' }},
+            portal_notifications: {{ in_array('portal_notifications', $permissions) ? 'true' : 'false' }}
+        },
+        
+        openModal(modal) {
+            console.log('Opening modal:', modal);
+            this.currentModal = modal;
+        },
+        
+        closeModal() {
+            this.currentModal = '';
+        },
+        
+        previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('photo-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+        
+        async savePortalAccess() {
+            try {
+                console.log('Saving portal data:', this.portalData);
+                
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (!csrfToken) {
+                    throw new Error('CSRF token not found');
+                }
+                
+                const response = await fetch(`/clients/{{ $client->id }}/contacts/{{ $contact->id }}/portal-access`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken.content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(this.portalData)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const result = await response.json();
+                console.log('Response result:', result);
+                
+                this.showNotification('Portal access updated successfully', 'success');
+                this.closeModal();
+                // Refresh page to show updated status
+                setTimeout(() => window.location.reload(), 1000);
+                
+            } catch (error) {
+                console.error('Error saving portal access:', error);
+                this.showNotification('Error: ' + error.message, 'error');
+            }
+        },
+        
+        async saveSecuritySettings() {
+            try {
+                const response = await fetch(`/clients/{{ $client->id }}/contacts/{{ $contact->id }}/security`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(this.securityData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.showNotification('Security settings updated successfully', 'success');
+                    this.closeModal();
+                } else {
+                    this.showNotification('Error updating security settings: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                this.showNotification('Network error: ' + error.message, 'error');
+            }
+        },
+        
+        async savePermissions() {
+            try {
+                // Convert boolean permissions to array format
+                const permissions = Object.keys(this.permissionsData)
+                    .filter(key => this.permissionsData[key])
+                    .filter(key => key !== 'email_notifications' && key !== 'portal_notifications');
+                
+                // Add notification preferences to permissions array
+                if (this.permissionsData.email_notifications) permissions.push('email_notifications');
+                if (this.permissionsData.portal_notifications) permissions.push('portal_notifications');
+                
+                const response = await fetch(`/clients/{{ $client->id }}/contacts/{{ $contact->id }}/permissions`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ permissions })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.showNotification('Permissions updated successfully', 'success');
+                    this.closeModal();
+                } else {
+                    this.showNotification('Error updating permissions: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                this.showNotification('Network error: ' + error.message, 'error');
+            }
+        },
+        
+        async lockAccount() {
+            if (confirm('Are you sure you want to lock this account?')) {
+                try {
+                    const response = await fetch(`/clients/{{ $client->id }}/contacts/{{ $contact->id }}/lock`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        this.showNotification('Account locked successfully', 'success');
+                        window.location.reload();
+                    } else {
+                        this.showNotification('Error locking account: ' + (result.message || 'Unknown error'), 'error');
+                    }
+                } catch (error) {
+                    this.showNotification('Network error: ' + error.message, 'error');
+                }
+            }
+        },
+        
+        async unlockAccount() {
+            try {
+                const response = await fetch(`/clients/{{ $client->id }}/contacts/{{ $contact->id }}/unlock`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.showNotification('Account unlocked successfully', 'success');
+                    window.location.reload();
+                } else {
+                    this.showNotification('Error unlocking account: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                this.showNotification('Network error: ' + error.message, 'error');
+            }
+        },
+        
+        async resetFailedAttempts() {
+            try {
+                const response = await fetch(`/clients/{{ $client->id }}/contacts/{{ $contact->id }}/reset-failed-attempts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.showNotification('Failed login attempts reset successfully', 'success');
+                    window.location.reload();
+                } else {
+                    this.showNotification('Error resetting failed attempts: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                this.showNotification('Network error: ' + error.message, 'error');
+            }
+        },
+        
+        testSave() {
+            console.log('Test save clicked - current portal data:', this.portalData);
+            this.showNotification('Test button clicked - check console for data', 'info');
+        },
+        
+        showNotification(message, type = 'info') {
+            // Simple notification system - you could integrate with existing notification system
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${type === 'success' ? 'bg-green-100 text-green-800' : type === 'error' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+    }
+}
+</script>
+
 @endsection

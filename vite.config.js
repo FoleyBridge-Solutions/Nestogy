@@ -6,8 +6,10 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/client-portal.css',
                 'resources/js/app.js',
                 'resources/js/it-documentation-diagram.js',
+                'resources/js/components/settings.js',
             ],
             refresh: true,
         }),
@@ -25,6 +27,7 @@ export default defineConfig({
                     vendor: ['alpinejs', 'axios'],
                     charts: ['chart.js'],
                     utils: ['date-fns', 'flatpickr', 'tom-select'],
+                    terminal: ['@xterm/xterm', '@xterm/addon-fit', '@xterm/addon-search', '@xterm/addon-web-links'],
                 },
             },
         },

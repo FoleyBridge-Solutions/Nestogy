@@ -3,35 +3,35 @@
 @section('title', 'Edit Calendar Event')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Edit Calendar Event</h1>
                 <div class="btn-group">
                     <a href="{{ route('clients.calendar-events.standalone.show', $calendarEvent) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-eye me-2"></i>View Event
+                        <i class="fas fa-eye mr-2"></i>View Event
                     </a>
                     <a href="{{ route('clients.calendar-events.standalone.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Events
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Events
                     </a>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8 col-xl-6">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6">
                             <form method="POST" action="{{ route('clients.calendar-events.standalone.update', $calendarEvent) }}">
                                 @csrf
                                 @method('PUT')
 
                                 <!-- Client Selection -->
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
+                                    <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client <span class="text-red-600">*</span></label>
                                     <select name="client_id" 
                                             id="client_id" 
-                                            class="form-select @error('client_id') is-invalid @enderror" 
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" 
                                             required>
                                         <option value="">Select a client...</option>
                                         @foreach($clients as $client)
@@ -48,11 +48,11 @@
 
                                 <!-- Event Title -->
                                 <div class="mb-3">
-                                    <label for="title" class="form-label">Event Title <span class="text-danger">*</span></label>
+                                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Event Title <span class="text-red-600">*</span></label>
                                     <input type="text" 
                                            name="title" 
                                            id="title" 
-                                           class="form-control @error('title') is-invalid @enderror" 
+                                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('title') is-invalid @enderror" 
                                            value="{{ old('title', $calendarEvent->title) }}" 
                                            required 
                                            maxlength="255"
@@ -67,7 +67,7 @@
                                     <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
                                     <select name="event_type" 
                                             id="event_type" 
-                                            class="form-select @error('event_type') is-invalid @enderror" 
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('event_type') is-invalid @enderror" 
                                             required>
                                         <option value="">Select event type...</option>
                                         @foreach($types as $key => $value)
@@ -86,7 +86,7 @@
                                     <label for="description" class="form-label">Description</label>
                                     <textarea name="description" 
                                               id="description" 
-                                              class="form-control @error('description') is-invalid @enderror" 
+                                              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('description') is-invalid @enderror" 
                                               rows="3" 
                                               placeholder="Event description...">{{ old('description', $calendarEvent->description) }}</textarea>
                                     @error('description')
@@ -111,7 +111,7 @@
 
                                 <!-- Date and Time -->
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="start_datetime" class="form-label">Start Date & Time <span class="text-danger">*</span></label>
                                             <input type="datetime-local" 
@@ -125,7 +125,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="end_datetime" class="form-label">End Date & Time <span class="text-danger">*</span></label>
                                             <input type="datetime-local" 
@@ -240,8 +240,8 @@
                                     @enderror
                                 </div>
 
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-save me-2"></i>Update Event
                                     </button>
                                     <a href="{{ route('clients.calendar-events.standalone.show', $calendarEvent) }}" class="btn btn-outline-secondary">
@@ -254,14 +254,14 @@
                 </div>
 
                 <div class="col-lg-4 col-xl-6">
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-clock me-2"></i>Event History
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="small text-muted">
+                        <div class="p-6">
+                            <div class="small text-gray-600">
                                 <div class="mb-2">
                                     <strong>Created:</strong> {{ $calendarEvent->created_at->format('M j, Y g:i A') }}
                                     @if($calendarEvent->creator)
@@ -283,13 +283,13 @@
                     </div>
 
                     <div class="card mt-3">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-info-circle me-2"></i>Event Guidelines
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div class="small text-muted">
+                            <div class="small text-gray-600">
                                 <h6>Status Options:</h6>
                                 <ul class="list-unstyled">
                                     <li><strong>Scheduled:</strong> Event is planned but not confirmed</li>

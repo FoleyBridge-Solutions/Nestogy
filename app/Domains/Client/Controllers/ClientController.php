@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Controllers\BaseController;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Location;
@@ -21,17 +23,52 @@ use App\Domains\Client\Services\ClientService;
 use App\Imports\ClientsImport;
 use Maatwebsite\Excel\Facades\Excel;
 
-class ClientController extends Controller
+class ClientController extends BaseController
 {
     protected $clientService;
 
     public function __construct(ClientService $clientService)
     {
+        parent::__construct();
         $this->clientService = $clientService;
     }
 
+    protected function initializeController(): void
+    {
+        $this->modelClass = Client::class;
+        $this->serviceClass = ClientService::class;
+        $this->resourceName = 'clients';
+        $this->viewPrefix = 'clients';
+        $this->eagerLoadRelations = ['primaryContact', 'primaryLocation'];
+    }
+
+    protected function getFilters(Request $request): array
+    {
+        return $request->only(['search', 'type', 'status']);
+    }
+
+    protected function applyCustomFilters($query, Request $request)
+    {
+        // Only show customers, not leads
+        $query->where('lead', false);
+
+        return $query;
+    }
+
+    protected function prepareStoreData(array $data): array
+    {
+        $data = parent::prepareStoreData($data);
+        
+        // Automatically select the newly created client
+        if (isset($data['client_id'])) {
+            \App\Services\NavigationService::setSelectedClient($data['client_id']);
+        }
+        
+        return $data;
+    }
+
     /**
-     * Display a listing of clients
+     * Display a listing of clients (custom implementation for DataTables)
      */
     public function index(Request $request)
     {
@@ -183,7 +220,10 @@ class ClientController extends Controller
         try {
             $clientData = $this->clientService->createClient($request->validated());
             
-            Log::info('Client created', [
+            // Automatically select the newly created client
+            \App\Services\NavigationService::setSelectedClient($clientData['client_id']);
+            
+            Log::info('Client created and selected', [
                 'client_id' => $clientData['client_id'],
                 'user_id' => Auth::id(),
                 'ip' => $request->ip()
@@ -199,7 +239,7 @@ class ClientController extends Controller
 
             return redirect()
                 ->route('clients.show', $clientData['client_id'])
-                ->with('success', "Client <strong>{$clientData['name']}</strong> created successfully");
+                ->with('success', "Client <strong>{$clientData['name']}</strong> created and selected successfully");
 
         } catch (\Exception $e) {
             Log::error('Client creation failed', [
@@ -265,8 +305,14 @@ class ClientController extends Controller
         ];
 
         if ($request->wantsJson()) {
+            // For API requests, return simplified client data for the search component
             return response()->json([
-                'client' => $client,
+                'id' => $client->id,
+                'name' => $client->name,
+                'company_name' => $client->company_name,
+                'email' => $client->email,
+                'phone' => $client->phone,
+                'status' => $client->status,
                 'stats' => $stats,
                 'recentActivity' => $recentActivity,
                 'upcomingRenewals' => $upcomingRenewals
@@ -636,7 +682,10 @@ class ClientController extends Controller
             return response()->json($leads);
         }
 
-        return view('clients.index-simple', ['clients' => $leads]);
+        return view('clients.index-simple', [
+            'clients' => $leads,
+            'isLeadsView' => true
+        ]);
     }
 
     /**
@@ -653,7 +702,10 @@ class ClientController extends Controller
         try {
             $client->convertToCustomer();
             
-            Log::info('Lead converted to customer', [
+            // Automatically select the converted client
+            \App\Services\NavigationService::setSelectedClient($client->id);
+            
+            Log::info('Lead converted to customer and selected', [
                 'client_id' => $client->id,
                 'user_id' => Auth::id()
             ]);
@@ -667,7 +719,7 @@ class ClientController extends Controller
 
             return redirect()
                 ->route('clients.show', $client)
-                ->with('success', "Lead <strong>{$client->name}</strong> converted to customer successfully");
+                ->with('success', "Lead <strong>{$client->name}</strong> converted to customer and selected successfully");
 
         } catch (\Exception $e) {
             Log::error('Lead conversion failed', [
@@ -891,6 +943,14 @@ class ClientController extends Controller
                 ]);
             }
 
+            // Handle return_to parameter for route preservation
+            $returnTo = $request->input('return_to');
+            if ($returnTo && $this->isValidReturnUrl($returnTo)) {
+                // Update client ID in URL if it's a client-specific route
+                $updatedUrl = $this->updateClientIdInUrl($returnTo, $client->id);
+                return redirect($updatedUrl)->with('success', "Now working with <strong>{$client->name}</strong>");
+            }
+
             return redirect()
                 ->route('clients.show', $client)
                 ->with('success', "Now working with <strong>{$client->name}</strong>");
@@ -955,6 +1015,70 @@ class ClientController extends Controller
     }
 
     /**
+     * Validate that the return URL is safe and from our application
+     */
+    private function isValidReturnUrl($url)
+    {
+        // Parse the URL to get the path
+        $parsedUrl = parse_url($url);
+        
+        // Must have a valid path
+        if (!isset($parsedUrl['path'])) {
+            return false;
+        }
+        
+        // Must be from the same host (if host is specified)
+        if (isset($parsedUrl['host'])) {
+            $currentHost = request()->getHost();
+            if ($parsedUrl['host'] !== $currentHost) {
+                return false;
+            }
+        }
+        
+        // Basic security check - no external redirects
+        $path = $parsedUrl['path'];
+        if (str_starts_with($path, '//') || str_contains($path, '://')) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Update client ID in URL if it's a client-specific route
+     */
+    private function updateClientIdInUrl($url, $newClientId)
+    {
+        $parsedUrl = parse_url($url);
+        $path = $parsedUrl['path'] ?? '';
+        
+        // Pattern for client-specific routes: /clients/{id}/something
+        $pattern = '/\/clients\/(\d+)(\/.*)?$/';
+        
+        if (preg_match($pattern, $path, $matches)) {
+            $oldClientId = $matches[1];
+            $subPath = $matches[2] ?? '';
+            
+            // Replace with new client ID
+            $newPath = "/clients/{$newClientId}{$subPath}";
+            
+            // Rebuild the URL
+            $newUrl = $newPath;
+            if (isset($parsedUrl['query'])) {
+                $newUrl .= '?' . $parsedUrl['query'];
+            }
+            if (isset($parsedUrl['fragment'])) {
+                $newUrl .= '#' . $parsedUrl['fragment'];
+            }
+            
+            return $newUrl;
+        }
+        
+        // If it's not a client-specific route, return as-is
+        return $url;
+    }
+
+    /**
      * Mark a client as recently accessed
      */
     public function markAsAccessed(Request $request, Client $client)
@@ -980,6 +1104,35 @@ class ClientController extends Controller
                 'message' => 'Failed to mark client as accessed'
             ], 500);
         }
+    }
+
+    /**
+     * Validate that multiple clients exist and belong to the current company
+     */
+    public function validateBatch(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer'
+        ]);
+        
+        $ids = $request->input('ids', []);
+        $companyId = Auth::user()->company_id;
+        
+        // Get valid client IDs that exist and belong to this company
+        $validIds = Client::where('company_id', $companyId)
+            ->whereIn('id', $ids)
+            ->whereNull('archived_at')
+            ->pluck('id')
+            ->toArray();
+        
+        Log::info('Batch client validation', [
+            'requested' => count($ids),
+            'valid' => count($validIds),
+            'user_id' => Auth::id()
+        ]);
+        
+        return response()->json($validIds);
     }
 
     /**
@@ -1011,5 +1164,269 @@ class ClientController extends Controller
         }
         
         return $phone;
+    }
+
+
+    /**
+     * Show the leads import form
+     */
+    public function leadsImportForm(Request $request)
+    {
+        $this->authorize('create', Client::class);
+        
+        return view('clients.leads-import');
+    }
+
+    /**
+     * Import leads from CSV file
+     */
+    public function leadsImport(Request $request)
+    {
+        $this->authorize('create', Client::class);
+        
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240',
+            'default_status' => 'required|string|in:active,inactive',
+            'default_type' => 'nullable|string|in:prospect,customer,partner',
+            'skip_duplicates' => 'boolean',
+            'import_notes' => 'nullable|string|max:1000'
+        ]);
+
+        try {
+            $file = $request->file('csv_file');
+            $handle = fopen($file->getPathname(), 'r');
+            
+            if (!$handle) {
+                throw new \Exception('Could not open CSV file');
+            }
+
+            // Read header row
+            $headers = fgetcsv($handle);
+            if (!$headers) {
+                throw new \Exception('Invalid CSV file - no headers found');
+            }
+
+            // Create column mapping
+            $columnMap = $this->createLeadColumnMapping($headers);
+            
+            $imported = 0;
+            $skipped = 0;
+            $errors = [];
+            $details = [];
+
+            while (($row = fgetcsv($handle)) !== false) {
+                try {
+                    // Skip empty rows
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+
+                    // Map CSV data to lead data
+                    $leadData = $this->mapCsvRowToLeadData($row, $headers, $columnMap);
+                    
+                    // Add default values
+                    $leadData['lead'] = true;
+                    $leadData['status'] = $request->input('default_status', 'active');
+                    $leadData['type'] = $request->input('default_type', 'prospect');
+                    $leadData['company_id'] = auth()->user()->company_id;
+                    
+                    if ($request->filled('import_notes')) {
+                        $leadData['notes'] = $request->input('import_notes');
+                    }
+
+                    // Check for duplicates if requested
+                    if ($request->boolean('skip_duplicates') && !empty($leadData['email'])) {
+                        $existing = Client::where('company_id', auth()->user()->company_id)
+                            ->where('email', $leadData['email'])
+                            ->first();
+                        
+                        if ($existing) {
+                            $skipped++;
+                            $details[] = "Skipped: {$leadData['email']} (already exists)";
+                            continue;
+                        }
+                    }
+
+                    // Create the lead as a client
+                    $client = Client::create($leadData);
+                    $imported++;
+                    $details[] = "Imported: {$client->name} ({$client->email})";
+
+                } catch (\Exception $e) {
+                    $errors[] = "Row error: " . $e->getMessage();
+                    $details[] = "Error processing row: " . implode(', ', array_slice($row, 0, 3));
+                }
+            }
+
+            fclose($handle);
+
+            // Prepare summary message
+            $message = "Import completed: {$imported} leads imported";
+            if ($skipped > 0) {
+                $message .= ", {$skipped} duplicates skipped";
+            }
+            if (count($errors) > 0) {
+                $message .= ", " . count($errors) . " errors";
+            }
+
+            return redirect()
+                ->route('clients.leads')
+                ->with('success', $message)
+                ->with('import_details', $details);
+
+        } catch (\Exception $e) {
+            Log::error('Lead CSV import failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download CSV template for lead import
+     */
+    public function leadsImportTemplate()
+    {
+        $filename = 'leads_import_template.csv';
+        
+        $headers = [
+            'Last', 'First', 'Middle', 'Company Name',
+            'Company Address Line 1', 'Company Address Line 2',
+            'City', 'State', 'ZIP', 'Email', 'Website', 'Phone'
+        ];
+        
+        $sampleData = [
+            'Smith', 'Jane', 'A', 'Tech Solutions LLC',
+            '456 Innovation Ave', 'Floor 2', 'Austin', 'TX', '78701',
+            'jane.smith@techsolutions.com', 'https://techsolutions.com', '(555) 987-6543'
+        ];
+
+        return response()->streamDownload(function () use ($headers, $sampleData) {
+            $output = fopen('php://output', 'w');
+            fputcsv($output, $headers);
+            fputcsv($output, $sampleData);
+            fclose($output);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Create column mapping for lead CSV import
+     */
+    private function createLeadColumnMapping(array $headers): array
+    {
+        $mapping = [];
+        
+        foreach ($headers as $index => $header) {
+            $normalizedHeader = strtolower(trim($header));
+            
+            // Map various column name variations to our expected fields
+            if (in_array($normalizedHeader, ['last', 'last name', 'lastname', 'surname'])) {
+                $mapping['last_name'] = $index;
+            } elseif (in_array($normalizedHeader, ['first', 'first name', 'firstname', 'given name'])) {
+                $mapping['first_name'] = $index;
+            } elseif (in_array($normalizedHeader, ['middle', 'middle name', 'middlename', 'middle initial'])) {
+                $mapping['middle_name'] = $index;
+            } elseif (in_array($normalizedHeader, ['company', 'company name', 'organization', 'business name'])) {
+                $mapping['company_name'] = $index;
+            } elseif (in_array($normalizedHeader, ['address', 'address line 1', 'address1', 'company address line 1'])) {
+                $mapping['address_line_1'] = $index;
+            } elseif (in_array($normalizedHeader, ['address line 2', 'address2', 'company address line 2'])) {
+                $mapping['address_line_2'] = $index;
+            } elseif (in_array($normalizedHeader, ['city', 'town'])) {
+                $mapping['city'] = $index;
+            } elseif (in_array($normalizedHeader, ['state', 'province', 'region'])) {
+                $mapping['state'] = $index;
+            } elseif (in_array($normalizedHeader, ['zip', 'postal code', 'zipcode', 'postcode'])) {
+                $mapping['postal_code'] = $index;
+            } elseif (in_array($normalizedHeader, ['email', 'email address', 'e-mail'])) {
+                $mapping['email'] = $index;
+            } elseif (in_array($normalizedHeader, ['website', 'url', 'web site', 'homepage'])) {
+                $mapping['website'] = $index;
+            } elseif (in_array($normalizedHeader, ['phone', 'phone number', 'telephone', 'mobile', 'cell'])) {
+                $mapping['phone'] = $index;
+            }
+        }
+        
+        return $mapping;
+    }
+
+    /**
+     * Map CSV row data to lead data array
+     */
+    private function mapCsvRowToLeadData(array $row, array $headers, array $columnMap): array
+    {
+        $data = [];
+        
+        // Build name from parts
+        $nameParts = [];
+        if (isset($columnMap['first_name']) && !empty($row[$columnMap['first_name']])) {
+            $nameParts[] = trim($row[$columnMap['first_name']]);
+        }
+        if (isset($columnMap['middle_name']) && !empty($row[$columnMap['middle_name']])) {
+            $nameParts[] = trim($row[$columnMap['middle_name']]);
+        }
+        if (isset($columnMap['last_name']) && !empty($row[$columnMap['last_name']])) {
+            $nameParts[] = trim($row[$columnMap['last_name']]);
+        }
+        
+        if (empty($nameParts)) {
+            throw new \Exception('Name is required (First/Last name columns)');
+        }
+        
+        $data['name'] = implode(' ', $nameParts);
+        
+        // Map other fields
+        if (isset($columnMap['company_name']) && !empty($row[$columnMap['company_name']])) {
+            $data['company_name'] = trim($row[$columnMap['company_name']]);
+        }
+        
+        if (isset($columnMap['email']) && !empty($row[$columnMap['email']])) {
+            $email = trim($row[$columnMap['email']]);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new \Exception("Invalid email format: {$email}");
+            }
+            $data['email'] = $email;
+        }
+        
+        if (isset($columnMap['phone']) && !empty($row[$columnMap['phone']])) {
+            $data['phone'] = trim($row[$columnMap['phone']]);
+        }
+        
+        if (isset($columnMap['website']) && !empty($row[$columnMap['website']])) {
+            $data['website'] = trim($row[$columnMap['website']]);
+        }
+        
+        // Build address
+        $addressParts = [];
+        if (isset($columnMap['address_line_1']) && !empty($row[$columnMap['address_line_1']])) {
+            $addressParts[] = trim($row[$columnMap['address_line_1']]);
+        }
+        if (isset($columnMap['address_line_2']) && !empty($row[$columnMap['address_line_2']])) {
+            $addressParts[] = trim($row[$columnMap['address_line_2']]);
+        }
+        if (!empty($addressParts)) {
+            $data['address'] = implode(', ', $addressParts);
+        }
+        
+        if (isset($columnMap['city']) && !empty($row[$columnMap['city']])) {
+            $data['city'] = trim($row[$columnMap['city']]);
+        }
+        
+        if (isset($columnMap['state']) && !empty($row[$columnMap['state']])) {
+            $data['state'] = trim($row[$columnMap['state']]);
+        }
+        
+        if (isset($columnMap['postal_code']) && !empty($row[$columnMap['postal_code']])) {
+            $data['postal_code'] = trim($row[$columnMap['postal_code']]);
+        }
+        
+        return $data;
     }
 }

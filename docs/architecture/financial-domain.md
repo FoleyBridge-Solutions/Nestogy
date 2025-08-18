@@ -2,7 +2,7 @@
 
 ## Domain Overview
 
-The Financial Domain is responsible for all monetary transactions, billing operations, and financial reporting within the Nestogy MSP platform. This domain handles invoice generation, payment processing, recurring billing, expense tracking, and financial analytics.
+The Financial Domain is responsible for all monetary transactions, billing operations, and financial reporting within the Nestogy MSP platform. This domain handles invoice generation, payment processing, recurring billing, expense tracking, and financial analytics. All financial services extend FinancialBaseService for audit logging and standardized operations.
 
 ## Domain Boundaries
 
@@ -449,4 +449,4 @@ This Financial Domain architecture provides a robust foundation for MSP billing 
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: January 2024 | **Platform**: Laravel 11 + PHP 8.2+
+**Version**: 2.0.0 | **Last Updated**: August 2024 | **Platform**: Laravel 12 + PHP 8.2+ + Modern Base Class Architecture

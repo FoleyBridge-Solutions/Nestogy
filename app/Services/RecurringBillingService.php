@@ -779,11 +779,12 @@ class RecurringBillingService
         $serviceAddress = $this->getClientServiceAddress($client);
         
         // Initialize VoIP tax service for the company
-        $voipTaxService = new VoIPTaxService($recurring->company_id, [
+        $voipTaxService = new VoIPTaxService([
             'cache_ttl' => 3600,
             'enable_caching' => true,
             'round_precision' => 4
         ]);
+        $voipTaxService->setCompanyId($recurring->company_id);
 
         $taxParams = [
             'amount' => $baseAmount,
@@ -880,7 +881,8 @@ class RecurringBillingService
      */
     protected function recordVoIPTaxExemptionUsage(array $exemptionsApplied, int $invoiceId): void
     {
-        $voipTaxService = new VoIPTaxService(Auth::user()->company_id);
+        $voipTaxService = new VoIPTaxService();
+        $voipTaxService->setCompanyId(Auth::user()->company_id);
         $voipTaxService->recordExemptionUsage($exemptionsApplied, $invoiceId);
     }
 

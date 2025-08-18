@@ -34,8 +34,10 @@ class NavigationService
                 'financial.*',
                 'billing.*',
                 'collections.*',
+                'products.*',
+                'services.*',
             ],
-            'patterns' => ['financial', 'billing', 'collections']
+            'patterns' => ['financial', 'billing', 'collections', 'products', 'services']
         ],
         'projects' => [
             'routes' => [
@@ -135,6 +137,13 @@ class NavigationService
             'clients.it-documentation.complete-review' => 'it-documentation',
             'clients.it-documentation.overdue-reviews' => 'it-documentation',
             'clients.it-documentation.bulk-update-access' => 'it-documentation',
+            
+            // Assets
+            'clients.assets.index' => 'assets',
+            'clients.assets.create' => 'assets',
+            'clients.assets.show' => 'assets',
+            'clients.assets.edit' => 'assets',
+            'clients.assets.destroy' => 'assets',
             
             // Infrastructure Management
             'clients.licenses.index' => 'licenses',
@@ -352,6 +361,20 @@ class NavigationService
             // Contracts
             'financial.contracts.index' => 'contracts',
             'financial.contracts.create' => 'contracts',
+            
+            // Products & Services
+            'products.index' => 'products',
+            'products.create' => 'create-product',
+            'products.show' => 'products',
+            'products.edit' => 'products',
+            'products.destroy' => 'products',
+            'products.import' => 'products',
+            'products.export' => 'products',
+            'services.index' => 'services',
+            'services.create' => 'create-service',
+            'services.show' => 'services',
+            'services.edit' => 'services',
+            'services.destroy' => 'services',
             'financial.contracts.show' => 'contracts',
             'financial.contracts.edit' => 'contracts',
             'financial.contracts.destroy' => 'contracts',
@@ -928,6 +951,14 @@ class NavigationService
             $items['invoices'] = 'Invoices';
         }
 
+        if ($user->hasPermission('financial.quotes.view')) {
+            $items['quotes'] = 'Quotes';
+        }
+
+        if ($user->hasPermission('contracts.view')) {
+            $items['contracts'] = 'Contracts';
+        }
+
         if ($user->hasPermission('financial.payments.view')) {
             $items['payments'] = 'Payments';
         }
@@ -940,12 +971,24 @@ class NavigationService
             $items['create-invoice'] = 'Create Invoice';
         }
 
+        if ($user->hasPermission('financial.quotes.manage')) {
+            $items['create-quote'] = 'Create Quote';
+        }
+
+        if ($user->hasPermission('contracts.create')) {
+            $items['create-contract'] = 'Create Contract';
+        }
+
         if ($user->hasPermission('financial.payments.manage')) {
             $items['create-payment'] = 'Record Payment';
         }
 
         if ($user->hasPermission('financial.expenses.manage')) {
             $items['create-expense'] = 'Add Expense';
+        }
+
+        if ($user->hasPermission('contracts.analytics')) {
+            $items['contract-analytics'] = 'Contract Analytics';
         }
 
         return $items;
@@ -1254,11 +1297,16 @@ class NavigationService
     {
         $itemPermissions = [
             'invoices' => 'financial.invoices.view',
+            'quotes' => 'financial.quotes.view',
+            'contracts' => 'contracts.view',
             'payments' => 'financial.payments.view',
             'expenses' => 'financial.expenses.view',
             'create-invoice' => 'financial.invoices.manage',
+            'create-quote' => 'financial.quotes.manage',
+            'create-contract' => 'contracts.create',
             'create-payment' => 'financial.payments.manage',
             'create-expense' => 'financial.expenses.manage',
+            'contract-analytics' => 'contracts.analytics',
         ];
 
         return isset($itemPermissions[$item]) && $user->hasPermission($itemPermissions[$item]);
@@ -1458,6 +1506,10 @@ class NavigationService
         try {
             return [
                 'invoices' => \App\Models\Invoice::where('company_id', $companyId)->count(),
+                'quotes' => \App\Models\Quote::where('company_id', $companyId)->count(),
+                'contracts' => \App\Models\Contract::where('company_id', $companyId)->count(),
+                'active-contracts' => \App\Models\Contract::where('company_id', $companyId)->where('status', 'active')->count(),
+                'expiring-contracts' => \App\Models\Contract::where('company_id', $companyId)->expiringSoon(30)->count(),
                 'payments' => \App\Models\Payment::where('company_id', $companyId)->count(),
                 'expenses' => \App\Models\Expense::where('company_id', $companyId)->count(),
                 'pending-payments' => \App\Models\Payment::where('company_id', $companyId)->where('status', 'pending')->count(),
@@ -1731,6 +1783,14 @@ class NavigationService
                 $items['quotes'] = 'Quotes';
             }
             
+            if ($user->hasPermission('contracts.view')) {
+                $items['contracts'] = 'Contracts';
+            }
+            
+            if ($user->hasPermission('financial.invoices.view')) {
+                $items['invoices'] = 'Invoices';
+            }
+            
             if ($user->hasPermission('clients.trips.view')) {
                 $items['trips'] = 'Trips';
             }
@@ -1768,6 +1828,10 @@ class NavigationService
                 'recurring-invoices' => \App\Models\Recurring::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
                 'quotes' => \App\Models\Quote::where('company_id', $companyId)
+                    ->where('client_id', $clientId)->count(),
+                'contracts' => \App\Models\Contract::where('company_id', $companyId)
+                    ->where('client_id', $clientId)->count(),
+                'invoices' => \App\Models\Invoice::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
                 'trips' => 0, // ClientTrip model not yet created
                 'calendar-events' => 0, // ClientCalendarEvent model not yet created

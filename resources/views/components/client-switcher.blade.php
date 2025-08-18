@@ -17,7 +17,7 @@
     <!-- Trigger Button -->
     <button @click="toggle()" 
             type="button"
-            class="group flex items-center space-x-3 px-4 py-2 rounded-xl bg-white/80 hover:bg-white shadow-sm hover:shadow-md border border-gray-200/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 backdrop-blur-sm"
+            class="group flex items-center space-x-3 px-4 py-2 rounded-xl bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 shadow-sm hover:shadow-md border border-gray-200/60 dark:border-gray-700/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 dark:focus:border-indigo-400 backdrop-blur-sm"
             :class="{ 'ring-2 ring-indigo-500/20 border-indigo-300': open }">
         
         @if($currentClient)
@@ -30,11 +30,11 @@
             
             <!-- Current Client Info -->
             <div class="flex-1 min-w-0 text-left">
-                <div class="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {{ $currentClient->name }}
                 </div>
                 @if($currentClient->company_name && $currentClient->company_name !== $currentClient->name)
-                    <div class="text-xs text-gray-500 truncate">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
                         {{ $currentClient->company_name }}
                     </div>
                 @endif
@@ -54,13 +54,13 @@
         @else
             <!-- No Client Selected State -->
             <div class="flex items-center space-x-3">
-                <div class="h-8 w-8 rounded-lg bg-gray-200 flex items-center justify-center">
-                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="h-8 w-8 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <svg class="h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                 </div>
-                <span class="text-sm font-medium text-gray-600">Select Client</span>
-                <svg class="h-4 w-4 text-gray-400" 
+                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Select Client</span>
+                <svg class="h-4 w-4 text-gray-400 dark:text-gray-500" 
                      :class="{ 'rotate-180': open }" 
                      fill="none" 
                      stroke="currentColor" 
@@ -79,7 +79,7 @@
          x-transition:leave="transition ease-in duration-150" 
          x-transition:leave-start="opacity-1 scale-100" 
          x-transition:leave-end="opacity-0 scale-95"
-         class="absolute z-50 mt-2 w-80 bg-white rounded-2xl shadow-xl ring-1 ring-black/5 backdrop-blur-sm border border-gray-100"
+         class="absolute z-50 mt-2 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-sm border border-gray-100 dark:border-gray-700"
          :class="{
              'right-0': '{{ $placement }}' === 'bottom-end',
              'left-0': '{{ $placement }}' === 'bottom-start'
@@ -87,9 +87,38 @@
          style="display: none;">
         
         <div class="p-4">
+            @if($currentClient)
+                <!-- Current Client Button -->
+                <div class="mb-4">
+                    <a href="{{ route('clients.show', $currentClient) }}" 
+                       class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 transition-all duration-200 group">
+                        <div class="flex-shrink-0">
+                            <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                                {{ substr($currentClient->name ?? '', 0, 2) }}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0 text-left">
+                            <div class="text-sm font-semibold text-indigo-900 dark:text-indigo-100 truncate group-hover:text-indigo-700 dark:group-hover:text-indigo-200 transition-colors">
+                                {{ $currentClient->name }}
+                            </div>
+                            @if($currentClient->company_name && $currentClient->company_name !== $currentClient->name)
+                                <div class="text-xs text-indigo-600 dark:text-indigo-300 truncate">
+                                    {{ $currentClient->company_name }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </a>
+                </div>
+            @endif
+            
             <!-- Search Input -->
             <div class="relative mb-3">
-                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" 
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" 
                      fill="none" 
                      stroke="currentColor" 
                      viewBox="0 0 24 24">
@@ -99,12 +128,12 @@
                        x-model="searchQuery"
                        @input="onSearch()"
                        placeholder="Search clients..."
-                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all duration-200 bg-gray-50/50">
+                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 dark:focus:border-indigo-400 transition-all duration-200 bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400">
                 
                 <!-- Clear Search -->
                 <button x-show="searchQuery.length > 0" 
                         @click="searchQuery = ''; onSearch()" 
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -113,7 +142,7 @@
             
             <!-- Loading State -->
             <div x-show="loading" class="flex items-center justify-center py-8">
-                <div class="flex items-center space-x-2 text-gray-500">
+                <div class="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
                     <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -127,42 +156,10 @@
                  data-dropdown-content
                  class="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                 
-                <!-- Recent Clients Section -->
-                <template x-if="hasRecentClients">
-                    <div class="mb-2">
-                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
-                            Recent Clients
-                        </div>
-                        <template x-for="(client, index) in recentClients.filter(c => !currentClient || c.id !== currentClient.id)" :key="client.id">
-                            <button @click="selectClient(client)" 
-                                    data-client-item
-                                    class="w-full flex items-center space-x-3 px-3 py-2.5 text-left rounded-lg hover:bg-gray-50 transition-all duration-150 group"
-                                    :class="{ 'bg-indigo-50 hover:bg-indigo-100': isItemSelected(index) }">
-                                <div class="flex-shrink-0">
-                                    <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
-                                        <span x-text="getClientInitials(client)"></span>
-                                    </div>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-gray-900 truncate group-hover:text-indigo-600" x-text="client.name"></div>
-                                    <template x-if="client.company_name && client.company_name !== client.name">
-                                        <div class="text-xs text-gray-500 truncate" x-text="client.company_name"></div>
-                                    </template>
-                                </div>
-                                <div class="text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Recent
-                                </div>
-                            </button>
-                        </template>
-                        
-                        <!-- Divider -->
-                        <div class="my-3 border-t border-gray-100"></div>
-                    </div>
-                </template>
                 
                 <!-- All Clients / Search Results -->
-                <template x-if="!hasRecentClients && filteredClients.length > 0">
-                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
+                <template x-if="filteredClients.length > 0">
+                    <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-2">
                         <span x-text="searchQuery ? 'Search Results' : 'All Clients'"></span>
                     </div>
                 </template>
@@ -171,20 +168,20 @@
                 <template x-for="(client, index) in filteredClients" :key="client.id">
                     <button @click="selectClient(client)" 
                             data-client-item
-                            class="w-full flex items-center space-x-3 px-3 py-2.5 text-left rounded-lg hover:bg-gray-50 transition-all duration-150 group"
-                            :class="{ 'bg-indigo-50 hover:bg-indigo-100': isItemSelected(hasRecentClients ? recentClients.length + index : index) }">
+                            class="w-full flex items-center space-x-3 px-3 py-2.5 text-left rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-150 group"
+                            :class="{ 'bg-indigo-50 hover:bg-indigo-100': isItemSelected(index) }">
                         <div class="flex-shrink-0">
                             <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-xs font-semibold">
                                 <span x-text="getClientInitials(client)"></span>
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium text-gray-900 truncate group-hover:text-indigo-600" x-text="client.name"></div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400" x-text="client.name"></div>
                             <template x-if="client.company_name && client.company_name !== client.name">
-                                <div class="text-xs text-gray-500 truncate" x-text="client.company_name"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="client.company_name"></div>
                             </template>
                         </div>
-                        <div class="text-xs text-gray-400 group-hover:text-indigo-500 transition-colors">
+                        <div class="text-xs text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -194,10 +191,10 @@
                 
                 <!-- No Results -->
                 <div x-show="showNoResults" class="text-center py-8">
-                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <div class="text-sm text-gray-500">
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
                         <p class="font-medium">No clients found</p>
                         <p>Try adjusting your search terms</p>
                     </div>
@@ -205,14 +202,14 @@
                 
                 <!-- Empty State -->
                 <div x-show="showEmpty" class="text-center py-8">
-                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
-                    <div class="text-sm text-gray-500">
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
                         <p class="font-medium">No clients available</p>
                         <p>Add your first client to get started</p>
                     </div>
-                    <a href="{{ route('clients.create') }}" class="inline-flex items-center px-3 py-2 mt-4 text-sm font-medium text-indigo-600 bg-indigo-50 border border-transparent rounded-lg hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <a href="{{ route('clients.create') }}" class="inline-flex items-center px-3 py-2 mt-4 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-transparent rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -223,13 +220,13 @@
             
             <!-- Footer Actions -->
             @if($currentClient)
-                <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
                     <a href="{{ route('clients.index') }}" 
-                       class="text-xs text-gray-500 hover:text-indigo-600 font-medium transition-colors">
+                       class="text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors">
                         View All Clients
                     </a>
                     <button @click="clearSelection()" 
-                            class="text-xs text-red-600 hover:text-red-700 font-medium transition-colors">
+                            class="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors">
                         Clear Selection
                     </button>
                 </div>

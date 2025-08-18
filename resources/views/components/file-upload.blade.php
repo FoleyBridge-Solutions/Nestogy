@@ -18,24 +18,24 @@
         </div>
         
         <div x-show="uploading" class="py-4">
-            <div class="spinner-border text-primary" role="status">
+            <div class="spinner-border text-blue-600" role="status">
                 <span class="visually-hidden">Uploading...</span>
             </div>
             <p class="mt-2 text-sm text-gray-600">Uploading files...</p>
         </div>
     </div>
     
-    <div x-show="error" class="mt-3 alert alert-danger" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
+    <div x-show="error" class="mt-3 px-4 py-3 rounded bg-red-100 border border-red-400 text-red-700" role="alert">
+        <i class="fas fa-exclamation-circle mr-2"></i>
         <span x-text="error"></span>
     </div>
     
     <div x-show="files.length > 0" class="mt-4">
         <h6 class="font-medium text-gray-700 mb-2">Uploaded Files:</h6>
         <template x-for="(file, index) in files" :key="index">
-            <div class="d-flex align-items-center justify-content-between p-2 border rounded mb-2">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-file me-2 text-gray-500"></i>
+            <div class="flex items-center justify-between p-2 border rounded mb-2">
+                <div class="flex items-center">
+                    <i class="fas fa-file mr-2 text-gray-500"></i>
                     <span x-text="file.name" class="text-sm"></span>
                 </div>
                 <button @click="removeFile(index)" class="btn btn-sm btn-outline-danger">

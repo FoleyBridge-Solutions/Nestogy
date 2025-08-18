@@ -6,19 +6,19 @@
 <div class="executive-dashboard">
     <!-- Dashboard Header -->
     <div class="dashboard-header">
-        <div class="row align-items-center mb-4">
-            <div class="col-md-8">
+        <div class="flex flex-wrap -mx-4 items-center mb-4">
+            <div class="md:w-2/3 px-4">
                 <h1 class="dashboard-title">
-                    <i class="fas fa-chart-line me-3 text-primary"></i>
+                    <i class="fas fa-chart-line mr-3 text-blue-600"></i>
                     Executive Dashboard
                 </h1>
-                <p class="dashboard-subtitle text-muted">
+                <p class="dashboard-subtitle text-gray-600">
                     Real-time financial insights and key performance indicators
                 </p>
             </div>
-            <div class="col-md-4 text-end">
+            <div class="md:w-1/3 px-4 text-end">
                 <div class="dashboard-controls">
-                    <div class="btn-group me-2">
+                    <div class="btn-group mr-2">
                         <button type="button" class="btn btn-outline-primary" id="dateRangeBtn">
                             <i class="fas fa-calendar me-2"></i>
                             <span id="dateRangeText">This Month</span>
@@ -27,8 +27,8 @@
                     <button type="button" class="btn btn-outline-secondary" id="refreshDashboard">
                         <i class="fas fa-sync-alt"></i>
                     </button>
-                    <div class="btn-group ms-2">
-                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    <div class="btn-group ml-2">
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dropdown-toggle" x-data="{ open: false }" @click="open = !open">
                             <i class="fas fa-download me-2"></i>Export
                         </button>
                         <ul class="dropdown-menu">
@@ -49,19 +49,19 @@
     </div>
 
     <!-- Key Performance Indicators -->
-    <div class="kpi-section mb-5">
-        <div class="row" id="kpiCards">
+    <div class="kpi-section mb-6">
+        <div class="flex flex-wrap -mx-4" id="kpiCards">
             <!-- KPI cards will be dynamically loaded -->
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card kpi-card" id="totalRevenueCard">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden kpi-bg-white rounded-lg shadow-md overflow-hidden" id="totalRevenueCard">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <h6 class="card-subtitle mb-1 text-muted">Total Revenue</h6>
+                                <h6 class="card-subtitle mb-1 text-gray-600">Total Revenue</h6>
                                 <h3 class="card-title mb-0" id="totalRevenueValue">
                                     <div class="skeleton-loader"></div>
                                 </h3>
-                                <small class="text-success" id="totalRevenueGrowth">
+                                <small class="text-green-600" id="totalRevenueGrowth">
                                     <div class="skeleton-loader"></div>
                                 </small>
                             </div>
@@ -75,14 +75,14 @@
 
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card kpi-card" id="mrrCard">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <div class="p-6">
+                        <div class="flex justify-between align-items-center">
                             <div>
                                 <h6 class="card-subtitle mb-1 text-muted">Monthly Recurring Revenue</h6>
                                 <h3 class="card-title mb-0" id="mrrValue">
                                     <div class="skeleton-loader"></div>
                                 </h3>
-                                <small class="text-primary" id="mrrGrowth">
+                                <small class="text-blue-600" id="mrrGrowth">
                                     <div class="skeleton-loader"></div>
                                 </small>
                             </div>
@@ -144,7 +144,7 @@
             <!-- Revenue Trends Chart -->
             <div class="col-xl-8 mb-4">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-chart-area me-2 text-primary"></i>
                             Revenue Trends
@@ -166,7 +166,7 @@
             <!-- Cash Flow Summary -->
             <div class="col-xl-4 mb-4">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-water me-2 text-info"></i>
                             Cash Flow Summary
@@ -181,7 +181,7 @@
                         </div>
                         <div class="cash-flow-item mb-3">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-success">
+                                <span class="text-green-600">
                                     <i class="fas fa-plus-circle me-1"></i>Total Inflow
                                 </span>
                                 <span class="fw-bold text-success" id="totalInflow">$0.00</span>
@@ -189,10 +189,10 @@
                         </div>
                         <div class="cash-flow-item mb-3">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-danger">
+                                <span class="text-red-600">
                                     <i class="fas fa-minus-circle me-1"></i>Total Outflow
                                 </span>
-                                <span class="fw-bold text-danger" id="totalOutflow">$0.00</span>
+                                <span class="fw-bold text-red-600" id="totalOutflow">$0.00</span>
                             </div>
                         </div>
                         <hr>
@@ -228,7 +228,7 @@
                                 <span class="metric-value" id="totalCustomers">0</span>
                             </div>
                             <div class="progress" style="height: 4px;">
-                                <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                <div class="progress-bar bg-blue-600" style="width: 100%"></div>
                             </div>
                         </div>
 
@@ -266,7 +266,7 @@
                     </div>
                     <div class="card-body">
                         <div id="performanceAlerts">
-                            <div class="alert alert-info alert-sm mb-2">
+                            <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700 alert-sm mb-2">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <small>All systems operating normally</small>
                             </div>
@@ -316,8 +316,8 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="recentActivityTable">
+                    <div class="min-w-full divide-y divide-gray-200-responsive">
+                        <table class="min-w-full divide-y divide-gray-200 [&>tbody>tr:hover]:bg-gray-100" id="recentActivityTable">
                             <thead>
                                 <tr>
                                     <th>Time</th>
@@ -344,17 +344,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Select Date Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="startDate">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input type="date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="startDate">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="endDate">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <input type="date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="endDate">
                     </div>
                 </div>
                 <div class="row mt-3">
@@ -369,8 +369,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="applyDateRange">Apply</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="applyDateRange">Apply</button>
             </div>
         </div>
     </div>
@@ -671,7 +671,7 @@ class ExecutiveDashboard {
         const container = document.getElementById('performanceAlerts');
         
         if (alerts.length === 0) {
-            container.innerHTML = '<div class="alert alert-success alert-sm mb-2"><i class="fas fa-check-circle me-2"></i><small>All systems operating normally</small></div>';
+            container.innerHTML = '<div class="px-4 py-3 rounded bg-green-100 border border-green-400 text-green-700 alert-sm mb-2"><i class="fas fa-check-circle me-2"></i><small>All systems operating normally</small></div>';
         } else {
             container.innerHTML = alerts.map(alert => 
                 `<div class="alert alert-${alert.type} alert-sm mb-2">

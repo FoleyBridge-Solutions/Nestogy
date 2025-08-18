@@ -14,213 +14,154 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/css/client-portal.css', 'resources/js/app.js'])
     
-    <!-- Custom Styles -->
-    <style>
-        :root {
-            --primary-color: #4e73df;
-            --secondary-color: #858796;
-            --success-color: #1cc88a;
-            --info-color: #36b9cc;
-            --warning-color: #f6c23e;
-            --danger-color: #e74a3b;
-            --light-color: #f8f9fc;
-            --dark-color: #5a5c69;
-            --sidebar-width: 250px;
-        }
-
-        body {
-            font-family: 'Figtree', sans-serif;
-            background-color: #f8f9fc;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--primary-color) 10%, #224abe 100%);
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .main-content {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-        }
-
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0;
-            transition: all 0.3s;
-        }
-
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar .nav-link i {
-            margin-right: 0.5rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        .navbar {
-            background-color: white;
-            border-bottom: 1px solid #e3e6f0;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            border-radius: 0.35rem;
-        }
-
-        .btn {
-            border-radius: 0.35rem;
-        }
-
-        .badge {
-            font-size: 0.75em;
-        }
-
-        .progress {
-            height: 0.5rem;
-            border-radius: 0.25rem;
-        }
-
-        .table th {
-            border-top: none;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .alert {
-            border-radius: 0.35rem;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-
-            .sidebar.show {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .mobile-menu-btn {
-                display: block !important;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .mobile-menu-btn {
-                display: none !important;
-            }
-        }
-
-        /* Utility Classes */
-        .text-primary { color: var(--primary-color) !important; }
-        .text-success { color: var(--success-color) !important; }
-        .text-info { color: var(--info-color) !important; }
-        .text-warning { color: var(--warning-color) !important; }
-        .text-danger { color: var(--danger-color) !important; }
-        
-        .bg-primary { background-color: var(--primary-color) !important; }
-        .bg-success { background-color: var(--success-color) !important; }
-        .bg-info { background-color: var(--info-color) !important; }
-        .bg-warning { background-color: var(--warning-color) !important; }
-        .bg-danger { background-color: var(--danger-color) !important; }
-
-        .border-left-primary { border-left: 0.25rem solid var(--primary-color) !important; }
-        .border-left-success { border-left: 0.25rem solid var(--success-color) !important; }
-        .border-left-info { border-left: 0.25rem solid var(--info-color) !important; }
-        .border-left-warning { border-left: 0.25rem solid var(--warning-color) !important; }
-        .border-left-danger { border-left: 0.25rem solid var(--danger-color) !important; }
-    </style>
-
+    <!-- Client Portal Theme Context for JavaScript -->
+    <script>
+        window.CLIENT_THEME = localStorage.getItem('client_theme') || 'auto';
+        // TODO: In future, fetch from client user preferences
+    </script>
+    
+    <!-- Additional Styles -->
     @stack('styles')
 </head>
-<body>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 antialiased" 
+      x-data="{ 
+          theme: localStorage.getItem('client_theme') || 'auto',
+          init() {
+              this.applyTheme();
+          },
+          applyTheme() {
+              document.body.classList.remove('dark', 'light');
+              if (this.theme === 'dark') {
+                  document.body.classList.add('dark');
+              } else if (this.theme === 'light') {
+                  document.body.classList.add('light');
+              }
+              // For 'auto', let CSS media query handle it
+          }
+      }" 
+      x-init="init()"
     <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-        <div class="p-3">
+    <nav class="fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-indigo-600 to-indigo-800 dark:from-gray-800 dark:to-gray-900 overflow-y-auto z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300" 
+         id="sidebar"
+         x-data="{ sidebarOpen: false }"
+         :class="{ 'translate-x-0': sidebarOpen }">
+        <div class="p-6">
             <!-- Brand -->
-            <div class="text-center mb-4">
-                <h4 class="text-white font-weight-bold">{{ config('app.name') }}</h4>
-                <small class="text-white-50">Client Portal</small>
+            <div class="text-center mb-6">
+                <h4 class="text-white text-xl font-bold">{{ config('app.name') }}</h4>
+                <p class="text-indigo-200 text-sm">Client Portal</p>
             </div>
 
             <!-- User Info -->
             @auth('client')
-            <div class="card bg-white bg-opacity-10 mb-4">
-                <div class="card-body text-center">
-                    <div class="avatar bg-white bg-opacity-20 rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
-                         style="width: 50px; height: 50px;">
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 mb-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full mx-auto mb-3 flex items-center justify-center">
                         <i class="fas fa-user text-white"></i>
                     </div>
-                    <h6 class="text-white mb-0">{{ auth('client')->user()->name }}</h6>
-                    <small class="text-white-50">{{ auth('client')->user()->email }}</small>
+                    <h6 class="text-white font-medium mb-1">{{ auth('client')->user()->name }}</h6>
+                    <p class="text-indigo-200 text-sm">{{ auth('client')->user()->email }}</p>
                 </div>
             </div>
             @endauth
 
             <!-- Navigation -->
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('client.dashboard') ? 'active' : '' }}" 
-                       href="{{ route('client.dashboard') }}">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('client.contracts*') ? 'active' : '' }}" 
-                       href="{{ route('client.contracts') }}">
-                        <i class="fas fa-file-contract"></i> My Contracts
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('client.invoices*') ? 'active' : '' }}" 
-                       href="{{ route('client.contracts', ['type' => 'invoices']) }}">
-                        <i class="fas fa-file-invoice-dollar"></i> Invoices
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('client.milestones*') ? 'active' : '' }}" 
-                       href="{{ route('client.contracts', ['view' => 'milestones']) }}">
-                        <i class="fas fa-tasks"></i> Milestones
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('client.profile*') ? 'active' : '' }}" 
-                       href="{{ route('client.profile') }}">
-                        <i class="fas fa-user-cog"></i> Profile & Settings
-                    </a>
-                </li>
-            </ul>
+            <nav class="space-y-1">
+                <!-- Dashboard - Always visible -->
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.dashboard') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.dashboard') }}">
+                    <i class="fas fa-tachometer-alt w-5 text-center mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+
+                @php
+                    $contact = auth('client')->user();
+                    $permissions = $contact->portal_permissions ?? [];
+                @endphp
+
+                <!-- Contracts - Only if user has permission -->
+                @if(in_array('can_view_contracts', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.contracts*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.contracts') }}">
+                    <i class="fas fa-file-contract w-5 text-center mr-3"></i>
+                    <span class="font-medium">Contracts</span>
+                </a>
+                @endif
+
+                <!-- Invoices - Only if user has permission -->
+                @if(in_array('can_view_invoices', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.invoices*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.invoices') }}">
+                    <i class="fas fa-file-invoice-dollar w-5 text-center mr-3"></i>
+                    <span class="font-medium">Invoices</span>
+                </a>
+                @endif
+
+                <!-- Support Tickets - Only if user has permission -->
+                @if(in_array('can_view_tickets', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.tickets*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.tickets') }}">
+                    <i class="fas fa-ticket-alt w-5 text-center mr-3"></i>
+                    <span class="font-medium">Support Tickets</span>
+                </a>
+                @endif
+
+                <!-- Quotes - Only if user has permission -->
+                @if(in_array('can_approve_quotes', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.quotes*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ Route::has('client.quotes') ? route('client.quotes') : '#' }}">
+                    <i class="fas fa-file-signature w-5 text-center mr-3"></i>
+                    <span class="font-medium">Quotes</span>
+                </a>
+                @endif
+
+                <!-- IT Assets - Only if user has permission -->
+                @if(in_array('can_view_assets', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.assets*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.assets') }}">
+                    <i class="fas fa-server w-5 text-center mr-3"></i>
+                    <span class="font-medium">IT Assets</span>
+                </a>
+                @endif
+
+                <!-- Projects - Only if user has permission -->
+                @if(in_array('can_view_projects', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.projects*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ Route::has('client.projects') ? route('client.projects') : '#' }}">
+                    <i class="fas fa-project-diagram w-5 text-center mr-3"></i>
+                    <span class="font-medium">Projects</span>
+                </a>
+                @endif
+
+                <!-- Reports - Only if user has permission -->
+                @if(in_array('can_view_reports', $permissions))
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.reports*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ Route::has('client.reports') ? route('client.reports') : '#' }}">
+                    <i class="fas fa-chart-bar w-5 text-center mr-3"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+                @endif
+
+                <!-- Profile & Settings - Always visible -->
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.profile*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ Route::has('client.profile') ? route('client.profile') : '#' }}">
+                    <i class="fas fa-user-cog w-5 text-center mr-3"></i>
+                    <span class="font-medium">Profile & Settings</span>
+                </a>
+            </nav>
         </div>
 
         <!-- Sidebar Footer -->
-        <div class="mt-auto p-3">
-            <hr class="border-white-50">
+        <div class="absolute bottom-0 left-0 right-0 p-6">
+            <hr class="border-indigo-400 mb-4">
             <div class="text-center">
-                <form action="{{ route('client.logout') }}" method="POST" class="d-inline">
+                <form action="{{ route('client.logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                    <button type="submit" class="w-full px-4 py-2 bg-transparent border border-white text-white rounded-lg hover:bg-white hover:text-indigo-600 transition-colors duration-200 touch-manipulation">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </button>
                 </form>
             </div>
@@ -228,51 +169,97 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="lg:ml-64 min-h-screen">
         <!-- Top Navigation -->
-        <nav class="navbar navbar-expand-lg navbar-light">
-            <div class="container-fluid">
-                <!-- Mobile Menu Button -->
-                <button class="btn btn-outline-primary mobile-menu-btn" type="button" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
+        <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm" x-data="{ notificationsOpen: false }">
+            <div class="px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Mobile Menu Button -->
+                    <button class="lg:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors touch-manipulation" 
+                            type="button" 
+                            @click="$refs.sidebar.classList.toggle('translate-x-0')">
+                        <i class="fas fa-bars"></i>
+                    </button>
 
-                <!-- Page Title -->
-                <div class="navbar-brand mb-0 h1">
-                    @yield('title', 'Dashboard')
-                </div>
-
-                <!-- Top Right Items -->
-                <div class="ms-auto d-flex align-items-center">
-                    <!-- Notifications -->
-                    <div class="dropdown me-3">
-                        <button class="btn btn-outline-secondary position-relative" type="button" 
-                                data-bs-toggle="dropdown">
-                            <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                3
-                            </span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" style="width: 300px;">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
-                            <li><a class="dropdown-item" href="#">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-signature text-warning"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2">
-                                        <div class="fw-bold">Signature Required</div>
-                                        <small class="text-muted">Contract ABC-123 needs your signature</small>
-                                    </div>
-                                </div>
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
-                        </ul>
+                    <!-- Page Title -->
+                    <div class="flex-1">
+                        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+                            @yield('title', 'Dashboard')
+                        </h1>
                     </div>
 
-                    <!-- Current Time -->
-                    <small class="text-muted">{{ now()->format('M j, Y g:i A') }}</small>
+                    <!-- Top Right Items -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors relative touch-manipulation" 
+                                    type="button" 
+                                    @click="notificationsOpen = !notificationsOpen">
+                                <i class="fas fa-bell"></i>
+                                @if(isset($notifications) && $notifications->where('is_read', false)->count() > 0)
+                                <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    {{ $notifications->where('is_read', false)->count() }}
+                                </span>
+                                @endif
+                            </button>
+                            
+                            <!-- Notifications Dropdown -->
+                            <div x-show="notificationsOpen"
+                                 @click.away="notificationsOpen = false"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
+                                 style="display: none;">
+                                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                                    <h6 class="font-semibold text-gray-900 dark:text-white">Notifications</h6>
+                                </div>
+                                <div class="p-4">
+                                    @if(isset($notifications) && $notifications->count() > 0)
+                                        @foreach($notifications->take(5) as $notification)
+                                        <a class="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors touch-manipulation {{ $notification->is_read ? '' : 'bg-blue-50 dark:bg-blue-900/20' }}" 
+                                           href="{{ $notification->action_url ?: '#' }}"
+                                           data-notification-id="{{ $notification->id }}">
+                                            <div class="flex">
+                                                <div class="flex-shrink-0">
+                                                    <i class="fas {{ $notification->getIcon() }} text-{{ $notification->getPriorityColor() }}-500"></i>
+                                                </div>
+                                                <div class="ml-3 flex-1">
+                                                    <div class="font-medium text-gray-900 dark:text-white">{{ $notification->title }}</div>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $notification->getExcerpt(60) }}</p>
+                                                    @if($notification->created_at)
+                                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                                    @endif
+                                                </div>
+                                                @if(!$notification->is_read)
+                                                <div class="flex-shrink-0">
+                                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </a>
+                                        @endforeach
+                                    @else
+                                        <div class="text-center py-4">
+                                            <div class="text-gray-500 dark:text-gray-400 text-sm">
+                                                <i class="fas fa-bell-slash mb-2"></i>
+                                                <p>No new notifications</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="p-3 border-t border-gray-200 dark:border-gray-700">
+                                    <a class="text-center block text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium" href="#">View all notifications</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Time -->
+                        <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">{{ now()->format('M j, Y g:i A') }}</span>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -281,30 +268,30 @@
         <main class="p-4">
             <!-- Flash Messages -->
             @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="portal-alert portal-alert-success portal-alert-dismissible portal-fade show" role="alert">
                 <i class="fas fa-check-circle"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="portal-alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
             @endif
 
             @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="portal-alert portal-alert-danger portal-alert-dismissible portal-fade show" role="alert">
                 <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="portal-alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
             @endif
 
             @if(session('warning'))
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="portal-alert portal-alert-warning portal-alert-dismissible portal-fade show" role="alert">
                 <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="portal-alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
             @endif
 
             @if(session('info'))
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <div class="portal-alert portal-alert-info portal-alert-dismissible portal-fade show" role="alert">
                 <i class="fas fa-info-circle"></i> {{ session('info') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="portal-alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
             @endif
 
@@ -312,17 +299,17 @@
         </main>
 
         <!-- Footer -->
-        <footer class="mt-5 py-4 bg-light">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-6">
-                        <small class="text-muted">
+        <footer class="mt-5 py-4 bg-gray-100 dark:bg-gray-800">
+            <div class="w-full px-4">
+                <div class="portal-row">
+                    <div class="portal-col-6">
+                        <small class="text-gray-600 dark:text-gray-400">
                             © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
                         </small>
                     </div>
-                    <div class="col-md-6 text-md-end">
-                        <small class="text-muted">
-                            Need help? <a href="mailto:support@example.com">Contact Support</a>
+                    <div class="portal-col-6 portal-md-text-end">
+                        <small class="text-gray-600 dark:text-gray-400">
+                            Need help? <a href="mailto:support@example.com" class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Contact Support</a>
                         </small>
                     </div>
                 </div>
@@ -330,11 +317,7 @@
         </footer>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- jQuery (for compatibility) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom Portal Scripts -->
 
     <!-- Custom Scripts -->
     <script>
@@ -356,19 +339,38 @@
 
         // Auto-dismiss alerts after 5 seconds
         setTimeout(function() {
-            $('.alert-dismissible').alert('close');
+            const alerts = document.querySelectorAll('.portal-alert-dismissible');
+            alerts.forEach(function(alert) {
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.style.display = 'none';
+                }, 300);
+            });
         }, 5000);
 
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+        // CSRF Token setup for fetch requests
+        window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        // CSRF Token setup for AJAX
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        // Handle notification clicks to mark as read
+        document.addEventListener('click', function(e) {
+            const notificationLink = e.target.closest('[data-notification-id]');
+            if (notificationLink) {
+                const notificationId = notificationLink.dataset.notificationId;
+                if (notificationId && !notificationLink.classList.contains('read')) {
+                    // Mark as read via AJAX (optional - implement if needed)
+                    fetch(`/client-portal/notifications/${notificationId}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': window.csrfToken
+                        }
+                    }).catch(err => console.log('Failed to mark notification as read', err));
+                    
+                    // Update UI immediately
+                    notificationLink.classList.remove('bg-blue-50');
+                    const unreadDot = notificationLink.querySelector('.bg-blue-500');
+                    if (unreadDot) unreadDot.remove();
+                }
             }
         });
     </script>

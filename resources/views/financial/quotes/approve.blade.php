@@ -3,7 +3,7 @@
 @section('title', 'Approve Quote #' . $quote->getFullNumber())
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -48,12 +48,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">Current Status</h3>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        @if($quote->approval_status === 'pending') bg-yellow-100 text-yellow-800
-                        @elseif($quote->approval_status === 'manager_approved') bg-blue-100 text-blue-800
-                        @elseif($quote->approval_status === 'executive_approved') bg-green-100 text-green-800
-                        @elseif($quote->approval_status === 'rejected') bg-red-100 text-red-800
-                        @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($quote->approval_status === 'pending') bg-yellow-100 text-yellow-800 @elseif($quote->approval_status === 'manager_approved') bg-blue-100 text-blue-800 @elseif($quote->approval_status === 'executive_approved') bg-green-100 text-green-800 @elseif($quote->approval_status === 'rejected') bg-red-100 text-red-800 @endif">
                         {{ ucfirst(str_replace('_', ' ', $quote->approval_status)) }}
                     </span>
                 </div>
@@ -239,11 +234,7 @@
                                 @endunless
                                 <div class="relative flex space-x-3">
                                     <div>
-                                        <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
-                                            @if($approval->isApproved()) bg-green-500
-                                            @elseif($approval->isRejected()) bg-red-500
-                                            @else bg-gray-400
-                                            @endif">
+                                        <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white @if($approval->isApproved()) bg-green-500 @elseif($approval->isRejected()) bg-red-500 @else bg-gray-400 @endif">
                                             @if($approval->isApproved())
                                             <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>

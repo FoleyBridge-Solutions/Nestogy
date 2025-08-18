@@ -101,10 +101,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | IP Security
+    | IP Security & Lookup
     |--------------------------------------------------------------------------
     |
-    | IP-based security settings including whitelisting and blacklisting.
+    | IP-based security settings including whitelisting, blacklisting,
+    | and IP lookup services for enhanced threat detection.
     |
     */
     'ip_security' => [
@@ -115,8 +116,93 @@ return [
         'geo_blocking_enabled' => env('GEO_BLOCKING_ENABLED', false),
         'allowed_countries' => array_filter(explode(',', env('GEO_ALLOWED_COUNTRIES', ''))),
         'blocked_countries' => array_filter(explode(',', env('GEO_BLOCKED_COUNTRIES', ''))),
+        'high_risk_countries' => array_filter(explode(',', env('HIGH_RISK_COUNTRIES', 'CN,RU,KP,IR'))),
         'vpn_detection' => env('VPN_DETECTION_ENABLED', false),
         'tor_blocking' => env('TOR_BLOCKING_ENABLED', false),
+        'block_vpn' => env('BLOCK_VPN_CONNECTIONS', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | IP Lookup Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Settings for IP geolocation and threat intelligence services.
+    |
+    */
+    'ip_lookup' => [
+        'enabled' => env('NESTOGY_IP_LOOKUP_ENABLED', true),
+        'cache_hours' => env('NESTOGY_IP_LOOKUP_CACHE_HOURS', 24),
+        'api_timeout' => env('NESTOGY_IP_LOOKUP_TIMEOUT', 10),
+        'cleanup_days' => env('NESTOGY_IP_LOOKUP_CLEANUP_DAYS', 90),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Suspicious Login Detection
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for detecting and handling suspicious login attempts.
+    |
+    */
+    'suspicious_login' => [
+        'enabled' => env('NESTOGY_SUSPICIOUS_LOGIN_ENABLED', true),
+        'email_enabled' => env('NESTOGY_SUSPICIOUS_LOGIN_EMAIL_ENABLED', true),
+        'token_expiry' => env('NESTOGY_SUSPICIOUS_LOGIN_TOKEN_EXPIRY', 60), // minutes
+        'risk_threshold' => env('NESTOGY_SUSPICIOUS_LOGIN_RISK_THRESHOLD', 60), // 0-100
+        'auto_block_high_risk' => env('NESTOGY_SUSPICIOUS_LOGIN_AUTO_BLOCK', false),
+        'location_analysis' => [
+            'country_check' => env('NESTOGY_LOCATION_ANALYSIS_COUNTRY_CHECK', true),
+            'region_check' => env('NESTOGY_LOCATION_ANALYSIS_REGION_CHECK', true),
+            'isp_check' => env('NESTOGY_LOCATION_ANALYSIS_ISP_CHECK', true),
+            'vpn_check' => env('NESTOGY_LOCATION_ANALYSIS_VPN_CHECK', true),
+            'distance_threshold' => env('NESTOGY_LOCATION_ANALYSIS_DISTANCE_THRESHOLD', 500), // km
+            'impossible_travel_check' => env('NESTOGY_LOCATION_ANALYSIS_IMPOSSIBLE_TRAVEL', true),
+        ],
+        'device_analysis' => [
+            'enabled' => env('NESTOGY_DEVICE_ANALYSIS_ENABLED', true),
+            'fingerprint_check' => env('NESTOGY_DEVICE_FINGERPRINT_CHECK', true),
+            'new_device_risk' => env('NESTOGY_NEW_DEVICE_RISK_SCORE', 30), // risk points
+        ],
+        'behavior_analysis' => [
+            'enabled' => env('NESTOGY_BEHAVIOR_ANALYSIS_ENABLED', true),
+            'failed_attempts_threshold' => env('NESTOGY_FAILED_ATTEMPTS_THRESHOLD', 3),
+            'concurrent_sessions_threshold' => env('NESTOGY_CONCURRENT_SESSIONS_THRESHOLD', 2),
+        ],
+        'trusted_devices' => [
+            'enabled' => env('NESTOGY_TRUSTED_DEVICES_ENABLED', true),
+            'default_expiry_days' => env('NESTOGY_TRUSTED_DEVICE_EXPIRY_DAYS', 30),
+            'auto_extend' => env('NESTOGY_TRUSTED_DEVICE_AUTO_EXTEND', true),
+            'max_devices_per_user' => env('NESTOGY_MAX_TRUSTED_DEVICES', 10),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Geo Blocking Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Enhanced geo-blocking with multiple service providers.
+    |
+    */
+    'geo_blocking' => [
+        'enabled' => env('GEO_BLOCKING_ENABLED', false),
+        'mode' => env('GEO_BLOCKING_MODE', 'block'), // 'allow' or 'block'
+        'countries' => array_filter(explode(',', env('GEO_BLOCKING_COUNTRIES', ''))),
+        'stealth_mode' => env('GEO_BLOCKING_STEALTH_MODE', false),
+        'default_policy' => env('GEO_BLOCKING_DEFAULT_POLICY', 'allow'), // 'allow' or 'block'
+        'high_risk_countries' => [
+            'CN', 'RU', 'KP', 'IR', 'SY', 'BY', 'MM', 'AF', 'IQ', 'LY', 'SO', 'SS', 'YE', 'VE'
+        ],
+        'services' => [
+            'ipapi' => env('GEO_SERVICE_IPAPI_ENABLED', true),
+            'ipgeolocation' => env('GEO_SERVICE_IPGEOLOCATION_ENABLED', false),
+            'maxmind' => env('GEO_SERVICE_MAXMIND_ENABLED', false),
+        ],
+        'api_keys' => [
+            'ipgeolocation' => env('IPGEOLOCATION_API_KEY'),
+        ],
+        'maxmind_database_path' => env('MAXMIND_DATABASE_PATH'),
     ],
 
     /*

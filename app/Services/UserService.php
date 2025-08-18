@@ -3,13 +3,21 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Services\RoleService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 
 class UserService
 {
+    protected $roleService;
+
+    public function __construct(RoleService $roleService)
+    {
+        $this->roleService = $roleService;
+    }
     /**
      * Get all users with optional filters
      */
@@ -66,9 +74,20 @@ class UserService
 
             $user = User::create($data);
 
-            // Assign roles if provided
-            if (!empty($data['roles'])) {
-                $user->assignRole($data['roles']);
+            // Handle role assignment - support both legacy 'role' field and new 'roles' array
+            $roleToAssign = null;
+            
+            if (!empty($data['role'])) {
+                // Legacy numeric role from forms (1-4)
+                $roleToAssign = (int) $data['role'];
+            } elseif (!empty($data['roles'])) {
+                // Array of role names from API/other sources
+                $roleToAssign = is_array($data['roles']) ? $data['roles'][0] : $data['roles'];
+            }
+
+            // Assign role using RoleService if specified
+            if ($roleToAssign !== null) {
+                $this->roleService->assignRole($user, $roleToAssign, $user->company_id);
             }
 
             DB::commit();
@@ -95,9 +114,20 @@ class UserService
 
             $user->update($data);
 
-            // Update roles if provided
-            if (isset($data['roles'])) {
-                $user->syncRoles($data['roles']);
+            // Handle role update - support both legacy 'role' field and new 'roles' array
+            $roleToAssign = null;
+            
+            if (isset($data['role'])) {
+                // Legacy numeric role from forms (1-4)
+                $roleToAssign = (int) $data['role'];
+            } elseif (isset($data['roles'])) {
+                // Array of role names from API/other sources
+                $roleToAssign = is_array($data['roles']) ? $data['roles'][0] : $data['roles'];
+            }
+
+            // Update role using RoleService if specified
+            if ($roleToAssign !== null) {
+                $this->roleService->assignRole($user, $roleToAssign, $user->company_id);
             }
 
             DB::commit();
@@ -272,5 +302,92 @@ class UserService
             'projects_assigned' => $user->assignedProjects()->where('created_at', '>=', $since)->count(),
             'last_login' => $user->last_login_at,
         ];
+    }
+
+    /**
+     * Update user profile information
+     */
+    public function updateUserProfile(User $user, array $data): User
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Filter only profile-related fields
+            $profileData = array_filter([
+                'name' => $data['name'] ?? null,
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+            ], function($value) {
+                return $value !== null;
+            });
+
+            // Handle avatar upload if provided
+            if (isset($data['avatar']) && $data['avatar'] instanceof \Illuminate\Http\UploadedFile) {
+                // Delete old avatar if exists
+                if ($user->avatar) {
+                    Storage::disk(config('filesystems.default'))->delete('users/' . $user->avatar);
+                }
+                
+                // Store new avatar
+                $avatarPath = $data['avatar']->store('users', config('filesystems.default'));
+                $profileData['avatar'] = basename($avatarPath);
+            }
+
+            $user->update($profileData);
+            
+            DB::commit();
+            return $user->fresh();
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Update user settings
+     */
+    public function updateUserSettings(User $user, array $data): User
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Update user-level settings
+            $userSettings = array_filter([
+                'timezone' => $data['timezone'] ?? null,
+                'date_format' => $data['date_format'] ?? null,
+                'time_format' => $data['time_format'] ?? null,
+            ], function($value) {
+                return $value !== null;
+            });
+
+            if (!empty($userSettings)) {
+                $user->update($userSettings);
+            }
+
+            // Update UserSetting model if it exists
+            if ($user->userSetting) {
+                $settingsData = array_filter([
+                    'force_mfa' => isset($data['force_mfa']) ? (bool)$data['force_mfa'] : null,
+                    'records_per_page' => isset($data['records_per_page']) ? (int)$data['records_per_page'] : null,
+                    'dashboard_financial_enable' => isset($data['dashboard_financial_enable']) ? (bool)$data['dashboard_financial_enable'] : null,
+                    'dashboard_technical_enable' => isset($data['dashboard_technical_enable']) ? (bool)$data['dashboard_technical_enable'] : null,
+                    'theme' => isset($data['theme']) ? $data['theme'] : null,
+                ], function($value) {
+                    return $value !== null;
+                });
+
+                if (!empty($settingsData)) {
+                    $user->userSetting->update($settingsData);
+                }
+            }
+            
+            DB::commit();
+            return $user->fresh(['userSetting']);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 }

@@ -3,26 +3,26 @@
 @section('title', $client->name . ' - Dashboard')
 
 @section('content')
-<div class="container-fluid">
+<div class="w-full px-4">
     <!-- Client Header -->
-    <div class="row mb-4">
+    <div class="flex flex-wrap -mx-4 mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="flex justify-between items-center">
                 <div>
                     <h1 class="h3 mb-2">{{ $client->name }}</h1>
-                    <div class="text-muted">
+                    <div class="text-gray-600 dark:text-gray-400 dark:text-gray-400">
                         <span class="badge badge-{{ $dashboardData['overview']['status'] === 'active' ? 'success' : 'secondary' }}">
                             {{ ucfirst($dashboardData['overview']['status']) }}
                         </span>
-                        <span class="ms-3">Client since {{ $client->created_at->format('M Y') }}</span>
+                        <span class="ml-3">Client since {{ $client->created_at->format('M Y') }}</span>
                     </div>
                 </div>
                 <div>
                     <button class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
-                    <div class="dropdown d-inline-block ms-2">
-                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    <div class="dropdown inline-block ml-2">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" x-data="{ open: false }" @click="open = !open">
                             <i class="fas fa-download"></i> Export
                         </button>
                         <ul class="dropdown-menu">
@@ -37,27 +37,27 @@
     </div>
 
     <!-- Key Metrics Row -->
-    <div class="row mb-4">
+    <div class="flex flex-wrap -mx-4 mb-4">
         <!-- Financial Card -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-subtitle text-muted">Total Revenue</h6>
-                        <i class="fas fa-dollar-sign text-success"></i>
+        <div class="col-lg-3 md:w-1/2 px-4 mb-3">
+            <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden h-100">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h6 class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-subtitle text-gray-600 dark:text-gray-400 dark:text-gray-400">Total Revenue</h6>
+                        <i class="fas fa-dollar-sign text-green-600"></i>
                     </div>
                     <h3 class="card-title mb-2">${{ number_format($dashboardData['financial']['total_revenue'], 2) }}</h3>
                     <div class="small">
-                        <span class="text-success">MRR: ${{ number_format($dashboardData['financial']['mrr'], 2) }}</span>
+                        <span class="text-green-600">MRR: ${{ number_format($dashboardData['financial']['mrr'], 2) }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Tickets Card -->
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-lg-3 md:w-1/2 px-4 mb-3">
             <div class="card h-100">
-                <div class="card-body">
+                <div class="p-6">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="card-subtitle text-muted">Open Tickets</h6>
                         <i class="fas fa-ticket-alt text-warning"></i>
@@ -96,13 +96,13 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="card-subtitle text-muted">Active Projects</h6>
-                        <i class="fas fa-project-diagram text-primary"></i>
+                        <i class="fas fa-project-diagram text-blue-600"></i>
                     </div>
                     <h3 class="card-title mb-2">{{ $dashboardData['projects']['active_projects'] }}</h3>
                     <div class="small">
                         <span class="text-muted">Completion: {{ $dashboardData['projects']['completion_rate'] }}%</span>
                         @if($dashboardData['projects']['overdue_projects'] > 0)
-                            <span class="ms-2 text-danger">{{ $dashboardData['projects']['overdue_projects'] }} overdue</span>
+                            <span class="ms-2 text-red-600">{{ $dashboardData['projects']['overdue_projects'] }} overdue</span>
                         @endif
                     </div>
                 </div>
@@ -116,19 +116,14 @@
         <div class="col-lg-8">
             <!-- Recent Activity -->
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
                     <h5 class="card-title mb-0">Recent Activity</h5>
                 </div>
                 <div class="card-body">
                     <div class="timeline">
                         @foreach($dashboardData['recent_activity'] as $activity)
                         <div class="timeline-item">
-                            <div class="timeline-marker 
-                                @if($activity['type'] === 'ticket') bg-warning
-                                @elseif($activity['type'] === 'invoice') bg-info
-                                @elseif($activity['type'] === 'payment') bg-success
-                                @else bg-secondary
-                                @endif">
+                            <div class="timeline-marker @if($activity['type'] === 'ticket') bg-warning @elseif($activity['type'] === 'invoice') bg-info @elseif($activity['type'] === 'payment') bg-success @else bg-gray-600 @endif">
                             </div>
                             <div class="timeline-content">
                                 <h6 class="mb-1">{{ $activity['description'] }}</h6>
@@ -152,7 +147,7 @@
 
             <!-- Financial Overview Chart -->
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
                     <h5 class="card-title mb-0">Financial Overview</h5>
                 </div>
                 <div class="card-body">
@@ -167,8 +162,8 @@
                     <a href="{{ route('tickets.index', ['client_id' => $client->id]) }}" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
+                    <div class="min-w-full divide-y divide-gray-200-responsive">
+                        <table class="min-w-full divide-y divide-gray-200 [&>tbody>tr:hover]:bg-gray-100 dark:bg-gray-800 dark:bg-gray-800">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -234,14 +229,14 @@
 
                         <dt class="col-sm-5">Outstanding:</dt>
                         <dd class="col-sm-7">
-                            <span class="{{ $dashboardData['financial']['outstanding_balance'] > 0 ? 'text-danger' : 'text-success' }}">
+                            <span class="{{ $dashboardData['financial']['outstanding_balance'] > 0 ? 'text-red-600' : 'text-success' }}">
                                 ${{ number_format($dashboardData['financial']['outstanding_balance'], 2) }}
                             </span>
                         </dd>
 
                         <dt class="col-sm-5">Credit Status:</dt>
                         <dd class="col-sm-7">
-                            <span class="badge badge-success">Good Standing</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Good Standing</span>
                         </dd>
                     </dl>
                 </div>

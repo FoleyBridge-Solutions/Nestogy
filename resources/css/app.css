@@ -2,6 +2,429 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Company Customizable Colors - Default Blue Theme */
+:root {
+  /* Primary Color Palette */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+  
+  /* Secondary Color Palette (Gray) */
+  --secondary-50: #f9fafb;
+  --secondary-100: #f3f4f6;
+  --secondary-200: #e5e7eb;
+  --secondary-300: #d1d5db;
+  --secondary-400: #9ca3af;
+  --secondary-500: #6b7280;
+  --secondary-600: #4b5563;
+  --secondary-700: #374151;
+  --secondary-800: #1f2937;
+  --secondary-900: #111827;
+}
+
+/* Dark mode color overrides */
+.dark {
+  --primary-50: #1e3a8a;
+  --primary-100: #1e40af;
+  --primary-200: #1d4ed8;
+  --primary-300: #2563eb;
+  --primary-400: #3b82f6;
+  --primary-500: #60a5fa;
+  --primary-600: #93c5fd;
+  --primary-700: #bfdbfe;
+  --primary-800: #dbeafe;
+  --primary-900: #eff6ff;
+  
+  --secondary-50: #111827;
+  --secondary-100: #1f2937;
+  --secondary-200: #374151;
+  --secondary-300: #4b5563;
+  --secondary-400: #6b7280;
+  --secondary-500: #9ca3af;
+  --secondary-600: #d1d5db;
+  --secondary-700: #e5e7eb;
+  --secondary-800: #f3f4f6;
+  --secondary-900: #f9fafb;
+}
+
+/* Auto theme detection - apply dark mode based on system preference when no explicit class */
+@media (prefers-color-scheme: dark) {
+  body:not(.dark):not(.light) {
+    --primary-50: #1e3a8a;
+    --primary-100: #1e40af;
+    --primary-200: #1d4ed8;
+    --primary-300: #2563eb;
+    --primary-400: #3b82f6;
+    --primary-500: #60a5fa;
+    --primary-600: #93c5fd;
+    --primary-700: #bfdbfe;
+    --primary-800: #dbeafe;
+    --primary-900: #eff6ff;
+    
+    --secondary-50: #111827;
+    --secondary-100: #1f2937;
+    --secondary-200: #374151;
+    --secondary-300: #4b5563;
+    --secondary-400: #6b7280;
+    --secondary-500: #9ca3af;
+    --secondary-600: #d1d5db;
+    --secondary-700: #e5e7eb;
+    --secondary-800: #f3f4f6;
+    --secondary-900: #f9fafb;
+  }
+}
+
+/* Global Dark Mode Overrides - Immediate Fix for Templates */
+.dark .bg-white:not(.force-light):not(.dark\:bg-gray-800) {
+  background-color: rgb(31 41 55); /* gray-800 */
+}
+
+.dark .bg-gray-50:not(.force-light):not(.dark\:bg-gray-900) {
+  background-color: rgb(17 24 39); /* gray-900 */
+}
+
+.dark .bg-gray-100:not(.force-light):not(.dark\:bg-gray-800) {
+  background-color: rgb(31 41 55); /* gray-800 */
+}
+
+.dark .text-gray-900:not(.force-light):not(.dark\:text-white) {
+  color: rgb(255 255 255); /* white */
+}
+
+.dark .text-gray-800:not(.force-light):not(.dark\:text-gray-200) {
+  color: rgb(229 231 235); /* gray-200 */
+}
+
+.dark .text-gray-700:not(.force-light):not(.dark\:text-gray-300) {
+  color: rgb(209 213 219); /* gray-300 */
+}
+
+.dark .text-gray-600:not(.force-light):not(.dark\:text-gray-400) {
+  color: rgb(156 163 175); /* gray-400 */
+}
+
+.dark .text-gray-500:not(.force-light):not(.dark\:text-gray-500) {
+  color: rgb(107 114 128); /* gray-500 */
+}
+
+.dark .border-gray-200:not(.force-light):not(.dark\:border-gray-700) {
+  border-color: rgb(55 65 81); /* gray-700 */
+}
+
+.dark .border-gray-300:not(.force-light):not(.dark\:border-gray-600) {
+  border-color: rgb(75 85 99); /* gray-600 */
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover:not(.force-light):not(.dark\:hover\:bg-gray-700) {
+  background-color: rgb(55 65 81); /* gray-700 */
+}
+
+.dark .hover\:bg-gray-100:hover:not(.force-light):not(.dark\:hover\:bg-gray-700) {
+  background-color: rgb(55 65 81); /* gray-700 */
+}
+
+.dark .hover\:text-gray-900:hover:not(.force-light):not(.dark\:hover\:text-white) {
+  color: rgb(255 255 255); /* white */
+}
+
+/* Mobile Touch Target Optimizations */
+@media (max-width: 1024px) {
+    /* Ensure minimum 44px touch targets for buttons */
+    button:not(.touch-optimized) {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+    
+    /* Optimize form inputs for mobile */
+    input[type="text"]:not(.touch-optimized),
+    input[type="email"]:not(.touch-optimized),
+    input[type="password"]:not(.touch-optimized),
+    input[type="number"]:not(.touch-optimized),
+    input[type="tel"]:not(.touch-optimized),
+    select:not(.touch-optimized),
+    textarea:not(.touch-optimized) {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Make links more touch-friendly */
+    a:not(.touch-optimized) {
+        min-height: 44px;
+        padding: 12px 16px;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    /* Improve small button groups */
+    .btn-group-sm button,
+    .btn-sm {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Better spacing for mobile interactions */
+    .space-y-1 > * + * {
+        margin-top: 8px;
+    }
+    
+    .space-y-2 > * + * {
+        margin-top: 12px;
+    }
+    
+    /* Mobile-specific utility classes */
+    .touch-target {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+    }
+    
+    .touch-target-large {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 14px 20px;
+    }
+    
+    /* Disable text selection on interactive elements */
+    button, .btn, [role="button"] {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* Better focus indicators for accessibility */
+    button:focus,
+    a:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: 2px solid var(--primary-600);
+        outline-offset: 2px;
+    }
+    
+    /* Improve tap highlight */
+    button, a, input, select, textarea {
+        -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Virtual Keyboard Handling */
+    .form-control, .form-select {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Prevent zoom on focus for iOS */
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    input[type="number"], 
+    input[type="tel"], 
+    input[type="url"],
+    input[type="search"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        transform: translateZ(0); /* Force hardware acceleration */
+    }
+    
+    /* Form container adjustments when keyboard is visible */
+    .keyboard-visible .modal,
+    .keyboard-visible .fixed {
+        /* Adjust fixed/modal positioning when keyboard is active */
+        transform: translateY(-20vh);
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    .keyboard-visible .bottom-0 {
+        /* Adjust bottom-positioned elements */
+        bottom: 20vh !important;
+        transition: bottom 0.3s ease-in-out;
+    }
+    
+    /* Smooth scrolling for focused inputs */
+    .form-control:focus,
+    .form-select:focus,
+    input:focus,
+    textarea:focus {
+        scroll-margin-top: 100px;
+    }
+    
+    /* Enhanced focus states for mobile */
+    .input-focused {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+        border-color: #3b82f6 !important;
+        transform: scale(1.02);
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Error message visibility when keyboard is active */
+    .keyboard-visible .invalid-feedback,
+    .keyboard-visible .error-message,
+    .keyboard-visible .field-error {
+        position: sticky;
+        top: 10px;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-top: 4px;
+        font-size: 14px;
+        z-index: 1000;
+    }
+    
+    /* Form validation improvements */
+    .keyboard-visible .was-validated .form-control:invalid,
+    .keyboard-visible .form-control.is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3) !important;
+    }
+    
+    .keyboard-visible .was-validated .form-control:valid,
+    .keyboard-visible .form-control.is-valid {
+        border-color: #198754 !important;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.3) !important;
+    }
+}
+
+/* Mobile Sidebar Enhancements */
+@media (max-width: 1024px) {
+    /* Sidebar swipe visual feedback */
+    .sidebar-swipe-active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100vh;
+        background: linear-gradient(to bottom, var(--primary-500), var(--primary-600));
+        z-index: 9999;
+        animation: sidebar-swipe-pulse 0.3s ease-in-out;
+    }
+    
+    /* Mobile sidebar toggle button */
+    .mobile-sidebar-toggle {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 9999;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(229, 231, 235, 0.5);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease-in-out;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .mobile-sidebar-toggle:hover {
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    .mobile-sidebar-toggle:active {
+        transform: translateY(0) scale(0.95);
+    }
+    
+    /* Dark mode mobile sidebar button */
+    .dark .mobile-sidebar-toggle {
+        background: rgba(31, 41, 55, 0.95);
+        border-color: rgba(55, 65, 81, 0.5);
+        color: rgb(229, 231, 235);
+    }
+    
+    .dark .mobile-sidebar-toggle:hover {
+        background: rgba(31, 41, 55, 1);
+    }
+    
+    /* Mobile sidebar overlay */
+    .mobile-sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 40;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease-in-out;
+        backdrop-filter: blur(2px);
+    }
+    
+    .mobile-sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Enhanced sidebar animations for mobile */
+    aside[data-sidebar] {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    aside[data-sidebar].open {
+        transform: translateX(0);
+    }
+    
+    /* Improve touch responsiveness for sidebar items */
+    aside[data-sidebar] a,
+    aside[data-sidebar] button {
+        min-height: 48px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Better visual feedback for touch */
+    aside[data-sidebar] a:active,
+    aside[data-sidebar] button:active {
+        background: rgba(59, 130, 246, 0.1);
+        transform: scale(0.98);
+        transition: all 0.1s ease-in-out;
+    }
+    
+    /* Accessibility improvements for mobile */
+    aside[data-sidebar] a:focus,
+    aside[data-sidebar] button:focus {
+        outline: 3px solid var(--primary-500);
+        outline-offset: 2px;
+        background: rgba(59, 130, 246, 0.05);
+    }
+}
+
+/* Sidebar swipe animation */
+@keyframes sidebar-swipe-pulse {
+    0% {
+        opacity: 0;
+        transform: scaleY(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+    100% {
+        opacity: 0.7;
+        transform: scaleY(0.8);
+    }
+}
+
 /* Modern Layout Animations */
 @keyframes slide-in {
     from {
@@ -112,15 +535,7 @@
         min-width: 44px;
     }
     
-    .navbar-padding {
-        padding-top: 5rem; /* Extra padding for mobile workflow nav */
-    }
-}
-
-@media (min-width: 1024px) {
-    .navbar-padding {
-        padding-top: 4rem; /* Standard navbar height */
-    }
+    /* navbar-padding class removed - no longer needed */
 }
 
 /* Dark mode support */

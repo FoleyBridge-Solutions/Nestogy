@@ -11,14 +11,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Run essential seeders for v1
+        // Run essential system seeders only - no demo data
         $this->call([
+            // Core system setup
             SubscriptionPlansSeeder::class,
             CompanySeeder::class,
             UserSeeder::class,
             UserSettingsSeeder::class,
-            RolesAndPermissionsSeeder::class,
-            ClientSeeder::class,
+            RolesAndPermissionsSeeder::class, // Bouncer-based permissions
+            
+            // System configuration (essential for functionality)
+            CategorySeeder::class,
+            TaxSeeder::class,
+            
+            // System templates (not demo data)
+            TicketTemplateSeeder::class,
+            ProjectTemplateSeeder::class,
+            DocumentTemplateSeeder::class,
+            
+            // CRM/Marketing default data
+            LeadSourceSeeder::class,
         ]);
     }
 }

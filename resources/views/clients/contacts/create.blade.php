@@ -13,7 +13,7 @@
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Add New Contact</h3>
                         <p class="mt-1 max-w-2xl text-sm text-gray-500">Create a new client contact.</p>
                     </div>
-                    <a href="{{ route('clients.contacts.standalone.index') }}" 
+                    <a href="{{ route('clients.contacts.index', $client) }}" 
                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -26,28 +26,15 @@
 
         <!-- Form -->
         <div class="bg-white shadow rounded-lg">
-            <form method="POST" action="{{ route('clients.contacts.standalone.store') }}" class="space-y-6">
+            <form method="POST" action="{{ route('clients.contacts.store', $client) }}" class="space-y-6">
                 @csrf
                 
                 <div class="px-4 py-5 sm:p-6">
-                    <!-- Client Selection -->
+                    <!-- Client Information -->
                     <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</label>
-                            <select name="client_id" 
-                                    id="client_id" 
-                                    required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('client_id') border-red-300 @enderror">
-                                <option value="">Select a client...</option>
-                                @foreach($clients as $client)
-                                    <option value="{{ $client->id }}" {{ (old('client_id') == $client->id || $selectedClientId == $client->id) ? 'selected' : '' }}>
-                                        {{ $client->display_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('client_id')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                        <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                            <p class="text-sm font-medium text-gray-700">Client</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ $client->name }}</p>
                         </div>
                     </div>
 
@@ -230,7 +217,7 @@
 
                 <!-- Form Actions -->
                 <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
-                    <a href="{{ route('clients.contacts.standalone.index') }}" 
+                    <a href="{{ route('clients.contacts.index', $client) }}" 
                        class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </a>

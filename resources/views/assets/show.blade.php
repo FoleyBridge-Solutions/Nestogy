@@ -3,27 +3,27 @@
 @section('title', 'Asset Details')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
             <!-- Asset Header -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <div class="row align-items-center">
+            <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-4">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                    <div class="flex flex-wrap -mx-4 items-center">
                         <div class="col">
-                            <h3 class="card-title mb-0">
-                                <i class="fas fa-{{ $asset->icon }} text-muted me-2"></i>
+                            <h3 class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                <i class="fas fa-{{ $asset->icon }} text-gray-600 dark:text-gray-400 dark:text-gray-400 mr-2"></i>
                                 {{ $asset->name }}
                             </h3>
-                            <p class="text-muted mb-0">{{ $asset->type }} - {{ $asset->make }} {{ $asset->model }}</p>
+                            <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-0">{{ $asset->type }} - {{ $asset->make }} {{ $asset->model }}</p>
                         </div>
                         <div class="col-auto">
                             <div class="btn-group" role="group">
-                                <a href="{{ route('assets.edit', $asset) }}" class="btn btn-primary">
+                                <a href="{{ route('assets.edit', $asset) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" 
-                                        data-bs-toggle="dropdown">
+                                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dropdown-toggle dropdown-toggle-split" 
+                                        x-data="{ open: false }" @click="open = !open">
                                     <span class="visually-hidden">Toggle Dropdown</span>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -39,7 +39,7 @@
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#checkInOutModal">
+                                        <button type="button" class="dropdown-item" @click="$dispatch('open-modal', 'modal-id')" data-bs-target="#checkInOutModal">
                                             <i class="fas fa-exchange-alt"></i> Check In/Out
                                         </button>
                                     </li>
@@ -59,7 +59,7 @@
                                               onsubmit="return confirm('Are you sure you want to delete this asset?');" class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="dropdown-item text-danger">
+                                            <button type="submit" class="dropdown-item text-red-600">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>
                                         </form>
@@ -70,9 +70,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="md:w-2/3 px-4">
                             <div class="row">
                                 <div class="col-sm-3">
                                     <p class="mb-0"><strong>Status:</strong></p>
@@ -111,7 +111,7 @@
                             </div>
                             @endif
                         </div>
-                        <div class="col-md-4 text-center">
+                        <div class="md:w-1/3 px-4 text-center">
                             <div class="mb-3">
                                 {!! $qrCode !!}
                             </div>
@@ -126,10 +126,10 @@
                 <div class="col-md-6">
                     <!-- Hardware Information -->
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
                             <h5 class="card-title mb-0">Hardware Information</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <dl class="row mb-0">
                                 <dt class="col-sm-4">Make</dt>
                                 <dd class="col-sm-8">{{ $asset->make }}</dd>
@@ -280,9 +280,9 @@
                             <div class="list-group">
                                 @foreach($asset->files as $file)
                                     <a href="{{ route('files.download', $file) }}" class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between">
+                                        <div class="flex w-100 justify-between">
                                             <h6 class="mb-1">
-                                                <i class="fas fa-file me-2"></i>
+                                                <i class="fas fa-file mr-2"></i>
                                                 {{ $file->name }}
                                             </h6>
                                             <small>{{ number_format($file->size / 1024, 2) }} KB</small>
@@ -304,7 +304,7 @@
                             <div class="list-group">
                                 @foreach($asset->tickets->take(5) as $ticket)
                                     <a href="{{ route('tickets.show', $ticket) }}" class="list-group-item list-group-item-action">
-                                        <div class="d-flex w-100 justify-content-between">
+                                        <div class="flex w-100 justify-between">
                                             <h6 class="mb-1">#{{ $ticket->number }} - {{ $ticket->subject }}</h6>
                                             <small>{{ $ticket->created_at->diffForHumans() }}</small>
                                         </div>
@@ -362,11 +362,11 @@
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Check In/Out Asset</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Action</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Action</label>
                         <div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="action" id="checkOut" value="check_out" 
@@ -386,8 +386,8 @@
                     </div>
 
                     <div class="mb-3" id="contactSelect" style="{{ $asset->contact_id ? 'display: none;' : '' }}">
-                        <label for="contact_id" class="form-label">Assign To</label>
-                        <select name="contact_id" id="contact_id" class="form-select">
+                        <label for="contact_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Assign To</label>
+                        <select name="contact_id" id="contact_id" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <option value="">Select Contact</option>
                             @foreach($asset->client->contacts as $contact)
                                 <option value="{{ $contact->id }}">{{ $contact->name }}</option>
@@ -397,13 +397,13 @@
 
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
-                        <textarea name="notes" id="notes" class="form-control" rows="3" 
+                        <textarea name="notes" id="notes" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" rows="3" 
                                   placeholder="Optional notes about this check in/out"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Submit</button>
                 </div>
             </form>
         </div>

@@ -6,7 +6,7 @@ return [
      * The disk on which to store added files and derived images by default. Choose
      * one or more of the disks you've configured in config/filesystems.php.
      */
-    'disk_name' => env('MEDIA_DISK', 'public'),
+    'disk_name' => env('MEDIA_DISK', 's3'),
 
     /*
      * The maximum file size of an addition in bytes.
@@ -92,7 +92,8 @@ return [
          * content-type, content-disposition, content-encoding, content-length
          */
         'extra_headers' => [
-            'CacheControl' => 'max-age=604800',
+            'CacheControl' => 'max-age=2592000', // 30 days for media files
+            'ServerSideEncryption' => 'AES256',
         ],
     ],
 

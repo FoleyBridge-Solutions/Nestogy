@@ -70,13 +70,23 @@ $workflowItems = [
     <div class="mx-auto max-w-full">
         <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             
-            <!-- Left Section: Logo & Client Context -->
-            <div class="flex items-center space-x-4">
+            <!-- Left Section: Mobile Menu, Logo & Client Context -->
+            <div class="flex items-center space-x-3">
+                <!-- Mobile Sidebar Toggle -->
+                @if($activeDomain ?? false)
+                    <button @click="$dispatch('toggle-mobile-sidebar')"
+                            class="lg:hidden p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                @endif
+                
                 <!-- Logo -->
                 <a href="{{ route('dashboard') }}" class="flex items-center group">
                     <x-application-logo class="h-8 w-auto text-gray-800 group-hover:text-indigo-600 transition-colors" />
                     <span class="ml-2 text-lg font-semibold text-gray-900 hidden sm:block">
-                        {{ config('app.name', 'Nestogy') }}
+                        {{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}
                     </span>
                 </a>
                 
@@ -93,14 +103,14 @@ $workflowItems = [
             <div class="hidden lg:flex items-center space-x-2">
                 @foreach($workflowItems as $item)
                 <a href="{{ $item['route'] }}"
-                   class="group relative flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all duration-200
+                   class="group relative flex items-center space-x-2 px-4 py-3 min-h-[44px] rounded-lg transition-all duration-200 touch-manipulation
                           {{ $currentWorkflow === $item['key'] 
                              ? 'bg-' . $item['color'] . '-50 text-' . $item['color'] . '-700 ring-1 ring-' . $item['color'] . '-200' 
                              : 'text-gray-600 hover:bg-gray-50' }}">
                     <span class="text-lg">{{ $item['icon'] }}</span>
-                    <span class="font-medium text-sm">{{ $item['label'] }}</span>
+                    <span class="font-medium text-base">{{ $item['label'] }}</span>
                     @if($item['count'] > 0)
-                    <span class="ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full
+                    <span class="ml-1 inline-flex items-center justify-center min-w-[24px] min-h-[24px] px-2 py-1 text-sm font-bold rounded-full
                                 bg-{{ $item['color'] }}-100 text-{{ $item['color'] }}-800">
                         {{ $item['count'] > 99 ? '99+' : $item['count'] }}
                     </span>
@@ -121,12 +131,12 @@ $workflowItems = [
             <div class="flex items-center space-x-3">
                 <!-- Command Palette Button -->
                 <button onclick="window.dispatchEvent(new CustomEvent('open-command-palette'))"
-                        class="hidden md:flex items-center space-x-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
-                    <svg class="w-4 h-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="hidden md:flex items-center space-x-2 px-4 py-3 min-h-[44px] bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group touch-manipulation">
+                    <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <span class="text-sm text-gray-600 group-hover:text-gray-900">Search</span>
-                    <kbd class="hidden lg:inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-white border border-gray-300 rounded">
+                    <span class="text-base text-gray-600 group-hover:text-gray-900">Search</span>
+                    <kbd class="hidden lg:inline-flex items-center px-2 py-1 text-sm text-gray-500 bg-white border border-gray-300 rounded">
                         Ctrl+/
                     </kbd>
                 </button>
@@ -134,12 +144,12 @@ $workflowItems = [
                 <!-- Notifications -->
                 <div class="relative">
                     <button @click="notificationsOpen = !notificationsOpen"
-                            class="relative p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                            class="relative p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
                         @if($badges['urgent'] > 0)
-                        <span class="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                        <span class="absolute top-1 right-1 inline-flex items-center justify-center min-w-[20px] min-h-[20px] text-xs font-bold text-white bg-red-500 rounded-full">
                             {{ min($badges['urgent'], 9) }}{{ $badges['urgent'] > 9 ? '+' : '' }}
                         </span>
                         @endif
@@ -174,12 +184,13 @@ $workflowItems = [
                 
                 <!-- User Menu -->
                 <div class="relative">
+                    @auth
                     <button @click="userMenuOpen = !userMenuOpen"
-                            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            class="flex items-center space-x-2 p-3 min-h-[44px] rounded-lg hover:bg-gray-50 transition-colors touch-manipulation">
                         <img class="h-8 w-8 rounded-full ring-2 ring-white shadow-sm"
-                             src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF"
+                             src="{{ Auth::user()->getAvatarUrl() }}"
                              alt="{{ Auth::user()->name }}">
-                        <svg class="hidden lg:block w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="hidden lg:block w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
@@ -216,6 +227,16 @@ $workflowItems = [
                                 Settings
                             </div>
                         </a>
+                        @if(auth()->id() === 1)
+                            <a href="{{ route('admin.console') }}" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Admin Console
+                                </div>
+                            </a>
+                        @endif
                         <div class="border-t border-gray-200 my-2"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -229,11 +250,17 @@ $workflowItems = [
                             </button>
                         </form>
                     </div>
+                    @else
+                    <!-- Guest user - show login button -->
+                    <a href="{{ route('login') }}" class="flex items-center space-x-2 p-3 min-h-[44px] rounded-lg hover:bg-gray-50 transition-colors touch-manipulation">
+                        <span class="text-sm font-medium text-gray-700">Sign In</span>
+                    </a>
+                    @endauth
                 </div>
                 
                 <!-- Mobile Menu Button -->
                 <button @click="mobileMenuOpen = !mobileMenuOpen"
-                        class="lg:hidden p-2 text-gray-600 hover:text-gray-900">
+                        class="lg:hidden p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation">
                     <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -250,14 +277,14 @@ $workflowItems = [
         <div class="flex overflow-x-auto px-4 py-2 space-x-2">
             @foreach($workflowItems as $item)
             <a href="{{ $item['route'] }}"
-               class="flex-shrink-0 flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap
+               class="flex-shrink-0 flex items-center space-x-2 px-4 py-3 min-h-[44px] rounded-lg text-base font-medium whitespace-nowrap touch-manipulation
                       {{ $currentWorkflow === $item['key'] 
                          ? 'bg-' . $item['color'] . '-100 text-' . $item['color'] . '-700' 
                          : 'text-gray-600 bg-white' }}">
-                <span>{{ $item['icon'] }}</span>
+                <span class="text-lg">{{ $item['icon'] }}</span>
                 <span>{{ $item['label'] }}</span>
                 @if($item['count'] > 0)
-                <span class="ml-1 text-xs font-bold">{{ $item['count'] }}</span>
+                <span class="ml-1 inline-flex items-center justify-center min-w-[20px] min-h-[20px] px-1 text-sm font-bold rounded-full bg-current bg-opacity-20">{{ $item['count'] }}</span>
                 @endif
             </a>
             @endforeach
@@ -277,11 +304,11 @@ $workflowItems = [
         <div class="px-4 py-3 space-y-3">
             <!-- Mobile Search -->
             <button onclick="window.dispatchEvent(new CustomEvent('open-command-palette'))"
-                    class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-full flex items-center justify-center space-x-2 px-4 py-3 min-h-[48px] bg-indigo-600 text-white rounded-lg touch-manipulation">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-                <span>Quick Search</span>
+                <span class="text-base font-medium">Quick Search</span>
             </button>
             
             <!-- Mobile Client Switcher -->
@@ -296,35 +323,29 @@ $workflowItems = [
                     <p class="text-xs text-gray-500 mb-2">No Client Selected</p>
                 @endif
                 <a href="{{ route('clients.index') }}" 
-                   class="block mt-2 text-center px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">
+                   class="block mt-2 text-center px-4 py-3 min-h-[44px] bg-white border border-gray-300 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 touch-manipulation flex items-center justify-center">
                     {{ $selectedClient ? 'Change Client' : 'Select Client' }}
                 </a>
             </div>
             
             <!-- Mobile Navigation Links -->
-            <nav class="space-y-1">
-                <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+            <nav class="space-y-2">
+                <a href="{{ route('dashboard') }}" class="block px-4 py-3 min-h-[48px] text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg touch-manipulation flex items-center">
                     Dashboard
                 </a>
-                <a href="{{ route('tickets.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                <a href="{{ route('tickets.index') }}" class="block px-4 py-3 min-h-[48px] text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg touch-manipulation flex items-center">
                     Tickets
                 </a>
-                <a href="{{ route('clients.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                <a href="{{ route('clients.index') }}" class="block px-4 py-3 min-h-[48px] text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg touch-manipulation flex items-center">
                     Clients
                 </a>
-                <a href="{{ route('financial.invoices.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                <a href="{{ route('financial.invoices.index') }}" class="block px-4 py-3 min-h-[48px] text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg touch-manipulation flex items-center">
                     Billing
                 </a>
             </nav>
         </div>
     </div>
 </nav>
-
-<!-- Spacer for fixed navbar -->
-<div class="h-16 lg:h-16"></div>
-@if(!request()->routeIs('dashboard'))
-<div class="lg:hidden h-12"></div>
-@endif
 
 <style>
 /* Hide x-cloak elements until Alpine loads */

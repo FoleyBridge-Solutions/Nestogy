@@ -11,9 +11,7 @@ Alpine.plugin(focus);
 Alpine.plugin(mask);
 Alpine.plugin(persist);
 
-// Bootstrap
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap';
+// Tailwind CSS is imported via app.css
 
 // FontAwesome
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -24,7 +22,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 
 // Tom Select for enhanced selects
 import TomSelect from 'tom-select';
-import 'tom-select/dist/css/tom-select.bootstrap5.css';
+import 'tom-select/dist/css/tom-select.css';
 
 // SweetAlert2 for modals/alerts
 import Swal from 'sweetalert2';
@@ -73,7 +71,6 @@ import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 
 // Clipboard
 import ClipboardJS from 'clipboard';
@@ -95,21 +92,43 @@ window.dateFns = { format, parseISO, addDays, subDays, startOfMonth, endOfMonth 
 window.FullCalendarPlugins = {
     dayGridPlugin,
     timeGridPlugin,
-    interactionPlugin,
-    bootstrap5Plugin
+    interactionPlugin
 };
 
 // Import modern components
 import { modernDashboard } from './components/dashboard.js';
 import { modernLayout, layoutUtils } from './components/layout.js';
+import { commandPalette } from './components/command-palette.js';
 import { clientSwitcher } from './components/client-switcher.js';
 import { clientSearchField } from './components/client-search-field.js';
+import './components/contact-search-field.js';
+import './components/asset-search-field.js';
+import './components/user-search-field.js';
+import { ticketCreateForm } from './components/ticket-create-form.js';
+import { productCreateForm } from './components/product-create-form.js';
+import { ticketMerge } from './components/ticket-merge.js';
+import { adminTerminal } from './components/admin-terminal.js';
+import './components/financial-document-builder-simple.js';
+import './components/financial-document-builder-advanced.js';
+import productSelectorAdvanced from './components/product-selector-advanced.js';
+
+// Import Tailwind replacement components
+import './components/tailwind-components.js';
+
+// Import modal system
+import './modal-system.js';
 
 // Register components globally
 Alpine.data('modernDashboard', modernDashboard);
 Alpine.data('modernLayout', modernLayout);
+Alpine.data('commandPalette', commandPalette);
 Alpine.data('clientSwitcher', clientSwitcher);
 Alpine.data('clientSearchField', clientSearchField);
+Alpine.data('ticketCreateForm', ticketCreateForm);
+Alpine.data('productCreateForm', productCreateForm);
+Alpine.data('ticketMerge', ticketMerge);
+Alpine.data('adminTerminal', adminTerminal);
+Alpine.data('productSelectorAdvanced', productSelectorAdvanced);
 
 // Make utilities available globally
 window.layoutUtils = layoutUtils;
@@ -229,10 +248,9 @@ Alpine.data('calendar', () => ({
             plugins: [
                 dayGridPlugin,
                 timeGridPlugin,
-                interactionPlugin,
-                bootstrap5Plugin
+                interactionPlugin
             ],
-            themeSystem: 'bootstrap5',
+            themeSystem: 'standard',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -279,16 +297,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-    
-    // Initialize popovers
-    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    popoverTriggerList.map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+    // Initialize Tippy.js for tooltips (Tailwind-friendly alternative)
+    // Tooltips will be initialized per component as needed
 });
 
-// Utility functions
+// Utility functions - both SweetAlert2 and custom modal system
 window.showAlert = (type, title, message) => {
     Swal.fire({
         icon: type,
@@ -311,6 +324,39 @@ window.showConfirm = (title, message, callback) => {
             callback();
         }
     });
+};
+
+// Enhanced modal utilities using our custom modal system
+window.showNotification = (message, type = 'info', options = {}) => {
+    const config = {
+        title: options.title || (type === 'error' ? 'Error' : type === 'success' ? 'Success' : 'Notice'),
+        confirmText: 'OK',
+        ...options
+    };
+    return window.customAlert(message, type, config);
+};
+
+window.confirmAction = async (message, options = {}) => {
+    const config = {
+        title: options.title || 'Confirm Action',
+        confirmText: options.confirmText || 'Confirm',
+        cancelText: options.cancelText || 'Cancel',
+        type: options.type || 'warning',
+        ...options
+    };
+    return await window.customConfirm(message, config);
+};
+
+window.promptUser = async (message, options = {}) => {
+    const config = {
+        title: options.title || 'Input Required',
+        placeholder: options.placeholder || '',
+        defaultValue: options.defaultValue || '',
+        confirmText: options.confirmText || 'Submit',
+        cancelText: options.cancelText || 'Cancel',
+        ...options
+    };
+    return await window.customPrompt(message, config);
 };
 
 window.formatDate = (date, formatStr = 'yyyy-MM-dd') => {

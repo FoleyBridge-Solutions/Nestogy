@@ -3,27 +3,27 @@
 @section('title', 'Edit Asset')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Edit Asset: {{ $asset->name }}</h3>
+            <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                    <h3 class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title">Edit Asset: {{ $asset->name }}</h3>
                 </div>
                 
                 <form action="{{ route('assets.update', $asset) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     
-                    <div class="card-body">
-                        <div class="row">
+                    <div class="p-6">
+                        <div class="flex flex-wrap -mx-4">
                             <!-- Basic Information -->
-                            <div class="col-md-6">
+                            <div class="md:w-1/2 px-4">
                                 <h5 class="mb-3">Basic Information</h5>
                                 
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
-                                    <select name="client_id" id="client_id" class="form-select @error('client_id') is-invalid @enderror" required>
+                                    <label for="client_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Client <span class="text-red-600">*</span></label>
+                                    <select name="client_id" id="client_id" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" required>
                                         <option value="">Select Client</option>
                                         @foreach($clients as $client)
                                             <option value="{{ $client->id }}" {{ old('client_id', $asset->client_id) == $client->id ? 'selected' : '' }}>
@@ -37,8 +37,8 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
-                                    <select name="type" id="type" class="form-select @error('type') is-invalid @enderror" required>
+                                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Type <span class="text-red-600">*</span></label>
+                                    <select name="type" id="type" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('type') is-invalid @enderror" required>
                                         <option value="">Select Type</option>
                                         @foreach(App\Models\Asset::TYPES as $type)
                                             <option value="{{ $type }}" {{ old('type', $asset->type) == $type ? 'selected' : '' }}>
@@ -53,7 +53,7 @@
 
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" 
+                                    <input type="text" name="name" id="name" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('name') is-invalid @enderror" 
                                            value="{{ old('name', $asset->name) }}" placeholder="Asset name or tag" required>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -62,7 +62,7 @@
 
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Description</label>
-                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" 
+                                    <textarea name="description" id="description" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('description') is-invalid @enderror" 
                                               rows="3" placeholder="Asset description">{{ old('description', $asset->description) }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -85,7 +85,7 @@
                             </div>
 
                             <!-- Hardware Information -->
-                            <div class="col-md-6">
+                            <div class="md:w-1/2 px-4">
                                 <h5 class="mb-3">Hardware Information</h5>
 
                                 <div class="mb-3">
@@ -157,7 +157,7 @@
                                         <div class="input-group-text">
                                             <input type="checkbox" name="dhcp" id="dhcp" value="1" 
                                                    {{ old('dhcp', $asset->ip === 'DHCP') ? 'checked' : '' }}>
-                                            <label for="dhcp" class="ms-2 mb-0">DHCP</label>
+                                            <label for="dhcp" class="ml-2 mb-0">DHCP</label>
                                         </div>
                                     </div>
                                     @error('ip')
@@ -309,7 +309,7 @@
                                     <label for="files" class="form-label">Attachments</label>
                                     <input type="file" name="files[]" id="files" class="form-control @error('files.*') is-invalid @enderror" 
                                            multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
-                                    <small class="text-muted">You can attach multiple files (PDF, Word, Excel, Images)</small>
+                                    <small class="text-gray-600 dark:text-gray-400 dark:text-gray-400">You can attach multiple files (PDF, Word, Excel, Images)</small>
                                     @error('files.*')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -320,11 +320,11 @@
                                         <label class="form-label">Current Attachments</label>
                                         <div class="list-group">
                                             @foreach($asset->files as $file)
-                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div class="list-group-item flex justify-between items-center">
                                                     <div>
-                                                        <i class="fas fa-file me-2"></i>
+                                                        <i class="fas fa-file mr-2"></i>
                                                         {{ $file->name }}
-                                                        <small class="text-muted">({{ number_format($file->size / 1024, 2) }} KB)</small>
+                                                        <small class="text-gray-600 dark:text-gray-400 dark:text-gray-400">({{ number_format($file->size / 1024, 2) }} KB)</small>
                                                     </div>
                                                     <div>
                                                         <a href="{{ route('files.download', $file) }}" class="btn btn-sm btn-outline-primary">
@@ -367,10 +367,10 @@
                     </div>
 
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-save"></i> Update Asset
                         </button>
-                        <a href="{{ route('assets.show', $asset) }}" class="btn btn-secondary">
+                        <a href="{{ route('assets.show', $asset) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                             <i class="fas fa-times"></i> Cancel
                         </a>
                     </div>

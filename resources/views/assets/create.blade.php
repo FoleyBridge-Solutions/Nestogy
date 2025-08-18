@@ -3,34 +3,34 @@
 @section('title', 'Create Asset')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Create New Asset</h3>
+            <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                    <h3 class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title">Create New Asset</h3>
                 </div>
                 
                 <form action="{{ route('assets.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
-                    <div class="card-body">
-                        <div class="row">
+                    <div class="p-6">
+                        <div class="flex flex-wrap -mx-4">
                             <!-- Basic Information -->
-                            <div class="col-md-6">
+                            <div class="md:w-1/2 px-4">
                                 <h5 class="mb-3">Basic Information</h5>
                                 
                                 <x-forms.client-search-field 
                                     name="client_id" 
                                     :required="true"
-                                    :selected="old('client_id', $selectedClientId ?? null) ? \App\Models\Client::find(old('client_id', $selectedClientId ?? null)) : null"
+                                    :selected="old('client_id', $selectedClientId ?? null) ? \App\Models\Client::where('company_id', auth()->user()->company_id)->find(old('client_id', $selectedClientId ?? null)) : null"
                                     label="Client"
                                     placeholder="Search for client..."
                                     class="mb-3" />
 
                                 <div class="mb-3">
-                                    <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
-                                    <select name="type" id="type" class="form-select @error('type') is-invalid @enderror" required>
+                                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Type <span class="text-red-600">*</span></label>
+                                    <select name="type" id="type" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('type') is-invalid @enderror" required>
                                         <option value="">Select Type</option>
                                         @foreach(App\Models\Asset::TYPES as $type)
                                             <option value="{{ $type }}" {{ old('type') == $type ? 'selected' : '' }}>
@@ -44,8 +44,8 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" 
+                                    <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Name <span class="text-red-600">*</span></label>
+                                    <input type="text" name="name" id="name" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('name') is-invalid @enderror" 
                                            value="{{ old('name') }}" placeholder="Asset name or tag" required>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -54,7 +54,7 @@
 
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Description</label>
-                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" 
+                                    <textarea name="description" id="description" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('description') is-invalid @enderror" 
                                               rows="3" placeholder="Asset description">{{ old('description') }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -63,7 +63,7 @@
 
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Status</label>
-                                    <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
+                                    <select name="status" id="status" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('status') is-invalid @enderror">
                                         @foreach(App\Models\Asset::STATUSES as $status)
                                             <option value="{{ $status }}" {{ old('status', 'Ready To Deploy') == $status ? 'selected' : '' }}>
                                                 {{ $status }}
@@ -77,7 +77,7 @@
                             </div>
 
                             <!-- Hardware Information -->
-                            <div class="col-md-6">
+                            <div class="md:w-1/2 px-4">
                                 <h5 class="mb-3">Hardware Information</h5>
 
                                 <div class="mb-3">
@@ -147,7 +147,7 @@
                                                value="{{ old('ip') }}" placeholder="192.168.1.100">
                                         <div class="input-group-text">
                                             <input type="checkbox" name="dhcp" id="dhcp" value="1" {{ old('dhcp') ? 'checked' : '' }}>
-                                            <label for="dhcp" class="ms-2 mb-0">DHCP</label>
+                                            <label for="dhcp" class="ml-2 mb-0">DHCP</label>
                                         </div>
                                     </div>
                                     @error('ip')
@@ -294,7 +294,7 @@
                                     <label for="files" class="form-label">Attachments</label>
                                     <input type="file" name="files[]" id="files" class="form-control @error('files.*') is-invalid @enderror" 
                                            multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
-                                    <small class="text-muted">You can attach multiple files (PDF, Word, Excel, Images)</small>
+                                    <small class="text-gray-600 dark:text-gray-400 dark:text-gray-400">You can attach multiple files (PDF, Word, Excel, Images)</small>
                                     @error('files.*')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -304,10 +304,10 @@
                     </div>
 
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-save"></i> Create Asset
                         </button>
-                        <a href="{{ route('assets.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('assets.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                             <i class="fas fa-times"></i> Cancel
                         </a>
                     </div>

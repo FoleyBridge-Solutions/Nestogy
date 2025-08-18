@@ -17,7 +17,7 @@ graph TB
         end
         
         subgraph "Application Layer"
-            LARAVEL[Laravel 11 App<br/>Multi-tenant MSP Platform]
+            LARAVEL[Laravel 12 App<br/>Multi-tenant MSP Platform<br/>Base Class Architecture]
             QUEUE[Laravel Queue Workers<br/>Background Processing]
         end
         
@@ -424,4 +424,4 @@ This deployment architecture provides flexibility to start small and scale as th
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: January 2024 | **Platform**: Laravel 11 + PHP 8.2+
+**Version**: 2.0.0 | **Last Updated**: August 2024 | **Platform**: Laravel 12 + PHP 8.2+ + Modern Base Class Architecture

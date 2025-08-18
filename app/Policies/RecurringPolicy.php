@@ -13,7 +13,7 @@ class RecurringPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.view');
+        return $user->can('financial.recurring.view');
     }
 
     /**
@@ -22,7 +22,7 @@ class RecurringPolicy
     public function view(User $user, Recurring $recurring): bool
     {
         // User can view if they have permission and recurring belongs to their company
-        return $user->hasPermission('financial.recurring.view') 
+        return $user->can('financial.recurring.view') 
             && $recurring->company_id === $user->company_id;
     }
 
@@ -31,7 +31,7 @@ class RecurringPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.manage');
+        return $user->can('financial.recurring.manage');
     }
 
     /**
@@ -40,7 +40,7 @@ class RecurringPolicy
     public function update(User $user, Recurring $recurring): bool
     {
         // User can update if they have permission and recurring belongs to their company
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -50,7 +50,7 @@ class RecurringPolicy
     public function delete(User $user, Recurring $recurring): bool
     {
         // User can delete if they have permission and recurring belongs to their company
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -59,7 +59,7 @@ class RecurringPolicy
      */
     public function restore(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -68,7 +68,7 @@ class RecurringPolicy
      */
     public function forceDelete(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id
             && $user->isAdmin();
     }
@@ -78,7 +78,7 @@ class RecurringPolicy
      */
     public function duplicate(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -87,7 +87,7 @@ class RecurringPolicy
      */
     public function generateInvoice(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.generate')
+        return $user->can('financial.recurring.generate')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -96,7 +96,7 @@ class RecurringPolicy
      */
     public function pauseResume(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -105,7 +105,7 @@ class RecurringPolicy
      */
     public function processUsage(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.usage')
+        return $user->can('financial.recurring.usage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -114,7 +114,7 @@ class RecurringPolicy
      */
     public function manageServiceTiers(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.manage')
+        return $user->can('financial.recurring.manage')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -123,7 +123,7 @@ class RecurringPolicy
      */
     public function applyEscalation(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.escalations')
+        return $user->can('financial.recurring.escalations')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -132,7 +132,7 @@ class RecurringPolicy
      */
     public function manageAdjustments(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.adjustments')
+        return $user->can('financial.recurring.adjustments')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -141,7 +141,7 @@ class RecurringPolicy
      */
     public function bulkOperations(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.bulk');
+        return $user->can('financial.recurring.bulk');
     }
 
     /**
@@ -149,7 +149,7 @@ class RecurringPolicy
      */
     public function viewAnalytics(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.analytics');
+        return $user->can('financial.recurring.analytics');
     }
 
     /**
@@ -157,7 +157,7 @@ class RecurringPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.export');
+        return $user->can('financial.recurring.export');
     }
 
     /**
@@ -165,8 +165,8 @@ class RecurringPolicy
      */
     public function createFromQuote(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.manage')
-            && $user->hasPermission('financial.quotes.view');
+        return $user->can('financial.recurring.manage')
+            && $user->can('financial.quotes.view');
     }
 
     /**
@@ -174,7 +174,7 @@ class RecurringPolicy
      */
     public function testAutomation(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.automation')
+        return $user->can('financial.recurring.automation')
             && ($user->isAdmin() || $user->isManager());
     }
 
@@ -183,7 +183,7 @@ class RecurringPolicy
      */
     public function viewTaxCalculations(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.view')
+        return $user->can('financial.recurring.view')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -192,7 +192,7 @@ class RecurringPolicy
      */
     public function manageTaxSettings(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.tax')
+        return $user->can('financial.recurring.tax')
             && ($user->isAdmin() || $user->isManager());
     }
 
@@ -201,7 +201,7 @@ class RecurringPolicy
      */
     public function viewUsageReports(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.reports')
+        return $user->can('financial.recurring.reports')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -210,7 +210,7 @@ class RecurringPolicy
      */
     public function viewRevenueForecast(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.forecast')
+        return $user->can('financial.recurring.forecast')
             && ($user->isAdmin() || $user->isManager());
     }
 
@@ -219,7 +219,7 @@ class RecurringPolicy
      */
     public function manageAutomation(User $user): bool
     {
-        return $user->hasPermission('financial.recurring.automation')
+        return $user->can('financial.recurring.automation')
             && ($user->isAdmin() || $user->isManager());
     }
 
@@ -228,7 +228,7 @@ class RecurringPolicy
      */
     public function viewBillingHistory(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.history')
+        return $user->can('financial.recurring.history')
             && $recurring->company_id === $user->company_id;
     }
 
@@ -237,7 +237,7 @@ class RecurringPolicy
      */
     public function overrideCalculations(User $user, Recurring $recurring): bool
     {
-        return $user->hasPermission('financial.recurring.override')
+        return $user->can('financial.recurring.override')
             && $recurring->company_id === $user->company_id
             && ($user->isAdmin() || $user->isManager());
     }

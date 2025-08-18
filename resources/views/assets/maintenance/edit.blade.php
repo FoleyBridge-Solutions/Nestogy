@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="h3 mb-0">Edit Maintenance</h1>
-                    <p class="text-muted mb-0">Update maintenance task details</p>
+                    <p class="text-gray-600 mb-0">Update maintenance task details</p>
                 </div>
                 <div>
                     <a href="{{ route('assets.maintenance.show', $maintenance ?? 1) }}" class="btn btn-outline-info">
@@ -20,12 +20,12 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Maintenance Details</h5>
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-4">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">Maintenance Details</h5>
                                 <div class="d-flex gap-2">
                                     @php
                                         $status = $maintenance->status ?? 'scheduled';
@@ -36,22 +36,22 @@
                                             'cancelled' => 'bg-secondary'
                                         ];
                                     @endphp
-                                    <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }}">
+                                    <span class="badge {{ $statusColors[$status] ?? 'bg-gray-600' }}">
                                         {{ ucfirst(str_replace('_', ' ', $status)) }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <form action="{{ route('assets.maintenance.update', $maintenance ?? 1) }}" method="POST" id="maintenanceForm">
                                 @csrf
                                 @method('PUT')
 
                                 <!-- Asset Selection -->
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                                        <select name="asset_id" id="asset_id" class="form-select @error('asset_id') is-invalid @enderror" required>
+                                    <div class="md:w-1/2 px-4">
+                                        <label for="asset_id" class="block text-sm font-medium text-gray-700 mb-1">Asset <span class="text-red-600">*</span></label>
+                                        <select name="asset_id" id="asset_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('asset_id') is-invalid @enderror" required>
                                             <option value="">Select an asset...</option>
                                             @foreach($assets ?? [] as $asset)
                                                 <option value="{{ $asset->id }}" 
@@ -65,8 +65,8 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="maintenance_type" class="form-label">Maintenance Type <span class="text-danger">*</span></label>
-                                        <select name="maintenance_type" id="maintenance_type" class="form-select @error('maintenance_type') is-invalid @enderror" required>
+                                        <label for="maintenance_type" class="block text-sm font-medium text-gray-700 mb-1">Maintenance Type <span class="text-red-600">*</span></label>
+                                        <select name="maintenance_type" id="maintenance_type" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('maintenance_type') is-invalid @enderror" required>
                                             <option value="">Select type...</option>
                                             <option value="preventive" {{ old('maintenance_type', $maintenance->maintenance_type ?? '') === 'preventive' ? 'selected' : '' }}>Preventive</option>
                                             <option value="corrective" {{ old('maintenance_type', $maintenance->maintenance_type ?? '') === 'corrective' ? 'selected' : '' }}>Corrective</option>
@@ -82,7 +82,7 @@
                                 <!-- Title and Description -->
                                 <div class="mb-3">
                                     <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                                    <input type="text" name="title" id="title" class="form-control @error('title') is-invalid @enderror" 
+                                    <input type="text" name="title" id="title" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('title') is-invalid @enderror" 
                                            value="{{ old('title', $maintenance->title ?? 'Preventive maintenance for Sample Asset') }}" required 
                                            placeholder="Brief description of maintenance task">
                                     @error('title')
@@ -92,7 +92,7 @@
 
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Description</label>
-                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" 
+                                    <textarea name="description" id="description" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('description') is-invalid @enderror" 
                                               rows="4" placeholder="Detailed description of maintenance task...">{{ old('description', $maintenance->description ?? 'Regular preventive maintenance to ensure optimal performance and prevent unexpected failures.') }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -198,7 +198,7 @@
 
                                 <!-- Completion Details (if completed) -->
                                 <div id="completionSection" style="{{ old('status', $maintenance->status ?? '') === 'completed' ? '' : 'display: none;' }}">
-                                    <h6 class="text-success mb-3">
+                                    <h6 class="text-green-600 mb-3">
                                         <i class="fas fa-check-circle"></i> Completion Details
                                     </h6>
                                     
@@ -285,11 +285,11 @@
 
                                 <!-- Submit Buttons -->
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-save"></i> Update Maintenance
                                     </button>
                                     @if($status !== 'completed')
-                                        <button type="submit" name="quick_complete" value="1" class="btn btn-success">
+                                        <button type="submit" name="quick_complete" value="1" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                             <i class="fas fa-check"></i> Save & Complete
                                         </button>
                                     @endif
@@ -308,13 +308,13 @@
                 <!-- Sidebar Info -->
                 <div class="col-md-4">
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h6 class="card-title mb-0">Maintenance Status</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="mb-3">
                                 <strong>Current Status:</strong>
-                                <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }} ms-2">
+                                <span class="badge {{ $statusColors[$status] ?? 'bg-gray-600' }} ml-2">
                                     {{ ucfirst(str_replace('_', ' ', $status)) }}
                                 </span>
                             </div>
@@ -341,7 +341,7 @@
                                 @if(isset($maintenance->asset))
                                     <div class="mb-2">
                                         <strong>{{ $maintenance->asset->name }}</strong>
-                                        <br><small class="text-muted">{{ $maintenance->asset->asset_tag }}</small>
+                                        <br><small class="text-gray-600">{{ $maintenance->asset->asset_tag }}</small>
                                     </div>
                                     <div class="mb-2">
                                         <small class="text-muted">Category:</small> {{ $maintenance->asset->category }}

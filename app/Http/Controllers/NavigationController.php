@@ -119,35 +119,127 @@ class NavigationController extends Controller
     public function getRecentItems(Request $request): JsonResponse
     {
         $limit = $request->get('limit', 10);
+        $recentItems = [];
         
-        // This would normally query from database
-        // For now, return mock data
-        $recentItems = [
-            [
-                'type' => 'ticket',
-                'id' => 1234,
-                'title' => 'Server Down - Acme Corp',
-                'url' => route('tickets.show', 1234),
-                'icon' => '🎫',
-                'timestamp' => now()->subMinutes(5),
-            ],
-            [
-                'type' => 'client',
-                'id' => 45,
-                'title' => 'Acme Corp',
-                'url' => route('clients.show', 45),
-                'icon' => '👥',
-                'timestamp' => now()->subMinutes(15),
-            ],
-            [
-                'type' => 'invoice',
-                'id' => 5678,
-                'title' => 'Invoice #5678',
-                'url' => route('financial.invoices.show', 5678),
-                'icon' => '💰',
-                'timestamp' => now()->subHours(1),
-            ],
-        ];
+        try {
+            $companyId = auth()->user()->company_id;
+            
+            // Get recent tickets
+            $recentTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
+                ->with('client')
+                ->orderBy('updated_at', 'desc')
+                ->limit(4)
+                ->get();
+            
+            foreach ($recentTickets as $ticket) {
+                $recentItems[] = [
+                    'type' => 'ticket',
+                    'id' => $ticket->id,
+                    'title' => "#{$ticket->id} - {$ticket->subject}",
+                    'subtitle' => $ticket->client ? $ticket->client->name : 'No Client',
+                    'url' => route('tickets.show', $ticket->id),
+                    'icon' => '🎫',
+                    'timestamp' => $ticket->updated_at,
+                    'status' => $ticket->status,
+                    'priority' => $ticket->priority,
+                ];
+            }
+            
+            // Get upcoming scheduled tickets
+            $upcomingTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
+                ->whereNotNull('scheduled_at')
+                ->where('scheduled_at', '>', now())
+                ->where('scheduled_at', '<=', now()->addDays(7))
+                ->with('client')
+                ->orderBy('scheduled_at', 'asc')
+                ->limit(3)
+                ->get();
+            
+            foreach ($upcomingTickets as $ticket) {
+                $recentItems[] = [
+                    'type' => 'ticket',
+                    'id' => $ticket->id,
+                    'title' => "#{$ticket->id} - {$ticket->subject}",
+                    'subtitle' => 'Scheduled: ' . $ticket->scheduled_at->format('M j, g:i A'),
+                    'url' => route('tickets.show', $ticket->id),
+                    'icon' => '📅',
+                    'timestamp' => $ticket->scheduled_at,
+                    'status' => 'scheduled',
+                    'priority' => $ticket->priority,
+                ];
+            }
+            
+            // Get recent invoices
+            $recentInvoices = \App\Models\Invoice::where('company_id', $companyId)
+                ->with('client')
+                ->orderBy('updated_at', 'desc')
+                ->limit(3)
+                ->get();
+            
+            foreach ($recentInvoices as $invoice) {
+                $invoiceNumber = $invoice->prefix ? $invoice->prefix . $invoice->number : $invoice->number;
+                $recentItems[] = [
+                    'type' => 'invoice',
+                    'id' => $invoice->id,
+                    'title' => "Invoice #{$invoiceNumber}",
+                    'subtitle' => ($invoice->client ? $invoice->client->name . ' - ' : '') . '$' . number_format($invoice->amount, 2),
+                    'url' => route('financial.invoices.show', $invoice->id),
+                    'icon' => '💰',
+                    'timestamp' => $invoice->updated_at,
+                    'status' => $invoice->status,
+                ];
+            }
+            
+            // Get recent quotes
+            $recentQuotes = \App\Models\Quote::where('company_id', $companyId)
+                ->with('client')
+                ->orderBy('updated_at', 'desc')
+                ->limit(2)
+                ->get();
+            
+            foreach ($recentQuotes as $quote) {
+                $quoteNumber = $quote->prefix ? $quote->prefix . $quote->number : $quote->number;
+                $recentItems[] = [
+                    'type' => 'quote',
+                    'id' => $quote->id,
+                    'title' => "Quote #{$quoteNumber}",
+                    'subtitle' => ($quote->client ? $quote->client->name . ' - ' : '') . '$' . number_format($quote->total, 2),
+                    'url' => route('financial.quotes.show', $quote->id),
+                    'icon' => '📝',
+                    'timestamp' => $quote->updated_at,
+                    'status' => $quote->status,
+                ];
+            }
+            
+            // Get recently accessed clients
+            $recentClients = \App\Models\Client::where('company_id', $companyId)
+                ->orderBy('updated_at', 'desc')
+                ->limit(2)
+                ->get();
+            
+            foreach ($recentClients as $client) {
+                $recentItems[] = [
+                    'type' => 'client',
+                    'id' => $client->id,
+                    'title' => $client->name,
+                    'subtitle' => $client->email ?: $client->phone ?: 'No contact info',
+                    'url' => route('clients.show', $client->id),
+                    'icon' => '👥',
+                    'timestamp' => $client->updated_at,
+                    'status' => $client->status ?? 'active',
+                ];
+            }
+            
+            // Sort by timestamp (most recent first)
+            usort($recentItems, function($a, $b) {
+                return $b['timestamp']->timestamp - $a['timestamp']->timestamp;
+            });
+            
+        } catch (\Exception $e) {
+            \Log::error('Error fetching recent items: ' . $e->getMessage());
+            // Return empty array on error
+            $recentItems = [];
+        }
         
         return response()->json(array_slice($recentItems, 0, $limit));
     }
@@ -169,6 +261,11 @@ class NavigationController extends Controller
         $results = [];
         
         try {
+            // Handle smart search patterns first
+            $smartResult = $this->handleSmartSearchPatterns($query);
+            if ($smartResult) {
+                return response()->json(['results' => $smartResult]);
+            }
             // Search tickets
             if ($domain === 'all' || $domain === 'tickets') {
                 $tickets = \App\Domains\Ticket\Models\Ticket::where('company_id', auth()->user()->company_id)
@@ -450,6 +547,60 @@ class NavigationController extends Controller
                 }
             }
             
+            // Search products
+            if ($domain === 'all' || $domain === 'products') {
+                $products = \App\Models\Product::products()
+                    ->where('company_id', auth()->user()->company_id)
+                    ->where(function($q) use ($query) {
+                        $q->where('name', 'like', "%{$query}%")
+                          ->orWhere('description', 'like', "%{$query}%")
+                          ->orWhere('sku', 'like', "%{$query}%");
+                    })
+                    ->limit(5)
+                    ->get();
+                
+                foreach ($products as $product) {
+                    $results[] = [
+                        'type' => 'product',
+                        'icon' => '📦',
+                        'title' => $product->name,
+                        'subtitle' => $product->description ?: 'Product - ' . $product->getFormattedPrice(),
+                        'url' => route('products.show', $product->id),
+                        'meta' => [
+                            'status' => $product->is_active ? 'active' : 'inactive',
+                            'price' => $product->getFormattedPrice(),
+                        ],
+                    ];
+                }
+            }
+            
+            // Search services
+            if ($domain === 'all' || $domain === 'services') {
+                $services = \App\Models\Product::services()
+                    ->where('company_id', auth()->user()->company_id)
+                    ->where(function($q) use ($query) {
+                        $q->where('name', 'like', "%{$query}%")
+                          ->orWhere('description', 'like', "%{$query}%")
+                          ->orWhere('sku', 'like', "%{$query}%");
+                    })
+                    ->limit(5)
+                    ->get();
+                
+                foreach ($services as $service) {
+                    $results[] = [
+                        'type' => 'service',
+                        'icon' => '🔧',
+                        'title' => $service->name,
+                        'subtitle' => $service->description ?: 'Service - ' . $service->getFormattedPrice(),
+                        'url' => route('services.show', $service->id),
+                        'meta' => [
+                            'status' => $service->is_active ? 'active' : 'inactive',
+                            'price' => $service->getFormattedPrice(),
+                        ],
+                    ];
+                }
+            }
+            
             // Search knowledge base articles (if exists)
             if ($domain === 'all' || $domain === 'knowledge') {
                 try {
@@ -544,6 +695,134 @@ class NavigationController extends Controller
         }
         
         return response()->json(['results' => $results]);
+    }
+
+    /**
+     * Handle smart search patterns like #123, @client, $invoice, %project
+     */
+    protected function handleSmartSearchPatterns(string $query): ?array
+    {
+        $query = trim($query);
+        $companyId = auth()->user()->company_id;
+        
+        // Pattern: #123 - Find ticket by ID
+        if (preg_match('/^#(\d+)$/', $query, $matches)) {
+            $ticketId = $matches[1];
+            $ticket = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
+                ->where('id', $ticketId)
+                ->with('client')
+                ->first();
+                
+            if ($ticket) {
+                return [[
+                    'type' => 'ticket',
+                    'icon' => '🎫',
+                    'title' => "#{$ticket->id} - {$ticket->title}",
+                    'subtitle' => $ticket->client->name ?? 'No Client',
+                    'url' => route('tickets.show', $ticket->id),
+                    'meta' => [
+                        'status' => $ticket->status,
+                        'priority' => $ticket->priority,
+                    ],
+                ]];
+            }
+        }
+        
+        // Pattern: @ClientName - Find client by name
+        if (preg_match('/^@(.+)$/', $query, $matches)) {
+            $clientName = trim($matches[1]);
+            $clients = \App\Models\Client::where('company_id', $companyId)
+                ->where('name', 'like', "%{$clientName}%")
+                ->limit(3)
+                ->get();
+                
+            $results = [];
+            foreach ($clients as $client) {
+                $results[] = [
+                    'type' => 'client',
+                    'icon' => '👥',
+                    'title' => $client->name,
+                    'subtitle' => $client->email,
+                    'url' => route('clients.show', $client->id),
+                    'meta' => [
+                        'status' => $client->status,
+                    ],
+                ];
+            }
+            return $results;
+        }
+        
+        // Pattern: $INV-123 - Find invoice by number
+        if (preg_match('/^\$(.+)$/', $query, $matches)) {
+            $invoiceNumber = trim($matches[1]);
+            $invoice = \App\Models\Invoice::where('company_id', $companyId)
+                ->where('invoice_number', 'like', "%{$invoiceNumber}%")
+                ->with('client')
+                ->first();
+                
+            if ($invoice) {
+                return [[
+                    'type' => 'invoice',
+                    'icon' => '💰',
+                    'title' => "Invoice #{$invoice->invoice_number}",
+                    'subtitle' => $invoice->client->name ?? 'No Client',
+                    'url' => route('financial.invoices.show', $invoice->id),
+                    'meta' => [
+                        'status' => $invoice->status,
+                        'amount' => '$' . number_format($invoice->total, 2),
+                    ],
+                ]];
+            }
+        }
+        
+        // Pattern: %ProjectName - Find project by name
+        if (preg_match('/^%(.+)$/', $query, $matches)) {
+            $projectName = trim($matches[1]);
+            $projects = \App\Models\Project::where('company_id', $companyId)
+                ->where('name', 'like', "%{$projectName}%")
+                ->with('client')
+                ->limit(3)
+                ->get();
+                
+            $results = [];
+            foreach ($projects as $project) {
+                $results[] = [
+                    'type' => 'project',
+                    'icon' => '📊',
+                    'title' => $project->name,
+                    'subtitle' => $project->client->name ?? 'Internal Project',
+                    'url' => route('projects.show', $project->id),
+                    'meta' => [
+                        'status' => $project->status,
+                    ],
+                ];
+            }
+            return $results;
+        }
+        
+        // Pattern: ^AssetTag - Find asset by tag
+        if (preg_match('/^\^(.+)$/', $query, $matches)) {
+            $assetTag = trim($matches[1]);
+            $asset = \App\Models\Asset::where('company_id', $companyId)
+                ->where('asset_tag', 'like', "%{$assetTag}%")
+                ->with('client')
+                ->first();
+                
+            if ($asset) {
+                return [[
+                    'type' => 'asset',
+                    'icon' => '🖥️',
+                    'title' => $asset->name,
+                    'subtitle' => "Tag: {$asset->asset_tag} | {$asset->model}",
+                    'url' => route('assets.show', $asset->id),
+                    'meta' => [
+                        'status' => $asset->status,
+                    ],
+                ]];
+            }
+        }
+        
+        return null; // No smart pattern matched
     }
 
     /**

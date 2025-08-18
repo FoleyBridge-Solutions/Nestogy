@@ -123,7 +123,7 @@ class FileController extends Controller
         $filePath = 'clients/files/' . $filename;
 
         // Store the file
-        $file->storeAs('clients/files', $filename);
+        $file->storeAs('clients/files', $filename, config('filesystems.default'));
 
         // Calculate file hash
         $fileHash = hash_file('sha256', $file->getRealPath());
@@ -146,6 +146,7 @@ class FileController extends Controller
             'is_public' => $request->has('is_public'),
             'download_count' => 0,
             'tags' => $tags,
+            'storage_disk' => config('filesystems.default'),
         ]);
         
         $clientFile->company_id = auth()->user()->company_id;
@@ -194,7 +195,7 @@ class FileController extends Controller
         // Increment download count and update access timestamp
         $file->incrementDownloadCount();
 
-        return Storage::download($file->file_path, $file->original_filename);
+        return Storage::disk(config('filesystems.default'))->download($file->file_path, $file->original_filename);
     }
 
     /**

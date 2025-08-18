@@ -6,13 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Silber\Bouncer\Database\Ability;
 
 /**
  * Permission Model
  * 
- * Represents individual permissions that can be granted to roles or users.
- * Each permission is scoped to a specific domain (clients, assets, etc.) and action.
+ * DEPRECATED: This model is maintained for backward compatibility only.
+ * The system now uses Bouncer's Ability model for permissions.
  * 
+ * @deprecated Use Silber\Bouncer\Database\Ability instead
  * @property int $id
  * @property string $name
  * @property string $slug
@@ -26,22 +28,24 @@ class Permission extends Model
 {
     use HasFactory;
 
+    protected $table = 'bouncer_abilities'; // Point to Bouncer abilities table
+
     protected $fillable = [
         'name',
-        'slug',
-        'domain',
-        'action',
-        'description',
-        'is_system',
-        'group_id',
+        'title',
+        'entity_id',
+        'entity_type',
+        'only_owned',
+        'options',
     ];
 
     protected $casts = [
-        'is_system' => 'boolean',
+        'only_owned' => 'boolean',
+        'options' => 'json',
     ];
 
     /**
-     * Permission domains
+     * Permission domains - maintained for backward compatibility
      */
     const DOMAIN_CLIENTS = 'clients';
     const DOMAIN_ASSETS = 'assets';
@@ -53,7 +57,7 @@ class Permission extends Model
     const DOMAIN_SYSTEM = 'system';
 
     /**
-     * Permission actions
+     * Permission actions - maintained for backward compatibility
      */
     const ACTION_VIEW = 'view';
     const ACTION_CREATE = 'create';
@@ -99,65 +103,15 @@ class Permission extends Model
     }
 
     /**
-     * Get the permission group.
+     * Get permission by name (Bouncer compatibility).
      */
-    public function group(): BelongsTo
+    public static function findBySlug(string $slug): ?self
     {
-        return $this->belongsTo(PermissionGroup::class);
+        return self::where('name', $slug)->first();
     }
 
     /**
-     * Get the roles that have this permission.
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'role_permissions');
-    }
-
-    /**
-     * Get the users who have this permission directly.
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'user_permissions')
-            ->withPivot(['company_id', 'granted'])
-            ->withTimestamps();
-    }
-
-    /**
-     * Scope permissions by domain.
-     */
-    public function scopeByDomain($query, string $domain)
-    {
-        return $query->where('domain', $domain);
-    }
-
-    /**
-     * Scope permissions by action.
-     */
-    public function scopeByAction($query, string $action)
-    {
-        return $query->where('action', $action);
-    }
-
-    /**
-     * Scope system permissions.
-     */
-    public function scopeSystem($query)
-    {
-        return $query->where('is_system', true);
-    }
-
-    /**
-     * Scope non-system permissions.
-     */
-    public function scopeCustom($query)
-    {
-        return $query->where('is_system', false);
-    }
-
-    /**
-     * Create a permission with automatic slug generation.
+     * Create a permission using Bouncer (backward compatibility).
      */
     public static function createPermission(
         string $name,
@@ -170,30 +124,9 @@ class Permission extends Model
         $slug = strtolower($domain . '.' . $action);
         
         return self::create([
-            'name' => $name,
-            'slug' => $slug,
-            'domain' => $domain,
-            'action' => $action,
-            'description' => $description,
-            'is_system' => $isSystem,
-            'group_id' => $groupId,
+            'name' => $slug,
+            'title' => $name,
         ]);
-    }
-
-    /**
-     * Get permission by slug.
-     */
-    public static function findBySlug(string $slug): ?self
-    {
-        return self::where('slug', $slug)->first();
-    }
-
-    /**
-     * Check if permission exists by domain and action.
-     */
-    public static function existsByDomainAction(string $domain, string $action): bool
-    {
-        return self::where('domain', $domain)->where('action', $action)->exists();
     }
 
     /**
@@ -201,7 +134,25 @@ class Permission extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        return $this->name ?: ucfirst($this->action) . ' ' . ucfirst($this->domain);
+        return $this->title ?: $this->name;
+    }
+
+    /**
+     * Get domain from permission name.
+     */
+    public function getDomainAttribute(): ?string
+    {
+        $parts = explode('.', $this->name);
+        return $parts[0] ?? null;
+    }
+
+    /**
+     * Get action from permission name.
+     */
+    public function getActionAttribute(): ?string
+    {
+        $parts = explode('.', $this->name);
+        return $parts[1] ?? null;
     }
 
     /**
@@ -210,7 +161,7 @@ class Permission extends Model
     public function getDomainLabelAttribute(): string
     {
         $domains = self::getAvailableDomains();
-        return $domains[$this->domain] ?? ucfirst($this->domain);
+        return $domains[$this->domain] ?? ucfirst($this->domain ?? '');
     }
 
     /**
@@ -219,6 +170,35 @@ class Permission extends Model
     public function getActionLabelAttribute(): string
     {
         $actions = self::getAvailableActions();
-        return $actions[$this->action] ?? ucfirst($this->action);
+        return $actions[$this->action] ?? ucfirst($this->action ?? '');
+    }
+
+    /**
+     * Bouncer compatibility methods
+     */
+    
+    /**
+     * Scope permissions by domain.
+     */
+    public function scopeByDomain($query, string $domain)
+    {
+        return $query->where('name', 'like', $domain . '.%');
+    }
+
+    /**
+     * Scope permissions by action.
+     */
+    public function scopeByAction($query, string $action)
+    {
+        return $query->where('name', 'like', '%.' . $action);
+    }
+
+    /**
+     * Check if permission exists by domain and action.
+     */
+    public static function existsByDomainAction(string $domain, string $action): bool
+    {
+        $slug = strtolower($domain . '.' . $action);
+        return self::where('name', $slug)->exists();
     }
 }

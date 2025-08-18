@@ -1,34 +1,38 @@
 # Nestogy MSP Platform - Testing Guide
 
-This guide covers testing practices, methodologies, and tools used in the Nestogy MSP Platform to ensure code quality, reliability, and maintainability.
+This guide covers testing practices, methodologies, and tools used in the Nestogy MSP Platform (Laravel 12) to ensure code quality, reliability, and maintainability in our modern base class architecture.
 
 ## Table of Contents
 
 1. [Testing Philosophy](#testing-philosophy)
 2. [Test Environment Setup](#test-environment-setup)
-3. [Test Types](#test-types)
-4. [Writing Effective Tests](#writing-effective-tests)
-5. [Test Organization](#test-organization)
-6. [Database Testing](#database-testing)
-7. [API Testing](#api-testing)
-8. [Frontend Testing](#frontend-testing)
-9. [Performance Testing](#performance-testing)
-10. [Security Testing](#security-testing)
-11. [Continuous Integration](#continuous-integration)
-12. [Test Coverage](#test-coverage)
-13. [Troubleshooting](#troubleshooting)
+3. [Base Class Testing](#base-class-testing)
+4. [Test Types](#test-types)
+5. [Writing Effective Tests](#writing-effective-tests)
+6. [Test Organization](#test-organization)
+7. [Database Testing](#database-testing)
+8. [API Testing](#api-testing)
+9. [Frontend Testing](#frontend-testing)
+10. [Multi-Tenancy Testing](#multi-tenancy-testing)
+11. [Performance Testing](#performance-testing)
+12. [Security Testing](#security-testing)
+13. [Continuous Integration](#continuous-integration)
+14. [Test Coverage](#test-coverage)
+15. [Troubleshooting](#troubleshooting)
 
 ## Testing Philosophy
 
 ### Our Testing Approach
 
-The Nestogy MSP Platform follows these testing principles:
+The Nestogy MSP Platform follows these testing principles with our modern base class architecture:
 
+- **Base Class First**: Test base controllers, services, and requests to ensure standardized behavior
+- **Multi-Tenancy Required**: ALL tests must verify proper company scoping and data isolation
 - **Test-Driven Development (TDD)**: Write tests before implementing features
-- **Comprehensive Coverage**: Aim for 80%+ test coverage on critical paths
+- **Comprehensive Coverage**: Aim for 90%+ test coverage on base classes, 80%+ on domain-specific code
 - **Fast Feedback**: Tests should run quickly and provide immediate feedback
 - **Reliable Tests**: Tests should be deterministic and not flaky
-- **Maintainable Tests**: Tests should be easy to read, update, and debug
+- **Security-First Testing**: Every test must verify multi-tenant security constraints
 
 ### Testing Pyramid
 
@@ -100,6 +104,183 @@ CREATE DATABASE nestogy_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'test_user'@'localhost' IDENTIFIED BY 'test_password';
 GRANT ALL PRIVILEGES ON nestogy_test.* TO 'test_user'@'localhost';
 FLUSH PRIVILEGES;
+```
+
+## Base Class Testing
+
+### Testing Base Controllers
+
+Test your controllers that extend BaseResourceController to ensure they inherit standard behavior:
+
+```php
+class ClientControllerTest extends TestCase
+{
+    use RefreshDatabase;
+    
+    protected User $user;
+    protected Company $company;
+    
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        $this->company = Company::factory()->create();
+        $this->user = User::factory()->for($this->company)->create();
+    }
+    
+    public function test_index_returns_json_when_requested()
+    {
+        Client::factory()->count(3)->for($this->company)->create();
+        
+        $response = $this->actingAs($this->user)
+            ->getJson('/clients');
+        
+        $response->assertOk()
+                ->assertJsonStructure([
+                    'data' => [
+                        '*' => ['id', 'name', 'email']
+                    ],
+                    'meta' => ['current_page', 'total']
+                ]);
+    }
+    
+    public function test_store_creates_with_company_scoping()
+    {
+        $data = [
+            'name' => 'Test Client',
+            'email' => 'test@example.com'
+        ];
+        
+        $response = $this->actingAs($this->user)
+            ->postJson('/clients', $data);
+        
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('clients', [
+            'name' => 'Test Client',
+            'company_id' => $this->company->id // Verify company scoping
+        ]);
+    }
+    
+    public function test_cannot_access_other_company_resources()
+    {
+        $otherCompany = Company::factory()->create();
+        $otherClient = Client::factory()->for($otherCompany)->create();
+        
+        $response = $this->actingAs($this->user)
+            ->getJson("/clients/{$otherClient->id}");
+        
+        $response->assertForbidden();
+    }
+}
+```
+
+### Testing Base Services
+
+Test services that extend domain-specific base services:
+
+```php
+class ClientServiceTest extends TestCase
+{
+    use RefreshDatabase;
+    
+    protected ClientService $service;
+    protected User $user;
+    
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+        $this->service = app(ClientService::class);
+    }
+    
+    public function test_create_automatically_sets_company_id()
+    {
+        $data = ['name' => 'Test Client', 'email' => 'test@example.com'];
+        
+        $client = $this->service->create($data);
+        
+        $this->assertEquals($this->user->company_id, $client->company_id);
+    }
+    
+    public function test_get_paginated_filters_by_company()
+    {
+        // Create clients for current user's company
+        Client::factory()->count(3)->for($this->user->company)->create();
+        
+        // Create clients for other company
+        $otherCompany = Company::factory()->create();
+        Client::factory()->count(2)->for($otherCompany)->create();
+        
+        $results = $this->service->getPaginated([]);
+        
+        $this->assertCount(3, $results);
+    }
+    
+    public function test_search_functionality_works()
+    {
+        Client::factory()->for($this->user->company)->create(['name' => 'Acme Corp']);
+        Client::factory()->for($this->user->company)->create(['name' => 'Beta LLC']);
+        
+        $results = $this->service->getPaginated(['search' => 'Acme']);
+        
+        $this->assertCount(1, $results);
+        $this->assertEquals('Acme Corp', $results->first()->name);
+    }
+}
+```
+
+### Testing Base Request Validation
+
+Test form request classes that extend base request classes:
+
+```php
+class StoreClientRequestTest extends TestCase
+{
+    use RefreshDatabase;
+    
+    protected User $user;
+    
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->user = User::factory()->create();
+    }
+    
+    public function test_validates_required_fields()
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson('/clients', []);
+        
+        $response->assertUnprocessable()
+                ->assertJsonValidationErrors(['name', 'email']);
+    }
+    
+    public function test_validates_email_format()
+    {
+        $response = $this->actingAs($this->user)
+            ->postJson('/clients', [
+                'name' => 'Test Client',
+                'email' => 'invalid-email'
+            ]);
+        
+        $response->assertJsonValidationErrors(['email']);
+    }
+    
+    public function test_validates_company_scoped_relationships()
+    {
+        $otherCompanyUser = User::factory()->create();
+        
+        $response = $this->actingAs($this->user)
+            ->postJson('/tickets', [
+                'client_id' => $otherCompanyUser->company_id,
+                'title' => 'Test Ticket'
+            ]);
+        
+        $response->assertJsonValidationErrors(['client_id']);
+    }
+}
 ```
 
 ## Test Types
@@ -983,4 +1164,4 @@ DB_DATABASE=:memory:
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: January 2024 | **Platform**: Laravel 11 + PHP 8.2+
+**Version**: 2.0.0 | **Last Updated**: August 2024 | **Platform**: Laravel 12 + PHP 8.2+ + Modern Base Class Architecture

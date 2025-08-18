@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="h3 mb-0">Add Warranty</h1>
-                    <p class="text-muted mb-0">Create a new warranty record for an asset</p>
+                    <p class="text-gray-600 mb-0">Create a new warranty record for an asset</p>
                 </div>
                 <div>
                     <a href="{{ route('assets.warranties.index') }}" class="btn btn-outline-secondary">
@@ -17,21 +17,21 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Warranty Information</h5>
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-4">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Information</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <form action="{{ route('assets.warranties.store') }}" method="POST" id="warrantyForm">
                                 @csrf
 
                                 <!-- Asset Selection -->
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                                        <select name="asset_id" id="asset_id" class="form-select @error('asset_id') is-invalid @enderror" required>
+                                    <div class="md:w-1/2 px-4">
+                                        <label for="asset_id" class="block text-sm font-medium text-gray-700 mb-1">Asset <span class="text-red-600">*</span></label>
+                                        <select name="asset_id" id="asset_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('asset_id') is-invalid @enderror" required>
                                             <option value="">Select an asset...</option>
                                             @foreach($assets ?? [] as $asset)
                                                 <option value="{{ $asset->id }}" {{ old('asset_id') == $asset->id ? 'selected' : '' }}>
@@ -44,8 +44,8 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="warranty_type" class="form-label">Warranty Type <span class="text-danger">*</span></label>
-                                        <select name="warranty_type" id="warranty_type" class="form-select @error('warranty_type') is-invalid @enderror" required>
+                                        <label for="warranty_type" class="block text-sm font-medium text-gray-700 mb-1">Warranty Type <span class="text-red-600">*</span></label>
+                                        <select name="warranty_type" id="warranty_type" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_type') is-invalid @enderror" required>
                                             <option value="">Select type...</option>
                                             <option value="manufacturer" {{ old('warranty_type') === 'manufacturer' ? 'selected' : '' }}>Manufacturer</option>
                                             <option value="extended" {{ old('warranty_type') === 'extended' ? 'selected' : '' }}>Extended</option>
@@ -63,7 +63,7 @@
                                     <div class="col-md-6">
                                         <label for="provider_name" class="form-label">Warranty Provider <span class="text-danger">*</span></label>
                                         <input type="text" name="provider_name" id="provider_name" 
-                                               class="form-control @error('provider_name') is-invalid @enderror" 
+                                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('provider_name') is-invalid @enderror" 
                                                value="{{ old('provider_name') }}" required 
                                                placeholder="e.g., Dell Technologies, HP Inc.">
                                         @error('provider_name')
@@ -73,7 +73,7 @@
                                     <div class="col-md-6">
                                         <label for="warranty_number" class="form-label">Warranty Number</label>
                                         <input type="text" name="warranty_number" id="warranty_number" 
-                                               class="form-control @error('warranty_number') is-invalid @enderror" 
+                                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_number') is-invalid @enderror" 
                                                value="{{ old('warranty_number') }}" 
                                                placeholder="WRN-123456789">
                                         @error('warranty_number')
@@ -239,11 +239,11 @@
                                 </div>
 
                                 <!-- Submit Buttons -->
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-save"></i> Create Warranty
                                     </button>
-                                    <button type="submit" name="status" value="active" class="btn btn-success">
+                                    <button type="submit" name="status" value="active" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                         <i class="fas fa-check"></i> Create & Activate
                                     </button>
                                     <a href="{{ route('assets.warranties.index') }}" class="btn btn-outline-secondary">
@@ -258,13 +258,13 @@
                 <!-- Sidebar Info -->
                 <div class="col-md-4">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h6 class="card-title mb-0">Warranty Guidelines</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="mb-3">
-                                <h6 class="text-primary">Warranty Types</h6>
-                                <small class="text-muted">
+                                <h6 class="text-blue-600">Warranty Types</h6>
+                                <small class="text-gray-600">
                                     <strong>Manufacturer:</strong> Original equipment warranty<br>
                                     <strong>Extended:</strong> Additional coverage beyond standard<br>
                                     <strong>Service:</strong> Service and support contract<br>
@@ -283,7 +283,7 @@
                                 </small>
                             </div>
 
-                            <div class="alert alert-warning">
+                            <div class="px-4 py-3 rounded bg-yellow-100 border border-yellow-400 text-yellow-700">
                                 <h6 class="alert-heading">📋 Important</h6>
                                 <small>
                                     • Keep warranty documentation safe<br>
@@ -315,7 +315,7 @@
                         <div class="card-body">
                             <div id="warrantyCalc">
                                 <small class="text-muted">Select start and end dates to calculate warranty duration</small>
-                                <div id="durationResult" class="mt-2 p-2 bg-light rounded" style="display: none;">
+                                <div id="durationResult" class="mt-2 p-2 bg-gray-100 rounded" style="display: none;">
                                     <strong>Duration:</strong> <span id="durationText"></span>
                                 </div>
                             </div>

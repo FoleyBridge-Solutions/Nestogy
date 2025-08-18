@@ -3,19 +3,19 @@
 @section('title', 'Recurring Invoice Details')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Recurring Invoice Details</h1>
                 <div class="btn-group">
                     @if($recurringInvoice->isActive())
-                        <a href="{{ route('clients.recurring-invoices.standalone.edit', $recurringInvoice) }}" class="btn btn-primary">
-                            <i class="fas fa-edit me-2"></i>Edit Invoice
+                        <a href="{{ route('clients.recurring-invoices.standalone.edit', $recurringInvoice) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-edit mr-2"></i>Edit Invoice
                         </a>
                         @if($recurringInvoice->isDue())
-                            <button type="button" class="btn btn-success" onclick="generateInvoice({{ $recurringInvoice->id }})">
-                                <i class="fas fa-file-invoice me-2"></i>Generate Invoice
+                            <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="generateInvoice({{ $recurringInvoice->id }})">
+                                <i class="fas fa-file-invoice mr-2"></i>Generate Invoice
                             </button>
                         @endif
                     @endif
@@ -30,19 +30,19 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8">
                     <!-- Main Invoice Details -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">
                                     <i class="fas fa-file-invoice me-2"></i>{{ $recurringInvoice->template_name }}
                                 </h5>
                                 <div class="d-flex gap-2">
                                     @switch($recurringInvoice->status)
                                         @case('draft')
-                                            <span class="badge bg-secondary">Draft</span>
+                                            <span class="badge bg-gray-600">Draft</span>
                                             @break
                                         @case('active')
                                             <span class="badge bg-success">Active</span>
@@ -54,7 +54,7 @@
                                             <span class="badge bg-danger">Cancelled</span>
                                             @break
                                         @case('expired')
-                                            <span class="badge bg-dark">Expired</span>
+                                            <span class="badge bg-gray-900">Expired</span>
                                             @break
                                     @endswitch
 
@@ -64,17 +64,17 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-muted">Client</h6>
+                                <div class="md:w-1/2 px-4">
+                                    <h6 class="text-gray-600">Client</h6>
                                     <p class="mb-3">
                                         <a href="{{ route('clients.show', $recurringInvoice->client) }}" class="text-decoration-none">
                                             {{ $recurringInvoice->client->display_name }}
                                         </a>
                                     </p>
 
-                                    <h6 class="text-muted">Amount Details</h6>
+                                    <h6 class="text-gray-600">Amount Details</h6>
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
                                             <span>Subtotal:</span>
@@ -89,7 +89,7 @@
                                         <hr class="my-2">
                                         <div class="d-flex justify-content-between">
                                             <span class="fw-bold">Total:</span>
-                                            <span class="fw-bold text-primary fs-5">{{ $recurringInvoice->formatted_total_amount }}</span>
+                                            <span class="fw-bold text-blue-600 fs-5">{{ $recurringInvoice->formatted_total_amount }}</span>
                                         </div>
                                     </div>
 
@@ -97,7 +97,7 @@
                                     <p class="mb-3">{{ $recurringInvoice->currency }} ({{ $recurringInvoice->getCurrencySymbol() }})</p>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="md:w-1/2 px-4">
                                     <h6 class="text-muted">Frequency</h6>
                                     <p class="mb-3">{{ $recurringInvoice->frequency_description }}</p>
 
@@ -154,7 +154,7 @@
                                     <ul class="list-unstyled">
                                         @foreach($recurringInvoice->line_items as $item)
                                             <li class="mb-1">
-                                                <i class="fas fa-check text-success me-2"></i>
+                                                <i class="fas fa-check text-green-600 me-2"></i>
                                                 {{ $item['description'] }}
                                             </li>
                                         @endforeach
@@ -165,7 +165,7 @@
                             @if($recurringInvoice->invoice_notes)
                                 <hr>
                                 <h6 class="text-muted">Invoice Notes</h6>
-                                <div class="mb-3 bg-light p-3 rounded">
+                                <div class="mb-3 bg-gray-100 p-3 rounded">
                                     {!! nl2br(e($recurringInvoice->invoice_notes)) !!}
                                 </div>
                             @endif
@@ -173,7 +173,7 @@
                             @if($recurringInvoice->payment_instructions)
                                 <hr>
                                 <h6 class="text-muted">Payment Instructions</h6>
-                                <div class="bg-light p-3 rounded">
+                                <div class="bg-gray-100 p-3 rounded">
                                     {!! nl2br(e($recurringInvoice->payment_instructions)) !!}
                                 </div>
                             @endif
@@ -183,12 +183,12 @@
                     <!-- Late Fee Settings -->
                     @if($recurringInvoice->late_fee_percentage > 0 || $recurringInvoice->late_fee_flat_amount > 0)
                         <div class="card mb-4">
-                            <div class="card-header">
+                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                                 <h5 class="card-title mb-0">
                                     <i class="fas fa-exclamation-triangle me-2"></i>Late Fee Settings
                                 </h5>
                             </div>
-                            <div class="card-body">
+                            <div class="p-6">
                                 <div class="row">
                                     @if($recurringInvoice->late_fee_percentage > 0)
                                         <div class="col-md-6">
@@ -220,13 +220,13 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <div class="text-center p-2 bg-light rounded">
-                                        <div class="fw-bold text-primary">{{ $recurringInvoice->invoice_count ?? 0 }}</div>
+                                        <div class="fw-bold text-blue-600">{{ $recurringInvoice->invoice_count ?? 0 }}</div>
                                         <small class="text-muted">Invoices</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-center p-2 bg-light rounded">
-                                        <div class="fw-bold text-success">{{ $recurringInvoice->getCurrencySymbol() }}{{ number_format($recurringInvoice->total_revenue ?? 0, 0) }}</div>
+                                        <div class="fw-bold text-green-600">{{ $recurringInvoice->getCurrencySymbol() }}{{ number_format($recurringInvoice->total_revenue ?? 0, 0) }}</div>
                                         <small class="text-muted">Revenue</small>
                                     </div>
                                 </div>
@@ -289,7 +289,7 @@
                             <div class="d-grid gap-2">
                                 @if($recurringInvoice->isActive())
                                     @if($recurringInvoice->isDue())
-                                        <button class="btn btn-success btn-sm" onclick="generateInvoice({{ $recurringInvoice->id }})">
+                                        <button class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 btn-sm" onclick="generateInvoice({{ $recurringInvoice->id }})">
                                             <i class="fas fa-file-invoice me-2"></i>Generate Invoice Now
                                         </button>
                                     @endif
@@ -298,7 +298,7 @@
                                         <i class="fas fa-pause me-2"></i>Pause Invoice
                                     </button>
                                     
-                                    <button class="btn btn-danger btn-sm" onclick="cancelInvoice({{ $recurringInvoice->id }})">
+                                    <button class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 btn-sm" onclick="cancelInvoice({{ $recurringInvoice->id }})">
                                         <i class="fas fa-times me-2"></i>Cancel Invoice
                                     </button>
                                 @elseif($recurringInvoice->isPaused())
@@ -369,17 +369,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Delete Recurring Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this recurring invoice? This action cannot be undone.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="deleteInvoiceForm" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Invoice</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Invoice</button>
                 </form>
             </div>
         </div>
@@ -392,16 +392,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Generate Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Generate an invoice from this recurring invoice template?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="generateInvoiceForm" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-primary">Generate Invoice</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Generate Invoice</button>
                 </form>
             </div>
         </div>
@@ -414,19 +414,19 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Pause Recurring Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <form id="pauseInvoiceForm" method="POST">
                 @csrf
                 <div class="modal-body">
                     <p>Are you sure you want to pause this recurring invoice?</p>
                     <div class="mb-3">
-                        <label for="pauseReason" class="form-label">Reason (Optional)</label>
-                        <textarea name="reason" id="pauseReason" class="form-control" rows="3" placeholder="Reason for pausing..."></textarea>
+                        <label for="pauseReason" class="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+                        <textarea name="reason" id="pauseReason" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" rows="3" placeholder="Reason for pausing..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                     <button type="submit" class="btn btn-warning">Pause Invoice</button>
                 </div>
             </form>
@@ -440,13 +440,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Resume Recurring Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Resume this recurring invoice? It will start generating invoices according to its schedule.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="resumeInvoiceForm" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-success">Resume Invoice</button>
@@ -462,19 +462,19 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Cancel Recurring Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <form id="cancelInvoiceForm" method="POST">
                 @csrf
                 <div class="modal-body">
                     <p>Are you sure you want to cancel this recurring invoice? This action cannot be undone.</p>
                     <div class="mb-3">
-                        <label for="cancelReason" class="form-label">Reason (Optional)</label>
-                        <textarea name="reason" id="cancelReason" class="form-control" rows="3" placeholder="Reason for cancelling..."></textarea>
+                        <label for="cancelReason" class="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+                        <textarea name="reason" id="cancelReason" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" rows="3" placeholder="Reason for cancelling..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                     <button type="submit" class="btn btn-danger">Cancel Invoice</button>
                 </div>
             </form>

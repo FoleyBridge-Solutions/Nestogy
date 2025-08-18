@@ -143,7 +143,7 @@ return [
     */
 
     'storage' => [
-        'disk' => env('PDF_STORAGE_DISK', 'local'),
+        'disk' => env('PDF_STORAGE_DISK', 's3'),
         'path' => env('PDF_STORAGE_PATH', 'pdfs'),
         'filename_format' => '{type}_{id}_{timestamp}.pdf',
     ],

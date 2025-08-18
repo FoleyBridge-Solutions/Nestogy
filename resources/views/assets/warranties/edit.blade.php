@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="h3 mb-0">Edit Warranty</h1>
-                    <p class="text-muted mb-0">Update warranty information and coverage details</p>
+                    <p class="text-gray-600 mb-0">Update warranty information and coverage details</p>
                 </div>
                 <div>
                     <a href="{{ route('assets.warranties.show', $warranty ?? 1) }}" class="btn btn-outline-info">
@@ -20,12 +20,12 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Warranty Information</h5>
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-4">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Information</h5>
                                 <div class="d-flex gap-2">
                                     @php
                                         $status = $warranty->status ?? 'active';
@@ -36,22 +36,22 @@
                                             'renewed' => 'bg-info'
                                         ];
                                     @endphp
-                                    <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }}">
+                                    <span class="badge {{ $statusColors[$status] ?? 'bg-gray-600' }}">
                                         {{ ucfirst($status) }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <form action="{{ route('assets.warranties.update', $warranty ?? 1) }}" method="POST" id="warrantyForm">
                                 @csrf
                                 @method('PUT')
 
                                 <!-- Asset Selection -->
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="asset_id" class="form-label">Asset <span class="text-danger">*</span></label>
-                                        <select name="asset_id" id="asset_id" class="form-select @error('asset_id') is-invalid @enderror" required>
+                                    <div class="md:w-1/2 px-4">
+                                        <label for="asset_id" class="block text-sm font-medium text-gray-700 mb-1">Asset <span class="text-red-600">*</span></label>
+                                        <select name="asset_id" id="asset_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('asset_id') is-invalid @enderror" required>
                                             <option value="">Select an asset...</option>
                                             @foreach($assets ?? [] as $asset)
                                                 <option value="{{ $asset->id }}" 
@@ -65,8 +65,8 @@
                                         @enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="warranty_type" class="form-label">Warranty Type <span class="text-danger">*</span></label>
-                                        <select name="warranty_type" id="warranty_type" class="form-select @error('warranty_type') is-invalid @enderror" required>
+                                        <label for="warranty_type" class="block text-sm font-medium text-gray-700 mb-1">Warranty Type <span class="text-red-600">*</span></label>
+                                        <select name="warranty_type" id="warranty_type" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_type') is-invalid @enderror" required>
                                             <option value="">Select type...</option>
                                             <option value="manufacturer" {{ old('warranty_type', $warranty->warranty_type ?? 'manufacturer') === 'manufacturer' ? 'selected' : '' }}>Manufacturer</option>
                                             <option value="extended" {{ old('warranty_type', $warranty->warranty_type ?? '') === 'extended' ? 'selected' : '' }}>Extended</option>
@@ -84,7 +84,7 @@
                                     <div class="col-md-6">
                                         <label for="provider_name" class="form-label">Warranty Provider <span class="text-danger">*</span></label>
                                         <input type="text" name="provider_name" id="provider_name" 
-                                               class="form-control @error('provider_name') is-invalid @enderror" 
+                                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('provider_name') is-invalid @enderror" 
                                                value="{{ old('provider_name', $warranty->provider_name ?? 'Dell Technologies') }}" required 
                                                placeholder="e.g., Dell Technologies, HP Inc.">
                                         @error('provider_name')
@@ -94,7 +94,7 @@
                                     <div class="col-md-6">
                                         <label for="warranty_number" class="form-label">Warranty Number</label>
                                         <input type="text" name="warranty_number" id="warranty_number" 
-                                               class="form-control @error('warranty_number') is-invalid @enderror" 
+                                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_number') is-invalid @enderror" 
                                                value="{{ old('warranty_number', $warranty->warranty_number ?? 'WRN-123456789') }}" 
                                                placeholder="WRN-123456789">
                                         @error('warranty_number')
@@ -280,7 +280,7 @@
 
                                 <!-- Submit Buttons -->
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-save"></i> Update Warranty
                                     </button>
                                     @if($status === 'expired')
@@ -309,13 +309,13 @@
                 <div class="col-md-4">
                     <!-- Warranty Status -->
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h6 class="card-title mb-0">Warranty Status</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="mb-3">
                                 <strong>Current Status:</strong>
-                                <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }} ms-2">
+                                <span class="badge {{ $statusColors[$status] ?? 'bg-gray-600' }} ml-2">
                                     {{ ucfirst($status) }}
                                 </span>
                             </div>
@@ -326,12 +326,12 @@
                                 $isExpired = $daysRemaining < 0;
                             @endphp
                             @if($isExpired)
-                                <div class="alert alert-danger">
+                                <div class="px-4 py-3 rounded bg-red-100 border border-red-400 text-red-700">
                                     <i class="fas fa-exclamation-triangle"></i>
                                     <strong>Expired:</strong> {{ abs($daysRemaining) }} days ago
                                 </div>
                             @elseif($isExpiring)
-                                <div class="alert alert-warning">
+                                <div class="px-4 py-3 rounded bg-yellow-100 border border-yellow-400 text-yellow-700">
                                     <i class="fas fa-clock"></i>
                                     <strong>Expires:</strong> in {{ $daysRemaining }} days
                                 </div>
@@ -363,7 +363,7 @@
                                 @if(isset($warranty->asset))
                                     <div class="mb-2">
                                         <strong>{{ $warranty->asset->name }}</strong>
-                                        <br><small class="text-muted">{{ $warranty->asset->asset_tag }}</small>
+                                        <br><small class="text-gray-600">{{ $warranty->asset->asset_tag }}</small>
                                     </div>
                                     <div class="mb-2">
                                         <small class="text-muted">Category:</small> {{ $warranty->asset->category }}
@@ -390,7 +390,7 @@
                         <div class="card-body">
                             <div id="warrantyCalc">
                                 <small class="text-muted">Duration will be calculated based on start and end dates</small>
-                                <div id="durationResult" class="mt-2 p-2 bg-light rounded" style="display: none;">
+                                <div id="durationResult" class="mt-2 p-2 bg-gray-100 rounded" style="display: none;">
                                     <strong>Duration:</strong> <span id="durationText"></span>
                                 </div>
                             </div>

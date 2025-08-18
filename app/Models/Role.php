@@ -5,39 +5,38 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Silber\Bouncer\Database\Role as BouncerRole;
 
 /**
  * Role Model
  * 
- * Represents user roles with associated permissions.
- * Supports hierarchical role levels for inheritance.
+ * DEPRECATED: This model is maintained for backward compatibility only.
+ * The system now uses Bouncer's Role model for roles.
  * 
+ * @deprecated Use Silber\Bouncer\Database\Role instead
  * @property int $id
  * @property string $name
- * @property string $slug
- * @property string|null $description
- * @property int $level
- * @property bool $is_system
+ * @property string $title
+ * @property int $scope
  */
 class Role extends Model
 {
     use HasFactory;
 
+    protected $table = 'bouncer_roles'; // Point to Bouncer roles table
+
     protected $fillable = [
         'name',
-        'slug',
-        'description',
-        'level',
-        'is_system',
+        'title',
+        'scope',
     ];
 
     protected $casts = [
-        'level' => 'integer',
-        'is_system' => 'boolean',
+        'scope' => 'integer',
     ];
 
     /**
-     * System role constants (matching existing UserSetting constants)
+     * System role constants - maintained for backward compatibility
      */
     const LEVEL_ACCOUNTANT = 1;
     const LEVEL_TECHNICIAN = 2;
@@ -63,134 +62,15 @@ class Role extends Model
     }
 
     /**
-     * Get the permissions assigned to this role.
+     * Find role by name (Bouncer compatibility).
      */
-    public function permissions(): BelongsToMany
+    public static function findBySlug(string $slug): ?self
     {
-        return $this->belongsToMany(Permission::class, 'role_permissions');
+        return self::where('name', $slug)->first();
     }
 
     /**
-     * Get the users who have this role.
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'user_roles')
-            ->withPivot(['company_id'])
-            ->withTimestamps();
-    }
-
-    /**
-     * Scope system roles.
-     */
-    public function scopeSystem($query)
-    {
-        return $query->where('is_system', true);
-    }
-
-    /**
-     * Scope custom roles.
-     */
-    public function scopeCustom($query)
-    {
-        return $query->where('is_system', false);
-    }
-
-    /**
-     * Scope roles by level or higher.
-     */
-    public function scopeByLevelOrHigher($query, int $level)
-    {
-        return $query->where('level', '>=', $level);
-    }
-
-    /**
-     * Check if this role has a specific permission.
-     */
-    public function hasPermission(string $permissionSlug): bool
-    {
-        return $this->permissions()->where('slug', $permissionSlug)->exists();
-    }
-
-    /**
-     * Check if this role has any of the given permissions.
-     */
-    public function hasAnyPermission(array $permissionSlugs): bool
-    {
-        return $this->permissions()->whereIn('slug', $permissionSlugs)->exists();
-    }
-
-    /**
-     * Check if this role has all of the given permissions.
-     */
-    public function hasAllPermissions(array $permissionSlugs): bool
-    {
-        $rolePermissions = $this->permissions()->whereIn('slug', $permissionSlugs)->count();
-        return $rolePermissions === count($permissionSlugs);
-    }
-
-    /**
-     * Give permissions to this role.
-     */
-    public function givePermissionTo(...$permissions): self
-    {
-        $permissionModels = collect($permissions)->flatten()
-            ->map(function ($permission) {
-                if ($permission instanceof Permission) {
-                    return $permission;
-                }
-                return Permission::findBySlug($permission);
-            })
-            ->filter()
-            ->pluck('id');
-
-        $this->permissions()->syncWithoutDetaching($permissionModels);
-        
-        return $this;
-    }
-
-    /**
-     * Remove permissions from this role.
-     */
-    public function revokePermissionTo(...$permissions): self
-    {
-        $permissionModels = collect($permissions)->flatten()
-            ->map(function ($permission) {
-                if ($permission instanceof Permission) {
-                    return $permission;
-                }
-                return Permission::findBySlug($permission);
-            })
-            ->filter()
-            ->pluck('id');
-
-        $this->permissions()->detach($permissionModels);
-        
-        return $this;
-    }
-
-    /**
-     * Sync permissions for this role.
-     */
-    public function syncPermissions(...$permissions): self
-    {
-        $permissionModels = collect($permissions)->flatten()
-            ->map(function ($permission) {
-                if ($permission instanceof Permission) {
-                    return $permission;
-                }
-                return Permission::findBySlug($permission);
-            })
-            ->filter()
-            ->pluck('id');
-
-        $this->permissions()->sync($permissionModels);
-        
-        return $this;
-    }
-
-    /**
-     * Create a role with automatic slug generation.
+     * Create a role using Bouncer (backward compatibility).
      */
     public static function createRole(
         string $name,
@@ -198,33 +78,113 @@ class Role extends Model
         int $level = 1,
         bool $isSystem = false
     ): self {
-        $slug = str()->slug($name);
-        
         return self::create([
-            'name' => $name,
-            'slug' => $slug,
-            'description' => $description,
-            'level' => $level,
-            'is_system' => $isSystem,
+            'name' => str()->slug($name),
+            'title' => $name,
         ]);
     }
 
     /**
-     * Find role by slug.
+     * Get role display name.
      */
-    public static function findBySlug(string $slug): ?self
+    public function getDisplayNameAttribute(): string
     {
-        return self::where('slug', $slug)->first();
+        return $this->title ?: $this->name;
     }
 
     /**
-     * Get all permissions for roles up to this level (hierarchical inheritance).
+     * Get slug attribute (backward compatibility).
      */
-    public function getInheritedPermissions(): \Illuminate\Database\Eloquent\Collection
+    public function getSlugAttribute(): string
     {
-        return Permission::whereHas('roles', function ($query) {
-            $query->where('level', '<=', $this->level);
-        })->get();
+        return $this->name;
+    }
+
+    /**
+     * Bouncer compatibility methods
+     */
+    
+    /**
+     * Check if this role has a specific permission.
+     */
+    public function hasPermission(string $permissionSlug): bool
+    {
+        // Use Bouncer to check permission
+        return \Silber\Bouncer\BouncerFacade::role($this->name)->can($permissionSlug);
+    }
+
+    /**
+     * Check if this role has any of the given permissions.
+     */
+    public function hasAnyPermission(array $permissionSlugs): bool
+    {
+        foreach ($permissionSlugs as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if this role has all of the given permissions.
+     */
+    public function hasAllPermissions(array $permissionSlugs): bool
+    {
+        foreach ($permissionSlugs as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Give permissions to this role using Bouncer.
+     */
+    public function givePermissionTo(...$permissions): self
+    {
+        foreach (collect($permissions)->flatten() as $permission) {
+            \Silber\Bouncer\BouncerFacade::allow($this->name)->to($permission);
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Remove permissions from this role using Bouncer.
+     */
+    public function revokePermissionTo(...$permissions): self
+    {
+        foreach (collect($permissions)->flatten() as $permission) {
+            \Silber\Bouncer\BouncerFacade::disallow($this->name)->to($permission);
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Sync permissions for this role (not directly supported by Bouncer).
+     */
+    public function syncPermissions(...$permissions): self
+    {
+        // This is a complex operation in Bouncer, for now just add permissions
+        return $this->givePermissionTo(...$permissions);
+    }
+
+    /**
+     * Get level from role name (backward compatibility).
+     */
+    public function getLevelAttribute(): int
+    {
+        $levels = [
+            'accountant' => self::LEVEL_ACCOUNTANT,
+            'tech' => self::LEVEL_TECHNICIAN,
+            'technician' => self::LEVEL_TECHNICIAN,
+            'admin' => self::LEVEL_ADMIN,
+        ];
+        
+        return $levels[$this->name] ?? 1;
     }
 
     /**
@@ -241,14 +201,6 @@ class Role extends Model
     public function isAtLeastLevel(int $level): bool
     {
         return $this->level >= $level;
-    }
-
-    /**
-     * Get role display name.
-     */
-    public function getDisplayNameAttribute(): string
-    {
-        return $this->name;
     }
 
     /**

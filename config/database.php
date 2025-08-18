@@ -94,7 +94,18 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'options' => extension_loaded('pdo_pgsql') ? array_filter([
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_STRINGIFY_FETCHES => false,
+                PDO::ATTR_TIMEOUT => 30,
+                PDO::ATTR_PERSISTENT => false,
+            ]) : [],
+            // PostgreSQL-specific optimizations for Nestogy MSP workload
+            'application_name' => env('APP_NAME', 'Nestogy'),
+            'connect_timeout' => 10,
+            'statement_timeout' => 30000, // 30 seconds
+            'lock_timeout' => 10000, // 10 seconds
         ],
 
         'sqlsrv' => [

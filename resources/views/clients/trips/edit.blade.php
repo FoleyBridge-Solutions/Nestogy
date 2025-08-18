@@ -3,42 +3,42 @@
 @section('title', 'Edit Trip')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Edit Trip</h1>
                 <div class="btn-group">
                     <a href="{{ route('clients.trips.standalone.show', $trip) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-eye me-2"></i>View Trip
+                        <i class="fas fa-eye mr-2"></i>View Trip
                     </a>
                     <a href="{{ route('clients.trips.standalone.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Trips
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Trips
                     </a>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8 col-xl-6">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6">
                             <form method="POST" action="{{ route('clients.trips.standalone.update', $trip) }}">
                                 @csrf
                                 @method('PUT')
 
                                 <!-- Trip Number -->
                                 <div class="mb-3">
-                                    <label class="form-label">Trip Number</label>
-                                    <input type="text" class="form-control" value="{{ $trip->trip_number }}" readonly>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Trip Number</label>
+                                    <input type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ $trip->trip_number }}" readonly>
                                     <div class="form-text">Trip number is automatically generated</div>
                                 </div>
 
                                 <!-- Client Selection -->
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
+                                    <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client <span class="text-red-600">*</span></label>
                                     <select name="client_id" 
                                             id="client_id" 
-                                            class="form-select @error('client_id') is-invalid @enderror" 
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" 
                                             required>
                                         <option value="">Select a client...</option>
                                         @foreach($clients as $client)
@@ -55,11 +55,11 @@
 
                                 <!-- Trip Title -->
                                 <div class="mb-3">
-                                    <label for="title" class="form-label">Trip Title <span class="text-danger">*</span></label>
+                                    <label for="title" class="form-label">Trip Title <span class="text-red-600">*</span></label>
                                     <input type="text" 
                                            name="title" 
                                            id="title" 
-                                           class="form-control @error('title') is-invalid @enderror" 
+                                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('title') is-invalid @enderror" 
                                            value="{{ old('title', $trip->title) }}" 
                                            required 
                                            maxlength="255"
@@ -71,7 +71,7 @@
 
                                 <!-- Description and Purpose -->
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="description" class="form-label">Description</label>
                                             <textarea name="description" 
@@ -84,7 +84,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="purpose" class="form-label">Purpose</label>
                                             <input type="text" 
@@ -108,7 +108,7 @@
                                             <label for="trip_type" class="form-label">Trip Type <span class="text-danger">*</span></label>
                                             <select name="trip_type" 
                                                     id="trip_type" 
-                                                    class="form-select @error('trip_type') is-invalid @enderror" 
+                                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('trip_type') is-invalid @enderror" 
                                                     required>
                                                 <option value="">Select trip type...</option>
                                                 @foreach($tripTypes as $key => $value)
@@ -532,8 +532,8 @@
                                     @enderror
                                 </div>
 
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-save me-2"></i>Update Trip
                                     </button>
                                     <a href="{{ route('clients.trips.standalone.show', $trip) }}" class="btn btn-outline-secondary">
@@ -546,14 +546,14 @@
                 </div>
 
                 <div class="col-lg-4 col-xl-6">
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-clock me-2"></i>Trip History
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="small text-muted">
+                        <div class="p-6">
+                            <div class="small text-gray-600">
                                 <div class="mb-2">
                                     <strong>Created:</strong> {{ $trip->created_at->format('M j, Y g:i A') }}
                                     @if($trip->creator)
@@ -584,7 +584,7 @@
 
                     @if($trip->expense_variance !== null)
                         <div class="card mt-3">
-                            <div class="card-header">
+                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                                 <h5 class="card-title mb-0">
                                     <i class="fas fa-calculator me-2"></i>Expense Analysis
                                 </h5>
@@ -592,20 +592,20 @@
                             <div class="card-body">
                                 <div class="row g-2 text-center">
                                     <div class="col-4">
-                                        <div class="p-2 bg-light rounded">
+                                        <div class="p-2 bg-gray-100 rounded">
                                             <div class="fw-bold text-info">{{ $trip->formatted_estimated_expenses }}</div>
-                                            <small class="text-muted">Estimated</small>
+                                            <small class="text-gray-600">Estimated</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="p-2 bg-light rounded">
-                                            <div class="fw-bold text-primary">{{ $trip->formatted_actual_expenses }}</div>
+                                        <div class="p-2 bg-gray-100 rounded">
+                                            <div class="fw-bold text-blue-600">{{ $trip->formatted_actual_expenses }}</div>
                                             <small class="text-muted">Actual</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="p-2 bg-light rounded">
-                                            <div class="fw-bold {{ $trip->expense_variance > 0 ? 'text-danger' : ($trip->expense_variance < 0 ? 'text-success' : 'text-info') }}">
+                                            <div class="fw-bold {{ $trip->expense_variance > 0 ? 'text-danger' : ($trip->expense_variance < 0 ? 'text-green-600' : 'text-info') }}">
                                                 {{ $trip->getCurrencySymbol() }}{{ number_format(abs($trip->expense_variance), 2) }}
                                             </div>
                                             <small class="text-muted">Variance</small>

@@ -13,7 +13,7 @@ class AssetPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('assets.view');
+        return $user->can('assets.view');
     }
 
     /**
@@ -21,7 +21,7 @@ class AssetPolicy
      */
     public function view(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.view') && $this->sameCompany($user, $asset);
+        return $user->can('assets.view') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -29,7 +29,7 @@ class AssetPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('assets.create');
+        return $user->can('assets.create');
     }
 
     /**
@@ -37,7 +37,7 @@ class AssetPolicy
      */
     public function update(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.edit') && $this->sameCompany($user, $asset);
+        return $user->can('assets.edit') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -45,7 +45,7 @@ class AssetPolicy
      */
     public function delete(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.delete') && $this->sameCompany($user, $asset);
+        return $user->can('assets.delete') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -53,7 +53,7 @@ class AssetPolicy
      */
     public function restore(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.manage') && $this->sameCompany($user, $asset);
+        return $user->can('assets.manage') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -61,7 +61,7 @@ class AssetPolicy
      */
     public function forceDelete(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.manage') && $this->sameCompany($user, $asset);
+        return $user->can('assets.manage') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -69,7 +69,7 @@ class AssetPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('assets.export');
+        return $user->can('assets.export');
     }
 
     /**
@@ -77,7 +77,7 @@ class AssetPolicy
      */
     public function import(User $user): bool
     {
-        return $user->hasPermission('assets.manage');
+        return $user->can('assets.manage');
     }
 
     /**
@@ -85,7 +85,7 @@ class AssetPolicy
      */
     public function manageMaintenance(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.maintenance.manage') && $this->sameCompany($user, $asset);
+        return $user->can('assets.maintenance.manage') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -93,7 +93,7 @@ class AssetPolicy
      */
     public function viewMaintenance(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.maintenance.view') && $this->sameCompany($user, $asset);
+        return $user->can('assets.maintenance.view') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -101,7 +101,7 @@ class AssetPolicy
      */
     public function exportMaintenance(User $user): bool
     {
-        return $user->hasPermission('assets.maintenance.export');
+        return $user->can('assets.maintenance.export');
     }
 
     /**
@@ -109,7 +109,7 @@ class AssetPolicy
      */
     public function manageWarranties(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.warranties.manage') && $this->sameCompany($user, $asset);
+        return $user->can('assets.warranties.manage') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -117,7 +117,7 @@ class AssetPolicy
      */
     public function viewWarranties(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.warranties.view') && $this->sameCompany($user, $asset);
+        return $user->can('assets.warranties.view') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -125,7 +125,7 @@ class AssetPolicy
      */
     public function exportWarranties(User $user): bool
     {
-        return $user->hasPermission('assets.warranties.export');
+        return $user->can('assets.warranties.export');
     }
 
     /**
@@ -133,7 +133,7 @@ class AssetPolicy
      */
     public function manageDepreciation(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.depreciations.manage') && $this->sameCompany($user, $asset);
+        return $user->can('assets.depreciations.manage') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -141,7 +141,7 @@ class AssetPolicy
      */
     public function viewDepreciation(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.depreciations.view') && $this->sameCompany($user, $asset);
+        return $user->can('assets.depreciations.view') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -149,7 +149,7 @@ class AssetPolicy
      */
     public function exportDepreciation(User $user): bool
     {
-        return $user->hasPermission('assets.depreciations.export');
+        return $user->can('assets.depreciations.export');
     }
 
     /**
@@ -157,7 +157,7 @@ class AssetPolicy
      */
     public function checkInOut(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.edit') && $this->sameCompany($user, $asset);
+        return $user->can('assets.edit') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -165,7 +165,7 @@ class AssetPolicy
      */
     public function generateQrCode(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.view') && $this->sameCompany($user, $asset);
+        return $user->can('assets.view') && $this->sameCompany($user, $asset);
     }
 
     /**
@@ -173,7 +173,7 @@ class AssetPolicy
      */
     public function printLabel(User $user, Asset $asset): bool
     {
-        return $user->hasPermission('assets.view') && $this->sameCompany($user, $asset);
+        return $user->can('assets.view') && $this->sameCompany($user, $asset);
     }
 
     /**

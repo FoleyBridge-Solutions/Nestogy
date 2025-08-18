@@ -13,7 +13,7 @@ class ProjectPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('projects.view');
+        return $user->can('projects.view');
     }
 
     /**
@@ -21,7 +21,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.view')) {
+        if (!$user->can('projects.view')) {
             return false;
         }
 
@@ -41,7 +41,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can view all projects
-        return $user->hasPermission('projects.manage');
+        return $user->can('projects.manage');
     }
 
     /**
@@ -49,7 +49,7 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('projects.create');
+        return $user->can('projects.create');
     }
 
     /**
@@ -57,7 +57,7 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.edit')) {
+        if (!$user->can('projects.edit')) {
             return false;
         }
 
@@ -71,7 +71,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can edit all projects
-        return $user->hasPermission('projects.manage');
+        return $user->can('projects.manage');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.delete')) {
+        if (!$user->can('projects.delete')) {
             return false;
         }
 
@@ -93,7 +93,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can delete all projects
-        return $user->hasPermission('projects.manage');
+        return $user->can('projects.manage');
     }
 
     /**
@@ -101,7 +101,7 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project): bool
     {
-        return $user->hasPermission('projects.manage') && $this->sameCompany($user, $project);
+        return $user->can('projects.manage') && $this->sameCompany($user, $project);
     }
 
     /**
@@ -109,7 +109,7 @@ class ProjectPolicy
      */
     public function forceDelete(User $user, Project $project): bool
     {
-        return $user->hasPermission('projects.manage') && $this->sameCompany($user, $project);
+        return $user->can('projects.manage') && $this->sameCompany($user, $project);
     }
 
     /**
@@ -117,7 +117,7 @@ class ProjectPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('projects.export');
+        return $user->can('projects.export');
     }
 
     // Task-related permissions
@@ -126,7 +126,7 @@ class ProjectPolicy
      */
     public function viewTasks(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.tasks.view')) {
+        if (!$user->can('projects.tasks.view')) {
             return false;
         }
 
@@ -138,7 +138,7 @@ class ProjectPolicy
      */
     public function manageTasks(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.tasks.manage')) {
+        if (!$user->can('projects.tasks.manage')) {
             return false;
         }
 
@@ -157,7 +157,7 @@ class ProjectPolicy
         }
 
         // Users with general manage permission
-        return $user->hasPermission('projects.manage');
+        return $user->can('projects.manage');
     }
 
     /**
@@ -165,7 +165,7 @@ class ProjectPolicy
      */
     public function exportTasks(User $user): bool
     {
-        return $user->hasPermission('projects.tasks.export');
+        return $user->can('projects.tasks.export');
     }
 
     // Member-related permissions
@@ -174,7 +174,7 @@ class ProjectPolicy
      */
     public function viewMembers(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.members.view')) {
+        if (!$user->can('projects.members.view')) {
             return false;
         }
 
@@ -186,7 +186,7 @@ class ProjectPolicy
      */
     public function manageMembers(User $user, Project $project): bool
     {
-        if (!$user->hasPermission('projects.members.manage')) {
+        if (!$user->can('projects.members.manage')) {
             return false;
         }
 
@@ -200,7 +200,7 @@ class ProjectPolicy
         }
 
         // Users with general manage permission
-        return $user->hasPermission('projects.manage');
+        return $user->can('projects.manage');
     }
 
     /**
@@ -225,7 +225,7 @@ class ProjectPolicy
      */
     public function viewTemplates(User $user): bool
     {
-        return $user->hasPermission('projects.templates.view');
+        return $user->can('projects.templates.view');
     }
 
     /**
@@ -233,7 +233,7 @@ class ProjectPolicy
      */
     public function manageTemplates(User $user): bool
     {
-        return $user->hasPermission('projects.templates.manage');
+        return $user->can('projects.templates.manage');
     }
 
     /**
@@ -241,7 +241,7 @@ class ProjectPolicy
      */
     public function createFromTemplate(User $user): bool
     {
-        return $user->hasAnyPermission(['projects.create', 'projects.templates.manage']);
+        return $user->canAny(['projects.create', 'projects.templates.manage']);
     }
 
     // Advanced permissions
@@ -260,7 +260,7 @@ class ProjectPolicy
         }
 
         // Users with general manage permission
-        return $user->hasPermission('projects.manage');
+        return $user->can('projects.manage');
     }
 
     /**
@@ -268,7 +268,7 @@ class ProjectPolicy
      */
     public function assignManager(User $user, Project $project): bool
     {
-        return $user->hasPermission('projects.manage') && $this->sameCompany($user, $project);
+        return $user->can('projects.manage') && $this->sameCompany($user, $project);
     }
 
     /**
@@ -284,7 +284,7 @@ class ProjectPolicy
      */
     public function viewReports(User $user, Project $project): bool
     {
-        if (!$user->hasAnyPermission(['projects.view', 'reports.projects'])) {
+        if (!$user->canAny(['projects.view', 'reports.projects'])) {
             return false;
         }
 

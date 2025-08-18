@@ -44,6 +44,7 @@ class UserSetting extends Model
         'records_per_page',
         'dashboard_financial_enable',
         'dashboard_technical_enable',
+        'theme',
     ];
 
     /**
@@ -64,6 +65,7 @@ class UserSetting extends Model
         'records_per_page' => 'integer',
         'dashboard_financial_enable' => 'boolean',
         'dashboard_technical_enable' => 'boolean',
+        'theme' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -256,7 +258,7 @@ class UserSetting extends Model
     /**
      * Create default settings for a user.
      */
-    public static function createDefaultForUser(int $userId, int $role = self::ROLE_ACCOUNTANT, int $companyId = null): self
+    public static function createDefaultForUser(int $userId, int $role = self::ROLE_ACCOUNTANT, ?int $companyId = null): self
     {
         // If no company ID provided, try to get it from the user
         if (!$companyId) {
@@ -272,6 +274,7 @@ class UserSetting extends Model
             'records_per_page' => 10,
             'dashboard_financial_enable' => in_array($role, [self::ROLE_ACCOUNTANT, self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]),
             'dashboard_technical_enable' => in_array($role, [self::ROLE_TECH, self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]),
+            'theme' => 'light',
         ]);
     }
 }

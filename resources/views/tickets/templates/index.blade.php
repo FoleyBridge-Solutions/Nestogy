@@ -168,13 +168,7 @@
 
                                 <!-- Priority & Statistics -->
                                 <div class="flex items-center justify-between mb-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                        @if($template->priority === 'Critical') bg-red-100 text-red-800
-                                        @elseif($template->priority === 'High') bg-orange-100 text-orange-800
-                                        @elseif($template->priority === 'Medium') bg-yellow-100 text-yellow-800
-                                        @elseif($template->priority === 'Low') bg-green-100 text-green-800
-                                        @else bg-gray-100 text-gray-800
-                                        @endif">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($template->priority === 'Critical') bg-red-100 text-red-800 @elseif($template->priority === 'High') bg-orange-100 text-orange-800 @elseif($template->priority === 'Medium') bg-yellow-100 text-yellow-800 @elseif($template->priority === 'Low') bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
                                         {{ $template->priority ?? 'Medium' }}
                                     </span>
                                     <div class="flex items-center text-sm text-gray-500">
@@ -310,7 +304,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-flex flex-wrap -mx-4-reverse">
                     <button type="submit" 
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Create Ticket

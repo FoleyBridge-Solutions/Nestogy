@@ -35,14 +35,14 @@
     <!-- CRISIS METRICS GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <!-- SLA Breaches -->
-        <div class="crisis-metric-card bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 text-white shadow-xl">
+        <div class="crisis-metric-bg-white rounded-lg shadow-md overflow-hidden bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 text-white shadow-xl">
             <p class="text-red-100 text-xs uppercase tracking-wide">SLA Breaches</p>
             <p class="text-3xl font-bold mt-1">{{ $data['counts']['sla_breaches'] ?? 0 }}</p>
             <p class="text-red-100 text-xs mt-1">24hr+ open</p>
         </div>
 
         <!-- Critical Tickets -->
-        <div class="crisis-metric-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-xl">
+        <div class="crisis-metric-bg-white rounded-lg shadow-md overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-xl">
             <p class="text-orange-100 text-xs uppercase tracking-wide">Critical</p>
             <p class="text-3xl font-bold mt-1">{{ $data['counts']['urgent_tickets'] ?? 0 }}</p>
             <p class="text-orange-100 text-xs mt-1">High priority</p>

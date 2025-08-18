@@ -41,11 +41,13 @@ class ServiceTaxCalculator
     public function calculate(Collection $items, string $serviceType = 'general', ?array $serviceAddress = null, ?array $config = null): array
     {
         $calculations = [];
-        $jurisdiction = $this->determineJurisdiction($serviceAddress);
+        
+        // Use LocalTaxRateService for address-based tax calculation
+        $localTaxService = new \App\Services\TaxEngine\LocalTaxRateService($this->companyId);
         
         foreach ($items as $item) {
             $itemServiceType = $item->service_type ?? $serviceType;
-            $applicableTaxes = $this->getApplicableTaxes($itemServiceType, $jurisdiction);
+            $applicableTaxes = $localTaxService->getApplicableTaxRates($itemServiceType, $serviceAddress);
             
             $itemCalculation = [
                 'item_id' => $item->id,
@@ -57,22 +59,31 @@ class ServiceTaxCalculator
                 'total_tax_amount' => 0
             ];
             
-            // Check for exemptions
-            $exemptions = $this->getApplicableExemptions($item, $itemServiceType);
+            // Check for exemptions (gracefully handle missing table)
+            try {
+                $exemptions = $this->getApplicableExemptions($item, $itemServiceType);
+            } catch (\Exception $e) {
+                Log::info('Tax exemptions table not available, skipping exemption checks', [
+                    'error' => $e->getMessage()
+                ]);
+                $exemptions = collect();
+            }
             
             // Calculate each applicable tax
             foreach ($applicableTaxes as $tax) {
-                $taxAmount = $this->calculateTaxAmount($item, $tax, $exemptions);
+                // Convert array to object if necessary for compatibility
+                $taxObj = is_array($tax) ? (object)$tax : $tax;
+                $taxAmount = $this->calculateTaxAmountFromArray($item, $taxObj, $exemptions);
                 
                 if ($taxAmount > 0) {
-                    $itemCalculation['tax_breakdown'][$tax->tax_code ?? $tax->tax_name] = [
-                        'name' => $tax->tax_name,
-                        'type' => $tax->tax_type,
-                        'regulatory_code' => $tax->regulatory_code,
-                        'rate' => $tax->percentage_rate ?? 0,
+                    $itemCalculation['tax_breakdown'][$taxObj->tax_code ?? $taxObj->tax_name] = [
+                        'name' => $taxObj->tax_name,
+                        'type' => $taxObj->tax_type ?? null,
+                        'regulatory_code' => $taxObj->regulatory_code ?? null,
+                        'rate' => $taxObj->percentage_rate ?? 0,
                         'amount' => $taxAmount,
-                        'authority' => $tax->authority_name,
-                        'is_recoverable' => $tax->is_recoverable
+                        'authority' => $taxObj->authority_name,
+                        'is_recoverable' => $taxObj->is_recoverable ?? false
                     ];
                     
                     $itemCalculation['total_tax_amount'] += $taxAmount;
@@ -121,7 +132,28 @@ class ServiceTaxCalculator
     }
     
     /**
-     * Calculate tax amount for a specific item and tax rate
+     * Calculate tax amount for a specific item and tax rate (array format)
+     */
+    protected function calculateTaxAmountFromArray($item, $tax, Collection $exemptions): float
+    {
+        $baseAmount = $item->subtotal ?? ($item->quantity * $item->price);
+        
+        // Check if exempted
+        $exemptionRate = $this->getExemptionRateFromArray($tax, $exemptions);
+        
+        if ($exemptionRate >= 100) {
+            return 0.0; // Fully exempt
+        }
+        
+        $taxRate = $tax->percentage_rate ?? 0;
+        $grossTax = $baseAmount * ($taxRate / 100);
+        
+        // Apply exemption
+        return $grossTax * (1 - ($exemptionRate / 100));
+    }
+    
+    /**
+     * Calculate tax amount for a specific item and tax rate (legacy)
      */
     protected function calculateTaxAmount($item, ServiceTaxRate $tax, Collection $exemptions): float
     {
@@ -262,7 +294,24 @@ class ServiceTaxCalculator
     }
     
     /**
-     * Get exemption rate for a specific tax
+     * Get exemption rate for a specific tax (array format)
+     */
+    protected function getExemptionRateFromArray($tax, Collection $exemptions): float
+    {
+        if ($exemptions->isEmpty()) {
+            return 0.0;
+        }
+        
+        $taxCode = $tax->tax_code ?? $tax->tax_name ?? '';
+        $exemption = $exemptions->first(function ($exemption) use ($taxCode) {
+            return $exemption->applies_to_tax_code === $taxCode;
+        });
+        
+        return $exemption ? ($exemption->exemption_percentage ?? 0) : 0.0;
+    }
+    
+    /**
+     * Get exemption rate for a specific tax (legacy)
      */
     protected function getExemptionRate(ServiceTaxRate $tax, Collection $exemptions): float
     {

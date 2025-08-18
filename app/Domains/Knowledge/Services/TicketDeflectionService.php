@@ -392,7 +392,7 @@ class TicketDeflectionService
                 },
             ])
             ->with(['category'])
-            ->having('period_views', '>', 0)
+            ->havingRaw('(select count(*) from "kb_article_views" where "kb_articles"."id" = "kb_article_views"."kb_article_id" and "viewed_at" between ? and ?) > 0', [$startDate, $endDate])
             ->orderByRaw('period_deflections DESC')
             ->orderByRaw('period_views DESC')
             ->limit($limit)

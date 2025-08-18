@@ -3,7 +3,7 @@
 @section('title', 'Edit Invoice #' . $invoice->getFullNumber())
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="max-w-6xl mx-auto">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
@@ -14,13 +14,7 @@
                     <span>•</span>
                     <span>{{ $invoice->date->format('M d, Y') }}</span>
                     <span>•</span>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        @if($invoice->status === 'Draft') bg-gray-100 text-gray-800
-                        @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800
-                        @elseif($invoice->status === 'Paid') bg-green-100 text-green-800
-                        @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800
-                        @else bg-gray-100 text-gray-800
-                        @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-800 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
                         {{ $invoice->status }}
                     </span>
                 </div>

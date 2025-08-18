@@ -160,12 +160,11 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm text-gray-900">
-                                            <div>{{ $location->address_line_1 }}</div>
-                                            @if($location->address_line_2)
-                                                <div>{{ $location->address_line_2 }}</div>
+                                            @if($location->address)
+                                                <div>{{ $location->address }}</div>
                                             @endif
                                             <div class="text-gray-500">
-                                                {{ $location->city }}, {{ $location->state }} {{ $location->zip_code }}
+                                                {{ $location->city }}, {{ $location->state }} {{ $location->zip }}
                                                 @if($location->country !== 'US')
                                                     <div>{{ $location->country }}</div>
                                                 @endif

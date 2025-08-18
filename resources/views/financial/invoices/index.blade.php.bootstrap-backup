@@ -1,0 +1,225 @@
+@extends('layouts.app')
+
+@section('title', 'Invoices')
+
+@section('content')
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Invoices</h1>
+            <p class="text-muted mb-0">Manage your invoices and billing</p>
+        </div>
+        <a href="{{ route('financial.invoices.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Invoice
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle p-3">
+                                <i class="fas fa-file-invoice fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Draft</h6>
+                            <h4 class="mb-0">${{ number_format($totals['draft'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle p-3">
+                                <i class="fas fa-paper-plane fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Sent</h6>
+                            <h4 class="mb-0">${{ number_format($totals['sent'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-3">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Paid</h6>
+                            <h4 class="mb-0">${{ number_format($totals['paid'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3">
+                                <i class="fas fa-clock fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="text-muted mb-1">Overdue</h6>
+                            <h4 class="mb-0">${{ number_format($totals['overdue'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            @if($invoices->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Due Date</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($invoices as $invoice)
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ $invoice->prefix }}{{ $invoice->number }}</div>
+                                        @if($invoice->scope)
+                                            <small class="text-muted">{{ Str::limit($invoice->scope, 30) }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($invoice->client)
+                                            <div>{{ $invoice->client->name }}</div>
+                                            @if($invoice->client->company_name)
+                                                <small class="text-muted">{{ $invoice->client->company_name }}</small>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold">${{ number_format($invoice->amount, 2) }}</td>
+                                    <td>
+                                        @php
+                                            $statusClasses = [
+                                                'Draft' => 'bg-secondary',
+                                                'Sent' => 'bg-info',
+                                                'Paid' => 'bg-success',
+                                                'Cancelled' => 'bg-danger',
+                                                'Overdue' => 'bg-warning'
+                                            ];
+                                            $statusClass = $statusClasses[$invoice->status] ?? 'bg-secondary';
+                                        @endphp
+                                        <span class="badge {{ $statusClass }}">{{ $invoice->status }}</span>
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($invoice->date)->format('M d, Y') }}</td>
+                                    <td>
+                                        @if($invoice->due_date)
+                                            {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}
+                                            @if($invoice->status === 'Sent' && \Carbon\Carbon::parse($invoice->due_date)->isPast())
+                                                <i class="fas fa-exclamation-triangle text-warning ms-1" title="Overdue"></i>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('financial.invoices.show', $invoice) }}" 
+                                               class="btn btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($invoice->status === 'Draft')
+                                                <a href="{{ route('financial.invoices.edit', $invoice) }}" 
+                                                   class="btn btn-outline-secondary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            @endif
+                                            @if($invoice->status === 'Sent')
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        onclick="markAsPaid({{ $invoice->id }})" title="Mark as Paid">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-4">
+                    {{ $invoices->links('pagination::bootstrap-5') }}
+                </div>
+            @else
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
+                    <h5>No invoices found</h5>
+                    <p class="text-muted">Get started by creating your first invoice</p>
+                    <a href="{{ route('financial.invoices.create') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-2"></i>Create Invoice
+                    </a>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function markAsPaid(invoiceId) {
+    if (confirm('Mark this invoice as paid?')) {
+        fetch(`/financial/invoices/${invoiceId}/mark-paid`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Failed to update invoice'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating invoice');
+        });
+    }
+}
+</script>
+@endpush
+@endsection

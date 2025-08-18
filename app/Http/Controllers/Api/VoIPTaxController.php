@@ -47,7 +47,8 @@ class VoIPTaxController extends Controller
             ]);
 
             $companyId = auth()->user()->company_id;
-            $taxService = new VoIPTaxService($companyId);
+            $taxService = new VoIPTaxService();
+            $taxService->setCompanyId($companyId);
 
             $calculation = $taxService->calculateTaxes($validated);
 
@@ -656,7 +657,8 @@ class VoIPTaxController extends Controller
             ]);
 
             $companyId = auth()->user()->company_id;
-            $taxService = new VoIPTaxService($companyId);
+            $taxService = new VoIPTaxService();
+            $taxService->setCompanyId($companyId);
 
             $pattern = $validated['pattern'] ?? null;
             $taxService->clearCache($pattern);

@@ -152,7 +152,26 @@ class LocationController extends Controller
                            ->withInput();
         }
 
-        $location = new Location($request->all());
+        // Prepare location data
+        $locationData = $request->all();
+        
+        // Combine address lines into single address field
+        $address = $request->address_line_1;
+        if ($request->address_line_2) {
+            $address .= ', ' . $request->address_line_2;
+        }
+        $locationData['address'] = $address;
+        
+        // Remove the separate address line fields as they don't exist in the model
+        unset($locationData['address_line_1'], $locationData['address_line_2']);
+        
+        // Rename zip_code to zip (database column name)
+        if (isset($locationData['zip_code'])) {
+            $locationData['zip'] = $locationData['zip_code'];
+            unset($locationData['zip_code']);
+        }
+
+        $location = new Location($locationData);
         $location->client_id = $client->id;
         $location->company_id = auth()->user()->company_id;
         $location->save();
@@ -265,7 +284,26 @@ class LocationController extends Controller
                            ->withInput();
         }
 
-        $location->fill($request->all());
+        // Prepare location data
+        $locationData = $request->all();
+        
+        // Combine address lines into single address field
+        $address = $request->address_line_1;
+        if ($request->address_line_2) {
+            $address .= ', ' . $request->address_line_2;
+        }
+        $locationData['address'] = $address;
+        
+        // Remove the separate address line fields as they don't exist in the model
+        unset($locationData['address_line_1'], $locationData['address_line_2']);
+        
+        // Rename zip_code to zip (database column name)
+        if (isset($locationData['zip_code'])) {
+            $locationData['zip'] = $locationData['zip_code'];
+            unset($locationData['zip_code']);
+        }
+
+        $location->fill($locationData);
         $location->save();
 
         // If this is set as primary, unset other primary locations for this client

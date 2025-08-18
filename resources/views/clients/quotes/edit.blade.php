@@ -3,42 +3,42 @@
 @section('title', 'Edit Quote')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Edit Quote</h1>
                 <div class="btn-group">
                     <a href="{{ route('clients.quotes.standalone.show', $quote) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-eye me-2"></i>View Quote
+                        <i class="fas fa-eye mr-2"></i>View Quote
                     </a>
                     <a href="{{ route('clients.quotes.standalone.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Quotes
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Quotes
                     </a>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8 col-xl-6">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6">
                             <form method="POST" action="{{ route('clients.quotes.standalone.update', $quote) }}">
                                 @csrf
                                 @method('PUT')
 
                                 <!-- Quote Number -->
                                 <div class="mb-3">
-                                    <label class="form-label">Quote Number</label>
-                                    <input type="text" class="form-control" value="{{ $quote->quote_number }}" readonly>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Quote Number</label>
+                                    <input type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ $quote->quote_number }}" readonly>
                                     <div class="form-text">Quote number is automatically generated</div>
                                 </div>
 
                                 <!-- Client Selection -->
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
+                                    <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client <span class="text-red-600">*</span></label>
                                     <select name="client_id" 
                                             id="client_id" 
-                                            class="form-select @error('client_id') is-invalid @enderror" 
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" 
                                             required>
                                         <option value="">Select a client...</option>
                                         @foreach($clients as $client)
@@ -55,11 +55,11 @@
 
                                 <!-- Quote Title -->
                                 <div class="mb-3">
-                                    <label for="title" class="form-label">Quote Title <span class="text-danger">*</span></label>
+                                    <label for="title" class="form-label">Quote Title <span class="text-red-600">*</span></label>
                                     <input type="text" 
                                            name="title" 
                                            id="title" 
-                                           class="form-control @error('title') is-invalid @enderror" 
+                                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('title') is-invalid @enderror" 
                                            value="{{ old('title', $quote->title) }}" 
                                            required 
                                            maxlength="255"
@@ -87,7 +87,7 @@
                                     <label for="currency" class="form-label">Currency <span class="text-danger">*</span></label>
                                     <select name="currency" 
                                             id="currency" 
-                                            class="form-select @error('currency') is-invalid @enderror" 
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('currency') is-invalid @enderror" 
                                             required>
                                         @foreach($currencies as $key => $value)
                                             <option value="{{ $key }}" {{ old('currency', $quote->currency) == $key ? 'selected' : '' }}>
@@ -122,7 +122,7 @@
 
                                 <!-- Tax and Discount -->
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="tax_rate" class="form-label">Tax Rate (%)</label>
                                             <input type="number" 
@@ -139,7 +139,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="discount_type" class="form-label">Discount Type</label>
                                             <select name="discount_type" id="discount_type" class="form-select @error('discount_type') is-invalid @enderror">
@@ -320,8 +320,8 @@
                                     @enderror
                                 </div>
 
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-save me-2"></i>Update Quote
                                     </button>
                                     <a href="{{ route('clients.quotes.standalone.show', $quote) }}" class="btn btn-outline-secondary">
@@ -334,14 +334,14 @@
                 </div>
 
                 <div class="col-lg-4 col-xl-6">
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-clock me-2"></i>Quote History
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="small text-muted">
+                        <div class="p-6">
+                            <div class="small text-gray-600">
                                 <div class="mb-2">
                                     <strong>Created:</strong> {{ $quote->created_at->format('M j, Y g:i A') }}
                                     @if($quote->creator)
@@ -378,32 +378,84 @@
                     </div>
 
                     <div class="card mt-3">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
-                                <i class="fas fa-calculator me-2"></i>Current Totals
+                                <i class="fas fa-calculator me-2"></i>Quote Summary
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div class="row g-2 text-center">
-                                <div class="col-6">
-                                    <div class="p-2 bg-light rounded">
-                                        <div class="fw-bold text-primary">{{ $quote->formatted_amount }}</div>
-                                        <small class="text-muted">Subtotal</small>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="p-2 bg-light rounded">
-                                        <div class="fw-bold text-success">{{ $quote->formatted_total_amount }}</div>
-                                        <small class="text-muted">Total</small>
-                                    </div>
-                                </div>
+                            <div class="d-flex justify-between items-center mb-2">
+                                <span>Subtotal:</span>
+                                <span class="fw-bold">{{ number_format($quote->items->sum('subtotal'), 2) }}</span>
                             </div>
+                            
                             @if($quote->discount_amount > 0)
-                                <div class="text-center mt-2">
-                                    <div class="p-2 bg-warning bg-opacity-10 rounded">
-                                        <div class="fw-bold text-warning">-{{ $quote->formatted_discount_amount }}</div>
-                                        <small class="text-muted">Discount</small>
+                                <div class="d-flex justify-content-between align-items-center mb-2 text-warning">
+                                    <span>Discount:</span>
+                                    <span class="fw-bold">-{{ $quote->formatted_discount_amount }}</span>
+                                </div>
+                            @endif
+                            
+                            {{-- Tax Breakdown --}}
+                            @php
+                                $taxBreakdown = collect();
+                                foreach($quote->items as $item) {
+                                    if($item->tax_breakdown) {
+                                        foreach($item->tax_breakdown as $tax) {
+                                            $taxName = $tax['tax_name'] ?? 'Tax';
+                                            if(!$taxBreakdown->has($taxName)) {
+                                                $taxBreakdown[$taxName] = [
+                                                    'name' => $taxName,
+                                                    'type' => $tax['tax_type'] ?? '',
+                                                    'authority' => $tax['authority'] ?? '',
+                                                    'amount' => 0
+                                                ];
+                                            }
+                                            $taxBreakdown[$taxName]['amount'] += $tax['tax_amount'] ?? 0;
+                                        }
+                                    }
+                                }
+                                $totalTax = $quote->items->sum('tax');
+                            @endphp
+                            
+                            @if($taxBreakdown->count() > 0)
+                                <hr class="my-2">
+                                <div class="text-gray-600 small mb-2">Tax Breakdown:</div>
+                                @foreach($taxBreakdown as $tax)
+                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                        <span>
+                                            {{ $tax['name'] }}
+                                            @if($tax['type'] === 'regulatory')
+                                                <i class="fas fa-info-circle" 
+                                                   title="Regulatory Fee: {{ $tax['authority'] }}" 
+                                                   x-data x-tooltip></i>
+                                            @endif
+                                        </span>
+                                        <span>${{ number_format($tax['amount'], 2) }}</span>
                                     </div>
+                                @endforeach
+                                <div class="d-flex justify-content-between align-items-center mb-2 border-top pt-2">
+                                    <span class="fw-bold">Total Tax:</span>
+                                    <span class="fw-bold">${{ number_format($totalTax, 2) }}</span>
+                                </div>
+                            @elseif($totalTax > 0)
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Tax:</span>
+                                    <span class="fw-bold">${{ number_format($totalTax, 2) }}</span>
+                                </div>
+                            @endif
+                            
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h6 mb-0">Total Amount:</span>
+                                <span class="h5 mb-0 text-green-600">{{ $quote->formatted_amount }}</span>
+                            </div>
+                            
+                            @if($taxBreakdown->count() > 0)
+                                <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700 mt-3 small">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Tax Information:</strong> Taxes are calculated based on service type and customer location. 
+                                    Regulatory fees apply to telecommunications services.
                                 </div>
                             @endif
                         </div>

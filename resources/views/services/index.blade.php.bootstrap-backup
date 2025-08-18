@@ -1,0 +1,199 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <x-page-header>
+        <x-slot name="title">Services</x-slot>
+        <x-slot name="description">Manage your service offerings and billing models</x-slot>
+        <x-slot name="actions">
+            @can('create', App\Models\Product::class)
+                <a href="{{ route('services.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Service
+                </a>
+            @endcan
+        </x-slot>
+    </x-page-header>
+
+    <x-content-card>
+        <!-- Search and Filters -->
+        <div class="row mb-4">
+            <div class="col-md-10">
+                <form method="GET" class="d-flex flex-wrap gap-2">
+                    <input type="text" name="search" class="form-control" style="max-width: 300px;"
+                           placeholder="Search services..." value="{{ request('search') }}">
+                    
+                    <select name="category_id" class="form-select" style="max-width: 200px;">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <select name="billing_model" class="form-select" style="max-width: 180px;">
+                        <option value="">All Billing Models</option>
+                        <option value="one_time" {{ request('billing_model') === 'one_time' ? 'selected' : '' }}>One-time</option>
+                        <option value="subscription" {{ request('billing_model') === 'subscription' ? 'selected' : '' }}>Subscription</option>
+                        <option value="usage_based" {{ request('billing_model') === 'usage_based' ? 'selected' : '' }}>Usage-based</option>
+                        <option value="hybrid" {{ request('billing_model') === 'hybrid' ? 'selected' : '' }}>Hybrid</option>
+                    </select>
+
+                    <select name="unit_type" class="form-select" style="max-width: 150px;">
+                        <option value="">All Unit Types</option>
+                        <option value="hours" {{ request('unit_type') === 'hours' ? 'selected' : '' }}>Hours</option>
+                        <option value="days" {{ request('unit_type') === 'days' ? 'selected' : '' }}>Days</option>
+                        <option value="weeks" {{ request('unit_type') === 'weeks' ? 'selected' : '' }}>Weeks</option>
+                        <option value="months" {{ request('unit_type') === 'months' ? 'selected' : '' }}>Months</option>
+                        <option value="years" {{ request('unit_type') === 'years' ? 'selected' : '' }}>Years</option>
+                        <option value="fixed" {{ request('unit_type') === 'fixed' ? 'selected' : '' }}>Fixed</option>
+                    </select>
+
+                    <select name="is_active" class="form-select" style="max-width: 120px;">
+                        <option value="">All Status</option>
+                        <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>Active</option>
+                        <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>Inactive</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+
+                    @if(request()->hasAny(['search', 'category_id', 'billing_model', 'unit_type', 'is_active']))
+                        <a href="{{ route('services.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
+        @if($services->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Billing Model</th>
+                            <th>Unit Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($services as $service)
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ $service->name }}</strong>
+                                        @if($service->sku)
+                                            <br><small class="text-muted">SKU: {{ $service->sku }}</small>
+                                        @endif
+                                        @if($service->description)
+                                            <br><small class="text-muted">{{ Str::limit($service->description, 60) }}</small>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    @if($service->category)
+                                        <span class="badge bg-secondary">{{ $service->category->name }}</span>
+                                    @else
+                                        <span class="text-muted">No category</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <strong>${{ number_format($service->price, 2) }}</strong>
+                                    <br><small class="text-muted">{{ $service->getFormattedUnitType() }}</small>
+                                </td>
+                                <td>
+                                    @if($service->billing_model === 'subscription')
+                                        <span class="badge bg-info">Subscription</span>
+                                        @if($service->billing_cycle)
+                                            <br><small class="text-muted">{{ $service->getBillingCycleDescription() }}</small>
+                                        @endif
+                                    @elseif($service->billing_model === 'usage_based')
+                                        <span class="badge bg-warning">Usage-based</span>
+                                    @elseif($service->billing_model === 'hybrid')
+                                        <span class="badge bg-purple">Hybrid</span>
+                                    @else
+                                        <span class="badge bg-success">One-time</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ ucfirst($service->unit_type) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($service->is_active)
+                                        <span class="badge bg-success">Active</span>
+                                    @else
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        @can('view', $service)
+                                            <a href="{{ route('services.show', $service) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @endcan
+                                        @can('update', $service)
+                                            <a href="{{ route('services.edit', $service) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcan
+                                        @can('delete', $service)
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete('{{ $service->name }}', '{{ route('services.destroy', $service) }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        @endcan
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{ $services->links() }}
+        @else
+            <div class="text-center py-5">
+                <i class="fas fa-concierge-bell fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No services found</h5>
+                <p class="text-muted">
+                    @if(request()->hasAny(['search', 'category_id', 'billing_model', 'unit_type', 'is_active']))
+                        Try adjusting your search criteria or <a href="{{ route('services.index') }}">view all services</a>.
+                    @else
+                        Create your first service offering to get started.
+                    @endif
+                </p>
+                @can('create', App\Models\Product::class)
+                    <a href="{{ route('services.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Service
+                    </a>
+                @endcan
+            </div>
+        @endif
+    </x-content-card>
+</div>
+
+<script>
+function confirmDelete(name, url) {
+    if (confirm(`Are you sure you want to delete the service "${name}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+@endsection

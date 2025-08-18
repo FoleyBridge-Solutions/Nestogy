@@ -1,0 +1,257 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <x-page-header>
+        <x-slot name="title">Create Product Bundle</x-slot>
+        <x-slot name="description">Create a new product bundle or package deal</x-slot>
+        <x-slot name="actions">
+            <a href="{{ route('bundles.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Bundles
+            </a>
+        </x-slot>
+    </x-page-header>
+
+    <form method="POST" action="{{ route('bundles.store') }}">
+        @csrf
+        
+        <div class="row">
+            <!-- Basic Information -->
+            <div class="col-md-8">
+                <x-content-card>
+                    <h5 class="card-title mb-4">Bundle Information</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Bundle Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                       id="name" name="name" value="{{ old('name') }}" required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sku" class="form-label">SKU</label>
+                                <input type="text" class="form-control @error('sku') is-invalid @enderror" 
+                                       id="sku" name="sku" value="{{ old('sku') }}">
+                                @error('sku')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control @error('description') is-invalid @enderror" 
+                                  id="description" name="description" rows="3">{{ old('description') }}</textarea>
+                        @error('description')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Product Selection -->
+                    <h6 class="mt-4 mb-3">Bundle Products</h6>
+                    <div id="bundle-products">
+                        <div class="bundle-product-row mb-2">
+                            <div class="row align-items-end">
+                                <div class="col-md-6">
+                                    <label class="form-label">Product</label>
+                                    <select name="products[0][product_id]" class="form-select" required>
+                                        <option value="">Select a product...</option>
+                                        @foreach($products as $product)
+                                            <option value="{{ $product->id }}">{{ $product->name }} - ${{ number_format($product->price, 2) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" name="products[0][quantity]" class="form-control" value="1" min="1" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-product" disabled>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="add-product" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus"></i> Add Product
+                    </button>
+                </x-content-card>
+            </div>
+
+            <!-- Pricing & Settings -->
+            <div class="col-md-4">
+                <x-content-card>
+                    <h5 class="card-title mb-4">Pricing & Settings</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pricing Type</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="pricing_type" 
+                                   id="calculated" value="calculated" checked>
+                            <label class="form-check-label" for="calculated">
+                                Calculate from products
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="pricing_type" 
+                                   id="fixed" value="fixed">
+                            <label class="form-check-label" for="fixed">
+                                Fixed price
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="fixed-price-group" style="display: none;">
+                        <label for="fixed_price" class="form-label">Fixed Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control @error('fixed_price') is-invalid @enderror" 
+                                   id="fixed_price" name="fixed_price" value="{{ old('fixed_price') }}" 
+                                   step="0.01" min="0">
+                        </div>
+                        @error('fixed_price')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="discount_type" class="form-label">Discount</label>
+                        <select name="discount_type" id="discount_type" class="form-select @error('discount_type') is-invalid @enderror">
+                            <option value="">No discount</option>
+                            <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>Percentage</option>
+                            <option value="fixed" {{ old('discount_type') === 'fixed' ? 'selected' : '' }}>Fixed amount</option>
+                        </select>
+                        @error('discount_type')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3" id="discount-value-group" style="display: none;">
+                        <label for="discount_value" class="form-label">Discount Value</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="discount-symbol">%</span>
+                            <input type="number" class="form-control @error('discount_value') is-invalid @enderror" 
+                                   id="discount_value" name="discount_value" value="{{ old('discount_value') }}" 
+                                   step="0.01" min="0">
+                        </div>
+                        @error('discount_value')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                   value="1" {{ old('is_active', true) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Bundle
+                        </button>
+                        <a href="{{ route('bundles.index') }}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </x-content-card>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let productIndex = 1;
+
+    // Add product functionality
+    document.getElementById('add-product').addEventListener('click', function() {
+        const container = document.getElementById('bundle-products');
+        const newRow = document.createElement('div');
+        newRow.className = 'bundle-product-row mb-2';
+        newRow.innerHTML = `
+            <div class="row align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Product</label>
+                    <select name="products[${productIndex}][product_id]" class="form-select" required>
+                        <option value="">Select a product...</option>
+                        @foreach($products as $product)
+                            <option value="{{ $product->id }}">{{ $product->name }} - ${{ number_format($product->price, 2) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" name="products[${productIndex}][quantity]" class="form-control" value="1" min="1" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-product">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(newRow);
+        productIndex++;
+        updateRemoveButtons();
+    });
+
+    // Remove product functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-product')) {
+            e.target.closest('.bundle-product-row').remove();
+            updateRemoveButtons();
+        }
+    });
+
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('.bundle-product-row');
+        rows.forEach((row, index) => {
+            const removeBtn = row.querySelector('.remove-product');
+            removeBtn.disabled = rows.length === 1;
+        });
+    }
+
+    // Pricing type toggle
+    document.querySelectorAll('input[name="pricing_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const fixedPriceGroup = document.getElementById('fixed-price-group');
+            if (this.value === 'fixed') {
+                fixedPriceGroup.style.display = 'block';
+            } else {
+                fixedPriceGroup.style.display = 'none';
+            }
+        });
+    });
+
+    // Discount type toggle
+    document.getElementById('discount_type').addEventListener('change', function() {
+        const discountValueGroup = document.getElementById('discount-value-group');
+        const discountSymbol = document.getElementById('discount-symbol');
+        
+        if (this.value) {
+            discountValueGroup.style.display = 'block';
+            discountSymbol.textContent = this.value === 'percentage' ? '%' : '$';
+        } else {
+            discountValueGroup.style.display = 'none';
+        }
+    });
+
+    // Initialize discount display if there's old input
+    if (document.getElementById('discount_type').value) {
+        document.getElementById('discount_type').dispatchEvent(new Event('change'));
+    }
+});
+</script>
+@endsection

@@ -165,16 +165,12 @@
                         <div draggable="true" 
                              @dragstart="handleDragStart($event, task)"
                              @click="toggleTaskComplete(task)"
-                             class="bg-white dark:bg-slate-600 p-3 rounded-lg shadow cursor-move hover:shadow-md transition-all duration-200 task-card">
+                             class="bg-white dark:bg-slate-600 p-3 rounded-lg shadow cursor-move hover:shadow-md transition-all duration-200 task-bg-white rounded-lg shadow-md overflow-hidden">
                             <p class="text-sm font-medium text-slate-700 dark:text-slate-200" x-text="task.title"></p>
                             <div class="flex items-center justify-between mt-2">
                                 <span class="text-xs text-slate-500 dark:text-slate-400" x-text="task.client"></span>
                                 <span class="text-xs px-2 py-0.5 rounded-full"
-                                      :class="{
-                                          'bg-red-100 text-red-700': task.priority === 'high',
-                                          'bg-yellow-100 text-yellow-700': task.priority === 'medium',
-                                          'bg-green-100 text-green-700': task.priority === 'low'
-                                      }"
+                                      :class="{ 'bg-red-100 text-red-700': task.priority === 'high', 'bg-yellow-100 text-yellow-700': task.priority === 'medium', 'bg-green-100 text-green-700': task.priority === 'low' }"
                                       x-text="task.priority"></span>
                             </div>
                         </div>
@@ -194,7 +190,7 @@
                     <template x-for="task in inProgressTasks" :key="task.id">
                         <div draggable="true"
                              @dragstart="handleDragStart($event, task)"
-                             class="bg-white dark:bg-slate-600 p-3 rounded-lg shadow cursor-move hover:shadow-md transition-all duration-200 task-card border-l-4 border-blue-500">
+                             class="bg-white dark:bg-slate-600 p-3 rounded-lg shadow cursor-move hover:shadow-md transition-all duration-200 task-bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-blue-500">
                             <p class="text-sm font-medium text-slate-700 dark:text-slate-200" x-text="task.title"></p>
                             <div class="flex items-center justify-between mt-2">
                                 <span class="text-xs text-slate-500 dark:text-slate-400" x-text="task.client"></span>
@@ -250,12 +246,7 @@
                         <div class="flex-1">
                             <div class="flex items-center space-x-2">
                                 <div class="w-2 h-2 rounded-full"
-                                     :class="{
-                                         'bg-blue-500': block.type === 'ticket',
-                                         'bg-green-500': block.type === 'meeting',
-                                         'bg-purple-500': block.type === 'break',
-                                         'bg-gray-400': block.type === 'available'
-                                     }"></div>
+                                     :class="{ 'bg-blue-500': block.type === 'ticket', 'bg-green-500': block.type === 'meeting', 'bg-purple-500': block.type === 'break', 'bg-gray-400': block.type === 'available' }"></div>
                                 <p class="text-sm font-medium text-slate-700 dark:text-slate-300" x-text="block.title"></p>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" x-text="block.description"></p>

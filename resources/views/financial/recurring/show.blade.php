@@ -3,7 +3,7 @@
 @section('title', $recurring->name)
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -72,10 +72,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">Service Status</h3>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        @if($recurring->status) bg-green-100 text-green-800
-                        @else bg-red-100 text-red-800
-                        @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->status) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
                         {{ $recurring->status ? 'Active' : 'Inactive' }}
                     </span>
                 </div>
@@ -88,8 +85,7 @@
                     </div>
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Next Billing</dt>
-                        <dd class="mt-1 text-sm text-gray-900 
-                            @if(\Carbon\Carbon::parse($recurring->next_billing_date)->isPast()) text-red-600 font-medium @endif">
+                        <dd class="mt-1 text-sm text-gray-900 @if(\Carbon\Carbon::parse($recurring->next_billing_date)->isPast()) text-red-600 font-medium @endif">
                             {{ \Carbon\Carbon::parse($recurring->next_billing_date)->format('M d, Y') }}
                             @if(\Carbon\Carbon::parse($recurring->next_billing_date)->isPast())
                                 <span class="block text-xs text-red-500">Overdue</span>
@@ -123,14 +119,7 @@
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Billing Type</dt>
                         <dd class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($recurring->billing_type === 'flat') bg-gray-100 text-gray-800
-                                @elseif($recurring->billing_type === 'usage_based') bg-blue-100 text-blue-800
-                                @elseif($recurring->billing_type === 'tiered') bg-green-100 text-green-800
-                                @elseif($recurring->billing_type === 'hybrid') bg-purple-100 text-purple-800
-                                @elseif($recurring->billing_type === 'volume_discount') bg-indigo-100 text-indigo-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->billing_type === 'flat') bg-gray-100 text-gray-800 @elseif($recurring->billing_type === 'usage_based') bg-blue-100 text-blue-800 @elseif($recurring->billing_type === 'tiered') bg-green-100 text-green-800 @elseif($recurring->billing_type === 'hybrid') bg-purple-100 text-purple-800 @elseif($recurring->billing_type === 'volume_discount') bg-indigo-100 text-indigo-800 @else bg-gray-100 text-gray-800 @endif">
                                 {{ ucfirst(str_replace('_', ' ', $recurring->billing_type)) }}
                             </span>
                         </dd>
@@ -158,37 +147,25 @@
                 <div class="px-6 py-4 space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">Contract Escalations</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($recurring->contract_escalation_enabled) bg-green-100 text-green-800
-                            @else bg-gray-100 text-gray-800
-                            @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->contract_escalation_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->contract_escalation_enabled ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">Proration</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($recurring->proration_enabled) bg-green-100 text-green-800
-                            @else bg-gray-100 text-gray-800
-                            @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->proration_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->proration_enabled ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">VoIP Tax Calculation</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($recurring->tax_calculation_enabled) bg-green-100 text-green-800
-                            @else bg-gray-100 text-gray-800
-                            @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->tax_calculation_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->tax_calculation_enabled ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">Auto Send Invoices</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            @if($recurring->auto_send) bg-green-100 text-green-800
-                            @else bg-gray-100 text-gray-800
-                            @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->auto_send) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->auto_send ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
@@ -317,13 +294,7 @@
                                 ${{ number_format($invoice->amount, 2) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @if($invoice->status === 'Draft') bg-gray-100 text-gray-800
-                                    @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800
-                                    @elseif($invoice->status === 'Paid') bg-green-100 text-green-800
-                                    @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-800 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
                                     {{ $invoice->status }}
                                 </span>
                             </td>
@@ -457,9 +428,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-m
-<!-- Usage Data Modal -->
-<div id="usageDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 1000;">
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-m <!-- Usage Data Modal --> <div id="usageDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 1000;">
     <div class="relative top-20 mx-auto p-5 border max-w-2xl shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <div class="flex items-center justify-between mb-4">

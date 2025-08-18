@@ -6,6 +6,8 @@ use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketPriorityQueue;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TicketAssignment;
+use App\Domains\Ticket\Models\SLA;
+use App\Domains\Ticket\Services\SLAService;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Contract;
@@ -30,56 +32,47 @@ class TicketService
     protected NotificationService $notificationService;
 
     /**
-     * SLA response times in hours based on priority
+     * @var SLAService
      */
-    protected array $defaultSlaResponseTimes = [
-        'Critical' => 1,    // 1 hour
-        'High' => 4,        // 4 hours
-        'Medium' => 8,      // 8 business hours
-        'Low' => 24,        // 24 business hours
-    ];
-
-    /**
-     * SLA resolution times in hours based on priority
-     */
-    protected array $defaultSlaResolutionTimes = [
-        'Critical' => 4,    // 4 hours
-        'High' => 8,        // 8 hours
-        'Medium' => 24,     // 24 business hours
-        'Low' => 72,        // 72 business hours
-    ];
+    protected SLAService $slaService;
 
     /**
      * Constructor
      * 
      * @param NotificationService $notificationService
+     * @param SLAService $slaService
      */
-    public function __construct(NotificationService $notificationService)
+    public function __construct(NotificationService $notificationService, SLAService $slaService)
     {
         $this->notificationService = $notificationService;
+        $this->slaService = $slaService;
     }
 
     /**
-     * Calculate SLA deadlines based on priority and client contract
+     * Calculate SLA deadlines based on priority and client SLA
      * 
      * @param Ticket $ticket
      * @return array
      */
     public function calculateSlaDeadlines(Ticket $ticket): array
     {
-        $priority = $ticket->priority;
+        $priority = strtolower($ticket->priority);
         $client = $ticket->client;
         
-        // Check if client has a contract with custom SLA terms
-        $slaTerms = $this->getClientSlaTerms($client, $priority);
+        if (!$client) {
+            return $this->getDefaultSlaDeadlines($ticket);
+        }
         
-        // Calculate response deadline
-        $responseHours = $slaTerms['response_hours'] ?? $this->defaultSlaResponseTimes[$priority] ?? 24;
-        $responseDeadline = $this->calculateBusinessDeadline($ticket->created_at, $responseHours);
+        // Calculate deadlines using SLA service
+        $responseDeadline = $this->slaService->calculateResponseDeadline($client, $priority, $ticket->created_at);
+        $resolutionDeadline = $this->slaService->calculateResolutionDeadline($client, $priority, $ticket->created_at);
         
-        // Calculate resolution deadline
-        $resolutionHours = $slaTerms['resolution_hours'] ?? $this->defaultSlaResolutionTimes[$priority] ?? 72;
-        $resolutionDeadline = $this->calculateBusinessDeadline($ticket->created_at, $resolutionHours);
+        // Get the SLA for additional information
+        $sla = $this->slaService->getClientSLA($client);
+        
+        if (!$responseDeadline || !$resolutionDeadline || !$sla) {
+            return $this->getDefaultSlaDeadlines($ticket);
+        }
         
         // Store in priority queue
         $this->updatePriorityQueue($ticket, $responseDeadline, $resolutionDeadline);
@@ -87,102 +80,57 @@ class TicketService
         return [
             'response_deadline' => $responseDeadline,
             'resolution_deadline' => $resolutionDeadline,
-            'response_hours' => $responseHours,
-            'resolution_hours' => $resolutionHours,
-            'is_custom_sla' => isset($slaTerms['is_custom']),
+            'response_minutes' => $sla->getResponseTimeMinutes($priority),
+            'resolution_minutes' => $sla->getResolutionTimeMinutes($priority),
+            'sla_id' => $sla->id,
+            'sla_name' => $sla->name,
+            'is_custom_sla' => !$sla->is_default,
         ];
     }
 
     /**
-     * Get client-specific SLA terms from contract
+     * Get default SLA deadlines when no SLA is available
      * 
-     * @param Client|null $client
-     * @param string $priority
+     * @param Ticket $ticket
      * @return array
      */
-    protected function getClientSlaTerms(?Client $client, string $priority): array
+    protected function getDefaultSlaDeadlines(Ticket $ticket): array
     {
-        if (!$client) {
-            return [];
-        }
-
-        // Check for active contract with SLA terms
-        $contract = Contract::where('client_id', $client->id)
-            ->where('status', 'Active')
-            ->where('start_date', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('end_date')
-                    ->orWhere('end_date', '>=', now());
-            })
-            ->first();
-
-        if (!$contract || !$contract->sla_terms) {
-            return [];
-        }
-
-        // Parse SLA terms from contract
-        $slaTerms = is_array($contract->sla_terms) ? $contract->sla_terms : json_decode($contract->sla_terms, true);
+        $priority = strtolower($ticket->priority);
         
-        if (isset($slaTerms[$priority])) {
-            return array_merge($slaTerms[$priority], ['is_custom' => true]);
-        }
-
-        return [];
-    }
-
-    /**
-     * Calculate business hours deadline
-     * 
-     * @param Carbon $startTime
-     * @param int $hours
-     * @return Carbon
-     */
-    protected function calculateBusinessDeadline(Carbon $startTime, int $hours): Carbon
-    {
-        $deadline = $startTime->copy();
-        $remainingHours = $hours;
+        // Default fallback SLA times in minutes
+        $defaultResponseTimes = [
+            'critical' => 60,
+            'high' => 240,
+            'medium' => 480,
+            'low' => 1440,
+        ];
         
-        // Business hours: 9 AM to 6 PM, Monday to Friday
-        $businessStartHour = 9;
-        $businessEndHour = 18;
+        $defaultResolutionTimes = [
+            'critical' => 240,
+            'high' => 1440,
+            'medium' => 4320,
+            'low' => 10080,
+        ];
         
-        while ($remainingHours > 0) {
-            // Skip weekends
-            if ($deadline->isWeekend()) {
-                $deadline->next('Monday')->setTime($businessStartHour, 0);
-                continue;
-            }
-            
-            // If after business hours, move to next business day
-            if ($deadline->hour >= $businessEndHour) {
-                $deadline->addDay()->setTime($businessStartHour, 0);
-                if ($deadline->isWeekend()) {
-                    $deadline->next('Monday')->setTime($businessStartHour, 0);
-                }
-                continue;
-            }
-            
-            // If before business hours, set to business start
-            if ($deadline->hour < $businessStartHour) {
-                $deadline->setTime($businessStartHour, 0);
-            }
-            
-            // Calculate hours until end of business day
-            $hoursUntilEndOfDay = $businessEndHour - $deadline->hour;
-            
-            if ($remainingHours <= $hoursUntilEndOfDay) {
-                $deadline->addHours($remainingHours);
-                $remainingHours = 0;
-            } else {
-                $remainingHours -= $hoursUntilEndOfDay;
-                $deadline->addDay()->setTime($businessStartHour, 0);
-                if ($deadline->isWeekend()) {
-                    $deadline->next('Monday')->setTime($businessStartHour, 0);
-                }
-            }
-        }
+        $responseMinutes = $defaultResponseTimes[$priority] ?? 1440;
+        $resolutionMinutes = $defaultResolutionTimes[$priority] ?? 10080;
         
-        return $deadline;
+        $responseDeadline = $ticket->created_at->addMinutes($responseMinutes);
+        $resolutionDeadline = $ticket->created_at->addMinutes($resolutionMinutes);
+        
+        // Store in priority queue
+        $this->updatePriorityQueue($ticket, $responseDeadline, $resolutionDeadline);
+        
+        return [
+            'response_deadline' => $responseDeadline,
+            'resolution_deadline' => $resolutionDeadline,
+            'response_minutes' => $responseMinutes,
+            'resolution_minutes' => $resolutionMinutes,
+            'sla_id' => null,
+            'sla_name' => 'Default SLA',
+            'is_custom_sla' => false,
+        ];
     }
 
     /**
@@ -451,6 +399,89 @@ class TicketService
      * @param array $options
      * @return Collection
      */
+
+    /**
+     * Check if ticket response SLA is breached
+     * 
+     * @param Ticket $ticket
+     * @return bool
+     */
+    public function isResponseSlaBreached(Ticket $ticket): bool
+    {
+        if (!$ticket->client) {
+            return false;
+        }
+        
+        $priority = strtolower($ticket->priority);
+        return $this->slaService->isResponseBreached($ticket->client, $priority, $ticket->created_at);
+    }
+
+    /**
+     * Check if ticket resolution SLA is breached
+     * 
+     * @param Ticket $ticket
+     * @return bool
+     */
+    public function isResolutionSlaBreached(Ticket $ticket): bool
+    {
+        if (!$ticket->client) {
+            return false;
+        }
+        
+        $priority = strtolower($ticket->priority);
+        $resolvedAt = $ticket->status === 'Resolved' ? $ticket->updated_at : null;
+        
+        return $this->slaService->isResolutionBreached($ticket->client, $priority, $ticket->created_at, $resolvedAt);
+    }
+
+    /**
+     * Check if ticket SLA is approaching breach
+     * 
+     * @param Ticket $ticket
+     * @param string $type - 'response' or 'resolution'
+     * @return bool
+     */
+    public function isSlaApproachingBreach(Ticket $ticket, string $type = 'response'): bool
+    {
+        if (!$ticket->client) {
+            return false;
+        }
+        
+        $priority = strtolower($ticket->priority);
+        return $this->slaService->isApproachingBreach($ticket->client, $priority, $ticket->created_at, $type);
+    }
+
+    /**
+     * Get SLA information for a ticket
+     * 
+     * @param Ticket $ticket
+     * @return array
+     */
+    public function getTicketSlaInfo(Ticket $ticket): array
+    {
+        if (!$ticket->client) {
+            return [];
+        }
+        
+        $sla = $this->slaService->getClientSLA($ticket->client);
+        
+        if (!$sla) {
+            return [];
+        }
+        
+        $priority = strtolower($ticket->priority);
+        
+        return [
+            'sla' => $sla,
+            'response_deadline' => $sla->calculateResponseDeadline($ticket->created_at, $priority),
+            'resolution_deadline' => $sla->calculateResolutionDeadline($ticket->created_at, $priority),
+            'is_response_breached' => $this->isResponseSlaBreached($ticket),
+            'is_resolution_breached' => $this->isResolutionSlaBreached($ticket),
+            'is_approaching_response_breach' => $this->isSlaApproachingBreach($ticket, 'response'),
+            'is_approaching_resolution_breach' => $this->isSlaApproachingBreach($ticket, 'resolution'),
+        ];
+    }
+
     public function checkAndTriggerEscalations(array $options = []): Collection
     {
         $escalatedTickets = collect();

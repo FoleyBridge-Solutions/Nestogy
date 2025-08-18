@@ -5,20 +5,20 @@
 @section('content')
 <div class="collection-dashboard">
     <!-- Header with date range selector -->
-    <div class="dashboard-header bg-white shadow-sm rounded-lg p-6 mb-6">
+    <div class="dashboard-header bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Collection Dashboard</h1>
-                <p class="text-gray-600 mt-1">Real-time collection performance and analytics</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Collection Dashboard</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Real-time collection performance and analytics</p>
             </div>
             <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-2">
-                    <label class="text-sm font-medium text-gray-700">Date Range:</label>
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Date Range:</label>
                     <input type="date" id="start_date" value="{{ $dateRange['start'] }}" 
-                           class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                           class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm">
                     <span class="text-gray-500">to</span>
                     <input type="date" id="end_date" value="{{ $dateRange['end'] }}" 
-                           class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                           class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm">
                     <button onclick="updateDashboard()" 
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                         Update
@@ -35,11 +35,11 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Total Outstanding -->
-        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-red-500">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-red-500">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Total Outstanding</p>
-                    <p class="text-2xl font-bold text-gray-900">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Outstanding</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
                         ${{ number_format($dashboard['summary']['total_outstanding'], 2) }}
                     </p>
                 </div>
@@ -52,11 +52,11 @@
         </div>
 
         <!-- Amount Collected -->
-        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-green-500">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Amount Collected</p>
-                    <p class="text-2xl font-bold text-gray-900">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Amount Collected</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
                         ${{ number_format($dashboard['summary']['amount_collected'], 2) }}
                     </p>
                     <p class="text-sm text-green-600 font-medium">
@@ -72,11 +72,11 @@
         </div>
 
         <!-- Collection Rate -->
-        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Collection Rate</p>
-                    <p class="text-2xl font-bold text-gray-900">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Collection Rate</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
                         {{ number_format($dashboard['summary']['collection_rate'], 1) }}%
                     </p>
                     <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -93,14 +93,14 @@
         </div>
 
         <!-- Active Clients -->
-        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Active Clients</p>
-                    <p class="text-2xl font-bold text-gray-900">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Clients</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
                         {{ number_format($dashboard['summary']['active_clients']) }}
                     </p>
-                    <p class="text-sm text-gray-600">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         of {{ number_format($dashboard['summary']['total_clients']) }} total
                     </p>
                 </div>
@@ -116,17 +116,17 @@
     <!-- KPI Metrics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Key Performance Indicators -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Key Performance Indicators</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Key Performance Indicators</h3>
             <div class="space-y-4">
                 @foreach($dashboard['kpi_metrics'] as $kpi => $data)
-                <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
                     <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-900">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
                             {{ ucfirst(str_replace('_', ' ', $kpi)) }}
                         </p>
                         <div class="flex items-center mt-1">
-                            <span class="text-lg font-bold text-gray-900">
+                            <span class="text-lg font-bold text-gray-900 dark:text-white">
                                 @if(in_array($kpi, ['collection_rate', 'payment_plan_success_rate', 'first_call_resolution']))
                                     {{ number_format($data['value'], 1) }}%
                                 @elseif($kpi === 'days_sales_outstanding')
@@ -162,9 +162,9 @@
         </div>
 
         <!-- Collection Trends Chart -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Collection Trends</h3>
-            <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Collection Trends</h3>
+            <div class="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <canvas id="trendsChart" class="w-full h-full"></canvas>
             </div>
         </div>
@@ -173,19 +173,19 @@
     <!-- Channel Effectiveness & Aging Analysis -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Channel Effectiveness -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Channel Effectiveness</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Channel Effectiveness</h3>
             <div class="space-y-3">
                 @foreach($dashboard['channel_effectiveness'] as $channel => $data)
                 <div class="flex items-center justify-between p-3 border rounded-lg">
                     <div class="flex-1">
-                        <p class="font-medium text-gray-900">{{ ucfirst(str_replace('_', ' ', $channel)) }}</p>
-                        <p class="text-sm text-gray-600">
+                        <p class="font-medium text-gray-900 dark:text-white">{{ ucfirst(str_replace('_', ' ', $channel)) }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
                             {{ $data['total_actions'] }} actions • {{ number_format($data['conversion_rate'], 1) }}% conversion
                         </p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-medium text-gray-900">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
                             {{ number_format($data['success_rate'], 1) }}%
                         </p>
                         <p class="text-xs text-gray-500">Success Rate</p>
@@ -196,13 +196,13 @@
         </div>
 
         <!-- Aging Analysis -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Aging Analysis</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Aging Analysis</h3>
             <div class="space-y-3">
                 @foreach($dashboard['aging_analysis']['buckets'] as $bucket => $data)
                 <div class="flex items-center justify-between p-3 border rounded-lg">
                     <div class="flex-1">
-                        <p class="font-medium text-gray-900">
+                        <p class="font-medium text-gray-900 dark:text-white">
                             @if($bucket === 'current') Current
                             @elseif($bucket === 'over_120') 120+ Days
                             @else {{ str_replace('_', '-', $bucket) }} Days
@@ -214,7 +214,7 @@
                         </div>
                     </div>
                     <div class="text-right ml-4">
-                        <p class="text-sm font-medium text-gray-900">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
                             ${{ number_format($data['amount'], 0) }}
                         </p>
                         <p class="text-xs text-gray-500">{{ number_format($data['percentage'], 1) }}%</p>
@@ -230,8 +230,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Performance Alerts -->
         @if(!empty($dashboard['alerts']))
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Performance Alerts</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Alerts</h3>
             <div class="space-y-3">
                 @foreach($dashboard['alerts'] as $alert)
                 <div class="flex items-start p-3 rounded-lg border-l-4 
@@ -250,8 +250,8 @@
                         @endif
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">{{ $alert['message'] }}</p>
-                        <p class="text-xs text-gray-600 mt-1">{{ ucfirst($alert['severity']) }} Priority</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $alert['message'] }}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ ucfirst($alert['severity']) }} Priority</p>
                     </div>
                 </div>
                 @endforeach
@@ -261,8 +261,8 @@
 
         <!-- Optimization Recommendations -->
         @if(!empty($dashboard['recommendations']))
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Optimization Recommendations</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Optimization Recommendations</h3>
             <div class="space-y-3">
                 @foreach($dashboard['recommendations'] as $recommendation)
                 <div class="p-3 border rounded-lg border-l-4 border-blue-500">
@@ -273,8 +273,8 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">{{ $recommendation['recommendation'] }}</p>
-                            <p class="text-xs text-gray-600 mt-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $recommendation['recommendation'] }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 {{ ucfirst($recommendation['priority']) }} Priority • 
                                 {{ ucfirst(str_replace('_', ' ', $recommendation['type'])) }}
                             </p>

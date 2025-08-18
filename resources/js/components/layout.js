@@ -8,27 +8,107 @@ export function modernLayout() {
         // State Management
         sidebarOpen: false,
         mobileMenuOpen: false,
-        darkMode: localStorage.getItem('darkMode') === 'true' || false,
+        darkMode: false, // Will be set from server data
         compactMode: localStorage.getItem('compactMode') === 'true' || false,
+        shortcuts: [],
         
         // Initialization
         init() {
+            // Get theme from server-side data instead of localStorage
+            if (window.CURRENT_USER && window.CURRENT_USER.theme) {
+                const userTheme = window.CURRENT_USER.theme;
+                if (userTheme === 'dark') {
+                    this.darkMode = true;
+                } else if (userTheme === 'light') {
+                    this.darkMode = false;
+                } else if (userTheme === 'auto') {
+                    this.darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+            } else {
+                // Fallback to checking if dark class is already applied
+                this.darkMode = document.documentElement.classList.contains('dark');
+            }
+            
             this.setupEventListeners();
             this.setupKeyboardShortcuts();
-            this.applyTheme();
+            this.setupThemeEventListeners();
+            // Don't call applyTheme() here - theme is already applied by server script
             this.detectMobileDevice();
-            console.log('Modern Layout initialized');
+            console.log('Layout initialized with theme:', this.darkMode ? 'dark' : 'light');
+        },
+        
+        // Setup theme event listeners for Alpine communication
+        setupThemeEventListeners() {
+            // Prevent duplicate event listeners
+            if (this.themeToggleHandler) {
+                document.removeEventListener('toggle-theme', this.themeToggleHandler);
+            }
+            
+            // Store reference for cleanup
+            this.themeToggleHandler = () => {
+                this.toggleDarkMode();
+            };
+            
+            // Listen for theme toggle events from other components (like dashboard)
+            document.addEventListener('toggle-theme', this.themeToggleHandler);
         },
         
         // Theme Management
         toggleDarkMode() {
-            this.darkMode = !this.darkMode;
+            // Determine what the new theme should be based on current state
+            const currentTheme = window.CURRENT_USER?.theme || 'light';
+            let newTheme;
+            
+            if (currentTheme === 'auto') {
+                // If auto, switch to the opposite of what auto is currently showing
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                newTheme = systemPrefersDark ? 'light' : 'dark';
+            } else {
+                // If light or dark, toggle to the opposite
+                newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            }
+            
+            // Apply the new theme
+            this.darkMode = newTheme === 'dark';
+            
+            // Update the global user object immediately (before web request)
+            if (window.CURRENT_USER) {
+                window.CURRENT_USER.theme = newTheme;
+            }
+            
+            // Save to localStorage as backup
             localStorage.setItem('darkMode', this.darkMode);
+            
+            // Apply theme immediately
             this.applyTheme();
             
-            // Emit theme change event for other components
+            // Save to server if user is logged in
+            if (window.CURRENT_USER && window.CURRENT_USER.id) {
+                fetch('/users/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ theme: newTheme })
+                }).catch(error => {
+                    console.warn('Failed to save theme preference:', error);
+                    // Revert the global user object if save failed
+                    if (window.CURRENT_USER) {
+                        window.CURRENT_USER.theme = currentTheme;
+                    }
+                });
+            }
+            
+            // Emit theme change event for other components via both window and Alpine events
             window.dispatchEvent(new CustomEvent('theme-changed', { 
-                detail: { darkMode: this.darkMode }
+                detail: { darkMode: this.darkMode, theme: newTheme }
+            }));
+            
+            // Also dispatch Alpine event for dashboard and other Alpine components
+            document.dispatchEvent(new CustomEvent('theme-changed', { 
+                detail: { darkMode: this.darkMode, theme: newTheme },
+                bubbles: true
             }));
             
             this.showNotification(
@@ -118,10 +198,10 @@ export function modernLayout() {
             });
             
             // Handle resize
-            let resizeTimeout;
+            let layoutResizeTimeout;
             window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => {
+                clearTimeout(layoutResizeTimeout);
+                layoutResizeTimeout = setTimeout(() => {
                     this.handleResize();
                 }, 100);
             });
@@ -129,26 +209,230 @@ export function modernLayout() {
         
         // Keyboard Shortcuts
         setupKeyboardShortcuts() {
+            // Load shortcuts from server
+            this.loadShortcuts();
+            
             document.addEventListener('keydown', (e) => {
-                // Ctrl/Cmd + B for sidebar toggle
-                if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-                    e.preventDefault();
-                    this.toggleSidebar();
+                // Skip if in input fields (except for safe shortcuts)
+                const isInInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
+                const isEditableDiv = e.target.contentEditable === 'true';
+                
+                if (isInInput || isEditableDiv) {
+                    if (!this.isInputSafeShortcut(e)) return;
                 }
                 
-                // Ctrl/Cmd + Shift + D for dark mode
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
-                    e.preventDefault();
-                    this.toggleDarkMode();
-                }
-                
-                // Ctrl/Cmd + Shift + C for compact mode
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
-                    e.preventDefault();
-                    this.toggleCompactMode();
-                }
+                // Handle keyboard shortcuts dynamically
+                this.handleKeyboardShortcut(e);
             });
         },
+
+        async loadShortcuts() {
+            try {
+                const response = await fetch('/reports/shortcuts/active', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                });
+                
+                const data = await response.json();
+                this.shortcuts = data.shortcuts || [];
+                console.log('Loaded shortcuts:', this.shortcuts);
+            } catch (error) {
+                console.error('Failed to load shortcuts:', error);
+                this.shortcuts = [];
+            }
+        },
+        
+        isInputSafeShortcut(e) {
+            // Allow certain shortcuts even in input fields
+            const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+            
+            // Command palette and help are always safe
+            if (isCtrlOrCmd && e.key === '/') return true;
+            if (isCtrlOrCmd && e.shiftKey && e.key === 'H') return true;
+            
+            return false;
+        },
+        
+        handleKeyboardShortcut(e) {
+            if (!this.shortcuts) return;
+            
+            // Build current key combination
+            const keyCombo = this.buildKeyCombo(e);
+            
+            // Find matching shortcut
+            const matchingShortcut = this.shortcuts.find(shortcut => {
+                return shortcut.keyString === keyCombo;
+            });
+            
+            if (matchingShortcut) {
+                e.preventDefault();
+                this.executeShortcutCommand(matchingShortcut);
+            }
+        },
+        
+        buildKeyCombo(e) {
+            const keys = [];
+            
+            if (e.ctrlKey || e.metaKey) keys.push('Ctrl');
+            if (e.altKey) keys.push('Alt');
+            if (e.shiftKey) keys.push('Shift');
+            
+            // Add the main key
+            let mainKey = e.key;
+            
+            // Handle special cases
+            if (mainKey === ' ') mainKey = 'Space';
+            else if (mainKey.length === 1) mainKey = mainKey.toUpperCase();
+            
+            keys.push(mainKey);
+            
+            return keys.join('+');
+        },
+        
+        async executeShortcutCommand(shortcut) {
+            // Handle system commands locally for better performance
+            switch (shortcut.command) {
+                case 'toggle_sidebar':
+                    this.toggleSidebar();
+                    return;
+                case 'toggle_dark_mode':
+                    this.toggleDarkMode();
+                    return;
+                case 'open_command_palette':
+                    // This is handled by the command palette component
+                    return;
+            }
+            
+            // For all other commands, execute via server
+            this.executeCommand(shortcut.command);
+        },
+        
+        async executeCommand(command) {
+            try {
+                const response = await fetch('/api/navigation/command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ command: command }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.action === 'navigate' && data.url) {
+                    window.location.href = data.url;
+                } else if (data.action === 'help') {
+                    this.showHelpMessage(data.message);
+                } else if (data.action === 'error') {
+                    this.showErrorMessage(data.message);
+                }
+            } catch (error) {
+                console.error('Command execution error:', error);
+                this.showErrorMessage('Failed to execute command');
+            }
+        },
+        
+        
+        showHelpMessage(message) {
+            this.showHelpModal(message);
+        },
+        
+        showHelpModal(message) {
+            // Create help modal
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50';
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto';
+            
+            // Convert message to HTML with proper formatting
+            const formattedMessage = message
+                .replace(/\n\n/g, '</p><p class="mb-3">')
+                .replace(/\n/g, '<br>')
+                .replace(/^/, '<p class="mb-3">')
+                .replace(/$/, '</p>');
+            
+            modalContent.innerHTML = `
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Keyboard Shortcuts & Commands</h3>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors" onclick="this.closest('[class*=fixed]').remove()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-700 font-mono whitespace-pre-line leading-relaxed">
+                        ${formattedMessage}
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" onclick="this.closest('[class*=fixed]').remove()">
+                            Got it!
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Handle escape key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
+            // Auto-focus close button for accessibility
+            setTimeout(() => {
+                const closeButton = modal.querySelector('button[onclick*="remove"]');
+                if (closeButton) closeButton.focus();
+            }, 100);
+        },
+        
+        showErrorMessage(message) {
+            this.showToast('Error: ' + message, 3000, 'error');
+        },
+        
+        showToast(message, duration = 3000, type = 'info') {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white max-w-sm ${
+                type === 'error' ? 'bg-red-600' : 'bg-gray-800'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s ease';
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after duration
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, duration);
+        },
+        
         
         // Responsive Handling
         handleResize() {
@@ -181,30 +465,57 @@ export function modernLayout() {
         setupTouchGestures() {
             let startX = 0;
             let startY = 0;
+            let startTime = 0;
+            let isEdgeSwipe = false;
             
             document.addEventListener('touchstart', (e) => {
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
-            });
+                startTime = Date.now();
+                isEdgeSwipe = startX < 20; // Detect edge swipe
+            }, { passive: true });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!isEdgeSwipe) return;
+                
+                const currentX = e.touches[0].clientX;
+                const deltaX = currentX - startX;
+                
+                // Provide visual feedback for sidebar swipe
+                if (deltaX > 10) {
+                    document.body.classList.add('sidebar-swipe-active');
+                }
+            }, { passive: true });
             
             document.addEventListener('touchend', (e) => {
                 const endX = e.changedTouches[0].clientX;
                 const endY = e.changedTouches[0].clientY;
+                const endTime = Date.now();
                 
-                const diffX = startX - endX;
-                const diffY = startY - endY;
+                const deltaX = endX - startX;
+                const deltaY = endY - startY;
+                const deltaTime = endTime - startTime;
                 
-                // Horizontal swipe detection
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                    if (diffX > 0 && startX < 50) {
-                        // Swipe from left edge to right - open sidebar
-                        this.toggleSidebar();
-                    } else if (diffX < 0 && this.sidebarOpen) {
-                        // Swipe right to left - close sidebar
+                document.body.classList.remove('sidebar-swipe-active');
+                
+                // Only handle edge swipes for sidebar
+                if (isEdgeSwipe) {
+                    // Horizontal swipe detection for sidebar
+                    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50 && deltaTime < 500) {
+                        if (deltaX > 0) {
+                            // Swipe right from edge - open sidebar
+                            this.toggleSidebar();
+                        }
+                    }
+                } else if (this.sidebarOpen) {
+                    // Swipe anywhere else to close sidebar when open
+                    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -50 && deltaTime < 500) {
                         this.closeSidebar();
                     }
                 }
-            });
+                
+                isEdgeSwipe = false;
+            }, { passive: true });
         },
         
         // Breadcrumb Navigation

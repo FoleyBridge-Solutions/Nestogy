@@ -3,323 +3,250 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="container-fluid">
+<div class="portal-container">
     <!-- Welcome Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+    <div class="portal-row portal-mb-4">
+        <div class="portal-col-12">
+            <div class="portal-d-flex portal-justify-content-between portal-align-items-center">
                 <div>
-                    <h1 class="h3 mb-0 text-gray-800">Welcome back, {{ $client->name }}!</h1>
-                    <p class="text-muted">Here's an overview of your contracts and recent activity</p>
+                    <h1 class="portal-text-3xl portal-mb-0 text-gray-800 dark:text-gray-200">Welcome back, {{ $contact->name }}!</h1>
+                    <p class="text-gray-600 dark:text-gray-400">{{ $client->name }} - Here's your account overview</p>
                 </div>
-                <div class="text-right">
-                    <small class="text-muted">Last login: {{ now()->format('M j, Y g:i A') }}</small>
+                <div style="text-align: right;">
+                    <small class="text-gray-600 dark:text-gray-400">{{ now()->format('M j, Y g:i A') }}</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Pending Actions Alert -->
-    @if(count($pendingActions) > 0)
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Action Required</h5>
-                @foreach($pendingActions as $action)
-                <p class="mb-2">
-                    <strong>{{ $action['message'] }}</strong>
-                    <a href="{{ $action['action_url'] }}" class="btn btn-sm btn-outline-warning ml-2">
-                        Take Action
-                    </a>
-                </p>
-                @endforeach
-                <button type="button" class="close" data-dismiss="alert">
+    <!-- Critical Alerts -->
+    @php
+        $criticalAlerts = [];
+        if (isset($ticketStats) && ($ticketStats['open_tickets'] ?? 0) > 0) {
+            $criticalAlerts[] = ['type' => 'danger', 'message' => ($ticketStats['open_tickets'] ?? 0) . ' open support tickets need attention', 'action' => route('client.tickets') ?? '#'];
+        }
+        if (isset($invoiceStats) && ($invoiceStats['outstanding_amount'] ?? 0) > 0) {
+            $criticalAlerts[] = ['type' => 'warning', 'message' => '$' . number_format($invoiceStats['outstanding_amount'] ?? 0, 2) . ' in outstanding invoices', 'action' => route('client.invoices')];
+        }
+        if (isset($assetStats) && ($assetStats['maintenance_due'] ?? 0) > 0) {
+            $criticalAlerts[] = ['type' => 'info', 'message' => ($assetStats['maintenance_due'] ?? 0) . ' assets require maintenance', 'action' => route('client.assets') ?? '#'];
+        }
+    @endphp
+
+    @if(count($criticalAlerts) > 0)
+    <div class="portal-row portal-mb-4">
+        @foreach($criticalAlerts as $alert)
+        <div class="portal-col-12 portal-mb-2">
+            <div class="portal-alert portal-alert-{{ $alert['type'] }} portal-alert-dismissible portal-fade show" role="alert">
+                <strong>{{ $alert['message'] }}</strong>
+                <a href="{{ $alert['action'] }}" class="portal-btn portal-btn-sm portal-btn-outline-primary" style="margin-left: 0.5rem;">
+                    View Details
+                </a>
+                <button type="button" class="portal-alert-close" onclick="this.parentElement.style.display='none'">
                     <span>&times;</span>
                 </button>
             </div>
         </div>
+        @endforeach
     </div>
     @endif
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Contracts
+    <!-- Key Statistics Cards -->
+    <div class="portal-row portal-mb-4">
+        @if(isset($contractStats))
+        <div class="portal-col-6 portal-col-xl-3 portal-mb-4">
+            <div class="portal-card portal-card-border-primary portal-shadow portal-h-100">
+                <div class="portal-card-body portal-py-4">
+                    <div class="portal-d-flex portal-align-items-center">
+                        <div class="portal-col portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-primary portal-uppercase portal-mb-1">
+                                Active Contracts
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $stats['total_contracts'] }}
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800 dark:text-gray-200">
+                                {{ $contractStats['active_contracts'] ?? 0 }}
                             </div>
                         </div>
-                        <div class="col-auto">
+                        <div class="portal-col-auto">
                             <i class="fas fa-file-contract fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endif
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active Contracts
+        @if(isset($invoiceStats))
+        <div class="portal-col-6 portal-col-xl-3 portal-mb-4">
+            <div class="portal-card portal-card-border-warning portal-shadow portal-h-100">
+                <div class="portal-card-body portal-py-4">
+                    <div class="portal-d-flex portal-align-items-center">
+                        <div class="portal-col portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-warning portal-uppercase portal-mb-1">
+                                Outstanding
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $stats['active_contracts'] }}
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800 dark:text-gray-200">
+                                ${{ number_format($invoiceStats['outstanding_amount'] ?? 0, 2) }}
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        <div class="portal-col-auto">
+                            <i class="fas fa-file-invoice-dollar fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endif
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Signatures
+        @if(isset($ticketStats))
+        <div class="portal-col-6 portal-col-xl-3 portal-mb-4">
+            <div class="portal-card portal-card-border-danger portal-shadow portal-h-100">
+                <div class="portal-card-body portal-py-4">
+                    <div class="portal-d-flex portal-align-items-center">
+                        <div class="portal-col portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-danger portal-uppercase portal-mb-1">
+                                Open Tickets
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $stats['pending_signatures'] }}
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800 dark:text-gray-200">
+                                {{ $ticketStats['open_tickets'] ?? 0 }}
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-signature fa-2x text-gray-300"></i>
+                        <div class="portal-col-auto">
+                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endif
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Value
+        @if(isset($assetStats))
+        <div class="portal-col-6 portal-col-xl-3 portal-mb-4">
+            <div class="portal-card portal-card-border-info portal-shadow portal-h-100">
+                <div class="portal-card-body portal-py-4">
+                    <div class="portal-d-flex portal-align-items-center">
+                        <div class="portal-col portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-info portal-uppercase portal-mb-1">
+                                Total Assets
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                ${{ number_format($stats['total_contract_value'], 2) }}
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800 dark:text-gray-200">
+                                {{ $assetStats['total_assets'] ?? 0 }}
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        <div class="portal-col-auto">
+                            <i class="fas fa-server fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
-    <div class="row">
-        <!-- Recent Contracts -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Contracts</h6>
-                    <a href="{{ route('client.contracts') }}" class="btn btn-sm btn-primary">
-                        View All <i class="fas fa-arrow-right"></i>
-                    </a>
+    <!-- Quick Overview & Actions -->
+    <div class="portal-row">
+        <!-- System Health Overview -->
+        <div class="portal-col-12 portal-col-lg-8 portal-mb-4">
+            <div class="portal-card portal-shadow">
+                <div class="px-6 py-4 portal-border-b portal-bg-gray-50 dark:bg-gray-900 py-3">
+                    <h6 class="portal-mb-0 portal-font-bold portal-text-primary">
+                        <i class="fas fa-heartbeat portal-mr-2"></i>System Health
+                    </h6>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Contract</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Value</th>
-                                    <th>Progress</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($contracts->take(5) as $contract)
-                                <tr>
-                                    <td>
-                                        <div class="font-weight-bold">{{ $contract->title }}</div>
-                                        <div class="text-muted small">{{ $contract->contract_number }}</div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-secondary">
-                                            {{ ucwords(str_replace('_', ' ', $contract->contract_type)) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $statusColor = match($contract->status) {
-                                                'active' => 'success',
-                                                'draft' => 'secondary',
-                                                'pending_approval' => 'warning',
-                                                'pending_signature' => 'info',
-                                                'completed' => 'success',
-                                                'terminated' => 'danger',
-                                                default => 'secondary'
-                                            };
-                                        @endphp
-                                        <span class="badge badge-{{ $statusColor }}">
-                                            {{ ucwords(str_replace('_', ' ', $contract->status)) }}
-                                        </span>
-                                    </td>
-                                    <td>${{ number_format($contract->contract_value, 2) }}</td>
-                                    <td>
-                                        @php
-                                            $progress = $contract->completion_percentage ?? 0;
-                                        @endphp
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-success" role="progressbar" 
-                                                 style="width: {{ $progress }}%" 
-                                                 aria-valuenow="{{ $progress }}" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">{{ $progress }}%</small>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('client.contracts.show', $contract) }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            View
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">
-                                        No contracts found
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                <div class="portal-card-body">
+                    <div class="portal-row">
+                        @if(isset($assetStats))
+                        <div class="portal-col-6 portal-col-xl-4 portal-mb-4">
+                            <div class="portal-d-flex portal-align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-yellow-100 rounded-full portal-d-flex portal-align-items-center justify-center">
+                                        <i class="fas fa-tools portal-text-sm text-yellow-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="portal-text-sm portal-font-medium text-gray-900 dark:text-white">
+                                        {{ $assetStats['maintenance_due'] ?? 0 }} Assets
+                                    </p>
+                                    <p class="portal-text-xs text-gray-500">Need Maintenance</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="portal-col-6 portal-col-xl-4 portal-mb-4">
+                            <div class="portal-d-flex portal-align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-orange-100 rounded-full portal-d-flex portal-align-items-center justify-center">
+                                        <i class="fas fa-shield-alt portal-text-sm text-orange-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="portal-text-sm portal-font-medium text-gray-900 dark:text-white">
+                                        {{ $assetStats['warranty_expiring'] ?? 0 }} Assets
+                                    </p>
+                                    <p class="portal-text-xs text-gray-500">Warranty Expiring</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if(isset($ticketStats))
+                        <div class="portal-col-6 portal-col-xl-4 portal-mb-4">
+                            <div class="portal-d-flex portal-align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 {{ ($ticketStats['open_tickets'] ?? 0) > 0 ? 'bg-red-100' : 'bg-green-100' }} rounded-full portal-d-flex portal-align-items-center justify-center">
+                                        <i class="fas fa-ticket-alt portal-text-sm {{ ($ticketStats['open_tickets'] ?? 0) > 0 ? 'text-red-600' : 'text-green-600' }}"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="portal-text-sm portal-font-medium text-gray-900 dark:text-white">
+                                        {{ $ticketStats['open_tickets'] ?? 0 }} Open
+                                    </p>
+                                    <p class="portal-text-xs text-gray-500">Support Tickets</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Upcoming Milestones & Recent Activity -->
-        <div class="col-xl-4 col-lg-5">
-            <!-- Upcoming Milestones -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Upcoming Milestones</h6>
+        <!-- Quick Actions -->
+        <div class="portal-col-12 portal-col-lg-4 portal-mb-4">
+            <div class="portal-card portal-shadow">
+                <div class="px-6 py-4 portal-border-b portal-bg-gray-50 dark:bg-gray-900 py-3">
+                    <h6 class="portal-mb-0 portal-font-bold portal-text-primary">
+                        <i class="fas fa-bolt portal-mr-2"></i>Quick Actions
+                    </h6>
                 </div>
-                <div class="card-body">
-                    @forelse($upcomingMilestones as $milestone)
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="mr-3">
-                            @php
-                                $daysUntil = \Carbon\Carbon::parse($milestone['due_date'])->diffInDays(now());
-                                $isOverdue = \Carbon\Carbon::parse($milestone['due_date'])->isPast();
-                                $urgencyClass = $isOverdue ? 'danger' : ($daysUntil <= 3 ? 'warning' : 'success');
-                            @endphp
-                            <span class="badge badge-{{ $urgencyClass }} badge-pill">
-                                {{ $isOverdue ? 'Overdue' : $daysUntil . 'd' }}
-                            </span>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="font-weight-bold">{{ $milestone['title'] }}</div>
-                            <div class="text-muted small">
-                                Due: {{ \Carbon\Carbon::parse($milestone['due_date'])->format('M j, Y') }}
-                            </div>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center text-muted">
-                        <i class="fas fa-calendar-check fa-2x mb-2"></i>
-                        <p>No upcoming milestones</p>
-                    </div>
-                    @endforelse
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
-                </div>
-                <div class="card-body">
-                    @forelse($recentActivity as $activity)
-                    <div class="d-flex mb-3">
-                        <div class="mr-3">
-                            @php
-                                $iconClass = match($activity['action']) {
-                                    'contract_signed' => 'fas fa-signature text-success',
-                                    'milestone_completed' => 'fas fa-check-circle text-success',
-                                    'contract_created' => 'fas fa-file-plus text-info',
-                                    'invoice_generated' => 'fas fa-file-invoice text-warning',
-                                    default => 'fas fa-info-circle text-muted'
-                                };
-                            @endphp
-                            <i class="{{ $iconClass }}"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="font-weight-bold">{{ $activity['description'] }}</div>
-                            <div class="text-muted small">
-                                {{ \Carbon\Carbon::parse($activity['created_at'])->diffForHumans() }}
-                            </div>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center text-muted">
-                        <i class="fas fa-history fa-2x mb-2"></i>
-                        <p>No recent activity</p>
-                    </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('client.contracts') }}" class="btn btn-outline-primary btn-block">
-                                <i class="fas fa-file-contract mb-2"></i><br>
-                                View All Contracts
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('client.contracts', ['status' => 'pending_signature']) }}" 
-                               class="btn btn-outline-warning btn-block">
-                                <i class="fas fa-signature mb-2"></i><br>
-                                Sign Documents
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('client.profile') }}" class="btn btn-outline-info btn-block">
-                                <i class="fas fa-user-cog mb-2"></i><br>
-                                Update Profile
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('client.contracts', ['type' => 'invoices']) }}" 
-                               class="btn btn-outline-success btn-block">
-                                <i class="fas fa-file-invoice-dollar mb-2"></i><br>
-                                View Invoices
-                            </a>
-                        </div>
+                <div class="portal-card-body">
+                    <div class="space-y-2">
+                        @if(isset($contractStats))
+                        <a href="{{ route('client.contracts') }}" class="portal-btn portal-w-100 portal-btn-outline-primary portal-text-sm">
+                            <i class="fas fa-file-contract portal-mr-2"></i>View Contracts
+                        </a>
+                        @endif
+                        
+                        @if(isset($invoiceStats))
+                        <a href="{{ route('client.invoices') }}" class="portal-btn portal-w-100 portal-btn-outline-primary portal-text-sm">
+                            <i class="fas fa-file-invoice portal-mr-2"></i>View Invoices
+                        </a>
+                        @endif
+                        
+                        @if(isset($ticketStats))
+                        <a href="{{ route('client.tickets') ?? '#' }}" class="portal-btn portal-w-100 portal-btn-outline-primary portal-text-sm">
+                            <i class="fas fa-ticket-alt portal-mr-2"></i>Support Tickets
+                        </a>
+                        @endif
+                        
+                        @if(isset($assetStats))
+                        <a href="{{ route('client.assets') ?? '#' }}" class="portal-btn portal-w-100 portal-btn-outline-primary portal-text-sm">
+                            <i class="fas fa-server portal-mr-2"></i>View Assets
+                        </a>
+                        @endif
+                        
+                        <a href="{{ route('client.profile') }}" class="portal-btn portal-w-100 portal-btn-outline-primary portal-text-sm">
+                            <i class="fas fa-user-cog portal-mr-2"></i>Account Settings
+                        </a>
                     </div>
                 </div>
             </div>
@@ -328,52 +255,25 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-// Auto-dismiss alerts after 10 seconds
-setTimeout(function() {
-    $('.alert-dismissible').alert('close');
-}, 10000);
-
-// Refresh dashboard data every 5 minutes
-setInterval(function() {
-    location.reload();
-}, 300000); // 5 minutes
-</script>
-@endpush
-
 @push('styles')
 <style>
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
-}
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-}
-.card {
-    transition: transform 0.2s;
-}
-.card:hover {
-    transform: translateY(-2px);
-}
-.progress {
-    background-color: #e3e6f0;
-}
-.quick-action-card {
-    text-align: center;
-    padding: 1.5rem;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-.quick-action-card:hover {
-    background-color: #f8f9fc;
-    transform: translateY(-2px);
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.flex-shrink-0 { flex-shrink: 0; }
+.w-10 { width: 2.5rem; }
+.h-10 { height: 2.5rem; }
+.ml-3 { margin-left: 0.75rem; }
+.rounded-full { border-radius: 9999px; }
+
+/* Badge colors */
+.bg-green-100 { background-color: #dcfce7; } .text-green-600 { color: #16a34a; }
+.bg-yellow-100 { background-color: #fef3c7; } .text-yellow-600 { color: #ca8a04; }
+.bg-red-100 { background-color: #fee2e2; } .text-red-600 { color: #dc2626; }
+.bg-orange-100 { background-color: #fed7aa; } .text-orange-600 { color: #ea580c; }
+
+/* Responsive */
+@media (min-width: 1024px) {
+    .portal-col-lg-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+    .portal-col-lg-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
 }
 </style>
 @endpush

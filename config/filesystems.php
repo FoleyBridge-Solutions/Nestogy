@@ -56,8 +56,37 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
             'throw' => false,
             'report' => false,
+            // DigitalOcean Spaces specific optimizations
+            'options' => [
+                'CacheControl' => 'max-age=2592000', // 30 days cache
+                'ServerSideEncryption' => 'AES256',
+            ],
+            'stream' => [
+                'read' => 'always',
+                'write' => 'always',
+            ],
+        ],
+
+        's3-public' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+            // For public assets like logos, images
+            'options' => [
+                'CacheControl' => 'max-age=31536000, public', // 1 year cache for public assets
+                'ServerSideEncryption' => 'AES256',
+            ],
         ],
 
     ],

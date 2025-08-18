@@ -1,0 +1,223 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Texas Comptroller API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the official Texas Comptroller tax data API.
+    | This provides FREE access to official tax jurisdiction rates and
+    | address mapping data updated quarterly.
+    |
+    */
+
+    'api' => [
+        'base_url' => env('TEXAS_COMPTROLLER_API_URL', 'https://api.comptroller.texas.gov/sift/v1/sift/public'),
+        'api_key' => env('TEXAS_COMPTROLLER_API_KEY'),
+        'timeout' => env('TEXAS_COMPTROLLER_TIMEOUT', 60), // seconds
+        'retry_attempts' => env('TEXAS_COMPTROLLER_RETRY_ATTEMPTS', 3),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Automation Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure how the system automatically updates tax data.
+    |
+    */
+
+    'automation' => [
+        // Enable automatic quarterly updates
+        'enabled' => env('TEXAS_TAX_AUTO_UPDATE', true),
+        
+        // Quarters to process (Texas releases data quarterly)
+        'quarters' => ['Q1', 'Q2', 'Q3', 'Q4'],
+        
+        // Days to wait after quarter end before checking for new data
+        'quarter_delay_days' => 30,
+        
+        // Whether to send notifications on successful updates
+        'send_notifications' => env('TEXAS_TAX_NOTIFICATIONS', true),
+        
+        // Email addresses to notify on updates
+        'notification_emails' => explode(',', env('TEXAS_TAX_NOTIFICATION_EMAILS', '')),
+        
+        // Slack webhook for notifications
+        'slack_webhook' => env('TEXAS_TAX_SLACK_WEBHOOK'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | County Prioritization
+    |--------------------------------------------------------------------------
+    |
+    | Counties to prioritize for address data downloads.
+    | Based on population and business activity.
+    |
+    */
+
+    'priority_counties' => [
+        // Tier 1: Major metropolitan areas
+        'tier_1' => [
+            '201', // Harris County (Houston)
+            '113', // Dallas County
+            '029', // Bexar County (San Antonio)
+            '453', // Travis County (Austin)
+            '439', // Tarrant County (Fort Worth)
+        ],
+        
+        // Tier 2: Large suburban counties
+        'tier_2' => [
+            '157', // Fort Bend County
+            '085', // Collin County
+            '121', // Denton County
+            '491', // Williamson County
+            '139', // Ellis County
+        ],
+        
+        // Tier 3: Medium business activity
+        'tier_3' => [
+            '167', // Galveston County
+            '339', // Montgomery County
+            '257', // Brazoria County
+            '215', // Hidalgo County
+            '061', // Cameron County
+        ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Data Storage
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for storing downloaded tax data files.
+    |
+    */
+
+    'storage' => [
+        // Local storage path for tax data files
+        'path' => storage_path('app/texas-tax-data'),
+        
+        // Whether to keep downloaded ZIP files after extraction
+        'keep_zip_files' => env('TEXAS_TAX_KEEP_ZIPS', false),
+        
+        // Number of quarters of data to retain
+        'retention_quarters' => 8,
+        
+        // Backup to cloud storage
+        'backup_to_cloud' => env('TEXAS_TAX_CLOUD_BACKUP', false),
+        'cloud_disk' => env('TEXAS_TAX_CLOUD_DISK', 's3'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Performance Settings
+    |--------------------------------------------------------------------------
+    |
+    | Settings to optimize performance during large data imports.
+    |
+    */
+
+    'performance' => [
+        // Batch size for database inserts
+        'batch_size' => 1000,
+        
+        // Memory limit for processing large files
+        'memory_limit' => '512M',
+        
+        // Enable progress bars in console output
+        'show_progress' => true,
+        
+        // Use database transactions for imports
+        'use_transactions' => true,
+        
+        // Parallel processing for multiple counties
+        'parallel_counties' => false, // Set to true if using queue workers
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fallback Configuration
+    |--------------------------------------------------------------------------
+    |
+    | What to do when API access fails.
+    |
+    */
+
+    'fallback' => [
+        // Try local files if API fails
+        'use_local_files' => true,
+        
+        // Local file path pattern
+        'local_file_pattern' => base_path('tax_jurisdiction_rates-{quarter}.csv'),
+        
+        // Use cached data if both API and local files fail
+        'use_cached_data' => true,
+        
+        // Maximum age of cached data (days)
+        'max_cached_age_days' => 120,
+        
+        // Alert emails when fallback is used
+        'fallback_alert_emails' => explode(',', env('TEXAS_TAX_FALLBACK_ALERTS', '')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Integration Settings
+    |--------------------------------------------------------------------------
+    |
+    | How tax data integrates with the MSP platform.
+    |
+    */
+
+    'integration' => [
+        // Automatically update existing quotes/invoices when rates change
+        'auto_update_existing' => false,
+        
+        // Log all tax calculations for auditing
+        'log_calculations' => true,
+        
+        // Cache tax lookups for performance
+        'cache_lookups' => true,
+        'cache_ttl' => 86400, // 24 hours
+        
+        // Default company ID for tax rates
+        'default_company_id' => 1,
+        
+        // Service types that use Texas tax rates
+        'applicable_services' => [
+            'equipment',
+            'tangible_goods',
+            'software_licenses', // If applicable in Texas
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cost Savings Tracking
+    |--------------------------------------------------------------------------
+    |
+    | Track savings compared to paid tax services.
+    |
+    */
+
+    'cost_tracking' => [
+        // Enable cost savings tracking
+        'enabled' => true,
+        
+        // Estimated monthly cost of alternatives (for reporting)
+        'alternative_costs' => [
+            'taxcloud' => 800, // TaxCloud enterprise
+            'avalara' => 1200, // Avalara enterprise
+            'taxjar' => 600,   // TaxJar enterprise
+        ],
+        
+        // Our cost (essentially free, just server resources)
+        'our_cost' => 0,
+        
+        // Track calculations per month for ROI reporting
+        'track_calculation_volume' => true,
+    ],
+];

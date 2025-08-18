@@ -5,8 +5,8 @@
 @section('content')
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="bg-white shadow-sm rounded-lg mb-6">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <span class="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-{{ $categoryInfo['color'] }}-100 mr-4">
@@ -44,7 +44,7 @@
                         </svg>
                     </span>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">{{ $categoryInfo['name'] }}</h1>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $categoryInfo['name'] }}</h1>
                         <p class="mt-1 text-sm text-gray-500">{{ $categoryInfo['description'] }}</p>
                     </div>
                 </div>
@@ -58,7 +58,7 @@
     <!-- Reports Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($reports as $report)
-        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
@@ -69,7 +69,7 @@
                         </span>
                     </div>
                     <div class="ml-4 flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">{{ $report['name'] }}</h3>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $report['name'] }}</h3>
                         <p class="mt-1 text-sm text-gray-500">{{ $report['description'] }}</p>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                             Configure
                         </a>
                         <button onclick="quickGenerate('{{ $report['id'] }}')" 
-                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             Quick Generate
                         </button>
                     </div>
@@ -101,7 +101,7 @@
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No reports available</h3>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No reports available</h3>
         <p class="mt-1 text-sm text-gray-500">No reports have been configured for this category yet.</p>
     </div>
     @endif

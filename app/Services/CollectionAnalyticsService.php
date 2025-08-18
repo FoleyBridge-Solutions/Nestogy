@@ -187,7 +187,7 @@ class CollectionAnalyticsService
         // Daily collection amounts
         $dailyCollections = Payment::whereBetween('created_at', $dateRange)
             ->where('status', 'completed')
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->selectRaw('created_at::date as date, SUM(amount) as total')
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -195,7 +195,7 @@ class CollectionAnalyticsService
 
         // Daily action counts
         $dailyActions = DunningAction::whereBetween('created_at', $dateRange)
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+            ->selectRaw('created_at::date as date, COUNT(*) as total')
             ->groupBy('date')
             ->orderBy('date')
             ->get()

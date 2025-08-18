@@ -5,8 +5,8 @@
 @section('page-actions')
 <div class="flex items-center space-x-4">
     <div class="flex items-center space-x-2">
-        <label for="report-type" class="text-sm font-medium text-gray-700">Type:</label>
-        <select id="report-type" class="form-select rounded-md border-gray-300 text-sm">
+        <label for="report-type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</label>
+        <select id="report-type" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border-gray-300 dark:border-gray-600 text-sm">
             <option value="overview" selected>Overview</option>
             <option value="revenue">Revenue Analysis</option>
             <option value="expenses">Expense Analysis</option>
@@ -18,8 +18,8 @@
     </div>
     
     <div class="flex items-center space-x-2">
-        <label for="date-preset" class="text-sm font-medium text-gray-700">Period:</label>
-        <select id="date-preset" class="form-select rounded-md border-gray-300 text-sm">
+        <label for="date-preset" class="text-sm font-medium text-gray-700 dark:text-gray-300">Period:</label>
+        <select id="date-preset" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border-gray-300 dark:border-gray-600 text-sm">
             <option value="last_7_days">Last 7 days</option>
             <option value="last_30_days" selected>Last 30 days</option>
             <option value="last_90_days">Last 90 days</option>
@@ -32,31 +32,31 @@
     </div>
     
     <div id="custom-date-range" class="hidden flex items-center space-x-2">
-        <input type="date" id="start-date" class="form-input rounded-md border-gray-300 text-sm">
+        <input type="date" id="start-date" class="form-input rounded-md border-gray-300 dark:border-gray-600 text-sm">
         <span class="text-gray-500">to</span>
-        <input type="date" id="end-date" class="form-input rounded-md border-gray-300 text-sm">
+        <input type="date" id="end-date" class="form-input rounded-md border-gray-300 dark:border-gray-600 text-sm">
     </div>
     
-    <button id="refresh-data" class="btn btn-secondary">
+    <button id="refresh-data" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
         <i class="fas fa-sync-alt mr-2"></i>
         Refresh
     </button>
     
     <div class="relative">
-        <button id="export-dropdown-btn" class="btn btn-primary">
+        <button id="export-dropdown-btn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <i class="fas fa-download mr-2"></i>
             Export
             <i class="fas fa-chevron-down ml-2"></i>
         </button>
-        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10">
             <div class="py-1">
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="pdf">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="pdf">
                     <i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF Report
                 </button>
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="xlsx">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="xlsx">
                     <i class="fas fa-file-excel mr-2 text-green-500"></i>Excel Report
                 </button>
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="csv">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="csv">
                     <i class="fas fa-file-csv mr-2 text-blue-500"></i>CSV Data
                 </button>
             </div>
@@ -68,28 +68,28 @@
 @section('content')
 <!-- Loading Overlay -->
 <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 shadow-xl">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
         <div class="flex items-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-4"></div>
-            <span class="text-gray-700">Loading financial data...</span>
+            <span class="text-gray-700 dark:text-gray-300">Loading financial data...</span>
         </div>
     </div>
 </div>
 
 <!-- Page Header -->
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Financial Reports</h1>
-    <p class="text-gray-600 mt-2">Revenue, expenses, profit analysis and financial performance metrics</p>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Financial Reports</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-2">Revenue, expenses, profit analysis and financial performance metrics</p>
     
     <div id="last-updated" class="text-sm text-gray-500 mt-1"></div>
 </div>
 
 <!-- Financial KPIs -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-revenue" class="text-2xl font-bold text-green-600">$0</span>
                     <span id="kpi-revenue-trend" class="ml-2 text-sm"></span>
@@ -102,10 +102,10 @@
         <div id="kpi-revenue-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Total Expenses</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Expenses</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-expenses" class="text-2xl font-bold text-red-600">$0</span>
                     <span id="kpi-expenses-trend" class="ml-2 text-sm"></span>
@@ -118,10 +118,10 @@
         <div id="kpi-expenses-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Net Profit</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Net Profit</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-profit" class="text-2xl font-bold text-blue-600">$0</span>
                     <span id="kpi-profit-trend" class="ml-2 text-sm"></span>
@@ -134,10 +134,10 @@
         <div id="kpi-profit-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Profit Margin</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Profit Margin</p>
                 <div class="flex items-center mt-2">
                     <span id="kpi-margin" class="text-2xl font-bold text-purple-600">0%</span>
                     <span id="kpi-margin-trend" class="ml-2 text-sm"></span>
@@ -154,9 +154,9 @@
 <!-- Main Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Revenue vs Expenses Trend -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Revenue vs Expenses</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Revenue vs Expenses</h3>
             <div class="flex items-center space-x-2">
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md bg-indigo-100 text-indigo-700" data-chart="revenue-expenses" data-period="30d">30D</button>
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md text-gray-500" data-chart="revenue-expenses" data-period="90d">90D</button>
@@ -169,9 +169,9 @@
     </div>
 
     <!-- Profit Margin Trend -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Profit Margin Trend</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Profit Margin Trend</h3>
             <div class="flex items-center space-x-2">
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md bg-indigo-100 text-indigo-700" data-chart="profit-margin" data-period="30d">30D</button>
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md text-gray-500" data-chart="profit-margin" data-period="90d">90D</button>
@@ -187,24 +187,24 @@
 <!-- Secondary Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     <!-- Expense Categories -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Expense Breakdown</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Expense Breakdown</h3>
         <div class="h-64">
             <canvas id="expense-categories-chart"></canvas>
         </div>
     </div>
 
     <!-- Payment Methods -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Methods</h3>
         <div class="h-64">
             <canvas id="payment-methods-chart"></canvas>
         </div>
     </div>
 
     <!-- Monthly Comparison -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Performance</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Performance</h3>
         <div class="h-64">
             <canvas id="monthly-comparison-chart"></canvas>
         </div>
@@ -214,11 +214,11 @@
 <!-- Financial Tables -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Top Expenses -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Expenses</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Expenses</h3>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
@@ -226,7 +226,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% of Total</th>
                     </tr>
                 </thead>
-                <tbody id="top-expenses-table" class="bg-white divide-y divide-gray-200">
+                <tbody id="top-expenses-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                     <!-- Data will be loaded dynamically -->
                 </tbody>
             </table>
@@ -234,8 +234,8 @@
     </div>
 
     <!-- Recent Transactions -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Transactions</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Transactions</h3>
         <div id="recent-transactions" class="space-y-4 max-h-96 overflow-y-auto">
             <!-- Transactions will be loaded dynamically -->
         </div>
@@ -516,10 +516,10 @@ document.addEventListener('DOMContentLoaded', function() {
             tables.top_expenses.forEach(expense => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${expense.category}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${expense.amount.toLocaleString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${expense.count}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${expense.percentage.toFixed(1)}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${expense.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">$${expense.amount.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${expense.count}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${expense.percentage.toFixed(1)}%</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -532,14 +532,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             tables.recent_transactions.forEach(transaction => {
                 const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                item.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg';
                 item.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <div class="flex-shrink-0 w-10 h-10 bg-${transaction.type === 'revenue' ? 'green' : 'red'}-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-${transaction.type === 'revenue' ? 'plus' : 'minus'} text-${transaction.type === 'revenue' ? 'green' : 'red'}-600"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-900">${transaction.description}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">${transaction.description}</p>
                             <p class="text-xs text-gray-500">${transaction.date}</p>
                         </div>
                     </div>

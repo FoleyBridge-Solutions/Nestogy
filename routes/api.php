@@ -83,14 +83,14 @@ Route::middleware(['auth:sanctum'])->prefix('voip-tax')->name('api.voip-tax.')->
 Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
     Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register');
-    Route::post('forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('forgot-password');
+    // Route::post('forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('forgot-password');
     
     // Authenticated Auth Routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
         Route::post('refresh', [App\Http\Controllers\Auth\LoginController::class, 'refresh'])->name('refresh');
         Route::get('me', function (Request $request) { return $request->user(); })->name('me');
-        Route::post('change-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('change-password');
+        // Route::post('change-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('change-password');
     });
 });
 
@@ -108,16 +108,16 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     // Client Management API
     Route::prefix('clients')->name('api.clients.')->group(function () {
         // Standard CRUD
-        Route::get('/', [App\Http\Controllers\ClientController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\ClientController::class, 'store'])->name('store');
-        Route::get('{client}', [App\Http\Controllers\ClientController::class, 'show'])->name('show');
-        Route::put('{client}', [App\Http\Controllers\ClientController::class, 'update'])->name('update');
-        Route::delete('{client}', [App\Http\Controllers\ClientController::class, 'destroy'])->name('destroy');
+        Route::get('/', [App\Domains\Client\Controllers\ClientController::class, 'index'])->name('index');
+        Route::post('/', [App\Domains\Client\Controllers\ClientController::class, 'store'])->name('store');
+        Route::get('{client}', [App\Domains\Client\Controllers\ClientController::class, 'show'])->name('show');
+        Route::put('{client}', [App\Domains\Client\Controllers\ClientController::class, 'update'])->name('update');
+        Route::delete('{client}', [App\Domains\Client\Controllers\ClientController::class, 'destroy'])->name('destroy');
         
         // Client Actions
-        Route::patch('{client}/archive', [App\Http\Controllers\ClientController::class, 'archive'])->name('archive');
-        Route::patch('{client}/restore', [App\Http\Controllers\ClientController::class, 'restore'])->name('restore');
-        Route::patch('{client}/notes', [App\Http\Controllers\ClientController::class, 'updateNotes'])->name('notes.update');
+        Route::patch('{client}/archive', [App\Domains\Client\Controllers\ClientController::class, 'archive'])->name('archive');
+        Route::patch('{client}/restore', [App\Domains\Client\Controllers\ClientController::class, 'restore'])->name('restore');
+        Route::patch('{client}/notes', [App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('notes.update');
         
         // Client Relationships
         Route::get('{client}/contacts', [App\Http\Controllers\ContactController::class, 'index'])->name('contacts.index');
@@ -130,7 +130,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::put('{client}/locations/{location}', [App\Domains\Client\Controllers\LocationController::class, 'update'])->name('locations.update');
         Route::delete('{client}/locations/{location}', [App\Domains\Client\Controllers\LocationController::class, 'destroy'])->name('locations.destroy');
         
-        Route::get('{client}/tickets', [App\Http\Controllers\TicketController::class, 'index'])->name('tickets.index');
+        Route::get('{client}/tickets', [App\Domains\Ticket\Controllers\TicketController::class, 'index'])->name('tickets.index');
         Route::get('{client}/invoices', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('{client}/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
         
@@ -138,6 +138,10 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('active', [App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('active');
         Route::get('search', [App\Http\Controllers\SearchController::class, 'clients'])->name('search');
         Route::post('{client}/mark-accessed', [App\Domains\Client\Controllers\ClientController::class, 'markAsAccessed'])->name('mark-accessed');
+        Route::post('validate-batch', [App\Domains\Client\Controllers\ClientController::class, 'validateBatch'])->name('validate-batch');
+        
+        // Client Billing Settings
+        Route::get('{client}/billing-settings', [App\Domains\Client\Controllers\ClientController::class, 'getBillingSettings'])->name('billing-settings');
     });
 
     // Ticket System API
@@ -150,21 +154,21 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::delete('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'destroy'])->name('destroy');
         
         // Ticket Actions
-        Route::post('{ticket}/replies', [App\Http\Controllers\TicketController::class, 'addReply'])->name('replies.store');
-        Route::patch('{ticket}/assign', [App\Http\Controllers\TicketController::class, 'assign'])->name('assign');
-        Route::patch('{ticket}/status', [App\Http\Controllers\TicketController::class, 'updateStatus'])->name('status.update');
-        Route::patch('{ticket}/priority', [App\Http\Controllers\TicketController::class, 'updatePriority'])->name('priority.update');
-        Route::patch('{ticket}/schedule', [App\Http\Controllers\TicketController::class, 'schedule'])->name('schedule');
-        Route::post('{ticket}/watchers', [App\Http\Controllers\TicketController::class, 'addWatcher'])->name('watchers.add');
-        Route::post('{ticket}/merge', [App\Http\Controllers\TicketController::class, 'merge'])->name('merge');
+        Route::post('{ticket}/replies', [App\Domains\Ticket\Controllers\TicketController::class, 'addReply'])->name('replies.store');
+        Route::patch('{ticket}/assign', [App\Domains\Ticket\Controllers\TicketController::class, 'assign'])->name('assign');
+        Route::patch('{ticket}/status', [App\Domains\Ticket\Controllers\TicketController::class, 'updateStatus'])->name('status.update');
+        Route::patch('{ticket}/priority', [App\Domains\Ticket\Controllers\TicketController::class, 'updatePriority'])->name('priority.update');
+        Route::patch('{ticket}/schedule', [App\Domains\Ticket\Controllers\TicketController::class, 'schedule'])->name('schedule');
+        Route::post('{ticket}/watchers', [App\Domains\Ticket\Controllers\TicketController::class, 'addWatcher'])->name('watchers.add');
+        Route::post('{ticket}/merge', [App\Domains\Ticket\Controllers\TicketController::class, 'merge'])->name('merge');
         
         // Ticket File Management
-        Route::post('{ticket}/attachments', [App\Http\Controllers\TicketController::class, 'uploadAttachment'])->name('attachments.upload');
-        Route::delete('{ticket}/attachments/{attachment}', [App\Http\Controllers\TicketController::class, 'deleteAttachment'])->name('attachments.destroy');
+        Route::post('{ticket}/attachments', [App\Domains\Ticket\Controllers\TicketController::class, 'uploadAttachment'])->name('attachments.upload');
+        Route::delete('{ticket}/attachments/{attachment}', [App\Domains\Ticket\Controllers\TicketController::class, 'deleteAttachment'])->name('attachments.destroy');
         
         // Ticket Viewers and Activity
-        Route::get('{ticket}/viewers', [App\Http\Controllers\TicketController::class, 'getViewers'])->name('viewers');
-        Route::post('{ticket}/view', [App\Http\Controllers\TicketController::class, 'markAsViewed'])->name('view');
+        Route::get('{ticket}/viewers', [App\Domains\Ticket\Controllers\TicketController::class, 'getViewers'])->name('viewers');
+        Route::post('{ticket}/view', [App\Domains\Ticket\Controllers\TicketController::class, 'markAsViewed'])->name('view');
         
         // Time Tracking API
         Route::prefix('{ticket}/time')->name('time.')->group(function () {
@@ -178,7 +182,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         
         // Quick Access
         Route::get('search', [App\Http\Controllers\SearchController::class, 'tickets'])->name('search');
-        Route::get('my-tickets', [App\Http\Controllers\TicketController::class, 'myTickets'])->name('my-tickets');
+        Route::get('my-tickets', [App\Domains\Ticket\Controllers\TicketController::class, 'myTickets'])->name('my-tickets');
         
         // New SLA and Bulk Operations
         Route::post('bulk-assign', [App\Http\Controllers\Api\TicketsController::class, 'bulkAssign'])->name('bulk-assign');
@@ -213,6 +217,31 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
     // Financial Management API
     Route::prefix('financial')->name('api.financial.')->group(function () {
+        
+        // Quote API
+        Route::prefix('quotes')->name('quotes.')->group(function () {
+            // Standard CRUD
+            Route::get('/', [App\Domains\Financial\Controllers\QuoteController::class, 'index'])->name('index');
+            Route::post('/', [App\Domains\Financial\Controllers\QuoteController::class, 'store'])->name('store');
+            Route::get('{quote}', [App\Domains\Financial\Controllers\QuoteController::class, 'show'])->name('show');
+            Route::put('{quote}', [App\Domains\Financial\Controllers\QuoteController::class, 'update'])->name('update');
+            Route::delete('{quote}', [App\Domains\Financial\Controllers\QuoteController::class, 'destroy'])->name('destroy');
+            
+            // Quote Items
+            Route::post('{quote}/items', [App\Domains\Financial\Controllers\QuoteController::class, 'addItem'])->name('items.store');
+            Route::put('{quote}/items/{item}', [App\Domains\Financial\Controllers\QuoteController::class, 'updateItem'])->name('items.update');
+            Route::delete('{quote}/items/{item}', [App\Domains\Financial\Controllers\QuoteController::class, 'deleteItem'])->name('items.destroy');
+            
+            // Quote Actions
+            Route::post('{quote}/send', [App\Domains\Financial\Controllers\QuoteController::class, 'sendEmail'])->name('send');
+            Route::post('{quote}/duplicate', [App\Domains\Financial\Controllers\QuoteController::class, 'duplicate'])->name('duplicate');
+            Route::post('{quote}/convert-to-invoice', [App\Domains\Financial\Controllers\QuoteController::class, 'convertToInvoice'])->name('convert-to-invoice');
+            
+            // Auto-save and PDF
+            Route::post('auto-save', [App\Domains\Financial\Controllers\QuoteController::class, 'autoSave'])->name('auto-save');
+            Route::post('preview-pdf', [App\Domains\Financial\Controllers\QuoteController::class, 'previewPdf'])->name('preview-pdf');
+            Route::post('email-pdf', [App\Domains\Financial\Controllers\QuoteController::class, 'emailPdf'])->name('email-pdf');
+        });
         
         // Invoice API
         Route::prefix('invoices')->name('invoices.')->group(function () {
@@ -275,6 +304,55 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::get('categories', [App\Http\Controllers\ExpenseController::class, 'categories'])->name('categories');
             Route::get('monthly-summary', [App\Http\Controllers\ExpenseController::class, 'monthlySummary'])->name('monthly-summary');
         });
+    });
+
+    // Product & Service Management API  
+    Route::prefix('products')->name('api.products.')->group(function () {
+        // Product Search & Discovery
+        Route::get('search', [App\Http\Controllers\Api\ProductController::class, 'search'])->name('search');
+        Route::get('quick-search', [App\Http\Controllers\Api\ProductController::class, 'quickSearch'])->name('quick-search');
+        Route::get('categories', [App\Http\Controllers\Api\ProductController::class, 'categories'])->name('categories');
+        Route::get('category/{category}', [App\Http\Controllers\Api\ProductController::class, 'byCategory'])->name('by-category');
+        
+        // Product Pricing
+        Route::post('pricing', [App\Http\Controllers\Api\ProductController::class, 'pricing'])->name('pricing');
+        Route::post('calculate-price', [App\Http\Controllers\Api\ProductController::class, 'calculatePrice'])->name('calculate-price');
+        Route::post('best-price', [App\Http\Controllers\Api\ProductController::class, 'bestPrice'])->name('best-price');
+        Route::post('apply-promo', [App\Http\Controllers\Api\ProductController::class, 'applyPromo'])->name('apply-promo');
+        
+        // Product Details & Recommendations
+        Route::get('{product}/details', [App\Http\Controllers\Api\ProductController::class, 'details'])->name('details');
+        Route::get('recommendations', [App\Http\Controllers\Api\ProductController::class, 'recommendations'])->name('recommendations');
+    });
+    
+    // Service Tax Calculation API
+    Route::prefix('services')->name('api.services.')->group(function () {
+        Route::post('calculate-tax', [App\Http\Controllers\Api\ServiceTaxController::class, 'calculateTax'])->name('calculate-tax');
+        Route::post('calculate-quote-tax', [App\Http\Controllers\Api\ServiceTaxController::class, 'calculateQuoteTax'])->name('calculate-quote-tax');
+        Route::get('customer/{customer}/address', [App\Http\Controllers\Api\ServiceTaxController::class, 'getCustomerAddress'])->name('customer-address');
+    });
+    
+    // Bundle Management API
+    Route::prefix('bundles')->name('api.bundles.')->group(function () {
+        // Bundle Discovery
+        Route::get('/', [App\Http\Controllers\Api\BundleController::class, 'index'])->name('index');
+        Route::get('search', [App\Http\Controllers\Api\BundleController::class, 'search'])->name('search');
+        
+        // Bundle Details & Configuration
+        Route::get('{bundle}/details', [App\Http\Controllers\Api\BundleController::class, 'details'])->name('details');
+        Route::get('{bundle}/configurable-options', [App\Http\Controllers\Api\BundleController::class, 'configurableOptions'])->name('configurable-options');
+        
+        // Bundle Pricing & Validation
+        Route::post('calculate-price', [App\Http\Controllers\Api\BundleController::class, 'calculatePrice'])->name('calculate-price');
+        Route::post('validate-selection', [App\Http\Controllers\Api\BundleController::class, 'validateSelection'])->name('validate-selection');
+        
+        // Bundle Management
+        Route::post('{bundle}/duplicate', [App\Http\Controllers\Api\BundleController::class, 'duplicate'])->name('duplicate');
+    });
+    
+    // Promo Code Management API
+    Route::prefix('promo-codes')->name('api.promo-codes.')->group(function () {
+        Route::post('validate', [App\Http\Controllers\Api\ProductController::class, 'applyPromo'])->name('validate');
     });
 
     // Project Management API
@@ -380,6 +458,24 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('recent', [App\Http\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
     });
     
+    // Keyboard Shortcuts API
+    Route::prefix('shortcuts')->name('api.shortcuts.')->group(function () {
+        Route::get('active', [App\Http\Controllers\Api\ShortcutsController::class, 'active'])->name('active');
+        Route::post('execute', [App\Http\Controllers\ShortcutController::class, 'executeShortcutCommand'])->name('execute');
+        Route::get('help', [App\Http\Controllers\ShortcutController::class, 'getShortcutHelp'])->name('help');
+    });
+    
+    // Product Catalog API (using the main products API above)
+    
+    // Services API (using the main services API above)
+    
+    // Bundles API (using the main bundles API above)
+    
+    // Categories API
+    Route::prefix('categories')->name('api.categories.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\CategoriesController::class, 'index'])->name('index');
+    });
+    
     // Search API
     Route::prefix('search')->name('api.search.')->group(function () {
         Route::get('global', [App\Http\Controllers\SearchController::class, 'global'])->name('global');
@@ -410,6 +506,10 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         
         Route::post('backup', [App\Http\Controllers\SettingsController::class, 'createBackup'])->name('backup.create');
         Route::get('logs', [App\Http\Controllers\SettingsController::class, 'logs'])->name('logs');
+        
+        // Billing Settings
+        Route::get('billing-defaults', [App\Http\Controllers\SettingsController::class, 'billingDefaults'])->name('billing-defaults');
+        Route::get('tax', [App\Http\Controllers\SettingsController::class, 'taxSettings'])->name('tax');
     });
     
     // RMM Integration Management API (Admin Only)
@@ -445,7 +545,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('stats', [App\Domains\Integration\Controllers\IntegrationController::class, 'getStats'])->name('stats');
         Route::get('{integration}/stats', [App\Domains\Integration\Controllers\IntegrationController::class, 'getIntegrationStats'])->name('integration-stats');
     });
+
 });
+
 
 // Integration Webhooks (No Authentication Required)
 Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->group(function () {

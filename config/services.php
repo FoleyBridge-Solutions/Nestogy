@@ -41,4 +41,19 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'google' => [
+        'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
+    'api_ninjas' => [
+        'key' => env('API_NINJAS_KEY'),
+        'timeout' => env('API_NINJAS_TIMEOUT', 10),
+        'base_url' => env('API_NINJAS_BASE_URL', 'https://api.api-ninjas.com/v1'),
+    ],
+
+    'ipgeolocation' => [
+        'key' => env('IPGEOLOCATION_API_KEY'),
+        'timeout' => env('IPGEOLOCATION_TIMEOUT', 5),
+    ],
+
 ];

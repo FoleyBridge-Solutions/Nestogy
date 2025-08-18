@@ -63,12 +63,14 @@ class Integration extends Model
     const PROVIDER_CONNECTWISE = 'connectwise';
     const PROVIDER_DATTO = 'datto';
     const PROVIDER_NINJA = 'ninja';
+    const PROVIDER_TACTICAL_RMM = 'tactical_rmm';
     const PROVIDER_GENERIC = 'generic';
 
     const PROVIDER_LABELS = [
         self::PROVIDER_CONNECTWISE => 'ConnectWise Automate',
         self::PROVIDER_DATTO => 'Datto RMM',
         self::PROVIDER_NINJA => 'NinjaOne',
+        self::PROVIDER_TACTICAL_RMM => 'Tactical RMM',
         self::PROVIDER_GENERIC => 'Generic RMM',
     ];
 
@@ -202,6 +204,20 @@ class Integration extends Model
                     'auto_assign_technician' => false,
                     'notify_client' => false,
                 ];
+            case self::PROVIDER_TACTICAL_RMM:
+                return [
+                    'severity_mapping' => [
+                        'critical' => 'urgent',
+                        'warning' => 'high',
+                        'error' => 'high',
+                        'info' => 'normal',
+                    ],
+                    'auto_create_tickets' => true,
+                    'auto_assign_technician' => false,
+                    'notify_client' => false,
+                    'sync_agents' => true,
+                    'sync_alerts' => true,
+                ];
             default:
                 return [
                     'severity_mapping' => [
@@ -252,6 +268,18 @@ class Integration extends Model
                     'message' => 'alertMessage',
                     'severity' => 'alertType',
                     'timestamp' => 'createdAt',
+                ];
+            case self::PROVIDER_TACTICAL_RMM:
+                return [
+                    'device_id' => 'agent_id',
+                    'device_name' => 'hostname',
+                    'client_id' => 'client',
+                    'site_id' => 'site',
+                    'alert_id' => 'id',
+                    'message' => 'message',
+                    'severity' => 'severity',
+                    'timestamp' => 'created_time',
+                    'alert_type' => 'alert_type',
                 ];
             default:
                 return [

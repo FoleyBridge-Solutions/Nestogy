@@ -208,12 +208,7 @@
                                     @if(isset($day['events']) && count($day['events']) > 0)
                                         <div class="space-y-1">
                                             @foreach(array_slice($day['events'], 0, 3) as $event)
-                                                <div class="px-2 py-1 text-xs rounded cursor-pointer hover:opacity-80
-                                                    @if($event['type'] === 'ticket') bg-blue-100 text-blue-700
-                                                    @elseif($event['type'] === 'event') bg-green-100 text-green-700
-                                                    @elseif($event['type'] === 'deadline') bg-red-100 text-red-700
-                                                    @else bg-gray-100 text-gray-700
-                                                    @endif"
+                                                <div class="px-2 py-1 text-xs rounded cursor-pointer hover:opacity-80 @if($event['type'] === 'ticket') bg-blue-100 text-blue-700 @elseif($event['type'] === 'event') bg-green-100 text-green-700 @elseif($event['type'] === 'deadline') bg-red-100 text-red-700 @else bg-gray-100 text-gray-700 @endif"
                                                     onclick="showEventDetails({{ json_encode($event) }})">
                                                     <div class="truncate">{{ $event['title'] }}</div>
                                                     @if($event['time'])
@@ -258,12 +253,7 @@
                                     <div class="bg-white min-h-16 p-1 border-r border-b border-gray-100 relative">
                                         @if(isset($weekEvents[$day['date']->format('Y-m-d')][$hour]))
                                             @foreach($weekEvents[$day['date']->format('Y-m-d')][$hour] as $event)
-                                                <div class="absolute inset-1 px-2 py-1 text-xs rounded cursor-pointer hover:opacity-80
-                                                    @if($event['type'] === 'ticket') bg-blue-100 text-blue-700
-                                                    @elseif($event['type'] === 'event') bg-green-100 text-green-700
-                                                    @elseif($event['type'] === 'deadline') bg-red-100 text-red-700
-                                                    @else bg-gray-100 text-gray-700
-                                                    @endif"
+                                                <div class="absolute inset-1 px-2 py-1 text-xs rounded cursor-pointer hover:opacity-80 @if($event['type'] === 'ticket') bg-blue-100 text-blue-700 @elseif($event['type'] === 'event') bg-green-100 text-green-700 @elseif($event['type'] === 'deadline') bg-red-100 text-red-700 @else bg-gray-100 text-gray-700 @endif"
                                                     onclick="showEventDetails({{ json_encode($event) }})">
                                                     <div class="truncate font-medium">{{ $event['title'] }}</div>
                                                     @if($event['time'])
@@ -293,12 +283,7 @@
                             <div class="flex items-center p-3 rounded-lg border hover:bg-gray-50 cursor-pointer"
                                  onclick="showEventDetails({{ json_encode($event) }})">
                                 <div class="flex-shrink-0">
-                                    <div class="w-3 h-3 rounded-full 
-                                        @if($event['type'] === 'ticket') bg-blue-500
-                                        @elseif($event['type'] === 'event') bg-green-500
-                                        @elseif($event['type'] === 'deadline') bg-red-500
-                                        @else bg-gray-500
-                                        @endif"></div>
+                                    <div class="w-3 h-3 rounded-full @if($event['type'] === 'ticket') bg-blue-500 @elseif($event['type'] === 'event') bg-green-500 @elseif($event['type'] === 'deadline') bg-red-500 @else bg-gray-500 @endif"></div>
                                 </div>
                                 <div class="ml-3 flex-1">
                                     <div class="text-sm font-medium text-gray-900">{{ $event['title'] }}</div>
@@ -359,7 +344,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-flex flex-wrap -mx-4-reverse">
                 <button type="button" 
                         onclick="closeEventModal()"
                         class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm">

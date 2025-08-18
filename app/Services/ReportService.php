@@ -331,7 +331,7 @@ class ReportService
         // Daily ticket creation
         $dailyVolume = Ticket::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->selectRaw('created_at::date as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();

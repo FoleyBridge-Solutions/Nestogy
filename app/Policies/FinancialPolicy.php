@@ -12,7 +12,7 @@ class FinancialPolicy
      */
     public function view(User $user): bool
     {
-        return $user->hasPermission('financial.view');
+        return $user->can('financial.view');
     }
 
     /**
@@ -20,7 +20,7 @@ class FinancialPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('financial.create');
+        return $user->can('financial.create');
     }
 
     /**
@@ -28,7 +28,7 @@ class FinancialPolicy
      */
     public function edit(User $user): bool
     {
-        return $user->hasPermission('financial.edit');
+        return $user->can('financial.edit');
     }
 
     /**
@@ -36,7 +36,7 @@ class FinancialPolicy
      */
     public function delete(User $user): bool
     {
-        return $user->hasPermission('financial.delete');
+        return $user->can('financial.delete');
     }
 
     /**
@@ -44,7 +44,7 @@ class FinancialPolicy
      */
     public function manage(User $user): bool
     {
-        return $user->hasPermission('financial.manage');
+        return $user->can('financial.manage');
     }
 
     /**
@@ -52,7 +52,7 @@ class FinancialPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('financial.export');
+        return $user->can('financial.export');
     }
 
     // Payment-specific permissions
@@ -61,7 +61,7 @@ class FinancialPolicy
      */
     public function viewPayments(User $user): bool
     {
-        return $user->hasPermission('financial.payments.view');
+        return $user->can('financial.payments.view');
     }
 
     /**
@@ -69,7 +69,7 @@ class FinancialPolicy
      */
     public function managePayments(User $user): bool
     {
-        return $user->hasPermission('financial.payments.manage');
+        return $user->can('financial.payments.manage');
     }
 
     /**
@@ -77,7 +77,7 @@ class FinancialPolicy
      */
     public function exportPayments(User $user): bool
     {
-        return $user->hasPermission('financial.payments.export');
+        return $user->can('financial.payments.export');
     }
 
     /**
@@ -85,7 +85,7 @@ class FinancialPolicy
      */
     public function processPayments(User $user): bool
     {
-        return $user->hasPermission('financial.payments.manage');
+        return $user->can('financial.payments.manage');
     }
 
     // Expense-specific permissions
@@ -94,7 +94,7 @@ class FinancialPolicy
      */
     public function viewExpenses(User $user): bool
     {
-        return $user->hasPermission('financial.expenses.view');
+        return $user->can('financial.expenses.view');
     }
 
     /**
@@ -102,7 +102,7 @@ class FinancialPolicy
      */
     public function manageExpenses(User $user): bool
     {
-        return $user->hasPermission('financial.expenses.manage');
+        return $user->can('financial.expenses.manage');
     }
 
     /**
@@ -110,7 +110,7 @@ class FinancialPolicy
      */
     public function exportExpenses(User $user): bool
     {
-        return $user->hasPermission('financial.expenses.export');
+        return $user->can('financial.expenses.export');
     }
 
     /**
@@ -118,7 +118,7 @@ class FinancialPolicy
      */
     public function approveExpenses(User $user): bool
     {
-        return $user->hasPermission('financial.expenses.approve');
+        return $user->can('financial.expenses.approve');
     }
 
     /**
@@ -126,7 +126,7 @@ class FinancialPolicy
      */
     public function rejectExpenses(User $user): bool
     {
-        return $user->hasPermission('financial.expenses.approve');
+        return $user->can('financial.expenses.approve');
     }
 
     /**
@@ -134,7 +134,7 @@ class FinancialPolicy
      */
     public function submitExpenses(User $user): bool
     {
-        return $user->hasPermission('financial.expenses.manage');
+        return $user->can('financial.expenses.manage');
     }
 
     // Invoice-specific permissions
@@ -143,7 +143,7 @@ class FinancialPolicy
      */
     public function viewInvoices(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.view');
+        return $user->can('financial.invoices.view');
     }
 
     /**
@@ -151,7 +151,7 @@ class FinancialPolicy
      */
     public function manageInvoices(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.manage');
+        return $user->can('financial.invoices.manage');
     }
 
     /**
@@ -159,7 +159,7 @@ class FinancialPolicy
      */
     public function exportInvoices(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.export');
+        return $user->can('financial.invoices.export');
     }
 
     /**
@@ -167,7 +167,7 @@ class FinancialPolicy
      */
     public function sendInvoices(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.manage');
+        return $user->can('financial.invoices.manage');
     }
 
     /**
@@ -175,7 +175,7 @@ class FinancialPolicy
      */
     public function generateInvoicePdf(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.view');
+        return $user->can('financial.invoices.view');
     }
 
     /**
@@ -183,7 +183,7 @@ class FinancialPolicy
      */
     public function updateInvoiceStatus(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.manage');
+        return $user->can('financial.invoices.manage');
     }
 
     /**
@@ -191,7 +191,7 @@ class FinancialPolicy
      */
     public function addInvoicePayments(User $user): bool
     {
-        return $user->hasPermission('financial.payments.manage');
+        return $user->can('financial.payments.manage');
     }
 
     /**
@@ -199,7 +199,7 @@ class FinancialPolicy
      */
     public function manageInvoiceItems(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.manage');
+        return $user->can('financial.invoices.manage');
     }
 
     /**
@@ -207,7 +207,7 @@ class FinancialPolicy
      */
     public function copyInvoices(User $user): bool
     {
-        return $user->hasPermission('financial.invoices.manage');
+        return $user->can('financial.invoices.manage');
     }
 
     // Special workflow permissions
@@ -216,7 +216,7 @@ class FinancialPolicy
      */
     public function approveWorkflows(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'financial.expenses.approve',
             'financial.manage'
         ]);
@@ -227,7 +227,7 @@ class FinancialPolicy
      */
     public function viewReports(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'financial.view',
             'reports.financial'
         ]);
@@ -238,7 +238,7 @@ class FinancialPolicy
      */
     public function viewSensitiveData(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'financial.manage',
             'financial.expenses.approve'
         ]) || $user->isAdmin();
@@ -249,6 +249,6 @@ class FinancialPolicy
      */
     public function configureSettings(User $user): bool
     {
-        return $user->hasPermission('financial.manage') || $user->isAdmin();
+        return $user->can('financial.manage') || $user->isAdmin();
     }
 }

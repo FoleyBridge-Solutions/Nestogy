@@ -4,10 +4,11 @@ namespace App\Models;
 
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -43,9 +44,9 @@ use Illuminate\Support\Facades\Hash;
  * @property int|null $vendor_id
  * @property int $client_id
  */
-class Contact extends Model
+class Contact extends Authenticatable
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, SoftDeletes, BelongsToCompany, Notifiable;
 
     /**
      * The table associated with the model.
@@ -79,6 +80,20 @@ class Contact extends Model
         'client_id',
         'company_id',
         'accessed_at',
+        // Portal access fields
+        'has_portal_access',
+        'portal_permissions',
+        'last_login_at',
+        'last_login_ip',
+        'login_count',
+        'failed_login_count',
+        'locked_until',
+        'email_verified_at',
+        'remember_token',
+        'password_changed_at',
+        'must_change_password',
+        'session_timeout_minutes',
+        'allowed_ip_addresses',
     ];
 
     /**
@@ -88,6 +103,7 @@ class Contact extends Model
         'password_hash',
         'password_reset_token',
         'pin',
+        'remember_token',
     ];
 
     /**
@@ -106,6 +122,18 @@ class Contact extends Model
         'location_id' => 'integer',
         'vendor_id' => 'integer',
         'client_id' => 'integer',
+        // Portal access casts
+        'has_portal_access' => 'boolean',
+        'portal_permissions' => 'array',
+        'last_login_at' => 'datetime',
+        'locked_until' => 'datetime',
+        'email_verified_at' => 'datetime',
+        'password_changed_at' => 'datetime',
+        'must_change_password' => 'boolean',
+        'allowed_ip_addresses' => 'array',
+        'login_count' => 'integer',
+        'failed_login_count' => 'integer',
+        'session_timeout_minutes' => 'integer',
     ];
 
     /**
@@ -169,6 +197,37 @@ class Contact extends Model
     }
 
     /**
+     * Get addresses related to this contact.
+     * Returns a collection of addresses from location and client.
+     */
+    public function getAddressesAttribute()
+    {
+        $addresses = collect();
+
+        // If contact has a location, add it as an address
+        if ($this->location_id && $this->location) {
+            // Create a pseudo-address object from location data
+            $locationAddress = (object) [
+                'id' => 'location_' . $this->location->id,
+                'display_name' => $this->location->display_name,
+                'formatted_address' => $this->location->formatted_address,
+                'phone' => $this->location->phone,
+                'type' => 'location',
+            ];
+            $addresses->push($locationAddress);
+        }
+
+        // Add client addresses
+        if ($this->client && $this->client->addresses) {
+            foreach ($this->client->addresses as $address) {
+                $addresses->push($address);
+            }
+        }
+
+        return $addresses;
+    }
+
+    /**
      * Get the contact's photo URL.
      */
     public function getPhotoUrl(): string
@@ -182,6 +241,14 @@ class Contact extends Model
         }
 
         return asset('images/default-avatar.png');
+    }
+
+    /**
+     * Get the contact's avatar URL (alias for getPhotoUrl for Laravel compatibility).
+     */
+    public function getAvatarUrl(): string
+    {
+        return $this->getPhotoUrl();
     }
 
     /**
@@ -375,6 +442,14 @@ class Contact extends Model
     }
 
     /**
+     * Get type labels attribute (accessor for type_labels).
+     */
+    public function getTypeLabelsAttribute(): array
+    {
+        return $this->getRoles();
+    }
+
+    /**
      * Scope to get only primary contacts.
      */
     public function scopePrimary($query)
@@ -489,5 +564,97 @@ class Contact extends Model
             self::AUTH_PASSWORD => 'Password',
             self::AUTH_PIN => 'PIN',
         ];
+    }
+    
+    /**
+     * Get the password for authentication (Laravel expects 'password' attribute).
+     */
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
+    
+    /**
+     * Get the password attribute (accessor for Laravel auth).
+     */
+    public function getPasswordAttribute()
+    {
+        return $this->password_hash;
+    }
+    
+    /**
+     * Set the password attribute (mutator for Laravel auth).
+     */
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password_hash'] = Hash::make($value);
+    }
+    
+    /**
+     * Find contact by email for authentication.
+     */
+    public static function findByEmail($email)
+    {
+        return static::where('email', $email)
+                    ->where('has_portal_access', true)
+                    ->with('client')
+                    ->first();
+    }
+    
+    /**
+     * Check if the contact account is locked.
+     */
+    public function isLocked(): bool
+    {
+        return $this->locked_until && $this->locked_until->isFuture();
+    }
+    
+    /**
+     * Increment failed login attempts.
+     */
+    public function incrementFailedLoginAttempts(): void
+    {
+        $this->increment('failed_login_count');
+        
+        // Lock account after 5 failed attempts
+        if ($this->failed_login_count >= 5) {
+            $this->update(['locked_until' => now()->addMinutes(30)]);
+        }
+    }
+    
+    /**
+     * Reset failed login attempts on successful login.
+     */
+    public function resetFailedLoginAttempts(): void
+    {
+        $this->update([
+            'failed_login_count' => 0,
+            'locked_until' => null,
+        ]);
+    }
+    
+    /**
+     * Update login information after successful authentication.
+     */
+    public function updateLoginInfo($ipAddress = null): void
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $ipAddress,
+            'login_count' => ($this->login_count ?? 0) + 1,
+        ]);
+        
+        $this->resetFailedLoginAttempts();
+    }
+    
+    /**
+     * Check if the contact can access the client portal.
+     */
+    public function canAccessPortal(): bool
+    {
+        return $this->has_portal_access && 
+               !$this->isLocked() && 
+               $this->client && 
+               ($this->client->status === 'active' || !$this->client->trashed());
     }
 }

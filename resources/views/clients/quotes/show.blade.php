@@ -3,18 +3,18 @@
 @section('title', 'Quote Details')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Quote Details</h1>
                 <div class="btn-group">
                     @if(in_array($quote->status, ['draft', 'pending']))
-                        <a href="{{ route('clients.quotes.standalone.edit', $quote) }}" class="btn btn-primary">
-                            <i class="fas fa-edit me-2"></i>Edit Quote
+                        <a href="{{ route('clients.quotes.standalone.edit', $quote) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-edit mr-2"></i>Edit Quote
                         </a>
-                        <button type="button" class="btn btn-success" onclick="sendQuote({{ $quote->id }})">
-                            <i class="fas fa-paper-plane me-2"></i>Send Quote
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="sendQuote({{ $quote->id }})">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Quote
                         </button>
                     @endif
                     @if($quote->isAccepted())
@@ -36,25 +36,25 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8">
                     <!-- Main Quote Details -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">
                                     <i class="fas fa-file-alt me-2"></i>{{ $quote->quote_number }}
                                 </h5>
                                 <div class="d-flex gap-2">
                                     @switch($quote->status)
                                         @case('draft')
-                                            <span class="badge bg-secondary">Draft</span>
+                                            <span class="badge bg-gray-600">Draft</span>
                                             @break
                                         @case('pending')
                                             <span class="badge bg-warning">Pending Approval</span>
                                             @break
                                         @case('sent')
-                                            <span class="badge bg-primary">Sent to Client</span>
+                                            <span class="badge bg-blue-600">Sent to Client</span>
                                             @break
                                         @case('viewed')
                                             <span class="badge bg-info">Viewed by Client</span>
@@ -66,36 +66,31 @@
                                             <span class="badge bg-danger">Declined</span>
                                             @break
                                         @case('expired')
-                                            <span class="badge bg-dark">Expired</span>
+                                            <span class="badge bg-gray-900">Expired</span>
                                             @break
                                         @case('converted')
                                             <span class="badge bg-success">Converted</span>
                                             @break
                                         @case('cancelled')
-                                            <span class="badge bg-secondary">Cancelled</span>
+                                            <span class="badge bg-gray-600">Cancelled</span>
                                             @break
                                     @endswitch
 
                                     @if($quote->conversion_probability > 0)
-                                        <span class="badge 
-                                            @if($quote->conversion_probability >= 75) bg-success
-                                            @elseif($quote->conversion_probability >= 50) bg-info
-                                            @elseif($quote->conversion_probability >= 25) bg-warning
-                                            @else bg-danger
-                                            @endif">
+                                        <span class="badge @if($quote->conversion_probability >= 75) bg-success @elseif($quote->conversion_probability >= 50) bg-info @elseif($quote->conversion_probability >= 25) bg-warning @else bg-danger @endif">
                                             {{ $quote->conversion_probability }}% Conversion
                                         </span>
                                     @endif
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-muted">Quote Title</h6>
+                                <div class="md:w-1/2 px-4">
+                                    <h6 class="text-gray-600">Quote Title</h6>
                                     <p class="mb-3 fw-bold">{{ $quote->title }}</p>
 
-                                    <h6 class="text-muted">Client</h6>
+                                    <h6 class="text-gray-600">Client</h6>
                                     <p class="mb-3">
                                         <a href="{{ route('clients.show', $quote->client) }}" class="text-decoration-none">
                                             {{ $quote->client->display_name }}
@@ -110,29 +105,71 @@
                                     @endif
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="md:w-1/2 px-4">
                                     <h6 class="text-muted">Amount Details</h6>
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
                                             <span>Subtotal:</span>
-                                            <span class="fw-bold">{{ $quote->formatted_amount }}</span>
+                                            <span class="fw-bold">${{ number_format($quote->items->sum('subtotal'), 2) }}</span>
                                         </div>
                                         @if($quote->discount_amount > 0)
-                                            <div class="d-flex justify-content-between text-success">
+                                            <div class="d-flex justify-content-between text-warning">
                                                 <span>Discount:</span>
                                                 <span>-{{ $quote->formatted_discount_amount }}</span>
                                             </div>
                                         @endif
-                                        @if($quote->tax_rate > 0)
+                                        
+                                        {{-- Tax Breakdown --}}
+                                        @php
+                                            $taxBreakdown = collect();
+                                            foreach($quote->items as $item) {
+                                                if($item->tax_breakdown) {
+                                                    foreach($item->tax_breakdown as $tax) {
+                                                        $taxName = $tax['tax_name'] ?? 'Tax';
+                                                        if(!$taxBreakdown->has($taxName)) {
+                                                            $taxBreakdown[$taxName] = [
+                                                                'name' => $taxName,
+                                                                'type' => $tax['tax_type'] ?? '',
+                                                                'authority' => $tax['authority'] ?? '',
+                                                                'amount' => 0
+                                                            ];
+                                                        }
+                                                        $taxBreakdown[$taxName]['amount'] += $tax['tax_amount'] ?? 0;
+                                                    }
+                                                }
+                                            }
+                                            $totalTax = $quote->items->sum('tax');
+                                        @endphp
+                                        
+                                        @if($taxBreakdown->count() > 0)
+                                            @foreach($taxBreakdown as $tax)
+                                                <div class="d-flex justify-content-between small">
+                                                    <span class="text-muted">
+                                                        {{ $tax['name'] }}
+                                                        @if($tax['type'] === 'regulatory')
+                                                            <i class="fas fa-info-circle" 
+                                                               title="Regulatory Fee: {{ $tax['authority'] }}" 
+                                                               x-data x-tooltip></i>
+                                                        @endif
+                                                    </span>
+                                                    <span class="text-muted">${{ number_format($tax['amount'], 2) }}</span>
+                                                </div>
+                                            @endforeach
+                                            <div class="d-flex justify-content-between border-top pt-1">
+                                                <span>Total Tax:</span>
+                                                <span class="fw-bold">${{ number_format($totalTax, 2) }}</span>
+                                            </div>
+                                        @elseif($totalTax > 0)
                                             <div class="d-flex justify-content-between">
-                                                <span>Tax ({{ $quote->tax_rate }}%):</span>
-                                                <span>{{ $quote->getCurrencySymbol() }}{{ number_format($quote->tax_amount, 2) }}</span>
+                                                <span>Tax:</span>
+                                                <span class="fw-bold">${{ number_format($totalTax, 2) }}</span>
                                             </div>
                                         @endif
+                                        
                                         <hr class="my-2">
                                         <div class="d-flex justify-content-between">
                                             <span class="fw-bold">Total:</span>
-                                            <span class="fw-bold text-primary fs-5">{{ $quote->formatted_total_amount }}</span>
+                                            <span class="fw-bold text-blue-600 fs-5">{{ $quote->formatted_amount }}</span>
                                         </div>
                                     </div>
 
@@ -181,8 +218,8 @@
                             @if($quote->line_items && count($quote->line_items) > 0)
                                 <hr>
                                 <h6 class="text-muted">Line Items</h6>
-                                <div class="table-responsive mb-3">
-                                    <table class="table table-sm">
+                                <div class="min-w-full divide-y divide-gray-200-responsive mb-3">
+                                    <table class="table min-w-full divide-y divide-gray-200-sm">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Description</th>
@@ -208,7 +245,7 @@
                             @if($quote->project_scope)
                                 <hr>
                                 <h6 class="text-muted">Project Scope</h6>
-                                <div class="mb-3 p-3 bg-light rounded">
+                                <div class="mb-3 p-3 bg-gray-100 rounded">
                                     {!! nl2br(e($quote->project_scope)) !!}
                                 </div>
                             @endif
@@ -229,7 +266,7 @@
                             @if($quote->terms_conditions)
                                 <hr>
                                 <h6 class="text-muted">Terms & Conditions</h6>
-                                <div class="bg-light p-3 rounded">
+                                <div class="bg-gray-100 p-3 rounded">
                                     {!! nl2br(e($quote->terms_conditions)) !!}
                                 </div>
                             @endif
@@ -237,7 +274,7 @@
                             @if($quote->notes)
                                 <hr>
                                 <h6 class="text-muted">Internal Notes</h6>
-                                <div class="alert alert-info">
+                                <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700">
                                     <i class="fas fa-sticky-note me-2"></i>
                                     {!! nl2br(e($quote->notes)) !!}
                                 </div>
@@ -248,12 +285,12 @@
                     <!-- Signature Section -->
                     @if($quote->client_signature)
                         <div class="card mb-4">
-                            <div class="card-header">
+                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                                 <h5 class="card-title mb-0">
                                     <i class="fas fa-signature me-2"></i>Client Signature
                                 </h5>
                             </div>
-                            <div class="card-body">
+                            <div class="p-6">
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="border p-3 rounded bg-light">
@@ -346,7 +383,7 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 @if(in_array($quote->status, ['sent', 'viewed']))
-                                    <button class="btn btn-success btn-sm" onclick="acceptQuote({{ $quote->id }})">
+                                    <button class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 btn-sm" onclick="acceptQuote({{ $quote->id }})">
                                         <i class="fas fa-check me-2"></i>Mark as Accepted
                                     </button>
                                     
@@ -392,7 +429,7 @@
                                 <p class="mb-2">
                                     This quote was converted to invoice:
                                 </p>
-                                <a href="{{ route('clients.invoices.show', $quote->invoice) }}" class="btn btn-primary btn-sm">
+                                <a href="{{ route('clients.invoices.show', $quote->invoice) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-sm">
                                     <i class="fas fa-eye me-2"></i>View Invoice {{ $quote->invoice->invoice_number }}
                                 </a>
                                 <div class="small text-muted mt-2">
@@ -430,17 +467,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Delete Quote</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this quote? This action cannot be undone.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="deleteQuoteForm" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Quote</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Quote</button>
                 </form>
             </div>
         </div>
@@ -453,13 +490,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Send Quote</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Send this quote to the client?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="sendQuoteForm" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-primary">Send Quote</button>
@@ -475,13 +512,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Convert to Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Convert this quote to an invoice? This will create a new invoice with the quote details.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="convertQuoteForm" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-success">Convert to Invoice</button>
@@ -497,13 +534,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Accept Quote</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Mark this quote as accepted by the client?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="acceptQuoteForm" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-success">Accept Quote</button>
@@ -519,19 +556,19 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Decline Quote</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <form id="declineQuoteForm" method="POST">
                 @csrf
                 <div class="modal-body">
                     <p>Mark this quote as declined by the client?</p>
                     <div class="mb-3">
-                        <label for="declineReason" class="form-label">Reason (Optional)</label>
-                        <textarea name="reason" id="declineReason" class="form-control" rows="3" placeholder="Reason for declining..."></textarea>
+                        <label for="declineReason" class="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+                        <textarea name="reason" id="declineReason" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" rows="3" placeholder="Reason for declining..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @click="$dispatch('close-modal')">Cancel</button>
                     <button type="submit" class="btn btn-warning">Decline Quote</button>
                 </div>
             </form>

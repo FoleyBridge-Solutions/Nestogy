@@ -41,6 +41,24 @@ $domains = [
         'route' => 'reports.index',
         'params' => [],
         'icon' => 'chart-bar'
+    ],
+    'products' => [
+        'name' => 'Products',
+        'route' => 'products.index',
+        'params' => [],
+        'icon' => 'cube'
+    ],
+    'leads' => [
+        'name' => 'Leads',
+        'route' => 'leads.index',
+        'params' => [],
+        'icon' => 'user-plus'
+    ],
+    'marketing' => [
+        'name' => 'Marketing',
+        'route' => 'marketing.campaigns.index',
+        'params' => [],
+        'icon' => 'megaphone'
     ]
 ];
 @endphp
@@ -126,7 +144,7 @@ $domains = [
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
                             <div class="flex items-center">
                                 <img class="h-8 w-8 rounded-full mr-2" 
-                                     src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=7F9CF5&background=EBF4FF" 
+                                     src="{{ Auth::user()->getAvatarUrl() }}" 
                                      alt="{{ Auth::user()->name }}">
                                 <div>{{ Auth::user()->name }}</div>
                             </div>
@@ -153,6 +171,12 @@ $domains = [
                                 {{ __('Settings') }}
                             </x-dropdown-link>
                         @endcan
+
+                        @if(auth()->id() === 1)
+                            <x-dropdown-link :href="route('admin.console')" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-terminal mr-1"></i> {{ __('Admin Console') }}
+                            </x-dropdown-link>
+                        @endif
 
                         <div class="border-t border-gray-100"></div>
 
@@ -236,6 +260,12 @@ $domains = [
                         {{ __('Settings') }}
                     </x-responsive-nav-link>
                 @endcan
+
+                @if(auth()->id() === 1)
+                    <x-responsive-nav-link :href="route('admin.console')" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-terminal mr-1"></i> {{ __('Admin Console') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">

@@ -3,43 +3,43 @@
 @section('title', 'Client Calendar Events')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Client Calendar Events</h1>
                 <div class="btn-group">
-                    <a href="{{ route('clients.calendar-events.standalone.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Add New Event
+                    <a href="{{ route('clients.calendar-events.standalone.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>Add New Event
                     </a>
-                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" x-data="{ open: false }" @click="open = !open">
                         <i class="fas fa-download"></i> Export
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ route('clients.calendar-events.standalone.export', request()->query()) }}">
-                            <i class="fas fa-file-csv me-2"></i>Export to CSV
+                            <i class="fas fa-file-csv mr-2"></i>Export to CSV
                         </a></li>
                     </ul>
                 </div>
             </div>
 
             <!-- Filters -->
-            <div class="card mb-4">
-                <div class="card-body">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                <div class="p-6">
                     <form method="GET" action="{{ route('clients.calendar-events.standalone.index') }}">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="search" class="form-label">Search</label>
+                        <div class="flex flex-wrap -mx-4 g-3">
+                            <div class="md:w-1/4 px-4">
+                                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
                                        id="search" 
                                        name="search" 
                                        value="{{ request('search') }}" 
                                        placeholder="Search title, description, location...">
                             </div>
-                            <div class="col-md-2">
-                                <label for="client_id" class="form-label">Client</label>
-                                <select name="client_id" id="client_id" class="form-select">
+                            <div class="md:w-1/6 px-4">
+                                <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                                <select name="client_id" id="client_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                     <option value="">All Clients</option>
                                     @foreach($clients as $client)
                                         <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
@@ -50,7 +50,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label for="event_type" class="form-label">Event Type</label>
-                                <select name="event_type" id="event_type" class="form-select">
+                                <select name="event_type" id="event_type" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                     <option value="">All Types</option>
                                     @foreach($types as $key => $value)
                                         <option value="{{ $key }}" {{ request('event_type') == $key ? 'selected' : '' }}>
@@ -82,8 +82,8 @@
                                 </select>
                             </div>
                             <div class="col-md-1">
-                                <label class="form-label d-block">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary">
+                                <label class="form-label block">&nbsp;</label>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-search"></i>
                                 </button>
                             </div>
@@ -93,7 +93,7 @@
                             <div class="col-md-2">
                                 <label for="start_date" class="form-label">Start Date</label>
                                 <input type="date" 
-                                       class="form-control" 
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
                                        id="start_date" 
                                        name="start_date" 
                                        value="{{ request('start_date') }}">
@@ -107,7 +107,7 @@
                                        value="{{ request('end_date') }}">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label d-block">&nbsp;</label>
+                                <label class="form-label block">&nbsp;</label>
                                 <div class="form-check">
                                     <input class="form-check-input" 
                                            type="checkbox" 
@@ -146,11 +146,11 @@
             </div>
 
             <!-- Events Table -->
-            <div class="card">
-                <div class="card-body">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
                     @if($events->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                        <div class="min-w-full divide-y divide-gray-200-responsive">
+                            <table class="table min-w-full divide-y divide-gray-200-striped [&>tbody>tr:hover]:bg-gray-100">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Event Details</th>
@@ -165,14 +165,14 @@
                                     @foreach($events as $event)
                                         <tr>
                                             <td>
-                                                <div class="d-flex align-items-center">
+                                                <div class="flex items-center">
                                                     <div class="me-3">
                                                         @switch($event->event_type)
                                                             @case('meeting')
-                                                                <i class="fas fa-users text-primary fa-lg"></i>
+                                                                <i class="fas fa-users text-blue-600 fa-lg"></i>
                                                                 @break
                                                             @case('appointment')
-                                                                <i class="fas fa-calendar-check text-success fa-lg"></i>
+                                                                <i class="fas fa-calendar-check text-green-600 fa-lg"></i>
                                                                 @break
                                                             @case('consultation')
                                                                 <i class="fas fa-comments text-info fa-lg"></i>
@@ -184,18 +184,18 @@
                                                                 <i class="fas fa-tools text-secondary fa-lg"></i>
                                                                 @break
                                                             @case('support')
-                                                                <i class="fas fa-headset text-primary fa-lg"></i>
+                                                                <i class="fas fa-headset text-blue-600 fa-lg"></i>
                                                                 @break
                                                             @case('follow_up')
                                                                 <i class="fas fa-phone text-info fa-lg"></i>
                                                                 @break
                                                             @default
-                                                                <i class="fas fa-calendar-alt text-muted fa-lg"></i>
+                                                                <i class="fas fa-calendar-alt text-gray-600 fa-lg"></i>
                                                         @endswitch
                                                     </div>
                                                     <div>
                                                         <div class="fw-bold">{{ $event->title }}</div>
-                                                        <small class="text-muted">{{ ucfirst(str_replace('_', ' ', $event->event_type)) }}</small>
+                                                        <small class="text-gray-600">{{ ucfirst(str_replace('_', ' ', $event->event_type)) }}</small>
                                                         @if($event->location)
                                                             <div class="small text-muted">
                                                                 <i class="fas fa-map-marker-alt"></i> {{ $event->location }}
@@ -237,7 +237,7 @@
                                             <td>
                                                 @switch($event->status)
                                                     @case('scheduled')
-                                                        <span class="badge bg-primary">Scheduled</span>
+                                                        <span class="badge bg-blue-600">Scheduled</span>
                                                         @break
                                                     @case('confirmed')
                                                         <span class="badge bg-success">Confirmed</span>
@@ -252,13 +252,13 @@
                                                         <span class="badge bg-danger">Cancelled</span>
                                                         @break
                                                     @case('no_show')
-                                                        <span class="badge bg-secondary">No Show</span>
+                                                        <span class="badge bg-gray-600">No Show</span>
                                                         @break
                                                     @case('rescheduled')
                                                         <span class="badge bg-info">Rescheduled</span>
                                                         @break
                                                     @default
-                                                        <span class="badge bg-secondary">{{ ucfirst($event->status) }}</span>
+                                                        <span class="badge bg-gray-600">{{ ucfirst($event->status) }}</span>
                                                 @endswitch
                                             </td>
                                             <td>
@@ -303,7 +303,7 @@
                         </div>
 
                         <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="d-flex justify-between align-items-center mt-4">
                             <div class="text-muted small">
                                 Showing {{ $events->firstItem() }} to {{ $events->lastItem() }} of {{ $events->total() }} results
                             </div>
@@ -331,17 +331,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Delete Calendar Event</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this calendar event? This action cannot be undone.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="deleteEventForm" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Event</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Event</button>
                 </form>
             </div>
         </div>

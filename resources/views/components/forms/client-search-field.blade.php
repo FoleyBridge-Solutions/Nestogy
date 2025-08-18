@@ -7,12 +7,28 @@
     'class' => ''
 ])
 
+@php
+// Ensure we have the basic client data structure
+if ($selected && !is_array($selected) && !is_null($selected)) {
+    // If it's a model, convert to array
+    if (is_object($selected)) {
+        $selected = [
+            'id' => $selected->id,
+            'name' => $selected->name,
+            'email' => $selected->email ?? null,
+            'phone' => $selected->phone ?? null,
+            'company_name' => $selected->company_name ?? null,
+        ];
+    }
+}
+@endphp
+
 <div class="form-group {{ $class }}">
     @if($label)
         <label for="{{ $name }}_search">
             {{ $label }}
             @if($required)
-                <span class="text-danger">*</span>
+                <span class="text-red-600">*</span>
             @endif
         </label>
     @endif
@@ -32,7 +48,7 @@
         <div class="relative">
             <!-- Search Icon -->
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
@@ -45,9 +61,10 @@
                    @focus="openDropdown()"
                    @input="search()"
                    @keydown="onKeyDown($event)"
+                   @click="if (selectedClient && selectedClient.id) { refreshSelectedClient(); }"
                    placeholder="{{ $placeholder }}"
                    autocomplete="off"
-                   class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error($name) border-red-500 @enderror">
+                   class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 @error($name) border-red-500 @enderror">
             
             <!-- Clear Button -->
             <button x-show="selectedClient"
@@ -55,7 +72,7 @@
                     @click="clearSelection()"
                     type="button"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-5 w-5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
@@ -64,7 +81,7 @@
             <div x-show="loading && !selectedClient" 
                  x-transition
                  class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <svg class="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -85,20 +102,20 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-1 scale-100"
              x-transition:leave-end="opacity-0 scale-95"
-             class="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 max-h-64 overflow-y-auto"
+             class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 max-h-64 overflow-y-auto"
              style="display: none;">
             
             <!-- Recent Clients Section -->
             <div x-show="showRecentClients" class="p-2">
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1">
+                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 py-1">
                     Recent Clients
                 </div>
                 <template x-for="(client, index) in recentClients" :key="'recent-' + client.id">
                     <button @click="selectClient(client)"
                             type="button"
                             data-client-item
-                            class="w-full flex items-center space-x-3 px-2 py-2 text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 focus:outline-none transition-colors duration-150"
-                            :class="{ 'bg-indigo-50 hover:bg-indigo-100': isItemSelected(index) }">
+                            class="w-full flex items-center space-x-3 px-2 py-2 text-left rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none transition-colors duration-150"
+                            :class="{ 'bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-800/50': isItemSelected(index) }">
                         <!-- Client Avatar -->
                         <div class="flex-shrink-0">
                             <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
@@ -107,12 +124,12 @@
                         </div>
                         <!-- Client Info -->
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium text-gray-900" x-text="client.name"></div>
-                            <div x-show="client.email" class="text-xs text-gray-500 truncate" x-text="client.email"></div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="client.name"></div>
+                            <div x-show="client.email" class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="client.email"></div>
                         </div>
                         <!-- Recent Badge -->
                         <div class="flex-shrink-0">
-                            <span class="text-xs text-indigo-600 font-medium">Recent</span>
+                            <span class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">Recent</span>
                         </div>
                     </button>
                 </template>
@@ -122,15 +139,15 @@
             <div x-show="showSearchResults" class="p-2">
                 <template x-if="clients.length > 0">
                     <div>
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1">
+                        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 py-1">
                             Search Results
                         </div>
                         <template x-for="(client, index) in clients" :key="'search-' + client.id">
                             <button @click="selectClient(client)"
                                     type="button"
                                     data-client-item
-                                    class="w-full flex items-center space-x-3 px-2 py-2 text-left rounded-md hover:bg-gray-100 focus:bg-gray-100 focus:outline-none transition-colors duration-150"
-                                    :class="{ 'bg-indigo-50 hover:bg-indigo-100': isItemSelected(showRecentClients ? recentClients.length + index : index) }">
+                                    class="w-full flex items-center space-x-3 px-2 py-2 text-left rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none transition-colors duration-150"
+                                    :class="{ 'bg-indigo-50 dark:bg-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-800/50': isItemSelected(showRecentClients ? recentClients.length + index : index) }">
                                 <!-- Client Avatar -->
                                 <div class="flex-shrink-0">
                                     <div class="h-8 w-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-xs font-semibold">
@@ -139,11 +156,11 @@
                                 </div>
                                 <!-- Client Info -->
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-gray-900" x-text="client.name"></div>
-                                    <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="client.name"></div>
+                                    <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                                         <span x-show="client.email" x-text="client.email" class="truncate"></span>
                                         <span x-show="client.phone" class="hidden sm:inline">
-                                            <span class="text-gray-400">•</span>
+                                            <span class="text-gray-400 dark:text-gray-500">•</span>
                                             <span x-text="client.phone"></span>
                                         </span>
                                     </div>
@@ -156,7 +173,7 @@
             
             <!-- Loading State -->
             <div x-show="loading && !showRecentClients" class="p-8">
-                <div class="flex flex-col items-center justify-center text-gray-500">
+                <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                     <svg class="animate-spin h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -167,8 +184,8 @@
             
             <!-- No Results -->
             <div x-show="showNoResults" class="p-8">
-                <div class="text-center text-gray-500">
-                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center text-gray-500 dark:text-gray-400">
+                    <svg class="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <p class="text-sm font-medium">No clients found</p>
@@ -178,8 +195,8 @@
             
             <!-- Empty State (no recent, no search) -->
             <div x-show="showEmpty" class="p-8">
-                <div class="text-center text-gray-500">
-                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center text-gray-500 dark:text-gray-400">
+                    <svg class="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                     <p class="text-sm font-medium">Start typing to search</p>
@@ -189,12 +206,12 @@
             
             <!-- Footer Actions -->
             <div x-show="clients.length > 0 || recentClients.length > 0" 
-                 class="border-t border-gray-100 px-3 py-2 bg-gray-50 rounded-b-lg">
+                 class="border-t border-gray-100 dark:border-gray-600 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-b-lg">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-500">
-                        <kbd class="px-1 py-0.5 bg-white border border-gray-300 rounded">↑↓</kbd> Navigate
-                        <kbd class="px-1 py-0.5 bg-white border border-gray-300 rounded ml-1">Enter</kbd> Select
-                        <kbd class="px-1 py-0.5 bg-white border border-gray-300 rounded ml-1">Esc</kbd> Close
+                    <span class="text-gray-500 dark:text-gray-400">
+                        <kbd class="px-1 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded dark:text-gray-200">↑↓</kbd> Navigate
+                        <kbd class="px-1 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded ml-1 dark:text-gray-200">Enter</kbd> Select
+                        <kbd class="px-1 py-0.5 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded ml-1 dark:text-gray-200">Esc</kbd> Close
                     </span>
                 </div>
             </div>

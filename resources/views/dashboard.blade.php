@@ -4,16 +4,16 @@
 <div 
     x-data="modernDashboard()" 
     x-init="init()"
-    class="min-h-screen transition-all duration-500"
+    class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-all duration-500"
 >
     <!-- Dashboard Header -->
-    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm border-b border-gray-200/60 dark:border-slate-700/60">
+    <header class="sticky top-0 z-40 bg-white dark:bg-gray-800/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-700/60 dark:border-slate-700/60">
         <div class="px-6 py-4">
             <div class="flex items-center justify-between">
                 <!-- Title & Time -->
                 <div class="flex items-center space-x-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">
                             @php
                                 $workflowTitles = [
                                     'urgent' => 'Urgent Items Dashboard',
@@ -85,7 +85,7 @@
                             x-transition:leave-start="transform opacity-100 scale-100"
                             x-transition:leave-end="transform opacity-0 scale-95"
                             @click.outside="open = false"
-                            class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50"
+                            class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50"
                         >
                             <button @click="exportData('json'); open = false" class="w-full px-4 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Export JSON</button>
                             <button @click="exportData('csv'); open = false" class="w-full px-4 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Export CSV</button>
@@ -123,116 +123,144 @@
         @endif
         
         <!-- KPI Cards Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8" role="region" aria-label="Key Performance Indicators">
             <!-- Total Revenue Card -->
-            <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10"></div>
-                <div class="relative">
+            <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] focus-within:ring-4 focus-within:ring-emerald-500/20" tabindex="0" aria-label="Total Revenue Statistics">
+                <!-- Decorative Pattern -->
+                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-400/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-300/30"></div>
+                <div class="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-emerald-300/10"></div>
+                
+                <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="rounded-xl bg-white/20 p-3">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Icon Container -->
+                        <div class="rounded-xl bg-emerald-400/20 backdrop-blur-sm p-3 transition-all duration-300 group-hover:bg-emerald-300/30 group-hover:scale-110">
+                            <svg class="h-6 w-6 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                             </svg>
                         </div>
+                        <!-- Value Display -->
                         <div class="text-right">
-                            <div class="text-xs opacity-80">Total Revenue</div>
-                            <div class="text-2xl font-bold" x-text="formatCurrency(kpis.totalRevenue?.value || 0)"></div>
+                            <div class="text-xs font-medium text-emerald-100/80 mb-1">Total Revenue</div>
+                            <div class="text-2xl font-bold tracking-tight" x-text="formatCurrency(kpis.monthly_revenue || 0)">$0</div>
                         </div>
                     </div>
+                    <!-- Status Indicator -->
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full" 
-                              :class="(kpis.totalRevenue?.growth || 0) >= 0 ? 'text-emerald-100' : 'text-red-200'">
-                            <span x-text="(kpis.totalRevenue?.growth || 0) >= 0 ? '↗' : '↘'"></span>
-                            <span x-text="Math.abs(kpis.totalRevenue?.growth || 0) + '%'"></span>
+                        <span class="inline-flex items-center text-xs bg-emerald-400/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-emerald-100 font-medium">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                            Monthly
                         </span>
-                        <span class="text-xs opacity-80">vs last month</span>
+                        <span class="text-xs text-emerald-100/70">Current month</span>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            <!-- MRR Card -->
-            <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10"></div>
-                <div class="relative">
+            <!-- Pending Invoices Card -->
+            <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] focus-within:ring-4 focus-within:ring-blue-500/20" tabindex="0" aria-label="Pending Invoices Statistics">
+                <!-- Decorative Pattern -->
+                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-400/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-300/30"></div>
+                <div class="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-blue-300/10"></div>
+                
+                <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="rounded-xl bg-white/20 p-3">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        <!-- Icon Container -->
+                        <div class="rounded-xl bg-blue-400/20 backdrop-blur-sm p-3 transition-all duration-300 group-hover:bg-blue-300/30 group-hover:scale-110">
+                            <svg class="h-6 w-6 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
+                        <!-- Value Display -->
                         <div class="text-right">
-                            <div class="text-xs opacity-80">Monthly Recurring</div>
-                            <div class="text-2xl font-bold" x-text="formatCurrency(kpis.mrr?.value || 0)"></div>
+                            <div class="text-xs font-medium text-blue-100/80 mb-1">Pending Invoices</div>
+                            <div class="text-2xl font-bold tracking-tight" x-text="formatCurrency(kpis.pending_invoices_amount || 0)">$0</div>
                         </div>
                     </div>
+                    <!-- Status Indicator -->
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full" 
-                              :class="(kpis.mrr?.growth || 0) >= 0 ? 'text-blue-100' : 'text-red-200'">
-                            <span x-text="(kpis.mrr?.growth || 0) >= 0 ? '↗' : '↘'"></span>
-                            <span x-text="Math.abs(kpis.mrr?.growth || 0) + '%'"></span>
+                        <span class="inline-flex items-center text-xs bg-blue-400/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-blue-100 font-medium">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span x-text="(kpis.pending_invoices_amount || 0).toLocaleString()">0</span>
                         </span>
-                        <span class="text-xs opacity-80">vs last month</span>
+                        <span class="text-xs text-blue-100/70">outstanding</span>
                     </div>
                 </div>
-            </div>
+            </article>
 
             <!-- Active Clients Card -->
-            <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10"></div>
-                <div class="relative">
+            <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] focus-within:ring-4 focus-within:ring-purple-500/20" tabindex="0" aria-label="Active Clients Statistics">
+                <!-- Decorative Pattern -->
+                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-purple-400/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-purple-300/30"></div>
+                <div class="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-purple-300/10"></div>
+                
+                <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="rounded-xl bg-white/20 p-3">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Icon Container -->
+                        <div class="rounded-xl bg-purple-400/20 backdrop-blur-sm p-3 transition-all duration-300 group-hover:bg-purple-300/30 group-hover:scale-110">
+                            <svg class="h-6 w-6 text-purple-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
+                        <!-- Value Display -->
                         <div class="text-right">
-                            <div class="text-xs opacity-80">Active Clients</div>
-                            <div class="text-2xl font-bold" x-text="kpis.activeClients?.value || 0"></div>
+                            <div class="text-xs font-medium text-purple-100/80 mb-1">Active Clients</div>
+                            <div class="text-2xl font-bold tracking-tight" x-text="kpis.total_clients || 0">0</div>
                         </div>
                     </div>
+                    <!-- Status Indicator -->
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full" 
-                              :class="(kpis.activeClients?.growth || 0) >= 0 ? 'text-purple-100' : 'text-red-200'">
-                            <span x-text="(kpis.activeClients?.growth || 0) >= 0 ? '↗' : '↘'"></span>
-                            <span x-text="Math.abs(kpis.activeClients?.growth || 0) + '%'"></span>
+                        <span class="inline-flex items-center text-xs bg-purple-400/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-purple-100 font-medium">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Stable
                         </span>
-                        <span class="text-xs opacity-80">vs last month</span>
+                        <span class="text-xs text-purple-100/70">vs last month</span>
                     </div>
                 </div>
-            </div>
+            </article>
 
             <!-- Open Tickets Card -->
-            <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10"></div>
-                <div class="relative">
+            <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] focus-within:ring-4 focus-within:ring-orange-500/20" tabindex="0" aria-label="Open Tickets Statistics">
+                <!-- Decorative Pattern -->
+                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-orange-400/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-orange-300/30"></div>
+                <div class="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-orange-300/10"></div>
+                
+                <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="rounded-xl bg-white/20 p-3">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Icon Container -->
+                        <div class="rounded-xl bg-orange-400/20 backdrop-blur-sm p-3 transition-all duration-300 group-hover:bg-orange-300/30 group-hover:scale-110">
+                            <svg class="h-6 w-6 text-orange-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                             </svg>
                         </div>
+                        <!-- Value Display -->
                         <div class="text-right">
-                            <div class="text-xs opacity-80">Open Tickets</div>
-                            <div class="text-2xl font-bold" x-text="kpis.openTickets?.value || 0"></div>
+                            <div class="text-xs font-medium text-orange-100/80 mb-1">Open Tickets</div>
+                            <div class="text-2xl font-bold tracking-tight" x-text="kpis.open_tickets || 0">0</div>
                         </div>
                     </div>
+                    <!-- Status Indicator -->
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full" 
-                              :class="(kpis.openTickets?.growth || 0) <= 0 ? 'text-green-200' : 'text-red-200'">
-                            <span x-text="(kpis.openTickets?.growth || 0) <= 0 ? '↘' : '↗'"></span>
-                            <span x-text="Math.abs(kpis.openTickets?.growth || 0) + '%'"></span>
+                        <span class="inline-flex items-center text-xs bg-orange-400/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-orange-100 font-medium">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span x-text="kpis.overdue_invoices || 0">0</span> overdue
                         </span>
-                        <span class="text-xs opacity-80">vs last month</span>
+                        <span class="text-xs text-orange-100/70">invoices pending</span>
                     </div>
                 </div>
-            </div>
+            </article>
         </section>
 
         <!-- Charts Grid -->
         <section class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
             <!-- Revenue Chart -->
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hover:shadow-xl transition-all duration-300">
+            <div class="bg-white dark:bg-gray-800 dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hover:shadow-xl transition-all duration-300">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-xl font-bold text-slate-900 dark:text-white">Revenue Trends</h3>
@@ -245,12 +273,24 @@
                     </div>
                 </div>
                 <div class="relative h-80">
-                    <canvas id="revenueChart" class="w-full h-full"></canvas>
+                    @if(empty($revenueChartData['data']) || array_sum($revenueChartData['data'] ?? []) == 0)
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <p class="text-slate-500 dark:text-slate-400">No revenue data yet</p>
+                                <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Start creating invoices to see trends</p>
+                            </div>
+                        </div>
+                    @else
+                        <canvas id="revenueChart" class="w-full h-full"></canvas>
+                    @endif
                 </div>
             </div>
 
             <!-- Ticket Distribution Chart -->
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hover:shadow-xl transition-all duration-300">
+            <div class="bg-white dark:bg-gray-800 dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 hover:shadow-xl transition-all duration-300">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-xl font-bold text-slate-900 dark:text-white">Support Overview</h3>
@@ -263,7 +303,19 @@
                     </div>
                 </div>
                 <div class="relative h-80">
-                    <canvas id="ticketsChart" class="w-full h-full"></canvas>
+                    @if(empty($ticketChartData['data']) || array_sum($ticketChartData['data'] ?? []) == 0)
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                </svg>
+                                <p class="text-slate-500 dark:text-slate-400">No ticket data yet</p>
+                                <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Tickets will appear here once created</p>
+                            </div>
+                        </div>
+                    @else
+                        <canvas id="ticketsChart" class="w-full h-full"></canvas>
+                    @endif
                 </div>
             </div>
         </section>
@@ -272,7 +324,7 @@
         <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <a href="{{ route('clients.create') }}" 
                class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 text-white shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300"></div>
+                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white dark:bg-gray-800/10 group-hover:bg-white dark:bg-gray-800/20 transition-all duration-300"></div>
                 <div class="relative">
                     <div class="mb-4">
                         <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,7 +344,7 @@
 
             <a href="{{ route('financial.invoices.create') }}" 
                class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-8 text-white shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300"></div>
+                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white dark:bg-gray-800/10 group-hover:bg-white dark:bg-gray-800/20 transition-all duration-300"></div>
                 <div class="relative">
                     <div class="mb-4">
                         <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,7 +364,7 @@
 
             <a href="{{ route('reports.index') }}" 
                class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-8 text-white shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 group-hover:bg-white/20 transition-all duration-300"></div>
+                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white dark:bg-gray-800/10 group-hover:bg-white dark:bg-gray-800/20 transition-all duration-300"></div>
                 <div class="relative">
                     <div class="mb-4">
                         <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,7 +395,7 @@
         x-transition:leave-end="opacity-0"
         class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50"
     >
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 flex items-center space-x-4 shadow-2xl">
+        <div class="bg-white dark:bg-gray-800 dark:bg-slate-800 rounded-2xl p-8 flex items-center space-x-4 shadow-2xl">
             <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
             <span class="text-slate-900 dark:text-white font-medium">Loading dashboard data...</span>
         </div>
@@ -353,318 +405,15 @@
 
 @push('scripts')
 <script>
-function modernDashboard() {
-    return {
-        // State
-        loading: false,
-        darkMode: localStorage.getItem('darkMode') === 'true' || false,
-        currentTime: '',
-        autoRefresh: true,
-        refreshInterval: null,
-        
-        // Data
-        kpis: @json($stats ?? []),
-        charts: {
-            revenue: null,
-            tickets: null
-        },
-        
-        // Initialize
-        init() {
-            this.updateCurrentTime();
-            this.applyDarkMode();
-            this.setupAutoRefresh();
-            
-            // Initialize charts
-            this.$nextTick(() => {
-                this.initCharts();
-                this.loadRealtimeData();
-            });
-            
-            setInterval(() => this.updateCurrentTime(), 1000);
-        },
-        
-        // Time Management
-        updateCurrentTime() {
-            const now = new Date();
-            this.currentTime = now.toLocaleDateString('en-US', { 
-                weekday: 'long',
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        },
-        
-        // Auto-refresh
-        setupAutoRefresh() {
-            if (this.autoRefresh) {
-                this.refreshInterval = setInterval(() => {
-                    this.loadRealtimeData(false);
-                }, 30000);
-            }
-        },
-        
-        toggleAutoRefresh() {
-            this.autoRefresh = !this.autoRefresh;
-            if (this.autoRefresh) {
-                this.setupAutoRefresh();
-            } else if (this.refreshInterval) {
-                clearInterval(this.refreshInterval);
-                this.refreshInterval = null;
-            }
-        },
-        
-        // Dark Mode
-        toggleDarkMode() {
-            this.darkMode = !this.darkMode;
-            this.applyDarkMode();
-            localStorage.setItem('darkMode', this.darkMode);
-        },
-        
-        applyDarkMode() {
-            if (this.darkMode) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        },
-        
-        // Data Loading
-        async loadRealtimeData(showLoading = true) {
-            if (showLoading) this.loading = true;
-            
-            try {
-                const response = await fetch(`{{ route('dashboard.realtime') }}?type=all`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Failed to fetch data');
-                const data = await response.json();
-                
-                // Update KPIs
-                this.kpis = data.stats || {};
-                
-                console.log('Dashboard data refreshed at:', new Date().toLocaleTimeString());
-                
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-            } finally {
-                if (showLoading) this.loading = false;
-            }
-        },
-        
-        // Charts
-        initCharts() {
-            if (typeof Chart === 'undefined') {
-                console.warn('Chart.js not available');
-                return;
-            }
-            
-            this.initRevenueChart();
-            this.initTicketsChart();
-        },
-        
-        initRevenueChart() {
-            const ctx = document.getElementById('revenueChart');
-            if (!ctx) return;
-            
-            const isDark = this.darkMode;
-            
-            this.charts.revenue = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: {!! json_encode($revenueChartData['labels'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']) !!},
-                    datasets: [{
-                        label: 'Revenue',
-                        data: {!! json_encode($revenueChartData['data'] ?? [0, 0, 0, 0, 0, 0]) !!},
-                        borderColor: 'rgb(34, 197, 94)',
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        borderWidth: 3,
-                        pointBackgroundColor: 'rgb(34, 197, 94)',
-                        pointBorderColor: 'white',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: 'rgb(34, 197, 94)',
-                            borderWidth: 1,
-                            cornerRadius: 8,
-                            displayColors: false,
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-                                font: { size: 12 }
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-                                font: { size: 12 },
-                                callback: function(value) {
-                                    return '$' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        },
-        
-        initTicketsChart() {
-            const ctx = document.getElementById('ticketsChart');
-            if (!ctx) return;
-            
-            this.charts.tickets = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Open', 'In Progress', 'Resolved', 'Closed'],
-                    datasets: [{
-                        data: {!! json_encode($ticketChartData['data'] ?? [0, 0, 0, 0]) !!},
-                        backgroundColor: [
-                            'rgb(239, 68, 68)',
-                            'rgb(245, 158, 11)', 
-                            'rgb(34, 197, 94)',
-                            'rgb(107, 114, 128)'
-                        ],
-                        borderWidth: 0,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                font: { size: 12 },
-                                color: this.darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            cornerRadius: 8,
-                        }
-                    }
-                }
-            });
-        },
-        
-        // Export Functionality
-        async exportData(format) {
-            this.loading = true;
-            
-            try {
-                const response = await fetch(`{{ route('dashboard.export') }}?format=${format}&type=executive`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Export failed');
-                const data = await response.json();
-                
-                // Create download
-                const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = data.filename;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-                this.showNotification(`Data exported as ${format.toUpperCase()}`, 'success');
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                this.showNotification('Failed to export data', 'error');
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        // Utility Functions
-        formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(amount || 0);
-        },
-        
-        showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-2xl z-50 max-w-sm transform transition-all duration-300 ${
-                type === 'success' ? 'bg-emerald-500 text-white' :
-                type === 'error' ? 'bg-red-500 text-white' :
-                'bg-blue-500 text-white'
-            }`;
-            notification.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0">
-                        ${type === 'success' ? 
-                            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
-                            type === 'error' ? 
-                            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' :
-                            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-                        }
-                    </div>
-                    <p class="text-sm font-medium">${message}</p>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => notification.style.transform = 'translateX(0)', 10);
-            
-            // Remove after delay
-            setTimeout(() => {
-                notification.style.transform = 'translateX(100%)';
-                notification.style.opacity = '0';
-                setTimeout(() => document.body.removeChild(notification), 300);
-            }, 3000);
-        }
-    };
-}
+// Pass server-side data to the dashboard component
+window.dashboardData = {
+    stats: @json($stats ?? []),
+    revenueChartData: @json($revenueChartData ?? []),
+    ticketChartData: @json($ticketChartData ?? []),
+    routes: {
+        realtime: '{{ route('dashboard.realtime') }}',
+        export: '{{ route('dashboard.export') }}'
+    }
+};
 </script>
 @endpush

@@ -1,0 +1,588 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\RoleService;
+use Silber\Bouncer\BouncerFacade as Bouncer;
+use Illuminate\Validation\Rule;
+
+/**
+ * RoleController
+ * 
+ * Manages roles and permissions for the application. Provides CRUD operations
+ * for roles, permission assignment, and role templates for MSP-specific workflows.
+ */
+class RoleController extends Controller
+{
+    protected $roleService;
+
+    public function __construct(RoleService $roleService)
+    {
+        $this->roleService = $roleService;
+    }
+
+    /**
+     * Display a listing of roles with their permissions
+     */
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', \App\Models\Role::class);
+
+        $user = Auth::user();
+        
+        // Get all Bouncer roles
+        $roles = Bouncer::role()->with(['abilities'])->get();
+        
+        // Get role statistics for current company
+        $roleStats = $this->roleService->getRoleStats($user->company_id);
+        
+        // Get all available abilities grouped by category
+        $abilitiesByCategory = $this->getAbilitiesByCategory();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'roles' => $roles,
+                'statistics' => $roleStats,
+                'abilities' => $abilitiesByCategory,
+            ]);
+        }
+
+        return view('settings.roles.index', compact('roles', 'roleStats', 'abilitiesByCategory'));
+    }
+
+    /**
+     * Show the form for creating a new role
+     */
+    public function create()
+    {
+        $this->authorize('create', \App\Models\Role::class);
+        
+        $abilitiesByCategory = $this->getAbilitiesByCategory();
+        $roleTemplates = $this->getMspRoleTemplates();
+
+        return view('settings.roles.create', compact('abilitiesByCategory', 'roleTemplates'));
+    }
+
+    /**
+     * Store a newly created role
+     */
+    public function store(Request $request)
+    {
+        $this->authorize('create', \App\Models\Role::class);
+
+        $request->validate([
+            'name' => 'required|string|max:255|unique:bouncer_roles,name',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'abilities' => 'array',
+            'abilities.*' => 'string|exists:bouncer_abilities,name',
+        ]);
+
+        DB::beginTransaction();
+        
+        try {
+            // Create the role
+            $role = Bouncer::role()->create([
+                'name' => $request->name,
+                'title' => $request->title,
+                'description' => $request->description,
+            ]);
+
+            // Assign abilities to the role
+            if ($request->has('abilities')) {
+                foreach ($request->abilities as $abilityName) {
+                    Bouncer::allow($role->name)->to($abilityName);
+                }
+            }
+
+            DB::commit();
+
+            Log::info('Role created', [
+                'role_name' => $role->name,
+                'abilities_count' => count($request->abilities ?? []),
+                'created_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role created successfully',
+                    'role' => $role->load('abilities'),
+                ], 201);
+            }
+
+            return redirect()
+                ->route('settings.roles.index')
+                ->with('success', "Role <strong>{$role->title}</strong> created successfully");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            Log::error('Role creation failed', [
+                'error' => $e->getMessage(),
+                'request_data' => $request->all(),
+                'user_id' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create role',
+                ], 500);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to create role: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified role
+     */
+    public function show(string $roleName)
+    {
+        $this->authorize('view', \App\Models\Role::class);
+
+        $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
+        
+        // Get users with this role in current company
+        $user = Auth::user();
+        $usersWithRole = collect();
+        
+        // This would need to be implemented based on your user-role relationship structure
+        // For now, we'll get role statistics instead
+        $roleStats = $this->roleService->getRoleStats($user->company_id);
+        
+        return view('settings.roles.show', compact('role', 'roleStats'));
+    }
+
+    /**
+     * Show the form for editing the specified role
+     */
+    public function edit(string $roleName)
+    {
+        $this->authorize('update', \App\Models\Role::class);
+
+        $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
+        
+        // Prevent editing system-critical roles
+        if (in_array($role->name, ['super-admin', 'admin'])) {
+            return back()->with('error', 'System roles cannot be edited');
+        }
+
+        $abilitiesByCategory = $this->getAbilitiesByCategory();
+        $roleAbilities = $role->abilities->pluck('name')->toArray();
+
+        return view('settings.roles.edit', compact('role', 'abilitiesByCategory', 'roleAbilities'));
+    }
+
+    /**
+     * Update the specified role
+     */
+    public function update(Request $request, string $roleName)
+    {
+        $this->authorize('update', \App\Models\Role::class);
+
+        $role = Bouncer::role()->where('name', $roleName)->firstOrFail();
+
+        // Prevent editing system-critical roles
+        if (in_array($role->name, ['super-admin', 'admin'])) {
+            return back()->with('error', 'System roles cannot be edited');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'abilities' => 'array',
+            'abilities.*' => 'string|exists:bouncer_abilities,name',
+        ]);
+
+        DB::beginTransaction();
+        
+        try {
+            // Update role details
+            $role->update([
+                'title' => $request->title,
+                'description' => $request->description,
+            ]);
+
+            // Remove all current abilities
+            $currentAbilities = $role->abilities->pluck('name')->toArray();
+            foreach ($currentAbilities as $abilityName) {
+                Bouncer::disallow($role->name)->to($abilityName);
+            }
+
+            // Assign new abilities
+            if ($request->has('abilities')) {
+                foreach ($request->abilities as $abilityName) {
+                    Bouncer::allow($role->name)->to($abilityName);
+                }
+            }
+
+            DB::commit();
+
+            Log::info('Role updated', [
+                'role_name' => $role->name,
+                'old_abilities_count' => count($currentAbilities),
+                'new_abilities_count' => count($request->abilities ?? []),
+                'updated_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role updated successfully',
+                    'role' => $role->fresh()->load('abilities'),
+                ]);
+            }
+
+            return redirect()
+                ->route('settings.roles.index')
+                ->with('success', "Role <strong>{$role->title}</strong> updated successfully");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            Log::error('Role update failed', [
+                'role_name' => $role->name,
+                'error' => $e->getMessage(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update role',
+                ], 500);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to update role: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified role
+     */
+    public function destroy(Request $request, string $roleName)
+    {
+        $this->authorize('delete', \App\Models\Role::class);
+
+        $role = Bouncer::role()->where('name', $roleName)->firstOrFail();
+
+        // Prevent deleting system-critical roles
+        if (in_array($role->name, ['super-admin', 'admin', 'tech', 'accountant'])) {
+            return back()->with('error', 'System roles cannot be deleted');
+        }
+
+        DB::beginTransaction();
+        
+        try {
+            $roleName = $role->name;
+            $roleTitle = $role->title;
+
+            // Remove role (this will also remove all ability assignments)
+            $role->delete();
+
+            DB::commit();
+
+            Log::warning('Role deleted', [
+                'role_name' => $roleName,
+                'role_title' => $roleTitle,
+                'deleted_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role deleted successfully',
+                ]);
+            }
+
+            return redirect()
+                ->route('settings.roles.index')
+                ->with('success', "Role <strong>{$roleTitle}</strong> deleted successfully");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            Log::error('Role deletion failed', [
+                'role_name' => $role->name,
+                'error' => $e->getMessage(),
+                'deleted_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete role',
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to delete role: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Duplicate an existing role
+     */
+    public function duplicate(Request $request, string $roleName)
+    {
+        $this->authorize('create', \App\Models\Role::class);
+
+        $originalRole = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
+
+        $request->validate([
+            'name' => 'required|string|max:255|unique:bouncer_roles,name',
+            'title' => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        
+        try {
+            // Create new role
+            $newRole = Bouncer::role()->create([
+                'name' => $request->name,
+                'title' => $request->title,
+                'description' => "Copy of {$originalRole->title}",
+            ]);
+
+            // Copy all abilities from original role
+            foreach ($originalRole->abilities as $ability) {
+                Bouncer::allow($newRole->name)->to($ability->name);
+            }
+
+            DB::commit();
+
+            Log::info('Role duplicated', [
+                'original_role' => $originalRole->name,
+                'new_role' => $newRole->name,
+                'abilities_copied' => $originalRole->abilities->count(),
+                'created_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role duplicated successfully',
+                    'role' => $newRole->load('abilities'),
+                ]);
+            }
+
+            return redirect()
+                ->route('settings.roles.edit', $newRole->name)
+                ->with('success', "Role <strong>{$newRole->title}</strong> created as copy of {$originalRole->title}");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            Log::error('Role duplication failed', [
+                'original_role' => $originalRole->name,
+                'error' => $e->getMessage(),
+                'created_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to duplicate role',
+                ], 500);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to duplicate role: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Apply a role template (preset roles for MSP workflows)
+     */
+    public function applyTemplate(Request $request)
+    {
+        $this->authorize('create', \App\Models\Role::class);
+
+        $request->validate([
+            'template' => 'required|string|in:help-desk,field-tech,network-admin,security-specialist,project-manager,client-manager,billing-admin',
+            'name' => 'required|string|max:255|unique:bouncer_roles,name',
+            'title' => 'required|string|max:255',
+        ]);
+
+        $templates = $this->getMspRoleTemplates();
+        $template = $templates[$request->template];
+
+        DB::beginTransaction();
+        
+        try {
+            // Create role
+            $role = Bouncer::role()->create([
+                'name' => $request->name,
+                'title' => $request->title,
+                'description' => $template['description'],
+            ]);
+
+            // Assign template abilities
+            foreach ($template['abilities'] as $abilityName) {
+                if (Bouncer::ability()->where('name', $abilityName)->exists()) {
+                    Bouncer::allow($role->name)->to($abilityName);
+                }
+            }
+
+            DB::commit();
+
+            Log::info('Role template applied', [
+                'template' => $request->template,
+                'role_name' => $role->name,
+                'abilities_count' => count($template['abilities']),
+                'created_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Role template applied successfully',
+                    'role' => $role->load('abilities'),
+                ]);
+            }
+
+            return redirect()
+                ->route('settings.roles.edit', $role->name)
+                ->with('success', "Role <strong>{$role->title}</strong> created from {$template['title']} template");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            Log::error('Role template application failed', [
+                'template' => $request->template,
+                'error' => $e->getMessage(),
+                'created_by' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to apply role template',
+                ], 500);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to apply role template: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get abilities grouped by category for UI display
+     */
+    private function getAbilitiesByCategory(): array
+    {
+        $abilities = Bouncer::ability()->orderBy('name')->get();
+        $categorized = [];
+
+        foreach ($abilities as $ability) {
+            $parts = explode('.', $ability->name);
+            $category = ucfirst($parts[0]);
+            
+            if (!isset($categorized[$category])) {
+                $categorized[$category] = [];
+            }
+            
+            $categorized[$category][] = [
+                'name' => $ability->name,
+                'title' => $ability->title ?? $this->generateAbilityTitle($ability->name),
+            ];
+        }
+
+        return $categorized;
+    }
+
+    /**
+     * Generate human-readable title from ability name
+     */
+    private function generateAbilityTitle(string $abilityName): string
+    {
+        $parts = explode('.', $abilityName);
+        
+        // Convert snake_case to Title Case
+        $formatted = array_map(function($part) {
+            return ucwords(str_replace(['_', '-'], ' ', $part));
+        }, $parts);
+
+        return implode(' - ', $formatted);
+    }
+
+    /**
+     * Get MSP-specific role templates
+     */
+    private function getMspRoleTemplates(): array
+    {
+        return [
+            'help-desk' => [
+                'title' => 'Help Desk Technician',
+                'description' => 'Front-line support role for handling customer inquiries and basic technical issues',
+                'abilities' => [
+                    'tickets.view', 'tickets.create', 'tickets.edit', 'tickets.manage',
+                    'clients.view', 'clients.contacts.view', 'clients.locations.view',
+                    'assets.view', 'reports.tickets',
+                ],
+            ],
+            'field-tech' => [
+                'title' => 'Field Technician',
+                'description' => 'On-site technical support with asset and network management capabilities',
+                'abilities' => [
+                    'tickets.*', 'assets.*', 'clients.view', 'clients.edit',
+                    'clients.contacts.*', 'clients.locations.*', 'clients.credentials.view',
+                    'clients.networks.*', 'clients.services.*', 'reports.tickets', 'reports.assets',
+                ],
+            ],
+            'network-admin' => [
+                'title' => 'Network Administrator',
+                'description' => 'Advanced technical role with network, security, and infrastructure management',
+                'abilities' => [
+                    'tickets.*', 'assets.*', 'clients.*', 'projects.view', 'projects.tasks.*',
+                    'reports.tickets', 'reports.assets', 'reports.projects',
+                ],
+            ],
+            'security-specialist' => [
+                'title' => 'Security Specialist',
+                'description' => 'Focused on security assessments, compliance, and risk management',
+                'abilities' => [
+                    'clients.view', 'clients.edit', 'clients.credentials.*', 'clients.certificates.*',
+                    'assets.view', 'assets.edit', 'tickets.view', 'tickets.create', 'tickets.edit',
+                    'reports.view', 'reports.assets', 'reports.clients',
+                ],
+            ],
+            'project-manager' => [
+                'title' => 'Project Manager',
+                'description' => 'Manages client projects, timelines, and resource allocation',
+                'abilities' => [
+                    'projects.*', 'clients.view', 'clients.edit', 'clients.contacts.*',
+                    'tickets.view', 'tickets.edit', 'assets.view',
+                    'reports.projects', 'reports.clients', 'reports.users',
+                ],
+            ],
+            'client-manager' => [
+                'title' => 'Client Relationship Manager',
+                'description' => 'Manages client relationships, contracts, and business development',
+                'abilities' => [
+                    'clients.*', 'contracts.*', 'financial.quotes.*',
+                    'reports.clients', 'reports.financial', 'projects.view',
+                ],
+            ],
+            'billing-admin' => [
+                'title' => 'Billing Administrator',
+                'description' => 'Manages invoicing, payments, and financial reporting',
+                'abilities' => [
+                    'financial.*', 'clients.view', 'clients.edit', 'clients.contacts.view',
+                    'reports.financial', 'reports.clients',
+                ],
+            ],
+        ];
+    }
+}

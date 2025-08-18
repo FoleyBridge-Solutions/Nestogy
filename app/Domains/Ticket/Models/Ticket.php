@@ -12,6 +12,7 @@ use App\Models\Vendor;
 use App\Models\Project;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Models\TicketReply;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -58,6 +59,11 @@ class Ticket extends Model
         'template_id',
         'recurring_ticket_id',
         'workflow_id',
+        // Sentiment analysis fields
+        'sentiment_score',
+        'sentiment_label',
+        'sentiment_analyzed_at',
+        'sentiment_confidence',
     ];
 
     protected $casts = [
@@ -69,6 +75,7 @@ class Ticket extends Model
         'updated_at' => 'datetime',
         'archived_at' => 'datetime',
         'closed_at' => 'datetime',
+        'sentiment_analyzed_at' => 'datetime',
         'created_by' => 'integer',
         'assigned_to' => 'integer',
         'closed_by' => 'integer',
@@ -82,6 +89,8 @@ class Ticket extends Model
         'template_id' => 'integer',
         'recurring_ticket_id' => 'integer',
         'workflow_id' => 'integer',
+        'sentiment_score' => 'decimal:2',
+        'sentiment_confidence' => 'decimal:2',
     ];
 
     /**
@@ -110,6 +119,15 @@ class Ticket extends Model
     const SOURCE_PORTAL = 'Portal';
     const SOURCE_WALK_IN = 'Walk-in';
     const SOURCE_INTERNAL = 'Internal';
+
+    /**
+     * Sentiment constants
+     */
+    const SENTIMENT_POSITIVE = 'POSITIVE';
+    const SENTIMENT_WEAK_POSITIVE = 'WEAK_POSITIVE';
+    const SENTIMENT_NEUTRAL = 'NEUTRAL';
+    const SENTIMENT_WEAK_NEGATIVE = 'WEAK_NEGATIVE';
+    const SENTIMENT_NEGATIVE = 'NEGATIVE';
 
     // ===========================================
     // EXISTING RELATIONSHIPS
@@ -257,6 +275,137 @@ class Ticket extends Model
     }
 
     /**
+     * Get text content for sentiment analysis (subject + details)
+     */
+    public function getSentimentAnalysisText(): string
+    {
+        $text = '';
+        
+        if (!empty($this->subject)) {
+            $text .= $this->subject;
+        }
+        
+        if (!empty($this->details)) {
+            if (!empty($text)) {
+                $text .= '. ';
+            }
+            $text .= $this->details;
+        }
+        
+        return trim($text);
+    }
+
+    /**
+     * Check if ticket has sentiment analysis
+     */
+    public function hasSentimentAnalysis(): bool
+    {
+        return !is_null($this->sentiment_score) && !is_null($this->sentiment_analyzed_at);
+    }
+
+    /**
+     * Get sentiment interpretation
+     */
+    public function getSentimentInterpretation(): array
+    {
+        if (!$this->hasSentimentAnalysis()) {
+            return [
+                'interpretation' => 'Not Analyzed',
+                'color' => '#94a3b8', // slate-400
+                'confidence_level' => 'N/A'
+            ];
+        }
+
+        return \App\Services\TaxEngine\SentimentAnalysisService::interpretSentimentScore($this->sentiment_score);
+    }
+
+    /**
+     * Check if ticket sentiment is negative
+     */
+    public function hasNegativeSentiment(): bool
+    {
+        return in_array($this->sentiment_label, [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE]);
+    }
+
+    /**
+     * Check if ticket sentiment is positive  
+     */
+    public function hasPositiveSentiment(): bool
+    {
+        return in_array($this->sentiment_label, [self::SENTIMENT_POSITIVE, self::SENTIMENT_WEAK_POSITIVE]);
+    }
+
+    /**
+     * Check if ticket sentiment needs attention (negative with high confidence)
+     */
+    public function sentimentNeedsAttention(): bool
+    {
+        return $this->hasNegativeSentiment() && ($this->sentiment_confidence ?? 0) > 0.6;
+    }
+
+    /**
+     * Get sentiment color for UI display
+     */
+    public function getSentimentColor(): string
+    {
+        if (!$this->hasSentimentAnalysis()) {
+            return '#94a3b8'; // slate-400
+        }
+
+        return match($this->sentiment_label) {
+            self::SENTIMENT_POSITIVE => '#10b981', // emerald-500
+            self::SENTIMENT_WEAK_POSITIVE => '#84cc16', // lime-500  
+            self::SENTIMENT_NEUTRAL => '#64748b', // slate-500
+            self::SENTIMENT_WEAK_NEGATIVE => '#f97316', // orange-500
+            self::SENTIMENT_NEGATIVE => '#ef4444', // red-500
+            default => '#94a3b8' // slate-400
+        };
+    }
+
+    /**
+     * Get sentiment icon for UI display
+     */
+    public function getSentimentIcon(): string
+    {
+        if (!$this->hasSentimentAnalysis()) {
+            return 'fas fa-question-circle';
+        }
+
+        return match($this->sentiment_label) {
+            self::SENTIMENT_POSITIVE => 'fas fa-smile',
+            self::SENTIMENT_WEAK_POSITIVE => 'fas fa-smile-wink',
+            self::SENTIMENT_NEUTRAL => 'fas fa-meh',
+            self::SENTIMENT_WEAK_NEGATIVE => 'fas fa-frown',
+            self::SENTIMENT_NEGATIVE => 'fas fa-angry',
+            default => 'fas fa-question-circle'
+        };
+    }
+
+    /**
+     * Update priority score including sentiment factor
+     */
+    public function calculatePriorityScoreWithSentiment(): float
+    {
+        $score = $this->calculatePriorityScore();
+        
+        // Add sentiment factor to priority calculation
+        if ($this->hasSentimentAnalysis()) {
+            $sentimentFactor = 0;
+            
+            // Negative sentiment increases priority
+            if ($this->sentiment_label === self::SENTIMENT_NEGATIVE) {
+                $sentimentFactor = 2 * ($this->sentiment_confidence ?? 0.5);
+            } elseif ($this->sentiment_label === self::SENTIMENT_WEAK_NEGATIVE) {
+                $sentimentFactor = 1 * ($this->sentiment_confidence ?? 0.5);
+            }
+            
+            $score += $sentimentFactor;
+        }
+        
+        return round($score, 2);
+    }
+
+    /**
      * Check if ticket can transition to a specific status
      */
     public function canTransitionTo(string $status): bool
@@ -369,6 +518,147 @@ class Ticket extends Model
         return $this->created_at->diffInDays(now());
     }
 
+    /**
+     * Get recent activity for the ticket
+     */
+    public function getRecentActivity(int $limit = 20): \Illuminate\Support\Collection
+    {
+        $activities = collect();
+
+        // Add replies
+        $this->replies()->with('user')->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($reply) use ($activities) {
+            $activities->push([
+                'type' => 'reply',
+                'description' => 'Reply added',
+                'user' => $reply->user,
+                'created_at' => $reply->created_at,
+                'data' => $reply,
+            ]);
+        });
+
+        // Add time entries
+        $this->timeEntries()->with('user')->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($entry) use ($activities) {
+            $activities->push([
+                'type' => 'time_entry',
+                'description' => 'Time logged: ' . $entry->hours_worked . ' hours',
+                'user' => $entry->user,
+                'created_at' => $entry->created_at,
+                'data' => $entry,
+            ]);
+        });
+
+        // Add assignments
+        $this->assignments()->with(['assignedTo', 'assignedBy'])->orderBy('assigned_at', 'desc')->limit($limit)->get()->each(function ($assignment) use ($activities) {
+            $description = $assignment->assigned_to 
+                ? 'Assigned to ' . $assignment->assignedTo->name
+                : 'Unassigned';
+            
+            $activities->push([
+                'type' => 'assignment',
+                'description' => $description,
+                'user' => $assignment->assignedBy,
+                'created_at' => $assignment->assigned_at,
+                'data' => $assignment,
+            ]);
+        });
+
+        // Add calendar events
+        $this->calendarEvents()->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($event) use ($activities) {
+            $activities->push([
+                'type' => 'calendar_event',
+                'description' => 'Event scheduled: ' . $event->title,
+                'user' => null, // Events don't have a specific user
+                'created_at' => $event->created_at,
+                'data' => $event,
+            ]);
+        });
+
+        // Sort by created_at and limit
+        return $activities->sortByDesc('created_at')->take($limit)->values();
+    }
+
+    /**
+     * Get available workflow transitions for the ticket
+     */
+    public function getAvailableTransitions(): \Illuminate\Support\Collection
+    {
+        if (!$this->workflow) {
+            return collect();
+        }
+
+        // This would typically query transition rules based on current status
+        // For now, return basic status transitions
+        return collect([
+            ['from' => 'open', 'to' => 'in_progress', 'name' => 'Start Work'],
+            ['from' => 'in_progress', 'to' => 'pending', 'name' => 'Set Pending'],
+            ['from' => 'pending', 'to' => 'in_progress', 'name' => 'Resume Work'],
+            ['from' => 'in_progress', 'to' => 'resolved', 'name' => 'Resolve'],
+            ['from' => 'resolved', 'to' => 'closed', 'name' => 'Close'],
+        ])->filter(function ($transition) {
+            return strtolower($transition['from']) === strtolower($this->status);
+        });
+    }
+
+    /**
+     * Get the color class for the ticket priority
+     */
+    public function getPriorityColor(): string
+    {
+        return match(strtolower($this->priority)) {
+            'low' => 'success',
+            'medium' => 'warning', 
+            'high' => 'danger',
+            'critical' => 'dark',
+            default => 'secondary',
+        };
+    }
+
+    /**
+     * Get the color class for the ticket status
+     */
+    public function getStatusColor(): string
+    {
+        return match(strtolower($this->status)) {
+            'new' => 'primary',
+            'open' => 'info',
+            'in_progress', 'in progress' => 'warning',
+            'pending' => 'secondary',
+            'resolved' => 'success',
+            'closed' => 'dark',
+            default => 'light',
+        };
+    }
+
+    /**
+     * Get the icon class for the ticket priority
+     */
+    public function getPriorityIcon(): string
+    {
+        return match(strtolower($this->priority)) {
+            'low' => 'fas fa-arrow-down',
+            'medium' => 'fas fa-minus',
+            'high' => 'fas fa-arrow-up',
+            'critical' => 'fas fa-exclamation-triangle',
+            default => 'fas fa-circle',
+        };
+    }
+
+    /**
+     * Get the icon class for the ticket status
+     */
+    public function getStatusIcon(): string
+    {
+        return match(strtolower($this->status)) {
+            'new' => 'fas fa-plus-circle',
+            'open' => 'fas fa-folder-open',
+            'in_progress', 'in progress' => 'fas fa-spinner',
+            'pending' => 'fas fa-pause-circle',
+            'resolved' => 'fas fa-check-circle',
+            'closed' => 'fas fa-times-circle',
+            default => 'fas fa-circle',
+        };
+    }
+
     // ===========================================
     // SCOPES
     // ===========================================
@@ -432,6 +722,48 @@ class Ticket extends Model
         return $query->whereNotNull('recurring_ticket_id');
     }
 
+    // Sentiment-related scopes
+    public function scopeWithSentimentAnalysis($query)
+    {
+        return $query->whereNotNull('sentiment_analyzed_at');
+    }
+
+    public function scopeWithoutSentimentAnalysis($query)
+    {
+        return $query->whereNull('sentiment_analyzed_at');
+    }
+
+    public function scopeBySentiment($query, string $sentiment)
+    {
+        return $query->where('sentiment_label', $sentiment);
+    }
+
+    public function scopePositiveSentiment($query)
+    {
+        return $query->whereIn('sentiment_label', [self::SENTIMENT_POSITIVE, self::SENTIMENT_WEAK_POSITIVE]);
+    }
+
+    public function scopeNegativeSentiment($query)
+    {
+        return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE]);
+    }
+
+    public function scopeNeutralSentiment($query)
+    {
+        return $query->where('sentiment_label', self::SENTIMENT_NEUTRAL);
+    }
+
+    public function scopeSentimentNeedsAttention($query)
+    {
+        return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE])
+                    ->where('sentiment_confidence', '>', 0.6);
+    }
+
+    public function scopeSentimentScoreBetween($query, float $min, float $max)
+    {
+        return $query->whereBetween('sentiment_score', [$min, $max]);
+    }
+
     // ===========================================
     // STATIC METHODS
     // ===========================================
@@ -466,6 +798,17 @@ class Ticket extends Model
             self::SOURCE_PORTAL,
             self::SOURCE_WALK_IN,
             self::SOURCE_INTERNAL,
+        ];
+    }
+
+    public static function getAvailableSentiments(): array
+    {
+        return [
+            self::SENTIMENT_POSITIVE,
+            self::SENTIMENT_WEAK_POSITIVE,
+            self::SENTIMENT_NEUTRAL,
+            self::SENTIMENT_WEAK_NEGATIVE,
+            self::SENTIMENT_NEGATIVE,
         ];
     }
 

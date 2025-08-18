@@ -4,12 +4,12 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
-    <div class="bg-white shadow-sm rounded-lg">
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $reportInfo['name'] }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $reportInfo['name'] }}</h1>
                     <p class="mt-1 text-sm text-gray-500">{{ $reportInfo['description'] }}</p>
                 </div>
                 <a href="{{ route('reports.index') }}" class="text-sm text-indigo-600 hover:text-indigo-500">
@@ -27,16 +27,16 @@
                 @if($filters['date_range'] ?? false)
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                        <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
                         <input type="date" name="start_date" id="start_date" 
                                value="{{ now()->subMonth()->format('Y-m-d') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                     <div>
-                        <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+                        <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
                         <input type="date" name="end_date" id="end_date" 
                                value="{{ now()->format('Y-m-d') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                 </div>
                 @endif
@@ -44,18 +44,18 @@
                 <!-- As Of Date (for snapshot reports) -->
                 @if($filters['as_of_date'] ?? false)
                 <div>
-                    <label for="as_of_date" class="block text-sm font-medium text-gray-700">As of Date</label>
+                    <label for="as_of_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">As of Date</label>
                     <input type="date" name="as_of_date" id="as_of_date" 
                            value="{{ now()->format('Y-m-d') }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                           class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 </div>
                 @endif
                 
                 <!-- Client Selection -->
                 @if($filters['client'] ?? false)
                 <div>
-                    <label for="client_id" class="block text-sm font-medium text-gray-700">Client (Optional)</label>
-                    <select name="client_id" id="client_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="client_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client (Optional)</label>
+                    <select name="client_id" id="client_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">All Clients</option>
                         @if(isset($clients))
                             @foreach($clients as $client)
@@ -69,8 +69,8 @@
                 <!-- User/Technician Selection -->
                 @if($filters['user'] ?? false || $filters['technician'] ?? false)
                 <div>
-                    <label for="user_id" class="block text-sm font-medium text-gray-700">User/Technician (Optional)</label>
-                    <select name="user_id" id="user_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="user_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">User/Technician (Optional)</label>
+                    <select name="user_id" id="user_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">All Users</option>
                         @if(isset($users))
                             @foreach($users as $user)
@@ -84,8 +84,8 @@
                 <!-- Status Filter -->
                 @if($filters['status'] ?? false)
                 <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">All Statuses</option>
                         <option value="open">Open</option>
                         <option value="in-progress">In Progress</option>
@@ -98,8 +98,8 @@
                 <!-- Priority Filter -->
                 @if($filters['priority'] ?? false)
                 <div>
-                    <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
-                    <select name="priority" id="priority" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Priority</label>
+                    <select name="priority" id="priority" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">All Priorities</option>
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -112,8 +112,8 @@
                 <!-- Category Filter -->
                 @if($filters['category'] ?? false)
                 <div>
-                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                    <select name="category" id="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                    <select name="category" id="category" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">All Categories</option>
                         <option value="hardware">Hardware</option>
                         <option value="software">Software</option>
@@ -127,8 +127,8 @@
                 <!-- Group By Option -->
                 @if($filters['group_by'] ?? false)
                 <div>
-                    <label for="group_by" class="block text-sm font-medium text-gray-700">Group By</label>
-                    <select name="group_by" id="group_by" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <label for="group_by" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Group By</label>
+                    <select name="group_by" id="group_by" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">No Grouping</option>
                         <option value="client">Client</option>
                         <option value="user">User</option>
@@ -141,13 +141,13 @@
                 
                 <!-- Output Format -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Output Format</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Output Format</label>
                     <div class="mt-2 grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-gray-800 p-4 shadow-sm focus:outline-none">
                             <input type="radio" name="format" value="html" class="sr-only" checked>
                             <div class="flex flex-1">
                                 <div class="flex flex-col">
-                                    <span class="block text-sm font-medium text-gray-900">View Online</span>
+                                    <span class="block text-sm font-medium text-gray-900 dark:text-white">View Online</span>
                                     <span class="mt-1 flex items-center text-sm text-gray-500">HTML</span>
                                 </div>
                             </div>
@@ -156,41 +156,41 @@
                             </svg>
                         </label>
                         
-                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-gray-800 p-4 shadow-sm focus:outline-none">
                             <input type="radio" name="format" value="pdf" class="sr-only">
                             <div class="flex flex-1">
                                 <div class="flex flex-col">
-                                    <span class="block text-sm font-medium text-gray-900">PDF</span>
+                                    <span class="block text-sm font-medium text-gray-900 dark:text-white">PDF</span>
                                     <span class="mt-1 flex items-center text-sm text-gray-500">Download</span>
                                 </div>
                             </div>
                         </label>
                         
-                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-gray-800 p-4 shadow-sm focus:outline-none">
                             <input type="radio" name="format" value="excel" class="sr-only">
                             <div class="flex flex-1">
                                 <div class="flex flex-col">
-                                    <span class="block text-sm font-medium text-gray-900">Excel</span>
+                                    <span class="block text-sm font-medium text-gray-900 dark:text-white">Excel</span>
                                     <span class="mt-1 flex items-center text-sm text-gray-500">XLSX</span>
                                 </div>
                             </div>
                         </label>
                         
-                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-gray-800 p-4 shadow-sm focus:outline-none">
                             <input type="radio" name="format" value="csv" class="sr-only">
                             <div class="flex flex-1">
                                 <div class="flex flex-col">
-                                    <span class="block text-sm font-medium text-gray-900">CSV</span>
+                                    <span class="block text-sm font-medium text-gray-900 dark:text-white">CSV</span>
                                     <span class="mt-1 flex items-center text-sm text-gray-500">Export</span>
                                 </div>
                             </div>
                         </label>
                         
-                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-gray-800 p-4 shadow-sm focus:outline-none">
                             <input type="radio" name="format" value="json" class="sr-only">
                             <div class="flex flex-1">
                                 <div class="flex flex-col">
-                                    <span class="block text-sm font-medium text-gray-900">JSON</span>
+                                    <span class="block text-sm font-medium text-gray-900 dark:text-white">JSON</span>
                                     <span class="mt-1 flex items-center text-sm text-gray-500">API</span>
                                 </div>
                             </div>
@@ -209,14 +209,14 @@
                         Generate Report
                     </button>
                     
-                    <button type="button" onclick="saveReport()" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button type="button" onclick="saveReport()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg class="mr-2 -ml-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
                         </svg>
                         Save Configuration
                     </button>
                     
-                    <button type="button" onclick="scheduleReport()" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button type="button" onclick="scheduleReport()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg class="mr-2 -ml-1 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -224,7 +224,7 @@
                     </button>
                 </div>
                 
-                <button type="button" onclick="resetForm()" class="text-sm text-gray-600 hover:text-gray-900">
+                <button type="button" onclick="resetForm()" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white dark:text-white">
                     Reset Form
                 </button>
             </div>
@@ -232,9 +232,9 @@
     </div>
     
     <!-- Report Preview Section (shown after generation) -->
-    <div id="reportPreview" class="hidden mt-6 bg-white shadow-sm rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Report Preview</h2>
+    <div id="reportPreview" class="hidden mt-6 bg-white dark:bg-gray-800 shadow-sm rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Report Preview</h2>
         </div>
         <div id="reportContent" class="p-6">
             <!-- Report content will be loaded here -->
@@ -290,9 +290,9 @@ function displayReport(data) {
         html += '<div class="grid grid-cols-1 md:grid-cols-4 gap-4">';
         for (const [key, value] of Object.entries(data.metrics)) {
             html += `
-                <div class="bg-gray-50 rounded-lg p-4">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <div class="text-sm font-medium text-gray-500">${key.replace(/_/g, ' ').toUpperCase()}</div>
-                    <div class="mt-1 text-2xl font-semibold text-gray-900">${formatValue(value)}</div>
+                    <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">${formatValue(value)}</div>
                 </div>
             `;
         }

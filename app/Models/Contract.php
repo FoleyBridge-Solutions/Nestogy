@@ -256,6 +256,16 @@ class Contract extends Model
         return $this->belongsTo(ContractTemplate::class, 'template_id');
     }
 
+    public function componentAssignments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Financial\ContractComponentAssignment::class);
+    }
+
+    public function activeComponentAssignments(): HasMany
+    {
+        return $this->componentAssignments()->where('status', 'active');
+    }
+
     /**
      * Get the user who created this contract.
      */

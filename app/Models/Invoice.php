@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use App\Services\VoIPTaxService;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
+use App\Traits\BelongsToCompany;
 
 /**
  * Invoice Model
@@ -38,7 +39,7 @@ use App\Models\TaxExemptionUsage;
  */
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -156,11 +157,60 @@ class Invoice extends Model
     }
 
     /**
+     * Get tax calculations for this invoice.
+     */
+    public function taxCalculations()
+    {
+        return $this->morphMany(TaxCalculation::class, 'calculable');
+    }
+
+    /**
+     * Get the latest tax calculation for this invoice.
+     */
+    public function latestTaxCalculation()
+    {
+        return $this->taxCalculations()
+                   ->where('status', '!=', 'voided')
+                   ->latest()
+                   ->first();
+    }
+
+    /**
+     * Get formatted tax breakdown by jurisdiction.
+     */
+    public function getFormattedTaxBreakdown(): array
+    {
+        $taxCalculation = $this->latestTaxCalculation();
+        
+        if (!$taxCalculation) {
+            return [
+                'total_tax' => 0,
+                'jurisdictions' => [],
+                'breakdown' => [],
+                'has_detailed_breakdown' => false,
+            ];
+        }
+
+        $jurisdictions = $taxCalculation->getJurisdictionBreakdown();
+        $breakdown = $taxCalculation->getTaxBreakdownSummary();
+
+        return [
+            'total_tax' => $taxCalculation->total_tax_amount,
+            'effective_rate' => $taxCalculation->effective_tax_rate,
+            'jurisdictions' => $jurisdictions,
+            'breakdown' => $breakdown,
+            'has_detailed_breakdown' => count($jurisdictions) > 0 || count($breakdown) > 0,
+            'calculation' => $taxCalculation,
+        ];
+    }
+
+    /**
      * Calculate VoIP taxes for all invoice items.
      */
     public function calculateVoIPTaxes(?array $serviceAddress = null): array
     {
-        $taxService = new VoIPTaxService($this->company_id);
+        $taxService = new VoIPTaxService();
+        $taxService->setCompanyId($this->company_id);
         $allCalculations = [];
         $totalTaxAmount = 0;
 

@@ -22,11 +22,15 @@ class NavigationComposer
         $activeDomain = $this->navigationService->getActiveDomain();
         $badgeCounts = $activeDomain ? $this->navigationService->getBadgeCounts($activeDomain) : [];
         
+        // Get current user's company
+        $company = auth()->user()?->company;
+        
         $view->with([
             'activeDomain' => $activeDomain,
             'activeItem' => $this->navigationService->getActiveNavigationItem(),
             'breadcrumbs' => $this->navigationService->getBreadcrumbs(),
             'badgeCounts' => $badgeCounts,
+            'currentCompany' => $company,
         ]);
     }
 }

@@ -24,7 +24,6 @@ class TicketTimeEntry extends Model
         'ticket_id',
         'user_id',
         'company_id',
-        'company_id',
         'description',
         'work_performed',
         'hours_worked',
@@ -34,8 +33,8 @@ class TicketTimeEntry extends Model
         'hourly_rate',
         'amount',
         'work_date',
-        'start_time',
-        'end_time',
+        'started_at',
+        'ended_at',
         'entry_type',
         'work_type',
         'rate_type',
@@ -57,7 +56,6 @@ class TicketTimeEntry extends Model
         'ticket_id' => 'integer',
         'user_id' => 'integer',
         'company_id' => 'integer',
-        'company_id' => 'integer',
         'hours_worked' => 'decimal:2',
         'minutes_worked' => 'integer',
         'hours_billed' => 'decimal:2',
@@ -65,8 +63,8 @@ class TicketTimeEntry extends Model
         'hourly_rate' => 'decimal:2',
         'amount' => 'decimal:2',
         'work_date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'started_at' => 'datetime',
+        'ended_at' => 'datetime',
         'submitted_at' => 'datetime',
         'submitted_by' => 'integer',
         'approved_at' => 'datetime',
@@ -100,6 +98,21 @@ class TicketTimeEntry extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function submittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
     // ===========================================
     // BUSINESS LOGIC METHODS
     // ===========================================
@@ -116,16 +129,17 @@ class TicketTimeEntry extends Model
         return round($this->hours_worked * $this->hourly_rate, 2);
     }
 
+
     /**
-     * Calculate hours worked from start/end times if available
+     * Calculate hours worked from started_at/ended_at times if available
      */
-    public function calculateHoursFromTimes(): ?float
+    public function calculateHoursFromStartedTimes(): ?float
     {
-        if (!$this->start_time || !$this->end_time) {
+        if (!$this->started_at || !$this->ended_at) {
             return null;
         }
 
-        $diff = $this->end_time->diffInMinutes($this->start_time);
+        $diff = $this->ended_at->diffInMinutes($this->started_at);
         return round($diff / 60, 2);
     }
 
@@ -138,7 +152,7 @@ class TicketTimeEntry extends Model
             $this->entry_type = self::TYPE_TIMER;
         }
 
-        $this->start_time = now();
+        $this->started_at = now();
         $this->save();
     }
 
@@ -147,12 +161,13 @@ class TicketTimeEntry extends Model
      */
     public function stopTimer(): float
     {
-        if (!$this->start_time) {
+        if (!$this->started_at) {
             throw new \Exception('Timer was not started for this entry.');
         }
 
-        $this->end_time = now();
-        $this->hours_worked = $this->calculateHoursFromTimes();
+        $this->ended_at = now();
+        $this->hours_worked = $this->calculateHoursFromStartedTimes();
+        $this->status = 'completed'; // Update status when timer stops
         $this->save();
 
         return $this->hours_worked;
@@ -164,8 +179,8 @@ class TicketTimeEntry extends Model
     public function isTimerRunning(): bool
     {
         return $this->entry_type === self::TYPE_TIMER 
-            && $this->start_time 
-            && !$this->end_time;
+            && $this->started_at 
+            && !$this->ended_at;
     }
 
     /**
@@ -177,7 +192,7 @@ class TicketTimeEntry extends Model
             return null;
         }
 
-        return $this->start_time->diffInMinutes(now());
+        return $this->started_at->diffInMinutes(now());
     }
 
     /**
@@ -207,6 +222,30 @@ class TicketTimeEntry extends Model
     }
 
     /**
+     * Get formatted duration attribute
+     */
+    public function getFormattedDurationAttribute(): string
+    {
+        return $this->getFormattedDuration();
+    }
+
+    /**
+     * Get date attribute (maps to work_date with fallbacks)
+     */
+    public function getDateAttribute()
+    {
+        if ($this->work_date) {
+            return $this->work_date;
+        }
+        
+        if ($this->started_at) {
+            return \Carbon\Carbon::parse($this->started_at->toDateString());
+        }
+        
+        return $this->created_at ? \Carbon\Carbon::parse($this->created_at->toDateString()) : \Carbon\Carbon::now();
+    }
+
+    /**
      * Create time entry from timer session
      */
     public static function createFromTimer(int $ticketId, int $userId, Carbon $startTime, Carbon $endTime, array $data = []): self
@@ -218,8 +257,8 @@ class TicketTimeEntry extends Model
             'user_id' => $userId,
             'company_id' => auth()->user()->company_id,
             'work_date' => $startTime->toDateString(),
-            'start_time' => $startTime,
-            'end_time' => $endTime,
+            'started_at' => $startTime,
+            'ended_at' => $endTime,
             'hours_worked' => round($hoursWorked, 2),
             'entry_type' => self::TYPE_TIMER,
         ], $data));
@@ -273,8 +312,8 @@ class TicketTimeEntry extends Model
     public function scopeRunningTimers($query)
     {
         return $query->where('entry_type', self::TYPE_TIMER)
-            ->whereNotNull('start_time')
-            ->whereNull('end_time');
+            ->whereNotNull('started_at')
+            ->whereNull('ended_at');
     }
 
     public function scopeByEntryType($query, string $type)
@@ -357,8 +396,8 @@ class TicketTimeEntry extends Model
             'billable' => 'boolean',
             'hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
             'work_date' => 'required|date|before_or_equal:today',
-            'start_time' => 'nullable|date',
-            'end_time' => 'nullable|date|after:start_time',
+            'started_at' => 'nullable|date',
+            'ended_at' => 'nullable|date|after:started_at',
             'entry_type' => 'required|in:manual,timer,import',
             'metadata' => 'nullable|array',
         ];
@@ -374,13 +413,14 @@ class TicketTimeEntry extends Model
 
         // Auto-calculate hours from times if not provided
         static::saving(function ($entry) {
-            if (!$entry->hours_worked && $entry->start_time && $entry->end_time) {
-                $entry->hours_worked = $entry->calculateHoursFromTimes();
+            // Calculate hours from started_at/ended_at if not provided
+            if (!$entry->hours_worked && $entry->started_at && $entry->ended_at) {
+                $entry->hours_worked = $entry->calculateHoursFromStartedTimes();
             }
 
-            // Set work_date from start_time if not provided
-            if (!$entry->work_date && $entry->start_time) {
-                $entry->work_date = $entry->start_time->toDateString();
+            // Set work_date from started_at if not provided
+            if (!$entry->work_date && $entry->started_at) {
+                $entry->work_date = $entry->started_at->toDateString();
             }
         });
     }

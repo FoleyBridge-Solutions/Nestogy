@@ -2,445 +2,1504 @@
 
 @section('title', 'Create Quote')
 
+@push('styles')
+<style>
+[x-cloak] { display: none !important; }
+.step-indicator { transition: all 0.3s ease; }
+.price-display { font-family: 'Courier New', monospace; }
+.item-row:hover { background-color: rgba(0,123,255,0.1); }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    /* Mobile-first layout adjustments */
+    .mobile-stack { flex-direction: column !important; }
+    .mobile-full-width { width: 100% !important; margin-bottom: 1rem; }
+    .mobile-hide { display: none !important; }
+    .mobile-show { display: block !important; }
+    
+    /* Touch-friendly sizing */
+    .mobile-touch-target {
+        min-height: 48px !important;
+        padding: 12px 16px !important;
+    }
+    
+    /* Mobile step indicator */
+    .mobile-step-compact {
+        gap: 0.5rem !important;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .mobile-step-compact .step-indicator {
+        flex-shrink: 0;
+        font-size: 0.875rem;
+    }
+    
+    .mobile-step-compact .step-indicator span {
+        display: none;
+    }
+    
+    /* Mobile item management */
+    .mobile-item-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .mobile-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .mobile-item-fields {
+        display: grid;
+        grid-template-columns: 1fr 80px 100px;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    /* Mobile form groups */
+    .mobile-form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .mobile-form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Mobile buttons */
+    .mobile-button-full {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .mobile-button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    /* Mobile navigation */
+    .mobile-nav-sticky {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        padding: 1rem;
+        margin: -1rem -1rem 0 -1rem;
+        z-index: 10;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tablet-grid-2 { 
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .tablet-grid-3 { 
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+}
+</style>
+@endpush
+
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Quote</h1>
-                <p class="text-gray-600 mt-1">Create a new quote for client proposal</p>
-            </div>
-            <a href="{{ route('financial.quotes.index') }}" 
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Quotes
+<div class="w-full px-4 px-4 py-4" x-data="quoteBuilder()" x-init="init()" x-cloak @products-selected.window="syncSelectedItems($event.detail)">
+    <!-- Page Header -->
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 gap-4">
+        <div class="flex-1">
+            <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Create Quote</h1>
+            <p class="text-gray-600 text-sm lg:text-base">
+                @if($copyData && $copyFromQuote)
+                    Copying quote <strong>#{{ $copyFromQuote->getFullNumber() }}</strong> - you can modify any details before saving
+                @else
+                    Create a new quote for your client
+                @endif
+            </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+            @if($copyData && $copyFromQuote)
+                <a href="{{ route('financial.quotes.show', $copyFromQuote) }}" class="inline-flex items-center justify-center px-4 py-2 border border-blue-300 text-blue-600 bg-white rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mobile-touch-target">
+                    <i class="fas fa-eye mr-2"></i>View Original
+                </a>
+            @endif
+            <button type="button" 
+                    @click="clearLocalStorage(); $dispatch('notification', { type: 'success', message: 'Draft cleared from local storage' });"
+                    class="inline-flex items-center justify-center px-3 py-2 border border-yellow-300 text-yellow-600 bg-white rounded-md hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 mobile-touch-target"
+                    title="Clear saved draft">
+                <i class="fas fa-trash text-sm"></i>
+                <span class="hidden lg:inline ml-1">Clear Draft</span>
+            </button>
+            
+            <a href="{{ route('financial.quotes.index') }}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-600 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 mobile-touch-target">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Quotes
             </a>
         </div>
+    </div>
 
-        <div class="bg-white shadow rounded-lg">
-            <form method="POST" action="{{ route('financial.quotes.store') }}" class="space-y-6 p-6" id="quote-form">
-                @csrf
+    @if($copyData && $copyFromQuote)
+    <!-- Copy Notice -->
+    <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700 flex items-center mb-4">
+        <i class="fas fa-copy mr-3"></i>
+        <div>
+            <strong>Copying Quote #{{ $copyFromQuote->getFullNumber() }}</strong><br>
+            <small>All data has been pre-filled from the original quote. You can modify any details before saving the new quote.</small>
+        </div>
+    </div>
+    @endif
 
-                <!-- Template Selection (if available) -->
-                @if($templates->count() > 0)
-                <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-                    <h3 class="text-lg font-medium text-blue-900 mb-3">Start from Template</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="template_id" class="block text-sm font-medium text-blue-700">Select Template</label>
-                            <select name="template_id" id="template_id" 
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-blue-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                                <option value="">None - Create from scratch</option>
-                                @foreach($templates as $template)
-                                    <option value="{{ $template->id }}" {{ ($selectedTemplate && $selectedTemplate->id === $template->id) ? 'selected' : '' }}>
-                                        {{ $template->name }} ({{ $template->getCategoryLabel() }})
+    <!-- Progress Steps -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden border-0 shadow-sm mb-4">
+        <div class="p-6 py-3">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+                <div class="flex items-center gap-2 lg:gap-4 mobile-step-compact">
+                    <div class="flex items-center step-indicator" 
+                         :class="currentStep >= 1 ? 'text-blue-600' : 'text-gray-600'">
+                        <div class="rounded-full flex items-center justify-center mr-2"
+                             :class="currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-100'"
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-info-circle text-sm" x-show="currentStep >= 1"></i>
+                            <span x-show="currentStep < 1" class="text-sm">1</span>
+                        </div>
+                        <span class="font-semibold hidden sm:inline">Details</span>
+                    </div>
+                    
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    
+                    <div class="flex items-center step-indicator"
+                         :class="currentStep >= 2 ? 'text-blue-600' : 'text-gray-500'">
+                        <div class="rounded-full flex items-center justify-center mr-2"
+                             :class="currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-100'"
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-shopping-cart text-sm" x-show="currentStep >= 2"></i>
+                            <span x-show="currentStep < 2" class="text-sm">2</span>
+                        </div>
+                        <span class="font-semibold hidden sm:inline">Items</span>
+                    </div>
+                    
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    
+                    <div class="flex items-center step-indicator"
+                         :class="currentStep >= 3 ? 'text-blue-600' : 'text-gray-500'">
+                        <div class="rounded-full flex items-center justify-center mr-2"
+                             :class="currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-100'"
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-check text-sm" x-show="currentStep >= 3"></i>
+                            <span x-show="currentStep < 3" class="text-sm">3</span>
+                        </div>
+                        <span class="font-semibold hidden sm:inline">Review</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-center lg:justify-end gap-3">
+                    <div x-show="saving" class="text-gray-500 text-sm">
+                        <i class="fas fa-spinner fa-spin"></i> <span class="hidden sm:inline">Saving...</span>
+                    </div>
+                    <div x-show="!saving && lastSaved" class="text-green-600 text-sm">
+                        <i class="fas fa-check-circle"></i> <span class="hidden sm:inline">Saved</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden border-0 shadow-sm">
+        <form @submit.prevent="submitQuote()">
+            
+            <!-- Step 1: Quote Details -->
+            <div x-show="currentStep === 1">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Quote Details</h5>
+                </div>
+                
+                <div class="p-4 lg:p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                        <!-- Client Selection -->
+                        <div class="mobile-form-group">
+                            <label for="client_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                Client <span class="text-red-600">*</span>
+                            </label>
+                            <select id="client_id" 
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                    x-model="quote.client_id"
+                                    @change="handleClientChange()"
+                                    :class="errors.client_id ? 'border-red-500' : ''">
+                                <option value="">Select a client...</option>
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}"
+                                            {{ ($selectedClient && $selectedClient->id == $client->id) ? 'selected' : '' }}>
+                                        {{ $client->name }}@if($client->company_name) ({{ $client->company_name }})@endif
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="text-red-600 text-sm mt-1" x-text="errors.client_id" x-show="errors.client_id"></div>
                         </div>
-                        <div class="flex items-end">
-                            <button type="button" id="load-template" 
-                                    class="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-white hover:bg-blue-50">
-                                Load Template
+                        
+                        <!-- Category Selection -->
+                        <div class="mobile-form-group">
+                            <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                Category <span class="text-red-600">*</span>
+                            </label>
+                            <select id="category_id" 
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                    x-model="quote.category_id"
+                                    :class="errors.category_id ? 'border-red-500' : ''">
+                                <option value="">Select a category...</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="text-red-600 text-sm mt-1" x-text="errors.category_id" x-show="errors.category_id"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Date and Currency Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mt-6">
+                        <div class="mobile-form-group">
+                            <label for="quote_date" class="block text-sm font-medium text-gray-700 mb-2">Quote Date</label>
+                            <input type="date" 
+                                   id="quote_date" 
+                                   class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                   x-model="quote.date">
+                        </div>
+                        
+                        <div class="mobile-form-group">
+                            <label for="expire_date" class="block text-sm font-medium text-gray-700 mb-2">Valid Until</label>
+                            <input type="date" 
+                                   id="expire_date" 
+                                   class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                   x-model="quote.expire_date"
+                                   :class="errors.expire_date ? 'border-red-500' : ''">
+                            <div class="text-red-600 text-sm mt-1" x-text="errors.expire_date" x-show="errors.expire_date"></div>
+                        </div>
+                        
+                        <div class="mobile-form-group">
+                            <label for="currency_code" class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                            <select id="currency_code" 
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                    x-model="quote.currency_code">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mobile-form-group mt-6">
+                        <label for="scope" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="scope" 
+                                  class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                  rows="4" 
+                                  x-model="quote.scope"
+                                  placeholder="Brief description of the quote..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Items -->
+            <div x-show="currentStep === 2">
+                <div class="px-4 lg:px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart mr-2"></i>Quote Items</h5>
+                </div>
+                
+                <div class="p-4 lg:p-6">
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <!-- Product Selection and Quick Add -->
+                        <div class="xl:col-span-2 order-2 xl:order-1">
+                            <!-- Mobile-Optimized Quick Add Item -->
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg mb-6">
+                                <div class="px-4 py-3 border-b border-gray-200 bg-gray-100">
+                                    <h6 class="mb-0 font-semibold">Add Item Quickly</h6>
+                                </div>
+                                <div class="p-4">
+                                    <!-- Mobile: Stack vertically -->
+                                    <div class="lg:hidden space-y-3">
+                                        <input type="text" 
+                                               x-model="newItem.name"
+                                               class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                               placeholder="Item name"
+                                               @keydown.enter="addQuickItem()">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <input type="number" 
+                                                   x-model="newItem.quantity"
+                                                   class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                                   placeholder="Quantity"
+                                                   min="1" 
+                                                   step="1">
+                                            <input type="number" 
+                                                   x-model="newItem.price"
+                                                   class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                                   placeholder="Price"
+                                                   min="0" 
+                                                   step="0.01">
+                                        </div>
+                                        <button type="button" 
+                                                @click="addQuickItem()"
+                                                class="w-full inline-flex justify-center items-center px-4 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mobile-touch-target">
+                                            <i class="fas fa-plus mr-2"></i> Add Item
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Desktop: Horizontal layout -->
+                                    <div class="hidden lg:flex gap-3">
+                                        <div class="flex-1">
+                                            <input type="text" 
+                                                   x-model="newItem.name"
+                                                   class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                                   placeholder="Item name"
+                                                   @keydown.enter="addQuickItem()">
+                                        </div>
+                                        <div class="w-24">
+                                            <input type="number" 
+                                                   x-model="newItem.quantity"
+                                                   class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                                   placeholder="Qty"
+                                                   min="1" 
+                                                   step="1">
+                                        </div>
+                                        <div class="w-28">
+                                            <input type="number" 
+                                                   x-model="newItem.price"
+                                                   class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                                   placeholder="Price"
+                                                   min="0" 
+                                                   step="0.01">
+                                        </div>
+                                        <button type="button" 
+                                                @click="addQuickItem()"
+                                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            <i class="fas fa-plus mr-2"></i> Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Product Selector Component -->
+                            <x-product-selector />
+                            
+                            <!-- Selected Items List -->
+                            <div class="mt-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h6>Selected Items (<span x-text="items.length"></span>)</h6>
+                                    <button type="button" 
+                                            @click="clearAllItems()"
+                                            class="inline-flex items-center px-3 py-1 border border-red-300 text-red-600 bg-white rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm mobile-touch-target"
+                                            x-show="items.length > 0">
+                                        <i class="fas fa-trash"></i> <span class="hidden sm:inline ml-1">Clear All</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Mobile Card Layout -->
+                                <div class="lg:hidden space-y-4" x-show="items.length > 0">
+                                    <template x-for="(item, index) in items" :key="item.id">
+                                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                            <div class="flex justify-between items-start mb-3">
+                                                <div class="flex-1 mr-3">
+                                                    <label class="block text-xs font-medium text-gray-500 mb-1">Item Name</label>
+                                                    <input type="text" 
+                                                           x-model="item.name"
+                                                           @input="updatePricing()"
+                                                           class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target"
+                                                           placeholder="Item description">
+                                                </div>
+                                                <button type="button" 
+                                                        @click="removeItem(index)"
+                                                        class="inline-flex items-center justify-center w-12 h-12 border border-red-300 text-red-600 bg-white rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mobile-touch-target">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-500 mb-1">Quantity</label>
+                                                    <input type="number" 
+                                                           x-model="item.quantity"
+                                                           @input="updatePricing()"
+                                                           class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base text-center mobile-touch-target"
+                                                           min="1" 
+                                                           step="1"
+                                                           placeholder="1">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-500 mb-1">Unit Price</label>
+                                                    <input type="number" 
+                                                           x-model="item.price"
+                                                           @input="updatePricing()"
+                                                           class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base text-right mobile-touch-target"
+                                                           min="0" 
+                                                           step="0.01"
+                                                           placeholder="0.00">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-sm font-medium text-gray-600">Subtotal:</span>
+                                                    <span class="text-lg font-bold text-gray-900" x-text="formatCurrency(item.quantity * item.price)"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <!-- Desktop Table Layout -->
+                                <div class="hidden lg:block overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qty</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Price</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Subtotal</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <template x-for="(item, index) in items" :key="item.id">
+                                                <tr class="item-row hover:bg-blue-50">
+                                                    <td class="px-4 py-3">
+                                                        <input type="text" 
+                                                               x-model="item.name"
+                                                               @input="updatePricing()"
+                                                               class="block w-full border-0 p-0 text-sm focus:ring-0 focus:border-0 bg-transparent">
+                                                    </td>
+                                                    <td class="px-4 py-3">
+                                                        <input type="number" 
+                                                               x-model="item.quantity"
+                                                               @input="updatePricing()"
+                                                               class="block w-full px-2 py-1 border border-gray-300 rounded text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                               min="1" 
+                                                               step="1">
+                                                    </td>
+                                                    <td class="px-4 py-3">
+                                                        <input type="number" 
+                                                               x-model="item.price"
+                                                               @input="updatePricing()"
+                                                               class="block w-full px-2 py-1 border border-gray-300 rounded text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                               min="0" 
+                                                               step="0.01">
+                                                    </td>
+                                                    <td class="px-4 py-3 text-right">
+                                                        <span class="font-semibold" x-text="formatCurrency(item.quantity * item.price)"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3">
+                                                        <button type="button" 
+                                                                @click="removeItem(index)"
+                                                                class="inline-flex items-center p-1 border border-red-300 text-red-600 bg-white rounded hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                            <i class="fas fa-times text-xs"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Empty State (Mobile & Desktop) -->
+                                <div x-show="items.length === 0" class="border border-gray-200 rounded-lg bg-gray-50">
+                                    <div class="px-4 py-8 text-center text-gray-500">
+                                        <i class="fas fa-inbox fa-2x mb-2 block"></i>
+                                        <div class="font-medium">No items added yet</div>
+                                        <div class="text-sm">Add your first item to get started</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Summary -->
+                        <div class="order-1 xl:order-2">
+                            <div class="bg-white border border-gray-200 rounded-lg sticky top-4">
+                                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                    <h6 class="mb-0 font-semibold">Pricing Summary</h6>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-sm">Subtotal:</span>
+                                        <span class="text-sm font-medium" x-text="formatCurrency(pricing.subtotal)"></span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Discount</label>
+                                        <div class="flex">
+                                            <input type="number" 
+                                                   x-model="quote.discount_amount"
+                                                   @input="updatePricing()"
+                                                   class="block w-full px-3 py-3 lg:py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base lg:text-sm mobile-touch-target" 
+                                                   min="0" 
+                                                   step="0.01"
+                                                   placeholder="0.00">
+                                            <select x-model="quote.discount_type" 
+                                                    @change="updatePricing()"
+                                                    class="border border-l-0 border-gray-300 rounded-r-md px-3 py-3 lg:py-2 bg-white text-base lg:text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mobile-touch-target">
+                                                <option value="fixed">$</option>
+                                                <option value="percentage">%</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div x-show="pricing.discount > 0" class="flex justify-between mb-2 text-green-600">
+                                        <span class="text-sm">Discount:</span>
+                                        <span class="text-sm font-medium" x-text="'-' + formatCurrency(pricing.discount)"></span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-sm">Tax:</span>
+                                        <span class="text-sm font-medium" x-text="formatCurrency(pricing.tax)"></span>
+                                    </div>
+                                    
+                                    <hr class="border-gray-200 my-3">
+                                    
+                                    <div class="flex justify-between">
+                                        <strong class="text-lg">Total:</strong>
+                                        <strong class="text-lg" x-text="formatCurrency(pricing.total)"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Review -->
+            <div x-show="currentStep === 3">
+                <div class="px-4 lg:px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h5 class="mb-0"><i class="fas fa-check mr-2"></i>Review & Submit</h5>
+                </div>
+                
+                <div class="p-4 lg:p-6">
+                    <!-- Mobile Layout -->
+                    <div class="lg:hidden space-y-6">
+                        <!-- Mobile Final Pricing (Priority) -->
+                        <div class="bg-white border border-gray-200 rounded-lg">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                <h6 class="mb-0 font-semibold">Final Pricing</h6>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-sm">Subtotal:</span>
+                                    <span class="text-sm font-medium" x-text="formatCurrency(pricing.subtotal)"></span>
+                                </div>
+                                
+                                <div x-show="pricing.discount > 0" class="flex justify-between mb-2 text-green-600">
+                                    <span class="text-sm">Discount:</span>
+                                    <span class="text-sm font-medium" x-text="'-' + formatCurrency(pricing.discount)"></span>
+                                </div>
+                                
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-sm">Tax:</span>
+                                    <span class="text-sm font-medium" x-text="formatCurrency(pricing.tax)"></span>
+                                </div>
+                                
+                                <hr class="border-gray-200 my-3">
+                                
+                                <div class="flex justify-between mb-4">
+                                    <strong class="text-lg">Total:</strong>
+                                    <strong class="text-lg price-display" x-text="formatCurrency(pricing.total)"></strong>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <button type="button" 
+                                            @click="saveAsDraft()"
+                                            class="w-full inline-flex justify-center items-center px-4 py-3 border border-gray-300 text-gray-600 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 mobile-touch-target"
+                                            :disabled="saving">
+                                        <i class="fas fa-save mr-2"></i> Save as Draft
+                                    </button>
+                                    
+                                    <button type="submit" 
+                                            class="w-full inline-flex justify-center items-center px-4 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mobile-touch-target"
+                                            :disabled="saving || !isValid()">
+                                        <i class="fas fa-check mr-2"></i>
+                                        <span x-show="!saving">Create Quote</span>
+                                        <span x-show="saving">Creating...</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile Quote Summary -->
+                        <div class="bg-white border border-gray-200 rounded-lg">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                <h6 class="mb-0 font-semibold">Quote Summary</h6>
+                            </div>
+                            <div class="p-4">
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-600">Client:</span>
+                                        <span class="text-right" x-text="getSelectedClientName()"></span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-600">Items:</span>
+                                        <span x-text="`${items.length} items`"></span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-600">Valid Until:</span>
+                                        <span x-text="quote.expire_date || 'No expiration'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile Additional Notes -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="note_mobile" class="block text-sm font-medium text-gray-700 mb-2">Internal Notes</label>
+                                <textarea id="note_mobile" 
+                                          class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                          rows="3" 
+                                          x-model="quote.note"
+                                          placeholder="Internal notes (optional)..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label for="terms_conditions_mobile" class="block text-sm font-medium text-gray-700 mb-2">Terms & Conditions</label>
+                                <textarea id="terms_conditions_mobile" 
+                                          class="block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base mobile-touch-target" 
+                                          rows="3" 
+                                          x-model="quote.terms_conditions"
+                                          placeholder="Terms and conditions (optional)..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Desktop Layout -->
+                    <div class="hidden lg:flex flex-wrap -mx-4">
+                        <div class="lg:w-2/3 px-4">
+                            <!-- Desktop Quote Summary -->
+                            <div class="bg-white border border-gray-200 rounded-lg mb-3">
+                                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                    <h6 class="mb-0">Quote Summary</h6>
+                                </div>
+                                <div class="p-4">
+                                    <dl class="grid grid-cols-3 gap-2">
+                                        <dt class="font-medium text-gray-600">Client:</dt>
+                                        <dd class="col-span-2" x-text="getSelectedClientName()"></dd>
+                                        
+                                        <dt class="font-medium text-gray-600">Items:</dt>
+                                        <dd class="col-span-2" x-text="`${items.length} items`"></dd>
+                                        
+                                        <dt class="font-medium text-gray-600">Total:</dt>
+                                        <dd class="col-span-2" x-text="formatCurrency(pricing.total)"></dd>
+                                        
+                                        <dt class="font-medium text-gray-600">Valid Until:</dt>
+                                        <dd class="col-span-2" x-text="quote.expire_date || 'No expiration'"></dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            <!-- Desktop Additional Notes -->
+                            <div class="flex flex-wrap -mx-2">
+                                <div class="w-1/2 px-2 mb-3">
+                                    <label for="note" class="block text-sm font-medium text-gray-700 mb-1">Internal Notes</label>
+                                    <textarea id="note" 
+                                              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                              rows="3" 
+                                              x-model="quote.note"
+                                              placeholder="Internal notes (optional)..."></textarea>
+                                </div>
+                                
+                                <div class="w-1/2 px-2 mb-3">
+                                    <label for="terms_conditions" class="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
+                                    <textarea id="terms_conditions" 
+                                              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                              rows="3" 
+                                              x-model="quote.terms_conditions"
+                                              placeholder="Terms and conditions (optional)..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="lg:w-1/3 px-4">
+                            <!-- Desktop Final Pricing -->
+                            <div class="bg-white border border-gray-200 rounded-lg sticky top-4">
+                                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                    <h6 class="mb-0">Final Pricing</h6>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span x-text="formatCurrency(pricing.subtotal)"></span>
+                                    </div>
+                                    
+                                    <div x-show="pricing.discount > 0" class="flex justify-between mb-2 text-green-600">
+                                        <span>Discount:</span>
+                                        <span x-text="'-' + formatCurrency(pricing.discount)"></span>
+                                    </div>
+                                    
+                                    <div class="flex justify-between mb-2">
+                                        <span>Tax:</span>
+                                        <span x-text="formatCurrency(pricing.tax)"></span>
+                                    </div>
+                                    
+                                    <hr class="border-gray-200 my-3">
+                                    
+                                    <div class="flex justify-between mb-3">
+                                        <strong>Total:</strong>
+                                        <strong class="price-display" x-text="formatCurrency(pricing.total)"></strong>
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <button type="button" 
+                                                @click="saveAsDraft()"
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-gray-600 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                                                :disabled="saving">
+                                            <i class="fas fa-save mr-2"></i> Save as Draft
+                                        </button>
+                                        
+                                        <button type="submit" 
+                                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                                :disabled="saving || !isValid()">
+                                            <i class="fas fa-check mr-2"></i>
+                                            <span x-show="!saving">Create Quote</span>
+                                            <span x-show="saving">Creating...</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Footer -->
+            <div class="px-4 lg:px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <!-- Mobile Navigation Layout -->
+                <div class="lg:hidden">
+                    <div class="flex flex-col space-y-3">
+                        <!-- Save Draft Button (Always Visible on Mobile) -->
+                        <button type="button" 
+                                class="w-full inline-flex justify-center items-center px-4 py-3 border border-blue-300 text-blue-600 bg-white rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mobile-touch-target" 
+                                @click="saveAsDraft()"
+                                :disabled="saving">
+                            <i class="fas fa-save mr-2"></i> 
+                            <span x-show="!saving">Save Draft</span>
+                            <span x-show="saving">Saving...</span>
+                        </button>
+                        
+                        <!-- Navigation Buttons -->
+                        <div class="flex gap-3">
+                            <button type="button" 
+                                    class="flex-1 inline-flex justify-center items-center px-4 py-3 border border-gray-300 text-gray-600 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 mobile-touch-target" 
+                                    @click="prevStep()" 
+                                    :disabled="currentStep === 1">
+                                <i class="fas fa-arrow-left mr-2"></i> Previous
+                            </button>
+                            
+                            <button type="button" 
+                                    class="flex-1 inline-flex justify-center items-center px-4 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mobile-touch-target" 
+                                    @click="nextStep()" 
+                                    x-show="currentStep < 3"
+                                    :disabled="!canProceed()">
+                                Next <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                            
+                            <button type="submit" 
+                                    class="flex-1 inline-flex justify-center items-center px-4 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mobile-touch-target" 
+                                    x-show="currentStep === 3"
+                                    :disabled="saving || !isValid()">
+                                <i class="fas fa-check mr-2"></i>
+                                <span x-show="!saving">Create</span>
+                                <span x-show="saving">Creating...</span>
                             </button>
                         </div>
                     </div>
                 </div>
-                @endif
-
-                <!-- Basic Quote Information -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Client -->
-                    <div>
-                        <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</label>
-                        <select name="client_id" id="client_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md @error('client_id') border-red-300 @enderror">
-                            <option value="">Select client</option>
-                            @foreach($clients as $client)
-                                <option value="{{ $client->id }}" {{ (old('client_id', $selectedClient?->id) == $client->id) ? 'selected' : '' }}>
-                                    {{ $client->name }}{{ $client->company_name ? ' (' . $client->company_name . ')' : '' }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('client_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Category -->
-                    <div>
-                        <label for="category_id" class="block text-sm font-medium text-gray-700">Category *</label>
-                        <select name="category_id" id="category_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md @error('category_id') border-red-300 @enderror">
-                            <option value="">Select category</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('category_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Quote Date -->
-                    <div>
-                        <label for="date" class="block text-sm font-medium text-gray-700">Quote Date *</label>
-                        <input type="date" name="date" id="date" required
-                               value="{{ old('date', now()->format('Y-m-d')) }}"
-                               class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('date') border-red-300 @enderror">
-                        @error('date')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Expiration Date -->
-                    <div>
-                        <label for="expire_date" class="block text-sm font-medium text-gray-700">Expiration Date</label>
-                        <input type="date" name="expire_date" id="expire_date"
-                               value="{{ old('expire_date', now()->addDays(30)->format('Y-m-d')) }}"
-                               class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('expire_date') border-red-300 @enderror">
-                        @error('expire_date')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Currency -->
-                    <div>
-                        <label for="currency_code" class="block text-sm font-medium text-gray-700">Currency *</label>
-                        <select name="currency_code" id="currency_code" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md @error('currency_code') border-red-300 @enderror">
-                            <option value="USD" {{ old('currency_code', 'USD') == 'USD' ? 'selected' : '' }}>USD - US Dollar</option>
-                            <option value="EUR" {{ old('currency_code') == 'EUR' ? 'selected' : '' }}>EUR - Euro</option>
-                            <option value="GBP" {{ old('currency_code') == 'GBP' ? 'selected' : '' }}>GBP - British Pound</option>
-                            <option value="CAD" {{ old('currency_code') == 'CAD' ? 'selected' : '' }}>CAD - Canadian Dollar</option>
-                            <option value="AUD" {{ old('currency_code') == 'AUD' ? 'selected' : '' }}>AUD - Australian Dollar</option>
-                        </select>
-                        @error('currency_code')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Scope/Description -->
-                    <div class="md:col-span-2">
-                        <label for="scope" class="block text-sm font-medium text-gray-700">Quote Scope</label>
-                        <input type="text" name="scope" id="scope" maxlength="255"
-                               value="{{ old('scope') }}"
-                               placeholder="Brief description of services or products being quoted"
-                               class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('scope') border-red-300 @enderror">
-                        @error('scope')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Discount Section -->
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Discount Settings</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="discount_type" class="block text-sm font-medium text-gray-700">Discount Type</label>
-                            <select name="discount_type" id="discount_type"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="fixed" {{ old('discount_type', 'fixed') == 'fixed' ? 'selected' : '' }}>Fixed Amount</option>
-                                <option value="percentage" {{ old('discount_type') == 'percentage' ? 'selected' : '' }}>Percentage</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="discount_amount" class="block text-sm font-medium text-gray-700">Discount Amount</label>
-                            <div class="mt-1 relative rounded-md shadow-sm">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm" id="discount-symbol">$</span>
-                                </div>
-                                <input type="number" name="discount_amount" id="discount_amount" step="0.01" min="0"
-                                       value="{{ old('discount_amount', '0.00') }}"
-                                       class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md @error('discount_amount') border-red-300 @enderror"
-                                       placeholder="0.00">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VoIP Configuration -->
-                <div class="border-t border-gray-200 pt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">VoIP Configuration</h3>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" id="enable-voip" name="enable_voip" value="1" {{ old('enable_voip') ? 'checked' : '' }}
-                                   class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            <span class="ml-2 text-sm text-gray-600">Enable VoIP Configuration</span>
-                        </label>
-                    </div>
-
-                    <div id="voip-config" class="space-y-6 {{ old('enable_voip') ? '' : 'hidden' }}">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label for="voip_extensions" class="block text-sm font-medium text-gray-700">Extensions</label>
-                                <input type="number" name="voip_config[extensions]" id="voip_extensions" min="1" max="1000"
-                                       value="{{ old('voip_config.extensions', 5) }}"
-                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="voip_concurrent" class="block text-sm font-medium text-gray-700">Concurrent Calls</label>
-                                <input type="number" name="voip_config[concurrent_calls]" id="voip_concurrent" min="1" max="500"
-                                       value="{{ old('voip_config.concurrent_calls', 3) }}"
-                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-3">VoIP Features</label>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="voip_config[features][voicemail]" value="1" {{ old('voip_config.features.voicemail', true) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-indigo-600 shadow-sm">
-                                    <span class="ml-2 text-sm text-gray-700">Voicemail</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="voip_config[features][call_forwarding]" value="1" {{ old('voip_config.features.call_forwarding', true) ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-indigo-600 shadow-sm">
-                                    <span class="ml-2 text-sm text-gray-700">Call Forwarding</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="voip_config[features][conference_calling]" value="1" {{ old('voip_config.features.conference_calling') ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-indigo-600 shadow-sm">
-                                    <span class="ml-2 text-sm text-gray-700">Conference Calling</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="voip_config[features][auto_attendant]" value="1" {{ old('voip_config.features.auto_attendant') ? 'checked' : '' }}
-                                           class="rounded border-gray-300 text-indigo-600 shadow-sm">
-                                    <span class="ml-2 text-sm text-gray-700">Auto Attendant</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-3">Equipment Requirements</label>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label for="voip_desk_phones" class="block text-sm font-medium text-gray-600">Desk Phones</label>
-                                    <input type="number" name="voip_config[equipment][desk_phones]" id="voip_desk_phones" min="0"
-                                           value="{{ old('voip_config.equipment.desk_phones', 0) }}"
-                                           class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                </div>
-                                <div>
-                                    <label for="voip_wireless_phones" class="block text-sm font-medium text-gray-600">Wireless Phones</label>
-                                    <input type="number" name="voip_config[equipment][wireless_phones]" id="voip_wireless_phones" min="0"
-                                           value="{{ old('voip_config.equipment.wireless_phones', 0) }}"
-                                           class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                </div>
-                                <div>
-                                    <label for="voip_conference_phones" class="block text-sm font-medium text-gray-600">Conference Phones</label>
-                                    <input type="number" name="voip_config[equipment][conference_phone]" id="voip_conference_phones" min="0"
-                                           value="{{ old('voip_config.equipment.conference_phone', 0) }}"
-                                           class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pricing Model -->
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Pricing Model</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="pricing_type" class="block text-sm font-medium text-gray-700">Pricing Type</label>
-                            <select name="pricing_model[type]" id="pricing_type"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="flat_rate" {{ old('pricing_model.type', 'flat_rate') == 'flat_rate' ? 'selected' : '' }}>Flat Rate</option>
-                                <option value="tiered" {{ old('pricing_model.type') == 'tiered' ? 'selected' : '' }}>Tiered Pricing</option>
-                                <option value="usage_based" {{ old('pricing_model.type') == 'usage_based' ? 'selected' : '' }}>Usage Based</option>
-                                <option value="hybrid" {{ old('pricing_model.type') == 'hybrid' ? 'selected' : '' }}>Hybrid</option>
-                            </select>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="setup_fee" class="block text-sm font-medium text-gray-700">Setup Fee</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">$</span>
-                                    </div>
-                                    <input type="number" name="pricing_model[setup_fee]" id="setup_fee" step="0.01" min="0"
-                                           value="{{ old('pricing_model.setup_fee', '0.00') }}"
-                                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md"
-                                           placeholder="0.00">
-                                </div>
-                            </div>
-                            <div>
-                                <label for="monthly_recurring" class="block text-sm font-medium text-gray-700">Monthly Recurring</label>
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">$</span>
-                                    </div>
-                                    <input type="number" name="pricing_model[monthly_recurring]" id="monthly_recurring" step="0.01" min="0"
-                                           value="{{ old('pricing_model.monthly_recurring', '0.00') }}"
-                                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md"
-                                           placeholder="0.00">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Auto-Renewal Settings -->
-                <div class="border-t border-gray-200 pt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Auto-Renewal Settings</h3>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" id="auto-renew" name="auto_renew" value="1" {{ old('auto_renew') ? 'checked' : '' }}
-                                   class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            <span class="ml-2 text-sm text-gray-600">Enable Auto-Renewal</span>
-                        </label>
-                    </div>
-
-                    <div id="auto-renew-options" class="grid grid-cols-1 md:grid-cols-2 gap-6 {{ old('auto_renew') ? '' : 'hidden' }}">
-                        <div>
-                            <label for="auto_renew_days" class="block text-sm font-medium text-gray-700">Renewal Period (Days)</label>
-                            <input type="number" name="auto_renew_days" id="auto_renew_days" min="1" max="365"
-                                   value="{{ old('auto_renew_days', 30) }}"
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notes and Terms -->
-                <div class="border-t border-gray-200 pt-6 space-y-6">
-                    <div>
-                        <label for="note" class="block text-sm font-medium text-gray-700">Quote Notes</label>
-                        <textarea name="note" id="note" rows="3"
-                                  class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('note') border-red-300 @enderror"
-                                  placeholder="Additional notes or comments for this quote...">{{ old('note') }}</textarea>
-                        @error('note')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="terms_conditions" class="block text-sm font-medium text-gray-700">Terms and Conditions</label>
-                        <textarea name="terms_conditions" id="terms_conditions" rows="4"
-                                  class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('terms_conditions') border-red-300 @enderror"
-                                  placeholder="Terms and conditions for this quote...">{{ old('terms_conditions') }}</textarea>
-                        @error('terms_conditions')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Hidden Status Field -->
-                <input type="hidden" name="status" value="Draft">
-                <input type="hidden" name="approval_status" value="pending">
-
-                <!-- Submit Buttons -->
-                <div class="flex flex-col sm:flex-row justify-end items-center pt-6 border-t border-gray-200 gap-3">
-                    <a href="{{ route('financial.quotes.index') }}"
-                       class="w-full sm:w-auto inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Cancel
-                    </a>
-                    <button type="submit"
-                            class="w-full sm:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Create Quote
+                
+                <!-- Desktop Navigation Layout -->
+                <div class="hidden lg:flex justify-between">
+                    <button type="button" 
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-600 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" 
+                            @click="prevStep()" 
+                            :disabled="currentStep === 1">
+                        <i class="fas fa-arrow-left mr-2"></i> Previous
                     </button>
+                    
+                    <div class="flex gap-2">
+                        <button type="button" 
+                                class="inline-flex items-center px-4 py-2 border border-blue-300 text-blue-600 bg-white rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" 
+                                @click="saveAsDraft()"
+                                :disabled="saving">
+                            <i class="fas fa-save mr-2"></i> Save Draft
+                        </button>
+                        
+                        <button type="button" 
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" 
+                                @click="nextStep()" 
+                                x-show="currentStep < 3"
+                                :disabled="!canProceed()">
+                            Next <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                        
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" 
+                                x-show="currentStep === 3"
+                                :disabled="saving || !isValid()">
+                            <i class="fas fa-check mr-2"></i>
+                            <span x-show="!saving">Create Quote</span>
+                            <span x-show="saving">Creating...</span>
+                        </button>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </div>
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set expiration date automatically when quote date changes
-    const quoteDate = document.getElementById('date');
-    const expireDate = document.getElementById('expire_date');
-    
-    quoteDate.addEventListener('change', function() {
-        if (this.value) {
-            const date = new Date(this.value);
-            date.setDate(date.getDate() + 30); // Default 30 days validity
-            expireDate.value = date.toISOString().split('T')[0];
-        }
-    });
-    
-    // Toggle discount symbol based on type
-    const discountType = document.getElementById('discount_type');
-    const discountSymbol = document.getElementById('discount-symbol');
-    
-    discountType.addEventListener('change', function() {
-        discountSymbol.textContent = this.value === 'percentage' ? '%' : '$';
-    });
-    
-    // Toggle VoIP configuration
-    const enableVoip = document.getElementById('enable-voip');
-    const voipConfig = document.getElementById('voip-config');
-    
-    enableVoip.addEventListener('change', function() {
-        voipConfig.classList.toggle('hidden', !this.checked);
-    });
-    
-    // Toggle auto-renewal options
-    const autoRenew = document.getElementById('auto-renew');
-    const autoRenewOptions = document.getElementById('auto-renew-options');
-    
-    autoRenew.addEventListener('change', function() {
-        autoRenewOptions.classList.toggle('hidden', !this.checked);
-    });
-    
-    // Load template functionality
-    const loadTemplateBtn = document.getElementById('load-template');
-    const templateSelect = document.getElementById('template_id');
-    
-    if (loadTemplateBtn && templateSelect) {
-        loadTemplateBtn.addEventListener('click', function() {
-            const templateId = templateSelect.value;
-            if (templateId) {
-                if (confirm('Loading a template will replace current form data. Continue?')) {
-                    window.location.href = `{{ route('financial.quotes.create') }}?template_id=${templateId}`;
-                }
-            } else {
-                alert('Please select a template first.');
-            }
-        });
-    }
-    
-    // Validate VoIP equipment doesn't exceed extensions
-    const extensionsInput = document.getElementById('voip_extensions');
-    const deskPhonesInput = document.getElementById('voip_desk_phones');
-    const wirelessPhonesInput = document.getElementById('voip_wireless_phones');
-    
-    function validateEquipment() {
-        if (extensionsInput && deskPhonesInput && wirelessPhonesInput) {
-            const extensions = parseInt(extensionsInput.value) || 0;
-            const deskPhones = parseInt(deskPhonesInput.value) || 0;
-            const wirelessPhones = parseInt(wirelessPhonesInput.value) || 0;
-            const totalPhones = deskPhones + wirelessPhones;
+function quoteBuilder() {
+    return {
+        // Core state
+        currentStep: 1,
+        saving: false,
+        lastSaved: null,
+        errors: {},
+        
+        // Quote data
+        quote: {
+            client_id: '',
+            category_id: '',
+            date: new Date().toISOString().split('T')[0],
+            expire_date: '',
+            currency_code: 'USD',
+            scope: '',
+            discount_amount: 0,
+            discount_type: 'fixed',
+            note: '',
+            terms_conditions: ''
+        },
+        
+        // Items
+        items: [],
+        newItem: {
+            name: '',
+            quantity: 1,
+            price: 0
+        },
+        
+        // Pricing
+        pricing: {
+            subtotal: 0,
+            discount: 0,
+            tax: 0,
+            total: 0
+        },
+        
+        // Tax breakdown from advanced calculation
+        taxBreakdown: [],
+        
+        // Client data
+        clients: {!! json_encode($clients->map(function($client) {
+            return [
+                'id' => $client->id,
+                'name' => $client->name,
+                'company_name' => $client->company_name,
+                'display_name' => $client->name . ($client->company_name ? ' (' . $client->company_name . ')' : '')
+            ];
+        })) !!},
+        
+        init() {
+            // Load from local storage first
+            this.loadFromLocalStorage();
             
-            if (totalPhones > extensions) {
-                alert('Total phones cannot exceed the number of extensions.');
-                return false;
+            // Handle copy data if present (overwrites local storage)
+            @if($copyData)
+                this.loadCopyData({!! json_encode($copyData) !!});
+            @else
+                // Set default expire date (30 days from now) only if not loaded from storage
+                if (!this.quote.expire_date) {
+                    const expireDate = new Date();
+                    expireDate.setDate(expireDate.getDate() + 30);
+                    this.quote.expire_date = expireDate.toISOString().split('T')[0];
+                }
+                
+                // Pre-select client if provided (from query parameter or session)
+                @if(request('client_id') || $selectedClient)
+                    if (!this.quote.client_id) {
+                        this.quote.client_id = '{{ request('client_id') ?: ($selectedClient ? $selectedClient->id : '') }}';
+                        this.handleClientChange();
+                    }
+                @endif
+            @endif
+            
+            // Initial pricing calculation
+            this.updatePricing();
+            
+            // Set up periodic auto-save to local storage (every 10 seconds)
+            setInterval(() => {
+                this.saveToLocalStorage();
+            }, 10000);
+            
+            // Save to local storage on any change
+            this.$watch('quote', () => this.saveToLocalStorage());
+            this.$watch('items', () => this.saveToLocalStorage());
+            this.$watch('currentStep', () => this.saveToLocalStorage());
+        },
+        
+        // Local Storage Management
+        getStorageKey() {
+            return 'nestogy_quote_draft_' + (window.location.pathname || 'new');
+        },
+        
+        saveToLocalStorage() {
+            try {
+                const data = {
+                    quote: this.quote,
+                    items: this.items,
+                    currentStep: this.currentStep,
+                    pricing: this.pricing,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                localStorage.setItem(this.getStorageKey(), JSON.stringify(data));
+                console.log('Quote progress saved to local storage');
+            } catch (error) {
+                console.error('Failed to save to local storage:', error);
             }
-        }
-        return true;
-    }
-    
-    [deskPhonesInput, wirelessPhonesInput].forEach(input => {
-        if (input) {
-            input.addEventListener('blur', validateEquipment);
-        }
-    });
-    
-    // Form validation before submit
-    document.getElementById('quote-form').addEventListener('submit', function(e) {
-        if (!validateEquipment()) {
-            e.preventDefault();
-            return false;
-        }
-    });
-});
+        },
+        
+        loadFromLocalStorage() {
+            try {
+                const storageKey = this.getStorageKey();
+                const savedData = localStorage.getItem(storageKey);
+                
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    
+                    // Check if data is recent (within 24 hours)
+                    const savedTime = new Date(data.timestamp);
+                    const now = new Date();
+                    const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
+                    
+                    if (hoursDiff > 24) {
+                        console.log('Local storage data is too old, clearing it');
+                        localStorage.removeItem(storageKey);
+                        return;
+                    }
+                    
+                    // Load the data
+                    if (data.quote) {
+                        Object.assign(this.quote, data.quote);
+                    }
+                    
+                    if (data.items && Array.isArray(data.items)) {
+                        this.items = data.items;
+                    }
+                    
+                    if (data.currentStep) {
+                        this.currentStep = data.currentStep;
+                    }
+                    
+                    if (data.pricing) {
+                        Object.assign(this.pricing, data.pricing);
+                    }
+                    
+                    console.log('Quote progress loaded from local storage:', data);
+                    
+                    // Show notification that progress was restored
+                    this.$dispatch('notification', {
+                        type: 'info',
+                        message: 'Previous quote progress restored from local storage'
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load from local storage:', error);
+                // Clear corrupted data
+                try {
+                    localStorage.removeItem(this.getStorageKey());
+                } catch (e) {
+                    console.error('Failed to clear corrupted local storage data:', e);
+                }
+            }
+        },
+        
+        clearLocalStorage() {
+            try {
+                const storageKey = this.getStorageKey();
+                localStorage.removeItem(storageKey);
+                console.log('Local storage cleared');
+            } catch (error) {
+                console.error('Failed to clear local storage:', error);
+            }
+        },
+        
+        // Copy data loading
+        loadCopyData(copyData) {
+            console.log('Loading copy data:', copyData);
+            
+            // Load quote data
+            Object.keys(this.quote).forEach(key => {
+                if (copyData[key] !== undefined) {
+                    this.quote[key] = copyData[key];
+                }
+            });
+            
+            // Load items data
+            if (copyData.items && Array.isArray(copyData.items)) {
+                this.items = copyData.items.map((item, index) => ({
+                    id: Date.now() + index, // Generate temporary ID for the form
+                    product_id: item.product_id || null,
+                    service_id: item.service_id || null,
+                    bundle_id: item.bundle_id || null,
+                    name: item.name || '',
+                    description: item.description || '',
+                    quantity: parseFloat(item.quantity) || 1,
+                    price: parseFloat(item.price) || 0,
+                    discount: parseFloat(item.discount) || 0,
+                    category_id: item.category_id || null,
+                    service_type: item.service_type || 'general',
+                    service_data: item.service_data || null,
+                    
+                    // Preserve original item type for proper categorization
+                    type: this.determineItemType(item),
+                    
+                    // Calculate totals
+                    subtotal: parseFloat(item.original_subtotal) || 0,
+                    tax: parseFloat(item.original_tax) || 0,
+                    total: parseFloat(item.original_total) || 0
+                }));
+                
+                // Recalculate pricing for all copied items
+                this.items.forEach(item => this.calculateItemTotals(item));
+            }
+            
+            // Handle client selection if it was copied
+            if (this.quote.client_id) {
+                this.handleClientChange();
+            }
+            
+            // Show copy notification
+            if (copyData.copy_from_quote_number) {
+                this.showNotification('Quote copied from ' + copyData.copy_from_quote_number + '. You can modify any details before saving.', 'info');
+            }
+            
+            // After loading the items, we need to inform the product selector component
+            // about the copied items so they appear in the correct tabs
+            this.$nextTick(() => {
+                this.syncCopiedItemsWithProductSelector();
+            });
+        },
+        
+        // Sync copied items with the product selector component
+        syncCopiedItemsWithProductSelector() {
+            // Prepare items in the format expected by the product selector
+            const selectedItems = this.items.map(item => ({
+                id: item.product_id || item.service_id || item.bundle_id || item.id,
+                type: item.type || 'product',
+                name: item.name,
+                sku: item.sku || '',
+                quantity: item.quantity,
+                base_price: item.price,
+                unit_price: item.price,
+                subtotal: item.subtotal || (item.quantity * item.price),
+                billing_model: item.billing_model || 'one_time',
+                billing_cycle: item.billing_cycle || 'monthly',
+                service_type: item.service_type || 'general',
+                service_data: item.service_data,
+                category_id: item.category_id,
+                product_id: item.product_id,
+                service_id: item.service_id,
+                bundle_id: item.bundle_id,
+                description: item.description || ''
+            }));
+            
+            // Dispatch event to notify the product selector component
+            // This will make the items appear as "selected" in the appropriate tabs
+            window.dispatchEvent(new CustomEvent('sync-copied-items', {
+                detail: {
+                    items: selectedItems,
+                    total: selectedItems.reduce((sum, item) => sum + (item.subtotal || 0), 0)
+                }
+            }));
+        },
+        
+        // Determine item type based on the copied item data
+        determineItemType(item) {
+            if (item.service_id) {
+                return 'service';
+            } else if (item.bundle_id) {
+                return 'bundle';
+            } else if (item.product_id) {
+                return 'product';
+            } else {
+                // For manually added items, determine by service_type or category
+                if (item.service_type && item.service_type !== 'general') {
+                    return 'service';
+                }
+                return 'product'; // Default to product for generic items
+            }
+        },
+        
+        // Navigation
+        nextStep() {
+            if (this.canProceed()) {
+                this.currentStep++;
+            }
+        },
+        
+        prevStep() {
+            if (this.currentStep > 1) {
+                this.currentStep--;
+            }
+        },
+        
+        canProceed() {
+            switch (this.currentStep) {
+                case 1:
+                    return this.quote.client_id && this.quote.category_id;
+                case 2:
+                    return this.items.length > 0;
+                default:
+                    return true;
+            }
+        },
+        
+        isValid() {
+            return this.quote.client_id && 
+                   this.quote.category_id && 
+                   this.items.length > 0 &&
+                   this.items.every(item => item.name && item.quantity > 0 && item.price >= 0);
+        },
+        
+        // Client handling
+        handleClientChange() {
+            this.errors.client_id = '';
+            
+            // Notify product selector component about client selection
+            if (this.quote.client_id) {
+                this.$dispatch('client-selected', { 
+                    clientId: this.quote.client_id 
+                });
+            }
+        },
+        
+        getSelectedClientName() {
+            const client = this.clients.find(c => c.id == this.quote.client_id);
+            return client ? client.display_name : 'No client selected';
+        },
+        
+        // Sync items from product selector
+        syncSelectedItems(eventData) {
+            if (eventData && eventData.items) {
+                // Clear existing items and add new ones
+                this.items = eventData.items.map(item => ({
+                    id: item.id || Date.now() + Math.random(),
+                    name: item.name || '',
+                    quantity: item.quantity || 1,
+                    price: item.unit_price || item.price || 0,
+                    type: item.type || 'product',
+                    sku: item.sku || '',
+                    description: item.description || ''
+                }));
+                
+                // Update pricing with new items
+                this.updatePricing();
+            }
+        },
+        
+        // Item management
+        addQuickItem() {
+            if (!this.newItem.name.trim()) return;
+            
+            const item = {
+                id: Date.now(),
+                name: this.newItem.name,
+                quantity: this.newItem.quantity || 1,
+                price: this.newItem.price || 0
+            };
+            
+            this.items.push(item);
+            this.updatePricing();
+            
+            // Reset form
+            this.newItem = { name: '', quantity: 1, price: 0 };
+        },
+        
+        removeItem(index) {
+            this.items.splice(index, 1);
+            this.updatePricing();
+        },
+        
+        clearAllItems() {
+            if (confirm('Are you sure you want to remove all items?')) {
+                this.items = [];
+                this.updatePricing();
+            }
+        },
+        
+        // Pricing calculations
+        updatePricing() {
+            // Calculate subtotal
+            this.pricing.subtotal = this.items.reduce((sum, item) => {
+                return sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0));
+            }, 0);
+            
+            // Calculate discount
+            if (this.quote.discount_type === 'percentage') {
+                this.pricing.discount = this.pricing.subtotal * (parseFloat(this.quote.discount_amount || 0) / 100);
+            } else {
+                this.pricing.discount = parseFloat(this.quote.discount_amount || 0);
+            }
+            
+            // Calculate tax using advanced tax engine
+            const afterDiscount = this.pricing.subtotal - this.pricing.discount;
+            
+            // Use advanced tax calculation if client and items are available
+            if (this.quote.client_id && this.items && this.items.length > 0) {
+                // Temporarily disabled due to missing tax_categories table
+                // TODO: Re-enable after running tax table migrations
+                // this.calculateAdvancedTax(afterDiscount);
+                this.pricing.tax = 0;
+            } else {
+                // Fallback to zero tax if no client/items
+                this.pricing.tax = 0;
+            }
+            
+            // Calculate total (will be updated again when tax calculation completes)
+            this.pricing.total = this.pricing.subtotal - this.pricing.discount + this.pricing.tax;
+        },
+        
+        // Calculate advanced tax using tax engine API
+        async calculateAdvancedTax(taxableAmount) {
+            try {
+                // Prepare items for bulk tax calculation
+                const taxItems = this.items.map(item => ({
+                    base_price: item.quantity * (item.price || item.unit_price || 0),
+                    quantity: 1, // Already calculated
+                    name: item.name,
+                    category_id: item.category_id,
+                    product_id: item.product_id,
+                    tax_data: item.service_data || {}
+                }));
+
+                const response = await fetch('/api/tax-engine/calculate-bulk', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({
+                        items: taxItems,
+                        customer_id: this.quote.client_id,
+                        calculation_type: 'preview'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.pricing.tax = result.data.summary.total_tax;
+                    this.taxBreakdown = result.data.items; // Store detailed breakdown
+                    
+                    // Recalculate total after tax calculation
+                    this.pricing.total = this.pricing.subtotal - this.pricing.discount + this.pricing.tax;
+                    
+                    console.log('Advanced tax calculation successful:', {
+                        taxable_amount: taxableAmount,
+                        calculated_tax: this.pricing.tax,
+                        effective_rate: result.data.summary.effective_tax_rate
+                    });
+                } else {
+                    console.error('Tax calculation failed:', result.error);
+                    this.pricing.tax = 0; // Fallback to zero tax
+                    // Recalculate total with zero tax
+                    this.pricing.total = this.pricing.subtotal - this.pricing.discount + this.pricing.tax;
+                }
+            } catch (error) {
+                console.error('Error calculating advanced tax:', error);
+                this.pricing.tax = 0; // Fallback to zero tax
+                // Recalculate total with zero tax
+                this.pricing.total = this.pricing.subtotal - this.pricing.discount + this.pricing.tax;
+            }
+        },
+
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: this.quote.currency_code || 'USD'
+            }).format(amount || 0);
+        },
+        
+        // Save functions
+        async saveAsDraft() {
+            await this.saveQuote('Draft');
+        },
+        
+        async submitQuote() {
+            if (!this.isValid()) {
+                alert('Please fix validation errors before submitting');
+                return;
+            }
+            
+            await this.saveQuote('Sent');
+        },
+        
+        async saveQuote(status = 'Draft') {
+            this.saving = true;
+            this.errors = {};
+            
+            try {
+                // Use XMLHttpRequest - more reliable than fetch()
+                this.submitViaXHR(status);
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('An error occurred while saving the quote. Please try again.');
+                this.saving = false;
+            }
+        },
+        
+        // XMLHttpRequest method - very reliable
+        submitViaXHR(status = 'Draft') {
+            // Start performance timer
+            const startTime = Date.now();
+            // Clean up items to ensure proper field names
+            const cleanItems = this.items.map(item => ({
+                id: item.id,
+                name: item.name,
+                description: item.description || '',
+                quantity: item.quantity || 1,
+                price: item.price || item.unit_price || 0,
+                type: item.type || 'product',
+                sku: item.sku || ''
+            }));
+
+            // Remove any items from quote object to avoid conflicts
+            const { items: quoteItems, ...quoteWithoutItems } = this.quote;
+
+            // Convert empty strings to null for validation
+            const sanitizedQuote = {};
+            for (const [key, value] of Object.entries(quoteWithoutItems)) {
+                if (value === '') {
+                    sanitizedQuote[key] = null;
+                } else {
+                    sanitizedQuote[key] = value;
+                }
+            }
+
+            const data = {
+                ...sanitizedQuote,
+                items: cleanItems,
+                pricing: this.pricing,
+                status: status,
+                skip_complex_calculations: status === 'Draft' // Only skip for drafts, full calculation for final quotes
+            };
+            
+            console.log('Submitting via XHR:', data);
+            
+            const xhr = new XMLHttpRequest();
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+            
+            xhr.open('POST', '{{ route("financial.quotes.store") }}', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    this.saving = false;
+                    const endTime = Date.now();
+                    const duration = endTime - startTime;
+                    console.log(`Request completed in ${duration}ms`);
+                    
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            console.log('Success response:', result);
+                            
+                            // Clear local storage on successful save
+                            this.clearLocalStorage();
+                            
+                            if (status === 'Sent') {
+                                // Redirect to quote view
+                                const quoteId = result.data?.id || result.id;
+                                if (quoteId) {
+                                    window.location.href = `/financial/quotes/${quoteId}`;
+                                } else {
+                                    window.location.href = '/financial/quotes';
+                                }
+                            } else {
+                                // Show success message for draft
+                                alert('Quote saved as draft successfully!');
+                                this.$dispatch('notification', {
+                                    type: 'success',
+                                    message: 'Quote saved as draft successfully'
+                                });
+                            }
+                        } catch (e) {
+                            console.error('JSON parse error:', e);
+                            // Still clear local storage on apparent success
+                            this.clearLocalStorage();
+                            alert('Quote saved successfully!');
+                        }
+                    } else if (xhr.status === 422) {
+                        // Validation errors
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            console.error('Validation errors:', result.errors);
+                            this.errors = result.errors || {};
+                            
+                            let errorMsg = 'Validation failed:\n';
+                            if (result.errors) {
+                                Object.keys(result.errors).forEach(field => {
+                                    errorMsg += `• ${field}: ${result.errors[field][0]}\n`;
+                                });
+                            }
+                            alert(errorMsg);
+                        } catch (e) {
+                            alert('Validation failed. Please check your input and try again.');
+                        }
+                    } else {
+                        console.error('Server error:', xhr.status, xhr.statusText, xhr.responseText);
+                        alert(`Server error (${xhr.status}): ${xhr.statusText}. Please try again or contact support.`);
+                    }
+                }
+            };
+            
+            xhr.onerror = () => {
+                this.saving = false;
+                console.error('Network error occurred');
+                alert('Network error: Could not connect to server. Please check your connection and try again.');
+            };
+            
+            xhr.ontimeout = () => {
+                this.saving = false;
+                console.error('Request timed out');
+                alert('Request timed out. Please try again.');
+            };
+            
+            xhr.timeout = 15000; // 15 second timeout for faster feedback
+            
+            try {
+                xhr.send(JSON.stringify(data));
+            } catch (sendError) {
+                this.saving = false;
+                console.error('Send error:', sendError);
+                alert('Failed to send request. Please try again.');
+            }
+        },
+    };
+}
 </script>
 @endpush
 @endsection

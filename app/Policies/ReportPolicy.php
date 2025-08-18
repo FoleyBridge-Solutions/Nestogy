@@ -12,7 +12,7 @@ class ReportPolicy
      */
     public function view(User $user): bool
     {
-        return $user->hasPermission('reports.view');
+        return $user->can('reports.view');
     }
 
     /**
@@ -20,7 +20,7 @@ class ReportPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('reports.export');
+        return $user->can('reports.export');
     }
 
     /**
@@ -28,7 +28,7 @@ class ReportPolicy
      */
     public function viewFinancial(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.financial',
             'financial.view'
         ]);
@@ -39,7 +39,7 @@ class ReportPolicy
      */
     public function viewTickets(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.tickets',
             'tickets.view'
         ]);
@@ -50,7 +50,7 @@ class ReportPolicy
      */
     public function viewAssets(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.assets',
             'assets.view'
         ]);
@@ -61,7 +61,7 @@ class ReportPolicy
      */
     public function viewClients(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.clients',
             'clients.view'
         ]);
@@ -72,7 +72,7 @@ class ReportPolicy
      */
     public function viewProjects(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.projects',
             'projects.view'
         ]);
@@ -83,7 +83,7 @@ class ReportPolicy
      */
     public function viewUsers(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.users',
             'users.view'
         ]);
@@ -94,7 +94,7 @@ class ReportPolicy
      */
     public function createCustom(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.view',
             'system.settings.manage'
         ]) || $user->isAdmin();
@@ -105,7 +105,7 @@ class ReportPolicy
      */
     public function schedule(User $user): bool
     {
-        return $user->hasPermission('reports.export') || $user->isAdmin();
+        return $user->can('reports.export') || $user->isAdmin();
     }
 
     /**
@@ -113,7 +113,7 @@ class ReportPolicy
      */
     public function viewDashboard(User $user): bool
     {
-        return $user->hasPermission('reports.view');
+        return $user->can('reports.view');
     }
 
     /**
@@ -121,7 +121,7 @@ class ReportPolicy
      */
     public function viewRevenue(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.financial',
             'financial.view',
             'financial.manage'
@@ -133,7 +133,7 @@ class ReportPolicy
      */
     public function viewExpenses(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.financial',
             'financial.expenses.view',
             'financial.expenses.approve'
@@ -145,7 +145,7 @@ class ReportPolicy
      */
     public function viewProfitLoss(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.financial',
             'financial.manage'
         ]) || $user->isAdmin();
@@ -156,7 +156,7 @@ class ReportPolicy
      */
     public function viewTimeTracking(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.tickets',
             'tickets.view',
             'projects.view'
@@ -168,7 +168,7 @@ class ReportPolicy
      */
     public function viewPerformance(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.users',
             'users.manage',
             'tickets.manage',
@@ -181,7 +181,7 @@ class ReportPolicy
      */
     public function viewMaintenance(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.assets',
             'assets.maintenance.view',
             'assets.view'
@@ -193,7 +193,7 @@ class ReportPolicy
      */
     public function viewWarranty(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.assets',
             'assets.warranties.view',
             'assets.view'
@@ -205,7 +205,7 @@ class ReportPolicy
      */
     public function viewDepreciation(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.assets',
             'assets.depreciations.view',
             'assets.view'
@@ -217,7 +217,7 @@ class ReportPolicy
      */
     public function viewSla(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.tickets',
             'tickets.manage'
         ]) || $user->isAdmin();
@@ -228,7 +228,7 @@ class ReportPolicy
      */
     public function viewSatisfaction(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.clients',
             'clients.manage',
             'tickets.manage'
@@ -240,7 +240,7 @@ class ReportPolicy
      */
     public function viewUtilization(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.users',
             'users.manage'
         ]) || $user->isAdmin();
@@ -251,7 +251,7 @@ class ReportPolicy
      */
     public function viewAdvancedAnalytics(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.export',
             'system.settings.manage'
         ]) || $user->isAdmin();
@@ -262,7 +262,7 @@ class ReportPolicy
      */
     public function configureSettings(User $user): bool
     {
-        return $user->hasPermission('system.settings.manage') || $user->isAdmin();
+        return $user->can('system.settings.manage') || $user->isAdmin();
     }
 
     /**
@@ -270,7 +270,7 @@ class ReportPolicy
      */
     public function viewAudit(User $user): bool
     {
-        return $user->hasPermission('system.logs.view') || $user->isAdmin();
+        return $user->can('system.logs.view') || $user->isAdmin();
     }
 
     /**
@@ -278,7 +278,7 @@ class ReportPolicy
      */
     public function viewSystemHealth(User $user): bool
     {
-        return $user->hasPermission('system.settings.view') || $user->isAdmin();
+        return $user->can('system.settings.view') || $user->isAdmin();
     }
 
     /**
@@ -286,7 +286,7 @@ class ReportPolicy
      */
     public function viewCompanyWide(User $user): bool
     {
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'reports.export',
             'system.settings.manage'
         ]) || $user->isAdmin();
@@ -297,7 +297,7 @@ class ReportPolicy
      */
     public function share(User $user): bool
     {
-        return $user->hasPermission('reports.export');
+        return $user->can('reports.export');
     }
 
     /**
@@ -305,6 +305,6 @@ class ReportPolicy
      */
     public function automate(User $user): bool
     {
-        return $user->hasPermission('reports.export') || $user->isAdmin();
+        return $user->can('reports.export') || $user->isAdmin();
     }
 }

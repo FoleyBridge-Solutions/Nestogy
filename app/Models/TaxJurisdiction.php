@@ -360,7 +360,7 @@ class TaxJurisdiction extends Model
      */
     public static function findByAddress(array $address): \Illuminate\Database\Eloquent\Collection
     {
-        $jurisdictions = collect();
+        $matchedJurisdictions = [];
 
         // Get all potential jurisdictions
         $query = static::active();
@@ -389,11 +389,16 @@ class TaxJurisdiction extends Model
         // Check each jurisdiction to see if it contains the address
         foreach ($potentialJurisdictions as $jurisdiction) {
             if ($jurisdiction->containsAddress($address)) {
-                $jurisdictions->push($jurisdiction);
+                $matchedJurisdictions[] = $jurisdiction;
             }
         }
 
-        return $jurisdictions->sortBy('priority');
+        // Sort by priority and return as Eloquent Collection
+        usort($matchedJurisdictions, function ($a, $b) {
+            return $a->priority <=> $b->priority;
+        });
+
+        return new \Illuminate\Database\Eloquent\Collection($matchedJurisdictions);
     }
 
     /**

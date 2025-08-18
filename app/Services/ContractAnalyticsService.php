@@ -322,7 +322,7 @@ class ContractAnalyticsService
             ->where('company_id', $companyId)
             ->where('status', 'Paid')
             ->whereBetween('date', [$startDate, $endDate])
-            ->selectRaw('YEAR(date) as year, MONTH(date) as month, SUM(amount) as total')
+            ->selectRaw('EXTRACT(year from date) as year, EXTRACT(month from date) as month, SUM(amount) as total')
             ->groupBy('year', 'month')
             ->orderBy('year')
             ->orderBy('month')

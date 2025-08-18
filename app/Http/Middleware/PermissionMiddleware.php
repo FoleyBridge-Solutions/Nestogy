@@ -37,9 +37,9 @@ class PermissionMiddleware
             return $this->forbidden($request, "Missing required permission: {$permission}");
         }
 
-        // Store permission info in request for easy access
+        // Store permission info in request for easy access  
         $request->attributes->set('required_permission', $permission);
-        $request->attributes->set('user_permissions', $user->getAllPermissions()->pluck('slug')->toArray());
+        $request->attributes->set('user_permissions', $user->getAllPermissions()->pluck('name')->toArray());
 
         return $next($request);
     }

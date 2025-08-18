@@ -5,11 +5,11 @@
 @section('content')
 <div class="max-w-7xl mx-auto">
     <!-- Report Header -->
-    <div class="bg-white shadow-sm rounded-lg mb-6">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $reportInfo['name'] }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $reportInfo['name'] }}</h1>
                     <p class="mt-1 text-sm text-gray-500">
                         Generated on {{ now()->format('F j, Y \a\t g:i A') }}
                         @if(isset($params['start_date']) && isset($params['end_date']))
@@ -18,7 +18,7 @@
                     </p>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="window.print()" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button onclick="window.print()" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                         </svg>
@@ -34,18 +34,18 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div id="exportMenu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                        <div id="exportMenu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
                             <div class="py-1">
                                 <a href="{{ route('reports.generate', array_merge(['reportId' => $reportId, 'format' => 'pdf'], $params)) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                   class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800">
                                     Export as PDF
                                 </a>
                                 <a href="{{ route('reports.generate', array_merge(['reportId' => $reportId, 'format' => 'excel'], $params)) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                   class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800">
                                     Export as Excel
                                 </a>
                                 <a href="{{ route('reports.generate', array_merge(['reportId' => $reportId, 'format' => 'csv'], $params)) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                   class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800">
                                     Export as CSV
                                 </a>
                             </div>
@@ -57,19 +57,19 @@
     </div>
 
     <!-- Report Content -->
-    <div class="bg-white shadow-sm rounded-lg">
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
         <div class="p-6">
             <!-- Summary Metrics -->
             @if(isset($data['metrics']) && !empty($data['metrics']))
             <div class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Summary Metrics</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Summary Metrics</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach($data['metrics'] as $key => $value)
-                    <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                         <dt class="text-sm font-medium text-gray-500 truncate">
                             {{ ucwords(str_replace('_', ' ', $key)) }}
                         </dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900">
+                        <dd class="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
                             @if(is_numeric($value))
                                 @if(strpos($key, 'revenue') !== false || strpos($key, 'amount') !== false || strpos($key, 'value') !== false)
                                     ${{ number_format($value, 2) }}
@@ -91,8 +91,8 @@
             <!-- Charts Section -->
             @if(isset($data['monthly_trend']) && !empty($data['monthly_trend']))
             <div class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Monthly Trend</h2>
-                <div class="bg-gray-50 rounded-lg p-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Trend</h2>
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <canvas id="monthlyTrendChart"></canvas>
                 </div>
             </div>
@@ -101,26 +101,26 @@
             <!-- Top Items Lists -->
             @if(isset($data['top_clients']) && !empty($data['top_clients']))
             <div class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Top Clients</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Clients</h2>
                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                     <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoices</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                             @foreach($data['top_clients'] as $client)
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                     {{ $client->client_name }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $client->invoice_count }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                     ${{ number_format($client->revenue, 2) }}
                                 </td>
                             </tr>
@@ -134,11 +134,11 @@
             <!-- Detailed Data Table -->
             @if(isset($data['details']) && !empty($data['details']))
             <div class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Detailed Data</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Detailed Data</h2>
                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-300">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
                                     @if(count($data['details']) > 0)
                                         @foreach(array_keys((array)$data['details']->first()) as $header)
@@ -149,11 +149,11 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                                 @foreach($data['details'] as $row)
                                 <tr>
                                     @foreach((array)$row as $key => $value)
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         @if(is_numeric($value) && (strpos($key, 'amount') !== false || strpos($key, 'total') !== false || strpos($key, 'revenue') !== false))
                                             ${{ number_format($value, 2) }}
                                         @else
@@ -173,7 +173,7 @@
             <!-- Summary Section -->
             @if(isset($data['summary']) && !empty($data['summary']))
             <div class="mb-8">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Summary</h2>
                 <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                     <div class="flex">
                         <div class="flex-shrink-0">

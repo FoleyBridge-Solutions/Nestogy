@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Products Search</title>
+    <meta name="csrf-token" content="">
+</head>
+<body>
+    <h1>Product Search Debug</h1>
+    <button onclick="testProductSearch()">Test Product Search</button>
+    <div id="result"></div>
+
+    <script>
+    async function testProductSearch() {
+        const params = new URLSearchParams({
+            search: '',
+            category: '',
+            billing_model: '',
+            min_price: 0,
+            max_price: 10000,
+            sort_by: 'name',
+            sort_order: 'asc',
+            page: 1,
+            per_page: 12,
+            client_id: '',
+            type: 'products'
+        });
+        
+        console.log('Making request to:', `/products/search?${params}`);
+        
+        try {
+            const response = await fetch(`/products/search?${params}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+        }
+    }
+    </script>
+</body>
+</html>

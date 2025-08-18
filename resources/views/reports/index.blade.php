@@ -5,8 +5,8 @@
 @section('page-actions')
 <div class="flex items-center space-x-4">
     <div class="flex items-center space-x-2">
-        <label for="date-preset" class="text-sm font-medium text-gray-700">Period:</label>
-        <select id="date-preset" class="form-select rounded-md border-gray-300 text-sm">
+        <label for="date-preset" class="text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Period:</label>
+        <select id="date-preset" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border-gray-300 dark:border-gray-600 dark:border-gray-600 text-sm">
             <option value="last_7_days">Last 7 days</option>
             <option value="last_30_days" selected>Last 30 days</option>
             <option value="last_90_days">Last 90 days</option>
@@ -19,31 +19,31 @@
     </div>
     
     <div id="custom-date-range" class="hidden flex items-center space-x-2">
-        <input type="date" id="start-date" class="form-input rounded-md border-gray-300 text-sm">
+        <input type="date" id="start-date" class="form-input rounded-md border-gray-300 dark:border-gray-600 dark:border-gray-600 text-sm">
         <span class="text-gray-500">to</span>
-        <input type="date" id="end-date" class="form-input rounded-md border-gray-300 text-sm">
+        <input type="date" id="end-date" class="form-input rounded-md border-gray-300 dark:border-gray-600 dark:border-gray-600 text-sm">
     </div>
     
-    <button id="refresh-data" class="btn btn-secondary">
+    <button id="refresh-data" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
         <i class="fas fa-sync-alt mr-2"></i>
         Refresh
     </button>
     
     <div class="relative">
-        <button id="export-dropdown-btn" class="btn btn-primary">
+        <button id="export-dropdown-btn" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <i class="fas fa-download mr-2"></i>
             Export
             <i class="fas fa-chevron-down ml-2"></i>
         </button>
-        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+        <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-md shadow-lg z-10">
             <div class="py-1">
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="pdf">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="pdf">
                     <i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF Report
                 </button>
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="xlsx">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="xlsx">
                     <i class="fas fa-file-excel mr-2 text-green-500"></i>Excel Report
                 </button>
-                <button class="export-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" data-format="csv">
+                <button class="export-btn block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800 w-full text-left" data-format="csv">
                     <i class="fas fa-file-csv mr-2 text-blue-500"></i>CSV Data
                 </button>
             </div>
@@ -55,18 +55,18 @@
 @section('content')
 <!-- Loading Overlay -->
 <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 shadow-xl">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg p-6 shadow-xl">
         <div class="flex items-center">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-4"></div>
-            <span class="text-gray-700">Loading reports data...</span>
+            <span class="text-gray-700 dark:text-gray-300 dark:text-gray-300">Loading reports data...</span>
         </div>
     </div>
 </div>
 
 <!-- Page Header -->
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Reports Dashboard</h1>
-    <p class="text-gray-600 mt-2">Comprehensive business intelligence and analytics across all domains</p>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white dark:text-white">Reports Dashboard</h1>
+    <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-2">Comprehensive business intelligence and analytics across all domains</p>
     
     <div id="last-updated" class="text-sm text-gray-500 mt-1"></div>
 </div>
@@ -76,12 +76,12 @@
 
 <!-- Key Performance Indicators -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Revenue</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">Revenue</p>
                 <div class="flex items-center mt-2">
-                    <span id="kpi-revenue" class="text-2xl font-bold text-gray-900">$0</span>
+                    <span id="kpi-revenue" class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">$0</span>
                     <span id="kpi-revenue-trend" class="ml-2 text-sm"></span>
                 </div>
             </div>
@@ -92,12 +92,12 @@
         <div id="kpi-revenue-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Active Tickets</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">Active Tickets</p>
                 <div class="flex items-center mt-2">
-                    <span id="kpi-tickets" class="text-2xl font-bold text-gray-900">0</span>
+                    <span id="kpi-tickets" class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">0</span>
                     <span id="kpi-tickets-trend" class="ml-2 text-sm"></span>
                 </div>
             </div>
@@ -108,12 +108,12 @@
         <div id="kpi-tickets-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">SLA Compliance</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">SLA Compliance</p>
                 <div class="flex items-center mt-2">
-                    <span id="kpi-sla" class="text-2xl font-bold text-gray-900">0%</span>
+                    <span id="kpi-sla" class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">0%</span>
                     <span id="kpi-sla-trend" class="ml-2 text-sm"></span>
                 </div>
             </div>
@@ -124,12 +124,12 @@
         <div id="kpi-sla-change" class="mt-4 text-sm"></div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-600">Active Projects</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">Active Projects</p>
                 <div class="flex items-center mt-2">
-                    <span id="kpi-projects" class="text-2xl font-bold text-gray-900">0</span>
+                    <span id="kpi-projects" class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">0</span>
                     <span id="kpi-projects-trend" class="ml-2 text-sm"></span>
                 </div>
             </div>
@@ -144,9 +144,9 @@
 <!-- Main Charts Section -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Revenue Trend Chart -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Revenue Trend</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white">Revenue Trend</h3>
             <div class="flex items-center space-x-2">
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md bg-indigo-100 text-indigo-700" data-chart="revenue" data-period="7d">7D</button>
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md text-gray-500" data-chart="revenue" data-period="30d">30D</button>
@@ -159,9 +159,9 @@
     </div>
 
     <!-- Ticket Volume Chart -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Ticket Volume</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white">Ticket Volume</h3>
             <div class="flex items-center space-x-2">
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md bg-indigo-100 text-indigo-700" data-chart="tickets" data-period="7d">7D</button>
                 <button class="chart-period-btn text-sm px-3 py-1 rounded-md text-gray-500" data-chart="tickets" data-period="30d">30D</button>
@@ -177,24 +177,24 @@
 <!-- Secondary Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     <!-- Project Status Distribution -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Project Status</h3>
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Project Status</h3>
         <div class="h-48">
             <canvas id="project-status-chart"></canvas>
         </div>
     </div>
 
     <!-- Expense Breakdown -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Expense Breakdown</h3>
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Expense Breakdown</h3>
         <div class="h-48">
             <canvas id="expense-breakdown-chart"></canvas>
         </div>
     </div>
 
     <!-- User Productivity -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Productivity</h3>
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Team Productivity</h3>
         <div class="h-48">
             <canvas id="user-productivity-chart"></canvas>
         </div>
@@ -204,16 +204,16 @@
 <!-- Recent Activities & Insights -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Recent Activities -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Recent Activities</h3>
         <div id="recent-activities" class="space-y-4 max-h-80 overflow-y-auto">
             <!-- Activities will be loaded dynamically -->
         </div>
     </div>
 
     <!-- Quick Insights -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Insights</h3>
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Quick Insights</h3>
         <div id="quick-insights" class="space-y-4">
             <!-- Insights will be loaded dynamically -->
         </div>
@@ -222,74 +222,74 @@
 
 <!-- Report Links Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <a href="{{ route('reports.financial') }}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+    <a href="{{ route('reports.financial') }}" class="group block p-6 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center">
             <div class="p-3 bg-green-100 rounded-full group-hover:bg-green-200 transition-colors duration-200">
                 <i class="fas fa-chart-line text-green-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">Financial Reports</h4>
-                <p class="text-gray-600 text-sm">Revenue, expenses, and profit analysis</p>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-600 transition-colors duration-200">Financial Reports</h4>
+                <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 text-sm">Revenue, expenses, and profit analysis</p>
             </div>
         </div>
     </a>
 
-    <a href="{{ route('reports.tickets') }}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+    <a href="{{ route('reports.tickets') }}" class="group block p-6 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center">
             <div class="p-3 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors duration-200">
                 <i class="fas fa-ticket-alt text-blue-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">Ticket Analytics</h4>
-                <p class="text-gray-600 text-sm">SLA compliance and performance metrics</p>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-600 transition-colors duration-200">Ticket Analytics</h4>
+                <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 text-sm">SLA compliance and performance metrics</p>
             </div>
         </div>
     </a>
 
-    <a href="{{ route('reports.assets') }}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+    <a href="{{ route('reports.assets') }}" class="group block p-6 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center">
             <div class="p-3 bg-yellow-100 rounded-full group-hover:bg-yellow-200 transition-colors duration-200">
                 <i class="fas fa-server text-yellow-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">Asset Reports</h4>
-                <p class="text-gray-600 text-sm">Maintenance and warranty tracking</p>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-600 transition-colors duration-200">Asset Reports</h4>
+                <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 text-sm">Maintenance and warranty tracking</p>
             </div>
         </div>
     </a>
 
-    <a href="{{ route('reports.clients') }}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+    <a href="{{ route('reports.clients') }}" class="group block p-6 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center">
             <div class="p-3 bg-purple-100 rounded-full group-hover:bg-purple-200 transition-colors duration-200">
                 <i class="fas fa-users text-purple-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">Client Reports</h4>
-                <p class="text-gray-600 text-sm">Client analytics and satisfaction</p>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-600 transition-colors duration-200">Client Reports</h4>
+                <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 text-sm">Client analytics and satisfaction</p>
             </div>
         </div>
     </a>
 
-    <a href="{{ route('reports.projects') }}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadows duration-200">
+    <a href="{{ route('reports.projects') }}" class="group block p-6 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:shadow-md transition-shadows duration-200">
         <div class="flex items-center">
             <div class="p-3 bg-indigo-100 rounded-full group-hover:bg-indigo-200 transition-colors duration-200">
                 <i class="fas fa-project-diagram text-indigo-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">Project Reports</h4>
-                <p class="text-gray-600 text-sm">Progress and resource utilization</p>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-600 transition-colors duration-200">Project Reports</h4>
+                <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 text-sm">Progress and resource utilization</p>
             </div>
         </div>
     </a>
 
-    <a href="{{ route('reports.users') }}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+    <a href="{{ route('reports.users') }}" class="group block p-6 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
         <div class="flex items-center">
             <div class="p-3 bg-red-100 rounded-full group-hover:bg-red-200 transition-colors duration-200">
                 <i class="fas fa-user-chart text-red-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">User Reports</h4>
-                <p class="text-gray-600 text-sm">Performance and productivity analysis</p>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-600 transition-colors duration-200">User Reports</h4>
+                <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 text-sm">Performance and productivity analysis</p>
             </div>
         </div>
     </a>
@@ -568,13 +568,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         activities.forEach(activity => {
             const item = document.createElement('div');
-            item.className = 'flex items-start space-x-3 p-3 bg-gray-50 rounded-lg';
+            item.className = 'flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 rounded-lg';
             item.innerHTML = `
                 <div class="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
                     <i class="fas fa-${activity.icon} text-indigo-600 text-sm"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900">${activity.title}</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white dark:text-white">${activity.title}</p>
                     <p class="text-sm text-gray-500">${activity.description}</p>
                     <p class="text-xs text-gray-400 mt-1">${formatTimestamp(activity.timestamp)}</p>
                 </div>

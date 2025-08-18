@@ -3,222 +3,79 @@
 @section('title', 'Create Ticket')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Create New Ticket</h3>
-                </div>
-                <form action="{{ route('tickets.store') }}" method="POST">
-                    @csrf
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <x-forms.client-search-field 
-                                    name="client_id" 
-                                    :required="true"
-                                    :selected="old('client_id', request('client_id')) ? \App\Models\Client::find(old('client_id', request('client_id'))) : null"
-                                    label="Client"
-                                    placeholder="Search for client..." />
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="contact_id">Contact</label>
-                                    <select name="contact_id" id="contact_id" class="form-control @error('contact_id') is-invalid @enderror">
-                                        <option value="">Select Contact</option>
-                                    </select>
-                                    @error('contact_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="subject">Subject <span class="text-danger">*</span></label>
-                                    <input type="text" name="subject" id="subject" class="form-control @error('subject') is-invalid @enderror" 
-                                           value="{{ old('subject') }}" required>
-                                    @error('subject')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="priority">Priority <span class="text-danger">*</span></label>
-                                    <select name="priority" id="priority" class="form-control @error('priority') is-invalid @enderror" required>
-                                        <option value="Low" {{ old('priority') == 'Low' ? 'selected' : '' }}>Low</option>
-                                        <option value="Medium" {{ old('priority', 'Medium') == 'Medium' ? 'selected' : '' }}>Medium</option>
-                                        <option value="High" {{ old('priority') == 'High' ? 'selected' : '' }}>High</option>
-                                        <option value="Critical" {{ old('priority') == 'Critical' ? 'selected' : '' }}>Critical</option>
-                                        <option value="Critical" {{ old('priority') == 'Critical' ? 'selected' : '' }}>Critical</option>
-                                    </select>
-                                    @error('priority')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="assigned_to">Assign To</label>
-                                    <select name="assigned_to" id="assigned_to" class="form-control @error('assigned_to') is-invalid @enderror">
-                                        <option value="">Unassigned</option>
-                                        @foreach(\App\Models\User::where('company_id', auth()->user()->company_id)->where('status', 1)->orderBy('name')->get() as $user)
-                                            <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
-                                                {{ $user->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('assigned_to')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="asset_id">Asset</label>
-                                    <select name="asset_id" id="asset_id" class="form-control @error('asset_id') is-invalid @enderror">
-                                        <option value="">Select Asset</option>
-                                    </select>
-                                    @error('asset_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="details">Details <span class="text-danger">*</span></label>
-                                    <textarea name="details" id="details" rows="8" class="form-control @error('details') is-invalid @enderror" required>{{ old('details') }}</textarea>
-                                    @error('details')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="vendor_id">Vendor</label>
-                                    <select name="vendor_id" id="vendor_id" class="form-control @error('vendor_id') is-invalid @enderror">
-                                        <option value="">Select Vendor</option>
-                                        @foreach(\App\Models\Vendor::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $vendor)
-                                            <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>
-                                                {{ $vendor->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('vendor_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="vendor_ticket_number">Vendor Ticket Number</label>
-                                    <input type="text" name="vendor_ticket_number" id="vendor_ticket_number" 
-                                           class="form-control @error('vendor_ticket_number') is-invalid @enderror" 
-                                           value="{{ old('vendor_ticket_number') }}">
-                                    @error('vendor_ticket_number')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="billable">Billable</label>
-                                    <select name="billable" id="billable" class="form-control @error('billable') is-invalid @enderror">
-                                        <option value="0" {{ old('billable', '0') == '0' ? 'selected' : '' }}>No</option>
-                                        <option value="1" {{ old('billable') == '1' ? 'selected' : '' }}>Yes</option>
-                                    </select>
-                                    @error('billable')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">Create Ticket</button>
-                        <a href="{{ route('tickets.index') }}" class="btn btn-secondary">Cancel</a>
-                    </div>
-                </form>
+<div class="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create New Ticket</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Submit a support request for your client
+                </p>
             </div>
+            <a href="{{ route('tickets.index') }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Tickets
+            </a>
         </div>
     </div>
+
+    <form action="{{ route('tickets.store') }}" method="POST" x-data="ticketCreateForm()">
+        @csrf
+        
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Basic Ticket Information (takes ~70% of width) -->
+            <div class="lg:flex-1" style="flex: 0 0 70%;">
+                <x-tickets.basic-info 
+                    :selectedClient="old('client_id', session('selected_client_id') ?? request('client_id')) ? \App\Models\Client::where('company_id', auth()->user()->company_id)->find(old('client_id', session('selected_client_id') ?? request('client_id'))) : null" />
+            </div>
+            
+            <!-- Additional Information (takes ~30% of width) -->
+            <div class="lg:flex-none" style="flex: 0 0 30%;">
+                <x-tickets.additional-info />
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            All ticket information will be saved automatically
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <a href="{{ route('tickets.index') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Cancel
+                            </a>
+                            <button type="submit" 
+                                    x-bind:disabled="!isFormValid || submitting"
+                                    x-bind:class="isFormValid && !submitting ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'bg-gray-400 cursor-not-allowed'"
+                                    class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200">
+                                <svg x-show="submitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <svg x-show="!submitting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <span x-show="!submitting">Create Ticket</span>
+                                <span x-show="submitting">Creating...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Listen for client selection events from the Alpine component
-    window.addEventListener('client-selected', function(event) {
-        const client = event.detail.client;
-        const contactSelect = document.getElementById('contact_id');
-        const assetSelect = document.getElementById('asset_id');
-        
-        // Clear and reset selects
-        contactSelect.innerHTML = '<option value="">Select Contact</option>';
-        assetSelect.innerHTML = '<option value="">Select Asset</option>';
-        
-        if (client && client.id) {
-            // Load contacts
-            fetch('/api/clients/' + client.id + '/contacts', {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(contact => {
-                    const option = document.createElement('option');
-                    option.value = contact.id;
-                    option.textContent = contact.name;
-                    contactSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error loading contacts:', error));
-            
-            // Load assets
-            fetch('/api/clients/' + client.id + '/assets', {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(asset => {
-                    const option = document.createElement('option');
-                    option.value = asset.id;
-                    option.textContent = asset.name + ' (' + asset.type + ')';
-                    assetSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error loading assets:', error));
-        }
-    });
-    
-    // Listen for client cleared event
-    window.addEventListener('client-cleared', function(event) {
-        const contactSelect = document.getElementById('contact_id');
-        const assetSelect = document.getElementById('asset_id');
-        
-        // Clear selects
-        contactSelect.innerHTML = '<option value="">Select Contact</option>';
-        assetSelect.innerHTML = '<option value="">Select Asset</option>';
-    });
-});
-</script>
-@endpush

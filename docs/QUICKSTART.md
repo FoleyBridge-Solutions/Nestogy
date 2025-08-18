@@ -1,6 +1,8 @@
 # Nestogy MSP Platform - Quick Start Guide
 
-Get the Nestogy MSP Platform up and running quickly with this streamlined guide. For detailed instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+Get the Nestogy MSP Platform up and running quickly with this streamlined guide. The platform uses Laravel 12 with modern base class architecture for 45% code reduction and 2-3x faster development.
+
+For detailed instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Prerequisites
 
@@ -8,6 +10,7 @@ Get the Nestogy MSP Platform up and running quickly with this streamlined guide.
 - Apache2 web server
 - MySQL 8.0+ database server
 - PHP 8.2+ with required extensions
+- Laravel 12 requirements
 - Composer installed
 - Node.js 18+ and npm installed
 
@@ -103,13 +106,14 @@ MAIL_ENCRYPTION=tls
 
 2. **Initial Setup**
    - Complete the setup wizard
-   - Configure company information
+   - Configure company information (critical for multi-tenancy)
    - Set up initial users
 
 3. **Test Core Features**
-   - Create a test client
-   - Create a test ticket
-   - Upload a test document
+   - Create a test client (tests base controller pattern)
+   - Create a test ticket (tests client relationship scoping)
+   - Upload a test document (tests file handling)
+   - Verify multi-tenant isolation (different company data is separate)
 
 ## Common Issues & Quick Fixes
 
@@ -259,12 +263,20 @@ php artisan queue:retry all
    npm audit
    ```
 
+6. **Learn Modern Architecture**: Review base class patterns
+   - Study BaseResourceController for standardized CRUD
+   - Understand domain-specific base services
+   - Learn multi-tenancy requirements
+   - See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed patterns
+
 ## Useful Resources
 
 - **Full Documentation**: [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Development Guide**: [DEVELOPMENT.md](DEVELOPMENT.md) - Modern architecture patterns
+- **Testing Guide**: [TESTING.md](TESTING.md) - Base class testing
 - **Apache Config**: [docs/apache/nestogy.conf](apache/nestogy.conf)
 - **Scripts Directory**: [scripts/](../scripts/)
-- **Laravel Docs**: https://laravel.com/docs
+- **Laravel 12 Docs**: https://laravel.com/docs/12.x
 - **Troubleshooting**: See [DEPLOYMENT.md#troubleshooting](DEPLOYMENT.md#troubleshooting)
 
 ## Support
@@ -275,5 +287,6 @@ php artisan queue:retry all
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: January 2024
+**Version**: 2.0.0
+**Last Updated**: August 2024
+**Platform**: Laravel 12 + Modern Base Class Architecture

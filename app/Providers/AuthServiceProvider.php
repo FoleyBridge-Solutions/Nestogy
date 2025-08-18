@@ -23,14 +23,19 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         // Domain model policies
         \App\Models\Client::class => \App\Policies\ClientPolicy::class,
+        \App\Models\Contact::class => \App\Policies\ContactPolicy::class,
         \App\Models\Ticket::class => \App\Policies\TicketPolicy::class,
         \App\Models\Asset::class => \App\Policies\AssetPolicy::class,
         \App\Models\User::class => \App\Policies\UserPolicy::class,
+        \App\Models\Role::class => \App\Policies\RolePolicy::class,
         \App\Models\Project::class => \App\Policies\ProjectPolicy::class,
         \App\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
         \App\Models\Quote::class => \App\Policies\QuotePolicy::class,
         \App\Models\Recurring::class => \App\Policies\RecurringPolicy::class,
         \App\Domains\Client\Models\ClientITDocumentation::class => \App\Policies\ClientITDocumentationPolicy::class,
+        \App\Models\Product::class => \App\Policies\ProductPolicy::class,
+        \App\Models\ProductBundle::class => \App\Policies\ProductBundlePolicy::class,
+        \App\Models\PricingRule::class => \App\Policies\PricingRulePolicy::class,
     ];
 
     /**
@@ -69,6 +74,9 @@ class AuthServiceProvider extends ServiceProvider
 
         // Define security and audit gates
         $this->defineSecurityGates();
+
+        // Define product management gates
+        $this->defineProductGates();
     }
 
     /**
@@ -681,6 +689,71 @@ class AuthServiceProvider extends ServiceProvider
     }
 
     /**
+     * Define product management authorization gates.
+     */
+    protected function defineProductGates(): void
+    {
+        // Product management gates
+        Gate::define('access', function (User $user, string $resource) {
+            if ($resource === 'products') {
+                return $user->getRole() >= User::ROLE_ACCOUNTANT;
+            }
+            if ($resource === 'settings') {
+                return $user->isAdmin() || $user->hasPermission('settings.manage');
+            }
+            return false;
+        });
+
+        Gate::define('create', function (User $user, string $resource) {
+            if ($resource === 'products') {
+                return $user->getRole() >= User::ROLE_TECH;
+            }
+            return false;
+        });
+
+        Gate::define('update', function (User $user, string $resource) {
+            if ($resource === 'products') {
+                return $user->getRole() >= User::ROLE_TECH;
+            }
+            return false;
+        });
+
+        Gate::define('delete', function (User $user, string $resource) {
+            if ($resource === 'products') {
+                return $user->getRole() >= User::ROLE_TECH;
+            }
+            return false;
+        });
+
+        // Product-specific capabilities
+        Gate::define('manage-products', function (User $user) {
+            return $user->getRole() >= User::ROLE_ACCOUNTANT;
+        });
+
+        Gate::define('manage-product-pricing', function (User $user) {
+            return $user->getRole() >= User::ROLE_TECH;
+        });
+
+        Gate::define('manage-product-inventory', function (User $user) {
+            return $user->getRole() >= User::ROLE_ACCOUNTANT;
+        });
+
+        Gate::define('import-export-products', function (User $user) {
+            return $user->getRole() >= User::ROLE_TECH;
+        });
+
+        // Bundle management gates
+        Gate::define('manage-bundles', function (User $user) {
+            return $user->getRole() >= User::ROLE_TECH;
+        });
+
+        // Pricing rule management gates
+        Gate::define('manage-pricing-rules', function (User $user) {
+            return $user->getRole() >= User::ROLE_TECH;
+        });
+    }
+
+    /**
      * Get all available permissions grouped by category.
      */
     public static function getAvailablePermissions(): array
@@ -726,6 +799,14 @@ class AuthServiceProvider extends ServiceProvider
                 'manage-technical' => 'Manage Technical',
                 'view-technical-reports' => 'View Technical Reports',
                 'manage-assets' => 'Manage Assets',
+            ],
+            'Product Management' => [
+                'manage-products' => 'Manage Products',
+                'manage-product-pricing' => 'Manage Product Pricing',
+                'manage-product-inventory' => 'Manage Product Inventory',
+                'import-export-products' => 'Import/Export Products',
+                'manage-bundles' => 'Manage Product Bundles',
+                'manage-pricing-rules' => 'Manage Pricing Rules',
             ],
             'System Administration' => [
                 'manage-settings' => 'Manage Settings',

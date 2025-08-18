@@ -3,22 +3,22 @@
 @section('title', 'Edit Ticket')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Edit Ticket #{{ $ticket->number }}</h3>
+            <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                    <h3 class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title">Edit Ticket #{{ $ticket->number }}</h3>
                 </div>
                 <form action="{{ route('tickets.update', $ticket) }}" method="POST">
                     @csrf
                     @method('PUT')
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
+                    <div class="p-6">
+                        <div class="flex flex-wrap -mx-4">
+                            <div class="md:w-1/2 px-4">
                                 <div class="form-group">
-                                    <label for="client_id">Client <span class="text-danger">*</span></label>
-                                    <select name="client_id" id="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
+                                    <label for="client_id">Client <span class="text-red-600">*</span></label>
+                                    <select name="client_id" id="client_id" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" required>
                                         <option value="">Select Client</option>
                                         @foreach(\App\Models\Client::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $client)
                                             <option value="{{ $client->id }}" {{ old('client_id', $ticket->client_id) == $client->id ? 'selected' : '' }}>
@@ -31,10 +31,10 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="md:w-1/2 px-4">
                                 <div class="form-group">
                                     <label for="contact_id">Contact</label>
-                                    <select name="contact_id" id="contact_id" class="form-control @error('contact_id') is-invalid @enderror">
+                                    <select name="contact_id" id="contact_id" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_id') is-invalid @enderror">
                                         <option value="">Select Contact</option>
                                         @if($ticket->client)
                                             @foreach($ticket->client->contacts as $contact)
@@ -54,7 +54,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="subject">Subject <span class="text-danger">*</span></label>
+                                    <label for="subject">Subject <span class="text-red-600">*</span></label>
                                     <input type="text" name="subject" id="subject" class="form-control @error('subject') is-invalid @enderror" 
                                            value="{{ old('subject', $ticket->subject) }}" required>
                                     @error('subject')
@@ -212,8 +212,8 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">Update Ticket</button>
-                        <a href="{{ route('tickets.show', $ticket) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Update Ticket</button>
+                        <a href="{{ route('tickets.show', $ticket) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Cancel</a>
                     </div>
                 </form>
             </div>

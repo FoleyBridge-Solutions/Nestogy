@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Contract\Models\Contract;
+use App\Traits\BelongsToCompany;
+use Illuminate\Support\Facades\Log;
 
 class Client extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     protected $fillable = [
         'company_id',
@@ -33,6 +37,7 @@ class Client extends Model
         'lead',
         'type',
         'accessed_at',
+        'sla_id',
         // Subscription fields
         'company_link_id',
         'stripe_customer_id',
@@ -54,6 +59,7 @@ class Client extends Model
         'contract_end_date' => 'datetime',
         'lead' => 'boolean',
         'accessed_at' => 'datetime',
+        'sla_id' => 'integer',
         // Subscription field casts
         'company_link_id' => 'integer',
         'subscription_plan_id' => 'integer',
@@ -151,6 +157,14 @@ class Client extends Model
     }
 
     /**
+     * Get the client's addresses.
+     */
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
      * Get the tags associated with the client.
      */
     public function tags()
@@ -164,6 +178,14 @@ class Client extends Model
     public function assets()
     {
         return $this->hasMany(Asset::class);
+    }
+
+    /**
+     * Get the client's RMM client mappings.
+     */
+    public function rmmClientMappings()
+    {
+        return $this->hasMany(\App\Domains\Integration\Models\RmmClientMapping::class);
     }
 
     /**
@@ -196,6 +218,14 @@ class Client extends Model
     public function projects()
     {
         return $this->hasMany(Project::class);
+    }
+
+    /**
+     * Get the client's contracts.
+     */
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
     }
 
     /**
@@ -321,5 +351,90 @@ class Client extends Model
     public function syncTags($tagIds)
     {
         return $this->tags()->sync($tagIds);
+    }
+
+    /**
+     * Get the client's SLA.
+     */
+    public function sla()
+    {
+        return $this->belongsTo(\App\Domains\Ticket\Models\SLA::class, 'sla_id');
+    }
+
+    /**
+     * Get the effective SLA for this client (specific SLA or company default).
+     */
+    public function getEffectiveSLA()
+    {
+        // First try to get the client's specific SLA
+        if ($this->sla_id && $this->sla && $this->sla->is_active) {
+            return $this->sla;
+        }
+        
+        // Fallback to company default SLA
+        return \App\Domains\Ticket\Models\SLA::where('company_id', $this->company_id)
+            ->where('is_default', true)
+            ->where('is_active', true)
+            ->effectiveOn()
+            ->first();
+    }
+
+    /**
+     * Boot the model and set up event listeners.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatically create RMM client when Nestogy client is created
+        static::created(function ($client) {
+            // Check if there's an active RMM integration for this company
+            $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', $client->company_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$integration) {
+                return; // No integration, skip auto-creation
+            }
+
+            try {
+                // Get the RMM service
+                $serviceFactory = new \App\Domains\Integration\Services\RmmServiceFactory();
+                $rmmService = $serviceFactory->make($integration);
+
+                // Create client in RMM system
+                $rmmClientData = [
+                    'name' => $client->display_name,
+                    'description' => 'Auto-created from Nestogy',
+                    // Add other fields as needed by TacticalRMM
+                ];
+
+                $rmmClient = $rmmService->createClient($rmmClientData);
+
+                if ($rmmClient && isset($rmmClient['id'])) {
+                    // Auto-create the mapping
+                    \App\Domains\Integration\Models\RmmClientMapping::create([
+                        'company_id' => $client->company_id,
+                        'client_id' => $client->id,
+                        'integration_id' => $integration->id,
+                        'rmm_client_id' => (string) $rmmClient['id'],
+                        'rmm_client_name' => $rmmClient['name'] ?? $client->display_name,
+                        'is_active' => true,
+                    ]);
+
+                    Log::info('Auto-created RMM client and mapping', [
+                        'nestogy_client_id' => $client->id,
+                        'rmm_client_id' => $rmmClient['id'],
+                        'integration_id' => $integration->id
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Log error but don't fail client creation
+                Log::warning('Failed to auto-create RMM client', [
+                    'nestogy_client_id' => $client->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        });
     }
 }

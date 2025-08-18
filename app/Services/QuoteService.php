@@ -54,6 +54,16 @@ class QuoteService
                 'created_by' => Auth::id(),
             ]);
 
+            // Add items if provided
+            if (isset($data['items']) && is_array($data['items'])) {
+                foreach ($data['items'] as $itemData) {
+                    $this->addQuoteItem($quote, $itemData);
+                }
+            }
+
+            // Calculate totals after adding items
+            $quote->calculateTotals();
+
             // Create initial version snapshot
             QuoteVersion::createSnapshot($quote, [], 'Initial quote creation');
 

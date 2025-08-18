@@ -9,13 +9,18 @@ export function modernDashboard() {
     return {
         // State Management
         loading: false,
-        darkMode: localStorage.getItem('darkMode') === 'true' || false,
+        darkMode: false, // Will be set from server data
         currentTime: '',
         autoRefresh: true,
         refreshInterval: null,
+        timeInterval: null,
+        themeChangeHandler: null,
+        themeChangeTimeout: null,
+        updatingCharts: false,
+        initialized: false,
         
         // Data
-        kpis: {},
+        kpis: window.dashboardData?.stats || {},
         charts: {
             revenue: null,
             tickets: null
@@ -23,8 +28,17 @@ export function modernDashboard() {
         
         // Lifecycle
         init() {
+            // Prevent double initialization
+            if (this.initialized) {
+                console.warn('Dashboard already initialized, skipping...');
+                return;
+            }
+            this.initialized = true;
+            
+            // Read current theme state from DOM - don't apply, server already did that
+            this.darkMode = document.documentElement.classList.contains('dark');
+            
             this.updateCurrentTime();
-            this.applyDarkMode();
             this.setupAutoRefresh();
             
             // Initialize charts with proper timing
@@ -34,21 +48,52 @@ export function modernDashboard() {
             });
             
             // Update time every second
-            setInterval(() => this.updateCurrentTime(), 1000);
+            this.timeInterval = setInterval(() => this.updateCurrentTime(), 1000);
             
-            console.log('Modern Dashboard initialized');
+            // Setup theme change listener (store reference for cleanup)
+            this.themeChangeHandler = (e) => {
+                // Add debouncing to prevent rapid theme changes
+                if (this.themeChangeTimeout) {
+                    clearTimeout(this.themeChangeTimeout);
+                }
+                
+                this.themeChangeTimeout = setTimeout(() => {
+                    this.darkMode = e.detail.darkMode;
+                    this.updateChartsTheme();
+                    console.log('Dashboard theme updated:', this.darkMode ? 'dark' : 'light');
+                }, 50); // 50ms debounce
+            };
+            
+            // Listen for theme changes from layout component
+            document.addEventListener('theme-changed', this.themeChangeHandler);
+            
+            console.log('Dashboard initialized with theme:', this.darkMode ? 'dark' : 'light');
         },
         
         destroy() {
-            // Cleanup
+            // Cleanup intervals
             if (this.refreshInterval) {
                 clearInterval(this.refreshInterval);
+            }
+            if (this.timeInterval) {
+                clearInterval(this.timeInterval);
+            }
+            if (this.themeChangeTimeout) {
+                clearTimeout(this.themeChangeTimeout);
+            }
+            
+            // Remove event listeners
+            if (this.themeChangeHandler) {
+                document.removeEventListener('theme-changed', this.themeChangeHandler);
             }
             
             // Destroy charts
             Object.values(this.charts).forEach(chart => {
                 if (chart) chart.destroy();
             });
+            
+            // Reset state
+            this.initialized = false;
         },
         
         // Time Management
@@ -88,34 +133,29 @@ export function modernDashboard() {
             }
         },
         
-        // Dark Mode Management
+        // Dark Mode Management - delegate to layout component via Alpine events
         toggleDarkMode() {
-            this.darkMode = !this.darkMode;
-            this.applyDarkMode();
-            localStorage.setItem('darkMode', this.darkMode);
-            
-            // Recreate charts with new theme
-            if (this.charts.revenue || this.charts.tickets) {
-                setTimeout(() => this.updateChartsTheme(), 100);
-            }
-        },
-        
-        applyDarkMode() {
-            if (this.darkMode) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+            // Dispatch Alpine event to layout component to handle theme toggle
+            this.$dispatch('toggle-theme');
         },
         
         updateChartsTheme() {
+            // Prevent rapid chart recreation
+            if (this.updatingCharts) return;
+            this.updatingCharts = true;
+            
             // Recreate charts with proper theme
             Object.values(this.charts).forEach(chart => {
                 if (chart) chart.destroy();
             });
             
             this.charts = { revenue: null, tickets: null };
-            this.initCharts();
+            
+            // Use nextTick to avoid potential event loops
+            this.$nextTick(() => {
+                this.initCharts();
+                this.updatingCharts = false;
+            });
         },
         
         // Data Management
@@ -123,7 +163,7 @@ export function modernDashboard() {
             if (showLoading) this.loading = true;
             
             try {
-                const response = await fetch('/api/dashboard/realtime?type=all', {
+                const response = await fetch(`${window.dashboardData?.routes?.realtime || '/api/dashboard/realtime'}?type=all`, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -185,6 +225,13 @@ export function modernDashboard() {
             const ctx = document.getElementById('revenueChart');
             if (!ctx) return;
             
+            // Check if we have data
+            const chartData = window.dashboardData?.revenueChartData?.data || [];
+            const chartLabels = window.dashboardData?.revenueChartData?.labels || [];
+            if (!chartData || chartData.length === 0 || chartData.reduce((a, b) => a + b, 0) === 0) {
+                return; // No data to display
+            }
+            
             const isDark = this.darkMode;
             const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
@@ -192,10 +239,10 @@ export function modernDashboard() {
             this.charts.revenue = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: chartLabels,
                     datasets: [{
                         label: 'Revenue',
-                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        data: chartData,
                         borderColor: 'rgb(34, 197, 94)',
                         backgroundColor: 'rgba(34, 197, 94, 0.1)',
                         tension: 0.4,
@@ -269,15 +316,22 @@ export function modernDashboard() {
             const ctx = document.getElementById('ticketsChart');
             if (!ctx) return;
             
+            // Check if we have data
+            const chartData = window.dashboardData?.ticketChartData?.data || [];
+            const chartLabels = window.dashboardData?.ticketChartData?.labels || ['Open', 'In Progress', 'Resolved', 'Closed'];
+            if (!chartData || chartData.length === 0 || chartData.reduce((a, b) => a + b, 0) === 0) {
+                return; // No data to display
+            }
+            
             const isDark = this.darkMode;
             const textColor = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
             
             this.charts.tickets = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Open', 'In Progress', 'Resolved', 'Closed'],
+                    labels: chartLabels,
                     datasets: [{
-                        data: [12, 8, 24, 16],
+                        data: chartData,
                         backgroundColor: [
                             'rgb(239, 68, 68)',   // Red for Open
                             'rgb(245, 158, 11)',  // Amber for In Progress
@@ -329,7 +383,7 @@ export function modernDashboard() {
             this.loading = true;
             
             try {
-                const response = await fetch(`/api/dashboard/export?format=${format}&type=executive`, {
+                const response = await fetch(`${window.dashboardData?.routes?.export || '/api/dashboard/export'}?format=${format}&type=executive`, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

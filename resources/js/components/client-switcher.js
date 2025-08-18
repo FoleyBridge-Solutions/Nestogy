@@ -6,13 +6,14 @@ export function clientSwitcher() {
         searchQuery: '',
         selectedIndex: -1,
         clients: [],
-        recentClients: [],
         currentClient: null,
         
         // Initialize component
         async init() {
             this.currentClient = this.getCurrentClientFromPage();
-            this.loadRecentClients();
+            
+            // Load client list immediately on page load
+            await this.loadClients();
             
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
@@ -42,26 +43,6 @@ export function clientSwitcher() {
             return null;
         },
         
-        // Load recent clients from localStorage
-        loadRecentClients() {
-            try {
-                const recent = localStorage.getItem('recent-clients');
-                this.recentClients = recent ? JSON.parse(recent) : [];
-            } catch (e) {
-                this.recentClients = [];
-            }
-        },
-        
-        // Save recent client to localStorage
-        saveRecentClient(client) {
-            let recent = this.recentClients.filter(c => c.id !== client.id);
-            recent.unshift(client);
-            recent = recent.slice(0, 5); // Keep only 5 recent clients
-            
-            this.recentClients = recent;
-            localStorage.setItem('recent-clients', JSON.stringify(recent));
-        },
-        
         // Toggle dropdown
         toggle() {
             if (this.open) {
@@ -82,11 +63,6 @@ export function clientSwitcher() {
             const searchInput = this.$el.querySelector('input[type="search"]');
             if (searchInput) {
                 searchInput.focus();
-            }
-            
-            // Load clients if not already loaded
-            if (this.clients.length === 0 && !this.loading) {
-                await this.loadClients();
             }
         },
         
@@ -171,27 +147,15 @@ export function clientSwitcher() {
             }
         },
         
-        // Get selectable items (recent + filtered clients)
+        // Get selectable items (filtered clients)
         getSelectableItems() {
-            const items = [];
-            
-            // Add recent clients (excluding current client)
-            if (this.searchQuery === '') {
-                const recentFiltered = this.recentClients.filter(client => 
-                    !this.currentClient || client.id !== this.currentClient.id
-                );
-                items.push(...recentFiltered);
-            }
-            
-            // Add search results (excluding current client and recent clients)
+            // Add search results (excluding current client)
             const clientsFiltered = this.clients.filter(client => {
                 if (this.currentClient && client.id === this.currentClient.id) return false;
-                if (this.searchQuery === '' && this.recentClients.some(recent => recent.id === client.id)) return false;
                 return true;
             });
             
-            items.push(...clientsFiltered);
-            return items;
+            return clientsFiltered;
         },
         
         // Scroll to selected item
@@ -232,11 +196,14 @@ export function clientSwitcher() {
                 tokenField.name = '_token';
                 tokenField.value = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
                 
-                form.appendChild(tokenField);
-                document.body.appendChild(form);
+                const returnToField = document.createElement('input');
+                returnToField.type = 'hidden';
+                returnToField.name = 'return_to';
+                returnToField.value = window.location.href;
                 
-                // Save to recent clients before submitting
-                this.saveRecentClient(client);
+                form.appendChild(tokenField);
+                form.appendChild(returnToField);
+                document.body.appendChild(form);
                 
                 // Submit form
                 form.submit();
@@ -303,7 +270,7 @@ export function clientSwitcher() {
         },
         
         get hasRecentClients() {
-            return this.recentClients.length > 0 && this.searchQuery === '';
+            return false;
         },
         
         get showNoResults() {

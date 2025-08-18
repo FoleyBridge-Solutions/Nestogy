@@ -3,7 +3,10 @@
 namespace App\Jobs;
 
 use App\Domains\Integration\Models\Integration;
+use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Models\DeviceMapping;
+use App\Domains\Integration\Services\AssetSyncService;
+use App\Domains\Integration\Services\RmmServiceFactory;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,8 +26,9 @@ class SyncDeviceInventory implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected Integration $integration;
+    protected RmmIntegration $integration;
     protected ?string $deviceId;
+    protected AssetSyncService $syncService;
 
     /**
      * The number of times the job may be attempted.
@@ -47,7 +51,7 @@ class SyncDeviceInventory implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(Integration $integration, ?string $deviceId = null)
+    public function __construct(RmmIntegration $integration, ?string $deviceId = null)
     {
         $this->integration = $integration;
         $this->deviceId = $deviceId;
@@ -57,12 +61,13 @@ class SyncDeviceInventory implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(AssetSyncService $syncService): void
     {
+        $this->syncService = $syncService;
         $startTime = microtime(true);
 
         try {
-            Log::info('Starting device inventory sync', [
+            Log::info('Starting comprehensive device inventory sync', [
                 'integration_id' => $this->integration->id,
                 'provider' => $this->integration->provider,
                 'device_id' => $this->deviceId,
@@ -70,22 +75,26 @@ class SyncDeviceInventory implements ShouldQueue
             ]);
 
             // Check if integration is active
-            if (!$this->integration->isActive()) {
+            if (!$this->integration->is_active) {
                 Log::warning('Skipping sync for inactive integration', [
                     'integration_id' => $this->integration->id,
                 ]);
                 return;
             }
 
-            // Sync specific device or all devices
+            // Use the new comprehensive sync service
             if ($this->deviceId) {
-                $this->syncSingleDevice();
+                $this->syncSingleDeviceComprehensive();
             } else {
-                $this->syncAllDevices();
+                $result = $this->syncService->syncAssetsFromIntegration($this->integration);
+                
+                Log::info('Comprehensive sync completed', [
+                    'integration_id' => $this->integration->id,
+                    'synced_count' => $result['synced_count'],
+                    'error_count' => $result['error_count'],
+                    'success' => $result['success'],
+                ]);
             }
-
-            // Update integration last sync timestamp
-            $this->integration->updateLastSync();
 
             $processingTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info('Device inventory sync completed', [
@@ -110,7 +119,42 @@ class SyncDeviceInventory implements ShouldQueue
     }
 
     /**
-     * Sync a single device.
+     * Sync a single device using comprehensive sync service.
+     */
+    protected function syncSingleDeviceComprehensive(): void
+    {
+        try {
+            $rmmService = app(RmmServiceFactory::class)->create($this->integration);
+            
+            // Get agent data first
+            $agentResponse = $rmmService->getAgent($this->deviceId);
+            
+            if (!$agentResponse['success']) {
+                throw new \Exception("Failed to get agent data: " . $agentResponse['error']);
+            }
+            
+            // Use comprehensive sync
+            $asset = $this->syncService->syncSingleAsset($this->integration, $rmmService, $agentResponse['data']);
+            
+            Log::info('Single device synced comprehensively', [
+                'integration_id' => $this->integration->id,
+                'device_id' => $this->deviceId,
+                'asset_id' => $asset->id,
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Comprehensive single device sync failed', [
+                'integration_id' => $this->integration->id,
+                'device_id' => $this->deviceId,
+                'error' => $e->getMessage(),
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * Sync a single device (legacy method - kept for backward compatibility).
      */
     protected function syncSingleDevice(): void
     {

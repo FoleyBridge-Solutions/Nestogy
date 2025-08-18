@@ -13,7 +13,7 @@ class ClientPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('clients.view') && $this->sameCompany($user);
+        return $user->can('clients.view') && $this->sameCompany($user);
     }
 
     /**
@@ -21,7 +21,7 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.view') && $this->sameCompany($user, $client);
+        return $user->can('clients.view') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -29,7 +29,7 @@ class ClientPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('clients.create');
+        return $user->can('clients.create');
     }
 
     /**
@@ -37,7 +37,7 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client);
+        return $user->can('clients.edit') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -45,7 +45,7 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.delete') && $this->sameCompany($user, $client);
+        return $user->can('clients.delete') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -53,7 +53,7 @@ class ClientPolicy
      */
     public function restore(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.manage') && $this->sameCompany($user, $client);
+        return $user->can('clients.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -61,7 +61,7 @@ class ClientPolicy
      */
     public function forceDelete(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.manage') && $this->sameCompany($user, $client);
+        return $user->can('clients.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -69,7 +69,7 @@ class ClientPolicy
      */
     public function archive(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client);
+        return $user->can('clients.edit') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -77,7 +77,7 @@ class ClientPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('clients.export');
+        return $user->can('clients.export');
     }
 
     /**
@@ -85,7 +85,7 @@ class ClientPolicy
      */
     public function import(User $user): bool
     {
-        return $user->hasPermission('clients.import');
+        return $user->can('clients.import');
     }
 
     /**
@@ -93,7 +93,7 @@ class ClientPolicy
      */
     public function manageTags(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client);
+        return $user->can('clients.edit') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -101,7 +101,7 @@ class ClientPolicy
      */
     public function convertLead(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.edit') && $this->sameCompany($user, $client) && $client->lead === true;
+        return $user->can('clients.edit') && $this->sameCompany($user, $client) && $client->lead === true;
     }
 
     /**
@@ -109,7 +109,7 @@ class ClientPolicy
      */
     public function viewFinancial(User $user, Client $client): bool
     {
-        return $user->hasAnyPermission(['clients.manage', 'financial.view']) && $this->sameCompany($user, $client);
+        return ($user->can('clients.manage') || $user->can('financial.view')) && $this->sameCompany($user, $client);
     }
 
     /**
@@ -117,7 +117,7 @@ class ClientPolicy
      */
     public function manageContacts(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.contacts.manage') && $this->sameCompany($user, $client);
+        return $user->can('clients.contacts.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -125,7 +125,7 @@ class ClientPolicy
      */
     public function viewContacts(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.contacts.view') && $this->sameCompany($user, $client);
+        return $user->can('clients.contacts.view') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -133,7 +133,7 @@ class ClientPolicy
      */
     public function exportContacts(User $user): bool
     {
-        return $user->hasPermission('clients.contacts.export');
+        return $user->can('clients.contacts.export');
     }
 
     /**
@@ -141,7 +141,7 @@ class ClientPolicy
      */
     public function manageLocations(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.locations.manage') && $this->sameCompany($user, $client);
+        return $user->can('clients.locations.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -149,7 +149,7 @@ class ClientPolicy
      */
     public function viewLocations(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.locations.view') && $this->sameCompany($user, $client);
+        return $user->can('clients.locations.view') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -157,7 +157,7 @@ class ClientPolicy
      */
     public function exportLocations(User $user): bool
     {
-        return $user->hasPermission('clients.locations.export');
+        return $user->can('clients.locations.export');
     }
 
     /**
@@ -165,7 +165,7 @@ class ClientPolicy
      */
     public function manageDocuments(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.documents.manage') && $this->sameCompany($user, $client);
+        return $user->can('clients.documents.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -173,7 +173,7 @@ class ClientPolicy
      */
     public function viewDocuments(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.documents.view') && $this->sameCompany($user, $client);
+        return $user->can('clients.documents.view') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -181,7 +181,7 @@ class ClientPolicy
      */
     public function exportDocuments(User $user): bool
     {
-        return $user->hasPermission('clients.documents.export');
+        return $user->can('clients.documents.export');
     }
 
     /**
@@ -189,7 +189,7 @@ class ClientPolicy
      */
     public function manageFiles(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.files.manage') && $this->sameCompany($user, $client);
+        return $user->can('clients.files.manage') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -197,7 +197,7 @@ class ClientPolicy
      */
     public function viewFiles(User $user, Client $client): bool
     {
-        return $user->hasPermission('clients.files.view') && $this->sameCompany($user, $client);
+        return $user->can('clients.files.view') && $this->sameCompany($user, $client);
     }
 
     /**
@@ -205,7 +205,7 @@ class ClientPolicy
      */
     public function exportFiles(User $user): bool
     {
-        return $user->hasPermission('clients.files.export');
+        return $user->can('clients.files.export');
     }
 
     /**

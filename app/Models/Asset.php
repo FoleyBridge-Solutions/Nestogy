@@ -29,6 +29,7 @@ class Asset extends Model
         'status',
         'purchase_date',
         'warranty_expire',
+        'next_maintenance_date',
         'install_date',
         'notes',
         'vendor_id',
@@ -41,6 +42,7 @@ class Asset extends Model
     protected $casts = [
         'purchase_date' => 'date',
         'warranty_expire' => 'date',
+        'next_maintenance_date' => 'date',
         'install_date' => 'date',
         'archived_at' => 'datetime',
         'accessed_at' => 'datetime',
@@ -143,6 +145,30 @@ class Asset extends Model
     public function files()
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+
+    /**
+     * Get the warranties for the asset.
+     */
+    public function warranties()
+    {
+        return $this->hasMany(\App\Domains\Asset\Models\AssetWarranty::class);
+    }
+
+    /**
+     * Get the maintenance records for the asset.
+     */
+    public function maintenances()
+    {
+        return $this->hasMany(\App\Domains\Asset\Models\AssetMaintenance::class);
+    }
+
+    /**
+     * Get the depreciation records for the asset.
+     */
+    public function depreciations()
+    {
+        return $this->hasMany(\App\Domains\Asset\Models\AssetDepreciation::class);
     }
 
     /**
@@ -280,5 +306,38 @@ class Asset extends Model
     {
         $this->accessed_at = now();
         $this->save();
+    }
+
+    /**
+     * Get the device mappings for this asset.
+     */
+    public function deviceMappings()
+    {
+        return $this->hasMany(\App\Domains\Integration\Models\DeviceMapping::class);
+    }
+
+    /**
+     * Check if asset is connected to an RMM system.
+     */
+    public function hasRmmConnection(): bool
+    {
+        return $this->deviceMappings()->active()->exists();
+    }
+
+    /**
+     * Get the primary RMM connection for this asset.
+     */
+    public function primaryRmmConnection()
+    {
+        return $this->deviceMappings()->active()->first();
+    }
+
+    /**
+     * Check if asset supports remote management.
+     */
+    public function supportsRemoteManagement(): bool
+    {
+        return $this->hasRmmConnection() && 
+               $this->primaryRmmConnection()->integration->is_active;
     }
 }

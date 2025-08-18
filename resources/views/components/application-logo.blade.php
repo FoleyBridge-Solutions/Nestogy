@@ -16,8 +16,4 @@
     <!-- Accent dot -->
     <circle cx="220" cy="120" r="12" fill="#FCD34D"/>
     
-    <!-- Company name text (optional, can be removed for icon-only version) -->
-    <text x="158" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1E40AF">
-        Nestogy
-    </text>
 </svg>

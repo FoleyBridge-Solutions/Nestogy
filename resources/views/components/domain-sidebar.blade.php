@@ -1,4 +1,4 @@
-@props(['activeDomain' => null, 'activeItem' => null])
+@props(['activeDomain' => null, 'activeItem' => null, 'mobile' => false])
 
 @php
 $sidebarConfig = [
@@ -106,6 +106,20 @@ $sidebarConfig = [
             [
                 'type' => 'section',
                 'title' => 'BILLING & FINANCE'
+            ],
+            [
+                'name' => 'Contracts',
+                'route' => 'financial.contracts.index',
+                'icon' => 'document-check',
+                'key' => 'contracts',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Quotes',
+                'route' => 'financial.quotes.index',
+                'icon' => 'document',
+                'key' => 'quotes',
+                'params' => ['client_id' => 'current']
             ],
             [
                 'name' => 'Invoices',
@@ -370,19 +384,19 @@ $sidebarConfig = [
             ],
             [
                 'name' => 'Maintenance',
-                'route' => 'assets.maintenance',
+                'route' => 'assets.maintenance.index',
                 'icon' => 'wrench-screwdriver',
                 'key' => 'maintenance'
             ],
             [
                 'name' => 'Warranties',
-                'route' => 'assets.warranties',
+                'route' => 'assets.warranties.index',
                 'icon' => 'shield-check',
                 'key' => 'warranties'
             ],
             [
                 'name' => 'Depreciation',
-                'route' => 'assets.depreciation',
+                'route' => 'assets.depreciation.index',
                 'icon' => 'chart-line',
                 'key' => 'depreciation'
             ],
@@ -444,10 +458,48 @@ $sidebarConfig = [
         'title' => 'Financial Management',
         'items' => [
             [
-                'name' => 'Dashboard',
-                'route' => 'financial.invoices.index',
-                'icon' => 'chart-pie',
-                'key' => 'dashboard'
+                'type' => 'section',
+                'title' => 'Contracts'
+            ],
+            [
+                'name' => 'All Contracts',
+                'route' => 'financial.contracts.index',
+                'icon' => 'document-check',
+                'key' => 'contracts'
+            ],
+            [
+                'name' => 'Create Contract',
+                'route' => 'financial.contracts.create',
+                'icon' => 'plus',
+                'key' => 'create-contract'
+            ],
+            [
+                'name' => 'Expiring Soon',
+                'route' => 'financial.contracts.expiring',
+                'icon' => 'clock',
+                'key' => 'expiring-contracts'
+            ],
+            [
+                'name' => 'Contract Templates',
+                'route' => 'financial.contracts.templates.index',
+                'icon' => 'document-duplicate',
+                'key' => 'contract-templates'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Quotes'
+            ],
+            [
+                'name' => 'All Quotes',
+                'route' => 'financial.quotes.index',
+                'icon' => 'document',
+                'key' => 'quotes'
+            ],
+            [
+                'name' => 'Create Quote',
+                'route' => 'financial.quotes.create',
+                'icon' => 'plus',
+                'key' => 'create-quote'
             ],
             [
                 'type' => 'section',
@@ -502,6 +554,34 @@ $sidebarConfig = [
                 'route' => 'financial.expenses.create',
                 'icon' => 'plus',
                 'key' => 'create-expense'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Products & Services'
+            ],
+            [
+                'name' => 'All Products',
+                'route' => 'products.index',
+                'icon' => 'cube',
+                'key' => 'products'
+            ],
+            [
+                'name' => 'Add Product',
+                'route' => 'products.create',
+                'icon' => 'plus',
+                'key' => 'create-product'
+            ],
+            [
+                'name' => 'All Services',
+                'route' => 'services.index',
+                'icon' => 'cog-6-tooth',
+                'key' => 'services'
+            ],
+            [
+                'name' => 'Add Service',
+                'route' => 'services.create',
+                'icon' => 'plus',
+                'key' => 'create-service'
             ]
         ]
     ],
@@ -617,6 +697,131 @@ $sidebarConfig = [
                 'key' => 'users'
             ]
         ]
+    ],
+    'products' => [
+        'title' => 'Product Management',
+        'items' => [
+            [
+                'name' => 'Overview',
+                'route' => 'products.index',
+                'icon' => 'home',
+                'key' => 'overview'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'PRODUCTS'
+            ],
+            [
+                'name' => 'All Products',
+                'route' => 'products.index',
+                'icon' => 'cube',
+                'key' => 'products'
+            ],
+            [
+                'name' => 'Add Product',
+                'route' => 'products.create',
+                'icon' => 'plus',
+                'key' => 'create-product'
+            ],
+            [
+                'name' => 'Import Products',
+                'route' => 'products.import',
+                'icon' => 'arrow-down-tray',
+                'key' => 'import-products'
+            ],
+            [
+                'name' => 'Export Products',
+                'route' => 'products.export',
+                'icon' => 'arrow-up-tray',
+                'key' => 'export-products'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'BUNDLES'
+            ],
+            [
+                'name' => 'Product Bundles',
+                'route' => 'bundles.index',
+                'icon' => 'gift',
+                'key' => 'bundles'
+            ],
+            [
+                'name' => 'Create Bundle',
+                'route' => 'bundles.create',
+                'icon' => 'plus-circle',
+                'key' => 'create-bundle'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'PRICING'
+            ],
+            [
+                'name' => 'Pricing Rules',
+                'route' => 'pricing-rules.index',
+                'icon' => 'calculator',
+                'key' => 'pricing-rules'
+            ],
+            [
+                'name' => 'Create Rule',
+                'route' => 'pricing-rules.create',
+                'icon' => 'plus',
+                'key' => 'create-pricing-rule'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'CATEGORIES'
+            ],
+            [
+                'name' => 'Active Products',
+                'route' => 'products.index',
+                'icon' => 'check-circle',
+                'key' => 'active-products',
+                'params' => ['is_active' => '1']
+            ],
+            [
+                'name' => 'Services',
+                'route' => 'products.index',
+                'icon' => 'wrench-screwdriver',
+                'key' => 'services',
+                'params' => ['type' => 'service']
+            ],
+            [
+                'name' => 'Physical Products',
+                'route' => 'products.index',
+                'icon' => 'cube',
+                'key' => 'physical-products',
+                'params' => ['type' => 'product']
+            ],
+            [
+                'name' => 'Subscription Items',
+                'route' => 'products.index',
+                'icon' => 'arrow-path',
+                'key' => 'subscription-products',
+                'params' => ['billing_model' => 'subscription']
+            ],
+            [
+                'type' => 'section',
+                'title' => 'INVENTORY',
+                'collapsible' => true,
+                'default_collapsed' => true
+            ],
+            [
+                'name' => 'Low Stock Items',
+                'route' => 'products.index',
+                'icon' => 'exclamation-triangle',
+                'key' => 'low-stock',
+                'params' => ['stock_status' => 'low'],
+                'parent_section' => 'inventory'
+            ],
+            [
+                'name' => 'Out of Stock',
+                'route' => 'products.index',
+                'icon' => 'x-circle',
+                'key' => 'out-of-stock',
+                'params' => ['stock_status' => 'out'],
+                'parent_section' => 'inventory'
+            ]
+        ]
     ]
 ];
 
@@ -624,40 +829,45 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
 @endphp
 
 @if($currentSidebar)
-<aside x-data="sidebarManager()" 
+<aside x-data="sidebarManager({{ $mobile ? 'true' : 'false' }})" 
        x-init="init()"
        x-cloak
        data-sidebar
        :class="{
-           'w-52': mode === 'expanded',
-           'w-16': mode === 'compact', 
-           'w-12': mode === 'mini'
+           {{ $mobile ? '' : "'w-52': mode === 'expanded', 'w-16': mode === 'compact', 'w-12': mode === 'mini'" }}
        }"
-       class="sidebar-loading bg-gradient-to-b from-white via-slate-50/30 to-white shadow-xl border-r border-gray-200/50 backdrop-blur-sm flex-shrink-0 transition-all duration-300 ease-in-out"
-       style="min-width: 48px;">
-    <div class="h-full flex flex-col">
+       class="{{ $mobile ? 'w-full bg-white dark:bg-gray-800' : 'sidebar-loading bg-gradient-to-b from-white via-slate-50/30 to-white dark:from-gray-800 dark:via-gray-900/30 dark:to-gray-800 shadow-xl border-r border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm flex-shrink-0' }} transition-all duration-300 ease-in-out"
+       style="{{ $mobile ? '' : 'min-width: 48px;' }}">
+    <div class="{{ $mobile ? 'h-full flex flex-col' : 'h-full flex flex-col pt-16' }}">
         <!-- Ultra-Compact Sidebar Header -->
-        <div class="border-b border-gray-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 transition-all duration-300"
+        <div class="{{ $mobile ? 'px-4 py-3 border-b border-gray-200 dark:border-gray-700' : 'border-b border-gray-200/60 dark:border-gray-700/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800' }} transition-all duration-300"
+             @if (!$mobile)
              :class="{
                  'px-3 py-2': mode === 'expanded',
                  'px-2 py-1.5': mode === 'compact',
                  'px-1 py-1': mode === 'mini'
-             }">
-            <div class="flex items-center" :class="mode === 'expanded' ? 'space-x-2' : 'justify-center'">
-                <div class="w-1.5 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse flex-shrink-0"></div>
-                <h2 x-show="mode === 'expanded'" 
+             }"
+             @endif>
+            <div class="flex items-center {{ $mobile ? 'space-x-3' : '' }}"
+                 @if (!$mobile)
+                 :class="mode === 'expanded' ? 'space-x-2' : 'justify-center'"
+                 @endif>
+                <div class="{{ $mobile ? 'w-2 h-2' : 'w-1.5 h-1.5' }} bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse flex-shrink-0"></div>
+                <h2 @if (!$mobile)
+                    x-show="mode === 'expanded'"
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 -translate-x-2"
                     x-transition:enter-end="opacity-100 translate-x-0"
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100 translate-x-0"
                     x-transition:leave-end="opacity-0 -translate-x-2"
-                    class="text-sm font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent truncate">
+                    @endif
+                    class="{{ $mobile ? 'text-lg font-semibold text-gray-900 dark:text-white' : 'text-sm font-semibold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent' }} truncate">
                     {{ $currentSidebar['title'] }}
                 </h2>
                 <!-- Compact title tooltip -->
                 <div x-show="mode !== 'expanded'" class="group relative">
-                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         {{ $currentSidebar['title'] }}
                     </div>
                 </div>
@@ -665,7 +875,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
         </div>
 
         <!-- Ultra-Compact Sidebar Navigation -->
-        <nav class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transition-all duration-300"
+        <nav class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800 transition-all duration-300"
              :class="{
                  'px-2 py-2 space-y-0.5': mode === 'expanded',
                  'px-1 py-1 space-y-0': mode === 'compact',
@@ -673,7 +883,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
              }">
             @foreach($currentSidebar['items'] as $item)
                 @if(($item['type'] ?? null) === 'divider')
-                    <hr class="my-3 border-gray-200">
+                    <hr class="my-3 border-gray-200 dark:border-gray-700">
                 @elseif(($item['type'] ?? null) === 'section')
                     @php
                     $sectionClasses = 'px-4 py-3 relative';
@@ -681,12 +891,12 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                     
                     // Priority section styling with gradients
                     if (($item['priority'] ?? false)) {
-                        $titleClasses .= ' text-red-600';
-                        $sectionClasses .= ' bg-gradient-to-r from-red-50 to-red-50/30 border-l-4 border-red-400 rounded-r-lg';
+                        $titleClasses .= ' text-red-600 dark:text-red-400';
+                        $sectionClasses .= ' bg-gradient-to-r from-red-50 to-red-50/30 dark:from-red-900/20 dark:to-red-900/10 border-l-4 border-red-400 dark:border-red-500 rounded-r-lg';
                     } elseif (($item['color'] ?? '') === 'red') {
-                        $titleClasses .= ' text-red-500';
+                        $titleClasses .= ' text-red-500 dark:text-red-400';
                     } else {
-                        $titleClasses .= ' text-gray-600';
+                        $titleClasses .= ' text-gray-600 dark:text-gray-300';
                     }
                     
                     // Collapsible section handling
@@ -709,19 +919,19 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                                         @if($isDefaultCollapsed) ▶ @else ▼ @endif
                                     </span>
                                     <span x-show="mode === 'expanded'" class="flex-1 text-xs">{{ $item['title'] }}</span>
-                                    <div x-show="mode !== 'expanded'" class="w-1 h-1 bg-gray-400 rounded-full mx-auto"></div>
+                                    <div x-show="mode !== 'expanded'" class="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full mx-auto"></div>
                                 </button>
                                 <!-- Section tooltip for compact modes -->
                                 <div x-show="mode !== 'expanded'" class="group relative">
-                                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                                         {{ $item['title'] }}
                                     </div>
                                 </div>
                             @else
-                                <span x-show="mode === 'expanded'" class="w-0.5 h-0.5 bg-gray-400 rounded-full"></span>
+                                <span x-show="mode === 'expanded'" class="w-0.5 h-0.5 bg-gray-400 dark:bg-gray-500 rounded-full"></span>
                                 <span x-show="mode === 'expanded'" class="text-xs">{{ $item['title'] }}</span>
-                                <div x-show="mode !== 'expanded'" class="w-0.5 h-0.5 bg-gray-400 rounded-full mx-auto group relative">
-                                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                                <div x-show="mode !== 'expanded'" class="w-0.5 h-0.5 bg-gray-400 dark:bg-gray-500 rounded-full mx-auto group relative">
+                                    <div class="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                                         {{ $item['title'] }}
                                     </div>
                                 </div>
@@ -815,19 +1025,19 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                     $badgeClasses = 'ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
                     switch ($badgeType) {
                         case 'urgent':
-                            $badgeClasses .= $isActive ? ' bg-red-100 text-red-800' : ' bg-red-100 text-red-800';
+                            $badgeClasses .= $isActive ? ' bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300' : ' bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300';
                             break;
                         case 'warning':
-                            $badgeClasses .= $isActive ? ' bg-yellow-100 text-yellow-800' : ' bg-yellow-100 text-yellow-800';
+                            $badgeClasses .= $isActive ? ' bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300' : ' bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300';
                             break;
                         default:
-                            $badgeClasses .= $isActive ? ' bg-indigo-100 text-indigo-800' : ' bg-gray-100 text-gray-800';
+                            $badgeClasses .= $isActive ? ' bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300' : ' bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300';
                     }
                     
                     // Modern link styling with gradients
                     $classes = $isActive
-                        ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-500 text-indigo-700 group flex items-center px-4 py-3 text-sm font-semibold rounded-xl border-l-4 shadow-sm transform scale-105 transition-all duration-200'
-                        : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-sm hover:transform hover:scale-102';
+                        ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 border-indigo-500 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 group flex items-center px-4 py-3 text-sm font-semibold rounded-xl border-l-4 shadow-sm transform scale-105 transition-all duration-200'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:text-gray-900 dark:hover:text-white group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-sm hover:transform hover:scale-102';
                         
                     // Parent section handling for collapsible sections
                     $parentSection = $item['parent_section'] ?? null;
@@ -840,7 +1050,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                              'mx-0': mode !== 'expanded'
                          }">
                         <a href="{{ route($item['route'], $routeParams) }}" 
-                           class="relative flex items-center rounded-lg transition-all duration-200 group {{ $isActive ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-500 text-indigo-700 border-l-2 shadow-sm' : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 hover:shadow-sm' }}" 
+                           class="relative flex items-center rounded-lg transition-all duration-200 group {{ $isActive ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 border-indigo-500 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 border-l-2 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:text-gray-900 dark:hover:text-white hover:shadow-sm' }}" 
                            :class="{
                                'px-2 py-1.5': mode === 'expanded',
                                'px-1.5 py-1 justify-center': mode === 'compact',
@@ -849,7 +1059,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                            @if($item['description'] ?? false) title="{{ $item['description'] }}" @endif>
                             
                             <!-- Icon -->
-                            <span class="{{ $isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-600' }} flex-shrink-0 h-4 w-4 flex items-center justify-center transition-colors duration-200">
+                            <span class="{{ $isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }} flex-shrink-0 h-4 w-4 flex items-center justify-center transition-colors duration-200">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <circle cx="10" cy="10" r="3"></circle>
                                 </svg>
@@ -870,7 +1080,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                             <!-- Badge (expanded mode) -->
                             @if($badgeCount > 0)
                                 <span x-show="mode === 'expanded'" x-transition
-                                      class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium {{ $badgeType === 'urgent' ? 'bg-red-100 text-red-800' : ($badgeType === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-indigo-100 text-indigo-800') }}">
+                                      class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium {{ $badgeType === 'urgent' ? 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300' : ($badgeType === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300' : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300') }}">
                                     @if($badgeType === 'urgent' && $badgeCount > 0)
                                         <span class="flex items-center space-x-0.5">
                                             <span class="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span>
@@ -895,10 +1105,10 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                         
                         <!-- Hover tooltip for compact modes -->
                         <div x-show="mode !== 'expanded'" 
-                             class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 top-1/2 transform -translate-y-1/2">
+                             class="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 top-1/2 transform -translate-y-1/2">
                             {{ $item['name'] }}
                             @if($badgeCount > 0)
-                                <span class="ml-1 px-1 py-0.5 bg-gray-700 rounded text-xs">{{ $badgeCount }}</span>
+                                <span class="ml-1 px-1 py-0.5 bg-gray-700 dark:bg-gray-600 rounded text-xs">{{ $badgeCount }}</span>
                             @endif
                         </div>
                     </div>
@@ -907,13 +1117,13 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
         </nav>
 
         <!-- Ultra-Compact Sidebar Footer -->
-        <div class="border-t border-gray-200/60 bg-gradient-to-r from-gray-50 to-gray-50/30 transition-all duration-300"
+        <div class="border-t border-gray-200/60 dark:border-gray-700/60 bg-gradient-to-r from-gray-50 to-gray-50/30 dark:from-gray-800 dark:to-gray-900/30 transition-all duration-300"
              :class="{
                  'px-2 py-1.5': mode === 'expanded',
                  'px-1 py-1': mode === 'compact', 
                  'px-0.5 py-0.5': mode === 'mini'
              }">
-            <div class="flex items-center text-xs text-gray-500" :class="mode === 'expanded' ? 'justify-between' : 'justify-center'">
+            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400" :class="mode === 'expanded' ? 'justify-between' : 'justify-center'">
                 <div class="flex items-center" :class="mode === 'expanded' ? 'space-x-1.5' : 'justify-center'">
                     <div class="w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
                         <svg class="w-1.5 h-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -932,7 +1142,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                 
                 <!-- Mode Toggle Button -->
                 <button @click="cycleMode()" 
-                        class="text-gray-400 hover:text-gray-600 transition-colors duration-200 flex-shrink-0 p-0.5" 
+                        class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 flex-shrink-0 p-0.5" 
                         :class="mode === 'expanded' ? '' : 'mt-1'"
                         :title="'Switch to ' + getNextModeLabel() + ' mode'">
                     <!-- Expanded mode icon -->
@@ -951,7 +1161,7 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
                 
                 <!-- Mode tooltip for compact modes -->
                 <div x-show="mode !== 'expanded'" class="group relative">
-                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         {{ ucfirst($activeDomain) }} - Click to cycle
                     </div>
                 </div>
@@ -972,8 +1182,16 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
     border-radius: 9999px;
 }
 
+.dark .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+}
+
 .scrollbar-track-gray-100::-webkit-scrollbar-track {
     background-color: #f3f4f6;
+}
+
+.dark .scrollbar-track-gray-100::-webkit-scrollbar-track {
+    background-color: #1f2937;
 }
 
 /* Prevent flash of unstyled content */
@@ -1031,6 +1249,11 @@ $currentSidebar = $sidebarConfig[$activeDomain] ?? null;
     border-radius: 0 0 12px 12px;
 }
 
+.dark .priority-section {
+    background: linear-gradient(to right, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.95));
+    border-bottom: 1px solid rgba(75, 85, 99, 0.6);
+}
+
 /* Hover effects */
 a:hover {
     transform: translateX(2px);
@@ -1062,6 +1285,10 @@ a:hover {
         z-index: 20;
     }
     
+    .dark .priority-section {
+        background: linear-gradient(to right, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98));
+    }
+    
     .collapsible-section:not(.priority-section) {
         max-height: 0;
         overflow: hidden;
@@ -1085,12 +1312,37 @@ a:hover {
 
 <!-- Sidebar Manager Alpine.js Component -->
 <script>
-function sidebarManager() {
+function sidebarManager(isMobile = false) {
     return {
-        mode: 'expanded', // 'expanded', 'compact', 'mini'
+        mode: isMobile ? 'expanded' : 'expanded', // 'expanded', 'compact', 'mini'
         initialized: false,
+        isMobile: isMobile,
         
         init() {
+            // Skip complex responsive handling for mobile
+            if (this.isMobile) {
+                this.mode = 'expanded';
+                this.initialized = true;
+                this.$el.classList.add('sidebar-loaded');
+                this.$el.classList.remove('sidebar-loading');
+                return;
+            }
+            
+            // For tablets and desktops, force expanded mode
+            const width = window.innerWidth;
+            if (width >= 768) { // Tablet and above
+                // Clear any saved compact/mini preference for larger screens
+                try {
+                    const savedMode = localStorage.getItem('sidebarMode');
+                    if (savedMode === 'compact' || savedMode === 'mini') {
+                        localStorage.setItem('sidebarMode', 'expanded');
+                    }
+                } catch (e) {
+                    console.warn('Could not update sidebar preferences:', e);
+                }
+                this.mode = 'expanded';
+            }
+            
             // Load preferences immediately before Alpine renders
             this.loadPreferences();
             this.setupResponsiveMode();
@@ -1149,9 +1401,9 @@ function sidebarManager() {
                 if (width < 768) {
                     this.mode = 'mini'; // Mobile
                 } else if (width < 1024) {
-                    this.mode = 'compact'; // Tablet
+                    this.mode = 'expanded'; // Tablet - show full sidebar
                 } else if (width < 1280) {
-                    this.mode = 'compact'; // Small desktop
+                    this.mode = 'expanded'; // Small desktop - show full sidebar
                 } else {
                     this.mode = 'expanded'; // Large desktop
                 }
@@ -1179,10 +1431,8 @@ function sidebarManager() {
             const width = window.innerWidth;
             if (width < 768) {
                 this.mode = 'mini';
-            } else if (width < 1280) {
-                this.mode = 'compact';
             } else {
-                this.mode = 'expanded';
+                this.mode = 'expanded'; // Always expanded for tablet and desktop
             }
         },
         
@@ -1337,10 +1587,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Handle window resize with modern improvements
-let resizeTimeout;
-window.addEventListener('resize', function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
+(function() {
+    let sidebarResizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(sidebarResizeTimeout);
+        sidebarResizeTimeout = setTimeout(() => {
         if (window.innerWidth > 768) {
             const sidebar = document.querySelector('.sidebar');
             if (sidebar) {
@@ -1357,5 +1608,6 @@ window.addEventListener('resize', function() {
         }
     }, 100);
 });
+})();
 </script>
 @endif

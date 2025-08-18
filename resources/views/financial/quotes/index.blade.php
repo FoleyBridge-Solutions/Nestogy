@@ -3,29 +3,17 @@
 @section('title', 'Quotes')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="w-full px-6 py-6">
+    <!-- Page Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Quotes</h1>
-            <p class="text-gray-600 mt-1">Manage client quotes and proposal workflow</p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-1">Quotes</h1>
+            <p class="text-gray-600">Manage client financial.quotes and proposals</p>
         </div>
-        <div class="flex space-x-3">
-            @can('export-quotes')
-            <a href="{{ route('financial.quotes.export') }}" 
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export
-            </a>
-            @endcan
+        <div>
             @can('create', App\Models\Quote::class)
-            <a href="{{ route('financial.quotes.create') }}" 
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                New Quote
+            <a href="{{ route('financial.quotes.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-plus mr-2"></i>New Quote
             </a>
             @endcan
         </div>
@@ -33,114 +21,94 @@
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
+        <div>
+            <div class="bg-white rounded-lg shadow-sm border p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
+                        <div class="bg-gray-100 text-gray-600 rounded-full p-3">
+                            <i class="fas fa-file-alt text-lg"></i>
                         </div>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Draft</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['draft_quotes'] ?? 0 }}</dd>
-                        </dl>
+                    <div class="ml-3">
+                        <h6 class="text-sm font-medium text-gray-500">Draft</h6>
+                        <h4 class="text-2xl font-bold text-gray-900">{{ $stats['draft_financial.quotes'] ?? 0 }}</h4>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
+        
+        <div>
+            <div class="bg-white rounded-lg shadow-sm border p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                            </svg>
+                        <div class="bg-blue-100 text-blue-600 rounded-full p-3">
+                            <i class="fas fa-paper-plane text-lg"></i>
                         </div>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Sent</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['sent_quotes'] ?? 0 }}</dd>
-                        </dl>
+                    <div class="ml-3">
+                        <h6 class="text-sm font-medium text-gray-500">Sent</h6>
+                        <h4 class="text-2xl font-bold text-gray-900">{{ $stats['sent_financial.quotes'] ?? 0 }}</h4>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
+        
+        <div>
+            <div class="bg-white rounded-lg shadow-sm border p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                        <div class="bg-green-100 text-green-600 rounded-full p-3">
+                            <i class="fas fa-check-circle text-lg"></i>
                         </div>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Accepted</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $stats['accepted_quotes'] ?? 0 }}</dd>
-                        </dl>
+                    <div class="ml-3">
+                        <h6 class="text-sm font-medium text-gray-500">Accepted</h6>
+                        <h4 class="text-2xl font-bold text-gray-900">{{ $stats['accepted_financial.quotes'] ?? 0 }}</h4>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
+        
+        <div>
+            <div class="bg-white rounded-lg shadow-sm border p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                        <div class="bg-yellow-100 text-yellow-600 rounded-full p-3">
+                            <i class="fas fa-percentage text-lg"></i>
                         </div>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Conversion Rate</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ number_format($stats['conversion_rate'] ?? 0, 1) }}%</dd>
-                        </dl>
+                    <div class="ml-3">
+                        <h6 class="text-sm font-medium text-gray-500">Conversion</h6>
+                        <h4 class="text-2xl font-bold text-gray-900">{{ number_format($stats['conversion_rate'] ?? 0, 1) }}%</h4>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
+        
+        <div>
+            <div class="bg-white rounded-lg shadow-sm border p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                            </svg>
+                        <div class="bg-blue-100 text-blue-600 rounded-full p-3">
+                            <i class="fas fa-dollar-sign text-lg"></i>
                         </div>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Value</dt>
-                            <dd class="text-lg font-medium text-gray-900">${{ number_format($stats['total_value'] ?? 0, 0) }}</dd>
-                        </dl>
+                    <div class="ml-3">
+                        <h6 class="text-sm font-medium text-gray-500">Total Value</h6>
+                        <h4 class="text-2xl font-bold text-gray-900">${{ number_format($stats['total_value'] ?? 0, 0) }}</h4>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filter Bar -->
-    <div class="bg-white shadow rounded-lg mb-6">
-        <div class="px-4 py-5 sm:p-6">
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm border mb-6">
+        <div class="p-6">
             <form method="GET" action="{{ route('financial.quotes.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" id="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" id="status" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">All Statuses</option>
                         <option value="Draft" {{ request('status') === 'Draft' ? 'selected' : '' }}>Draft</option>
                         <option value="Sent" {{ request('status') === 'Sent' ? 'selected' : '' }}>Sent</option>
@@ -148,33 +116,29 @@
                         <option value="Accepted" {{ request('status') === 'Accepted' ? 'selected' : '' }}>Accepted</option>
                         <option value="Declined" {{ request('status') === 'Declined' ? 'selected' : '' }}>Declined</option>
                         <option value="Expired" {{ request('status') === 'Expired' ? 'selected' : '' }}>Expired</option>
-                        <option value="Converted" {{ request('status') === 'Converted' ? 'selected' : '' }}>Converted</option>
+                        <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                     </select>
                 </div>
-
+                
                 <div>
-                    <label for="approval_status" class="block text-sm font-medium text-gray-700">Approval Status</label>
-                    <select name="approval_status" id="approval_status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="">All Approval Statuses</option>
+                    <label for="approval_status" class="block text-sm font-medium text-gray-700 mb-1">Approval Status</label>
+                    <select name="approval_status" id="approval_status" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">All</option>
                         <option value="pending" {{ request('approval_status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="manager_approved" {{ request('approval_status') === 'manager_approved' ? 'selected' : '' }}>Manager Approved</option>
-                        <option value="executive_approved" {{ request('approval_status') === 'executive_approved' ? 'selected' : '' }}>Executive Approved</option>
+                        <option value="approved" {{ request('approval_status') === 'approved' ? 'selected' : '' }}>Approved</option>
                         <option value="rejected" {{ request('approval_status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                        <option value="not_required" {{ request('approval_status') === 'not_required' ? 'selected' : '' }}>Not Required</option>
                     </select>
                 </div>
-
+                
                 <div>
-                    <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                     <input type="text" name="search" id="search" value="{{ request('search') }}" 
-                           placeholder="Search quotes..." 
-                           class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                           placeholder="Search financial.quotes..." class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                 </div>
-
+                
                 <div class="flex items-end">
-                    <button type="submit" 
-                            class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Filter
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full">
+                        <i class="fas fa-filter mr-2"></i>Filter
                     </button>
                 </div>
             </form>
@@ -182,186 +146,167 @@
     </div>
 
     <!-- Quotes Table -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <div class="px-4 py-5 sm:p-6">
+    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div class="overflow-x-auto">
             @if($quotes->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Quote
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Client
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Amount
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Approval
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Dates
-                                </th>
-                                <th scope="col" class="relative px-6 py-3">
-                                    <span class="sr-only">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($quotes as $quote)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ $quote->getFullNumber() }}
-                                                @if($quote->version > 1)
-                                                    <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                        v{{ $quote->version }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            @if($quote->scope)
-                                                <div class="text-sm text-gray-500">
-                                                    {{ Str::limit($quote->scope, 50) }}
-                                                </div>
-                                            @endif
-                                            @if($quote->template_name)
-                                                <div class="text-xs text-indigo-600">
-                                                    Template: {{ $quote->template_name }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($quote->client)
-                                            <div class="text-sm text-gray-900">{{ $quote->client->name }}</div>
-                                            @if($quote->client->company_name)
-                                                <div class="text-sm text-gray-500">{{ $quote->client->company_name }}</div>
-                                            @endif
-                                        @else
-                                            <span class="text-sm text-gray-500">No client</span>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quote #</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid Until</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($quotes as $quote)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-semibold text-gray-900">
+                                        {{ $quote->getFullNumber() }}
+                                        @if(isset($quote->version) && $quote->version > 1)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500 text-white ml-1">v{{ $quote->version }}</span>
                                         @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">
-                                            ${{ number_format($quote->amount, 2) }}
-                                        </div>
-                                        @if($quote->voip_config && isset($quote->voip_config['extensions']))
-                                            <div class="text-xs text-gray-500">
-                                                {{ $quote->voip_config['extensions'] }} extensions
-                                            </div>
+                                    </div>
+                                    @if($quote->scope)
+                                        <div class="text-sm text-gray-500">{{ Str::limit($quote->scope, 30) }}</div>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($quote->client)
+                                        <div class="text-sm font-medium text-gray-900">{{ $quote->client->name }}</div>
+                                        @if($quote->client->company_name)
+                                            <div class="text-sm text-gray-500">{{ $quote->client->company_name }}</div>
                                         @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $statusClasses = [
-                                                'Draft' => 'bg-gray-100 text-gray-800',
-                                                'Sent' => 'bg-blue-100 text-blue-800',
-                                                'Viewed' => 'bg-purple-100 text-purple-800',
-                                                'Accepted' => 'bg-green-100 text-green-800',
-                                                'Declined' => 'bg-red-100 text-red-800',
-                                                'Expired' => 'bg-yellow-100 text-yellow-800',
-                                                'Converted' => 'bg-indigo-100 text-indigo-800',
-                                                'Cancelled' => 'bg-gray-100 text-gray-800',
-                                            ];
-                                            $class = $statusClasses[$quote->status] ?? 'bg-gray-100 text-gray-800';
-                                        @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $class }}">
-                                            {{ $quote->status }}
-                                        </span>
-                                        @if($quote->isExpired() && $quote->status !== 'Expired')
-                                            <div class="text-xs text-red-500 mt-1">Expired</div>
+                                    @else
+                                        <span class="text-gray-500">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${{ number_format($quote->amount, 2) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @php
+                                        $statusClasses = [
+                                            'Draft' => 'bg-gray-500 text-white',
+                                            'Sent' => 'bg-blue-100 text-blue-800',
+                                            'Viewed' => 'bg-blue-600 text-white',
+                                            'Accepted' => 'bg-green-100 text-green-800',
+                                            'Declined' => 'bg-red-100 text-red-800',
+                                            'Expired' => 'bg-yellow-100 text-yellow-800',
+                                            'Converted' => 'bg-gray-900 text-white'
+                                        ];
+                                        $statusClass = $statusClasses[$quote->status] ?? 'bg-gray-500 text-white';
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">{{ $quote->status }}</span>
+                                    @if($quote->isExpired() && $quote->status !== 'Expired')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 ml-1">Expired</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $quote->date->format('M d, Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    @if($quote->valid_until ?? $quote->expire)
+                                        {{ ($quote->valid_until ?? $quote->expire)->format('M d, Y') }}
+                                    @else
+                                        <span class="text-gray-500">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end space-x-2">
+                                        {{-- View: Always available if user has permission --}}
+                                        @if(auth()->user()->can('financial.quotes.view'))
+                                        <a href="{{ route('financial.quotes.show', $quote) }}" 
+                                           class="inline-flex items-center p-2 text-blue-600 hover:text-blue-900" 
+                                           title="View Quote">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
                                         @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $approvalClasses = [
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'manager_approved' => 'bg-blue-100 text-blue-800',
-                                                'executive_approved' => 'bg-green-100 text-green-800',
-                                                'rejected' => 'bg-red-100 text-red-800',
-                                                'not_required' => 'bg-gray-100 text-gray-800',
-                                            ];
-                                            $approvalClass = $approvalClasses[$quote->approval_status] ?? 'bg-gray-100 text-gray-800';
-                                        @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $approvalClass }}">
-                                            {{ ucfirst(str_replace('_', ' ', $quote->approval_status)) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <div>{{ $quote->date->format('M j, Y') }}</div>
-                                        @if($quote->expire_date || $quote->valid_until)
-                                            <div class="text-xs text-gray-400">
-                                                Expires: {{ ($quote->valid_until ?? $quote->expire_date)->format('M j, Y') }}
-                                            </div>
+                                        
+                                        {{-- Edit: Only for Draft quotes --}}
+                                        @if(auth()->user()->can('financial.quotes.manage') && $quote->status === 'Draft')
+                                        <a href="{{ route('financial.quotes.edit', $quote) }}" 
+                                           class="inline-flex items-center p-2 text-gray-600 hover:text-gray-900" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
                                         @endif
-                                        @if($quote->sent_at)
-                                            <div class="text-xs text-green-600">
-                                                Sent: {{ $quote->sent_at->format('M j') }}
-                                            </div>
+                                        
+                                        {{-- Send: Only for Draft quotes --}}
+                                        @if(auth()->user()->can('financial.quotes.send') && $quote->status === 'Draft')
+                                        <form method="POST" action="{{ route('financial.quotes.send', $quote) }}" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" 
+                                                    onclick="return confirm('Are you sure you want to send quote {{ $quote->getFullNumber() }}? This will change its status to Sent.')"
+                                                    class="inline-flex items-center p-2 text-blue-600 hover:text-blue-900" title="Send Quote">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </form>
                                         @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            @can('view', $quote)
-                                            <a href="{{ route('financial.quotes.show', $quote) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900">View</a>
-                                            @endcan
-                                            
-                                            @can('update', $quote)
-                                            @if($quote->isDraft() || $quote->approval_status === 'rejected')
-                                            <a href="{{ route('financial.quotes.edit', $quote) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            @endif
-                                            @endcan
-
-                                            @can('approve', $quote)
-                                            @if($quote->needsApproval())
-                                            <a href="{{ route('financial.quotes.approve', $quote) }}" 
-                                               class="text-green-600 hover:text-green-900">Approve</a>
-                                            @endif
-                                            @endcan
-
-                                            @can('convert', $quote)
-                                            @if($quote->isAccepted())
-                                            <button onclick="convertQuote({{ $quote->id }})"
-                                                    class="text-purple-600 hover:text-purple-900">Convert</button>
-                                            @endif
-                                            @endcan
-                                        </div>
+                                        
+                                        {{-- Copy: Always available if user can create quotes --}}
+                                        @if(auth()->user()->can('financial.quotes.create'))
+                                        <a href="{{ route('financial.quotes.copy', $quote) }}" 
+                                           class="inline-flex items-center p-2 text-blue-600 hover:text-blue-900" title="Copy Quote">
+                                            <i class="fas fa-copy"></i>
+                                        </a>
+                                        @endif
+                                        
+                                        {{-- Convert to Invoice: Only for Accepted quotes --}}
+                                        @if(auth()->user()->can('financial.quotes.convert') && $quote->status === 'Accepted')
+                                        <form method="POST" action="{{ route('financial.quotes.convert-to-invoice', $quote) }}" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" 
+                                                    onclick="return confirm('Convert quote {{ $quote->getFullNumber() }} to an invoice?')"
+                                                    class="inline-flex items-center p-2 text-green-600 hover:text-green-900" title="Convert to Invoice">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                        
+                                        {{-- Cancel: Only for Sent, Viewed, Accepted, or Declined quotes --}}
+                                        @if(auth()->user()->can('financial.quotes.cancel') && in_array($quote->status, ['Sent', 'Viewed', 'Accepted', 'Declined']))
+                                        <form method="POST" action="{{ route('financial.quotes.cancel', $quote) }}" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" 
+                                                    onclick="return confirm('Are you sure you want to cancel quote {{ $quote->getFullNumber() }}? This will mark it as cancelled and it cannot be sent or converted.')"
+                                                    class="inline-flex items-center p-2 text-yellow-600 hover:text-yellow-900" title="Cancel Quote">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                        
+                                        {{-- Delete: Only for Draft quotes --}}
+                                        @if(auth()->user()->can('financial.quotes.delete') && $quote->status === 'Draft')
+                                        <form method="POST" action="{{ route('financial.quotes.destroy', $quote) }}" style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" 
+                                                    onclick="return confirm('Are you sure you want to delete quote {{ $quote->getFullNumber() }}? This action cannot be undone.')"
+                                                    class="inline-flex items-center p-2 text-red-600 hover:text-red-900" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </div>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                </div>
 
                 <!-- Pagination -->
-                <div class="mt-6">
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     {{ $quotes->withQueryString()->links() }}
                 </div>
             @else
-                <div class="text-center py-6">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No quotes found</h3>
-                    <p class="mt-1 text-sm text-gray-500">Get started by creating your first quote.</p>
+                <div class="text-center py-12">
+                    <i class="fas fa-file-alt text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No quotes found</h3>
+                    <p class="text-gray-600 mb-6">Get started by creating your first quote</p>
                     @can('create', App\Models\Quote::class)
-                    <div class="mt-6">
-                        <a href="{{ route('financial.quotes.create') }}" 
-                           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            New Quote
-                        </a>
-                    </div>
+                    <a href="{{ route('financial.quotes.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>Create Quote
+                    </a>
                     @endcan
                 </div>
             @endif
@@ -372,8 +317,8 @@
 @push('scripts')
 <script>
 function convertQuote(quoteId) {
-    if (confirm('Are you sure you want to convert this quote to an invoice?')) {
-        fetch(`/financial/quotes/${quoteId}/convert`, {
+    if (confirm('Convert this quote to an invoice?')) {
+        fetch(`/financial/quotes/${quoteId}/convert-to-invoice`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -385,12 +330,116 @@ function convertQuote(quoteId) {
             if (data.success) {
                 window.location.href = `/financial/invoices/${data.invoice.id}`;
             } else {
-                alert('Error converting quote: ' + data.message);
+                alert('Error: ' + (data.message || 'Failed to convert quote'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Error converting quote');
+        });
+    }
+}
+
+function deleteQuote(quoteId, quoteNumber) {
+    if (confirm(`Are you sure you want to delete quote ${quoteNumber}? This action cannot be undone.`)) {
+        // Use fetch API for DELETE request to ensure proper handling
+        fetch(`/financial/quotes/${quoteId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            if (data.success) {
+                // Reload the page to refresh the quote list
+                location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Failed to delete quote'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Fallback: try using form submission method
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ url('financial/quotes') }}/${quoteId}`;
+            form.style.display = 'none';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfInput);
+            
+            // Add DELETE method
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+            
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+}
+
+function cancelQuote(quoteId, quoteNumber) {
+    if (confirm(`Are you sure you want to cancel quote ${quoteNumber}? This will mark it as cancelled and it cannot be sent or converted.`)) {
+        fetch(`/financial/quotes/${quoteId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Refresh page to show updated status
+            } else {
+                alert('Error: ' + (data.message || 'Failed to cancel quote'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error cancelling quote');
+        });
+    }
+}
+
+function sendQuote(quoteId, quoteNumber) {
+    if (confirm(`Are you sure you want to send quote ${quoteNumber}? This will change its status to 'Sent'.`)) {
+        fetch(`/financial/quotes/${quoteId}/send`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Refresh page to show updated status
+            } else {
+                alert('Error: ' + (data.message || 'Failed to send quote'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sending quote');
         });
     }
 }

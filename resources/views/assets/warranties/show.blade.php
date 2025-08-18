@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="h3 mb-0">Warranty Details</h1>
-                    <p class="text-muted mb-0">View warranty information and coverage</p>
+                    <p class="text-gray-600 mb-0">View warranty information and coverage</p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="flex gap-2">
                     <a href="{{ route('assets.warranties.edit', $warranty ?? 1) }}" class="btn btn-outline-primary">
                         <i class="fas fa-edit"></i> Edit
                     </a>
@@ -30,13 +30,13 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-4">
                     <!-- Main Details -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">{{ $warranty->warranty_number ?? 'WRN-123456789' }}</h5>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="d-flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">{{ $warranty->warranty_number ?? 'WRN-123456789' }}</h5>
                                 <div class="d-flex gap-2">
                                     @php
                                         $status = $warranty->status ?? 'active';
@@ -47,7 +47,7 @@
                                             'renewed' => 'bg-info'
                                         ];
                                     @endphp
-                                    <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }}">
+                                    <span class="badge {{ $statusColors[$status] ?? 'bg-gray-600' }}">
                                         {{ ucfirst($status) }}
                                     </span>
                                     @php
@@ -59,31 +59,31 @@
                                             'maintenance' => 'bg-secondary'
                                         ];
                                     @endphp
-                                    <span class="badge {{ $typeColors[$type] ?? 'bg-secondary' }}">
+                                    <span class="badge {{ $typeColors[$type] ?? 'bg-gray-600' }}">
                                         {{ ucfirst($type) }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="md:w-1/2 px-4">
                                     <strong>Asset:</strong>
-                                    <div class="ms-3">
+                                    <div class="ml-3">
                                         {{ $warranty->asset->name ?? 'Sample Server' }}
-                                        <br><small class="text-muted">{{ $warranty->asset->asset_tag ?? 'SRV-001' }}</small>
+                                        <br><small class="text-gray-600">{{ $warranty->asset->asset_tag ?? 'SRV-001' }}</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Warranty Provider:</strong>
-                                    <div class="ms-3">{{ $warranty->provider_name ?? 'Dell Technologies' }}</div>
+                                    <div class="ml-3">{{ $warranty->provider_name ?? 'Dell Technologies' }}</div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <strong>Coverage Details:</strong>
                                 <div class="ms-3 mt-1">
-                                    <div class="bg-light p-3 rounded">
+                                    <div class="bg-gray-100 p-3 rounded">
                                         {{ $warranty->coverage_details ?? 'Full hardware replacement including parts and labor, 24/7 support with 4-hour response time, on-site service included for critical failures.' }}
                                     </div>
                                 </div>
@@ -93,7 +93,7 @@
                                 <div class="mb-3">
                                     <strong>Terms & Conditions:</strong>
                                     <div class="ms-3 mt-1">
-                                        <div class="bg-light p-3 rounded">
+                                        <div class="bg-gray-100 p-3 rounded">
                                             {{ $warranty->terms_conditions ?? 'Standard manufacturer warranty terms apply. Coverage excludes damage due to misuse, environmental factors, or unauthorized modifications.' }}
                                         </div>
                                     </div>
@@ -115,10 +115,10 @@
 
                     <!-- Warranty Period & Cost -->
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h6 class="card-title mb-0">Warranty Period & Cost</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -136,7 +136,7 @@
                                             @endphp
                                             {{ $endDate->format('M d, Y') }}
                                             @if($isExpired)
-                                                <span class="text-danger ms-2">
+                                                <span class="text-red-600 ms-2">
                                                     <i class="fas fa-exclamation-triangle"></i> Expired
                                                 </span>
                                             @elseif($isExpiring)
@@ -258,8 +258,8 @@
                                 ];
                             @endphp
                             @if(count($claims) > 0)
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
+                                <div class="min-w-full divide-y divide-gray-200-responsive">
+                                    <table class="table min-w-full divide-y divide-gray-200-sm">
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
@@ -418,17 +418,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">Confirm Action</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body" id="modalBody">
                 <!-- Dynamic content -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="actionForm" method="POST" style="display: inline;">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="btn btn-primary" id="confirmButton">Confirm</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="confirmButton">Confirm</button>
                 </form>
             </div>
         </div>

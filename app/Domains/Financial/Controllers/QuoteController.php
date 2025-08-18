@@ -13,11 +13,17 @@ use App\Models\QuoteTemplate;
 use App\Models\InvoiceItem;
 use App\Models\Client;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Tax;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
 use App\Http\Requests\ApproveQuoteRequest;
-use App\Services\QuoteService;
+use App\Domains\Financial\Services\QuoteService;
+use App\Domains\Financial\Exceptions\QuoteExceptionHandler;
+use App\Domains\Financial\Exceptions\FinancialException;
+use App\Http\Resources\Financial\QuoteResource;
+use App\Http\Resources\Financial\QuoteCollection;
+use App\Http\Resources\ApiResponse;
 use App\Services\EmailService;
 use App\Services\PdfService;
 use App\Services\QuoteInvoiceConversionService;
@@ -53,57 +59,51 @@ class QuoteController extends Controller
     }
 
     /**
-     * Display a listing of quotes
+     * Display a listing of quotes (optimized with eager loading)
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $query = Quote::with(['client', 'category', 'creator', 'approver'])
-            ->where('company_id', $user->company_id);
+        try {
+            $filters = [
+                'status' => $request->get('status'),
+                'client_id' => $request->get('client_id'),
+                'category_id' => $request->get('category_id'),
+                'date_from' => $request->get('date_from'),
+                'date_to' => $request->get('date_to'),
+                'search' => $request->get('search'),
+            ];
 
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->get('status'));
+            $perPage = $request->get('per_page', 25);
+            $companyId = auth()->user()->company_id;
+
+            // Use optimized query method with eager loading
+            $quotes = $this->quoteService->getCompanyQuotes($companyId, $filters, $perPage);
+
+            // Get real statistics
+            $statistics = $this->quoteService->getQuoteStatistics($companyId);
+            $statsFormatted = [
+                'draft_quotes' => $statistics['totals']->draft_quotes ?? 0,
+                'sent_quotes' => $statistics['totals']->sent_quotes ?? 0,
+                'accepted_quotes' => $statistics['totals']->accepted_quotes ?? 0,
+                'conversion_rate' => $statistics['conversion_rate'] ?? 0,
+                'total_value' => $statistics['totals']->accepted_value ?? 0,
+            ];
+
+            if ($request->wantsJson()) {
+                return ApiResponse::success(
+                    new QuoteCollection($quotes),
+                    'Quotes retrieved successfully'
+                );
+            }
+
+            return view('financial.quotes.index', compact('quotes', 'statsFormatted') + ['stats' => $statsFormatted]);
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
         }
-
-        if ($request->filled('approval_status')) {
-            $query->where('approval_status', $request->get('approval_status'));
-        }
-
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->get('client_id'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->where('date', '>=', $request->get('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->where('date', '<=', $request->get('date_to'));
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('number', 'like', "%{$search}%")
-                  ->orWhere('scope', 'like', "%{$search}%")
-                  ->orWhere('note', 'like', "%{$search}%");
-            });
-        }
-
-        $quotes = $query->orderBy('created_at', 'desc')->paginate(25);
-
-        // Calculate summary statistics
-        $stats = $this->quoteService->getQuoteStatistics($user->company_id);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'quotes' => $quotes,
-                'stats' => $stats
-            ]);
-        }
-
-        return view('financial.quotes.index', compact('quotes', 'stats'));
     }
 
     /**
@@ -133,9 +133,37 @@ class QuoteController extends Controller
         // Get tax rates
         $taxes = Tax::orderBy('name')->get();
         
+        // Handle copy functionality
+        $copyData = null;
+        $copyFromQuote = null;
+        if ($request->get('copy_from')) {
+            $copyData = session('quote_copy_data');
+            if ($copyData) {
+                // Clear the session data after retrieving
+                session()->forget('quote_copy_data');
+                
+                // Get source quote for reference
+                $copyFromQuote = Quote::find($request->get('copy_from'));
+                
+                Log::info('Quote create form loaded with copy data', [
+                    'copy_from_quote_id' => $request->get('copy_from'),
+                    'items_count' => count($copyData['items'] ?? []),
+                    'user_id' => Auth::id()
+                ]);
+            }
+        }
+        
         // Handle pre-selected client or template
         $clientId = $request->get('client_id');
         $selectedClient = $clientId ? Client::findOrFail($clientId) : null;
+        
+        // If no query parameter, check session for selected client
+        if (!$selectedClient) {
+            $sessionClient = \App\Services\NavigationService::getSelectedClient();
+            if ($sessionClient) {
+                $selectedClient = $sessionClient;
+            }
+        }
         $templateId = $request->get('template_id');
         $selectedTemplate = $templateId ? QuoteTemplate::findOrFail($templateId) : null;
         
@@ -145,7 +173,9 @@ class QuoteController extends Controller
             'templates',
             'taxes',
             'selectedClient', 
-            'selectedTemplate'
+            'selectedTemplate',
+            'copyData',
+            'copyFromQuote'
         ));
     }
 
@@ -155,48 +185,41 @@ class QuoteController extends Controller
     public function store(StoreQuoteRequest $request)
     {
         try {
-            $validated = $request->validated();
-            
-            // Get the client object
-            $client = Client::findOrFail($validated['client_id']);
-            
-            // Remove client_id from data since it's passed as separate parameter
-            $quoteData = \Illuminate\Support\Arr::except($validated, ['client_id']);
-            
-            $quote = $this->quoteService->createQuote($client, $quoteData);
-            
-            Log::info('Quote created', [
-                'quote_id' => $quote->id,
+            // Debug: Log the incoming data
+            Log::info('Quote creation attempt', [
+                'data' => $request->all(),
                 'user_id' => Auth::id(),
-                'ip' => $request->ip()
+                'company_id' => Auth::user()->company_id
             ]);
 
+            $quote = $this->quoteService->createQuote($request->validated());
+
             if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Quote created successfully',
-                    'quote' => $quote
-                ], 201);
+                return ApiResponse::created(
+                    new QuoteResource($quote),
+                    'Quote created successfully'
+                );
             }
 
             return redirect()
                 ->route('financial.quotes.show', $quote->id)
-                ->with('success', "Quote #{$quote->getFullNumber()} created successfully");
+                ->with('success', "Quote #{$quote->quote_number} created successfully");
 
-        } catch (\Exception $e) {
-            Log::error('Quote creation failed', [
+        } catch (FinancialException $e) {
+            Log::error('Quote creation failed (FinancialException)', [
                 'error' => $e->getMessage(),
+                'data' => $request->all(),
                 'user_id' => Auth::id()
             ]);
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to create quote'
-                ], 500);
-            }
-
-            return back()->withInput()->with('error', 'Failed to create quote: ' . $e->getMessage());
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            Log::error('Quote creation failed (Exception)', [
+                'error' => $e->getMessage(),
+                'data' => $request->all(),
+                'user_id' => Auth::id()
+            ]);
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
         }
     }
 
@@ -205,35 +228,51 @@ class QuoteController extends Controller
      */
     public function show(Request $request, Quote $quote)
     {
-        $this->authorize('view', $quote);
+        try {
+            $this->authorize('view', $quote);
 
-        $quote->load([
-            'client',
-            'category',
-            'creator',
-            'approver',
-            'items' => function ($query) {
-                $query->orderBy('order');
-            },
-            'approvals' => function ($query) {
-                $query->with('user')->orderBy('created_at', 'desc');
-            },
-            'versions' => function ($query) {
-                $query->with('creator')->orderBy('version_number', 'desc');
+            $quote = $this->quoteService->findQuote($quote->id);
+            
+            // Load tax calculations for detailed breakdown
+            $quote->load(['taxCalculations' => function($query) {
+                $query->where('status', '!=', 'voided')->latest();
+            }]);
+
+            if ($request->wantsJson()) {
+                return ApiResponse::success(
+                    (new QuoteResource($quote))->toArrayDetailed($request),
+                    'Quote retrieved successfully'
+                );
             }
-        ]);
 
-        // Calculate quote totals
-        $totals = $this->quoteService->calculateQuoteTotals($quote);
+            // Calculate totals for the view
+            $totals = [
+                'subtotal' => $quote->getSubtotal(),
+                'discount_amount' => $quote->getDiscountAmount(),
+                'tax_amount' => $quote->getTotalTax(),
+                'total' => $quote->amount, // The total amount from the quote
+            ];
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'quote' => $quote,
-                'totals' => $totals
-            ]);
+            // Add VoIP breakdown if this quote has VoIP services
+            if ($quote->hasVoIPServices()) {
+                $voipBreakdown = $quote->getVoIPTaxBreakdown();
+                if (!empty($voipBreakdown)) {
+                    $totals['voip_breakdown'] = [
+                        'setup_fees' => 0, // You may need to calculate this
+                        'monthly_recurring' => 0, // You may need to calculate this
+                        'equipment_costs' => 0, // You may need to calculate this
+                    ];
+                }
+            }
+
+            return view('financial.quotes.show', compact('quote', 'totals'));
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
         }
-
-        return view('financial.quotes.show', compact('quote', 'totals'));
     }
 
     /**
@@ -275,49 +314,27 @@ class QuoteController extends Controller
      */
     public function update(UpdateQuoteRequest $request, Quote $quote)
     {
-        $this->authorize('update', $quote);
-
-        // Only allow editing of draft quotes or those not yet approved
-        if (!$quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
-            return back()->with('error', 'Only draft or rejected quotes can be edited');
-        }
-
         try {
+            $this->authorize('update', $quote);
+
             $updatedQuote = $this->quoteService->updateQuote($quote, $request->validated());
-            
-            Log::info('Quote updated', [
-                'quote_id' => $quote->id,
-                'user_id' => Auth::id(),
-                'ip' => $request->ip()
-            ]);
 
             if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Quote updated successfully',
-                    'quote' => $updatedQuote
-                ]);
+                return ApiResponse::updated(
+                    new QuoteResource($updatedQuote),
+                    'Quote updated successfully'
+                );
             }
 
             return redirect()
                 ->route('financial.quotes.show', $quote)
-                ->with('success', "Quote #{$quote->getFullNumber()} updated successfully");
+                ->with('success', "Quote #{$quote->quote_number} updated successfully");
 
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
-            Log::error('Quote update failed', [
-                'quote_id' => $quote->id,
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update quote'
-                ], 500);
-            }
-
-            return back()->withInput()->with('error', 'Failed to update quote: ' . $e->getMessage());
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
         }
     }
 
@@ -781,45 +798,94 @@ class QuoteController extends Controller
      */
     public function duplicate(Request $request, Quote $quote)
     {
-        $this->authorize('create', Quote::class);
-
-        $request->validate([
-            'date' => 'required|date'
-        ]);
-
         try {
-            $newQuote = $this->quoteService->duplicateQuote($quote, [
-                'date' => $request->get('date'),
-                'expire_date' => now()->addDays(30),
-                'valid_until' => now()->addDays(30),
-            ]);
-            
-            Log::info('Quote duplicated', [
-                'original_quote_id' => $quote->id,
-                'new_quote_id' => $newQuote->id,
+            $this->authorize('create', Quote::class);
+
+            $overrides = [
+                'date' => $request->get('date', now()->format('Y-m-d')),
+                'expire_date' => now()->addDays(30)->format('Y-m-d'),
+            ];
+
+            $newQuote = $this->quoteService->duplicateQuote($quote, $overrides);
+
+            if ($request->wantsJson()) {
+                return ApiResponse::created(
+                    new QuoteResource($newQuote),
+                    'Quote duplicated successfully'
+                );
+            }
+
+            return redirect()
+                ->route('financial.quotes.show', $newQuote)
+                ->with('success', "Quote duplicated as #{$newQuote->quote_number}");
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
+        }
+    }
+
+    /**
+     * Copy quote - redirects to create form with pre-filled data
+     */
+    public function copy(Request $request, Quote $quote)
+    {
+        try {
+            $this->authorize('view', $quote);
+            $this->authorize('create', Quote::class);
+
+            // Prepare quote data for copying
+            $copyData = $this->quoteService->prepareQuoteForCopy($quote);
+
+            // Build query parameters for the create route
+            $queryParams = [
+                'copy_from' => $quote->id,
+                'client_id' => $quote->client_id,
+            ];
+
+            Log::info('Quote copy initiated', [
+                'source_quote_id' => $quote->id,
+                'source_quote_number' => $quote->getFullNumber(),
                 'user_id' => Auth::id()
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Quote duplicated successfully',
-                    'quote' => $newQuote
+                    'message' => 'Quote prepared for copying',
+                    'redirect_url' => route('financial.quotes.create', $queryParams),
+                    'copy_data' => $copyData
                 ]);
             }
 
-            return redirect()
-                ->route('financial.quotes.show', $newQuote)
-                ->with('success', "Quote duplicated as #{$newQuote->getFullNumber()}");
+            // Store copy data in session for the create form
+            session(['quote_copy_data' => $copyData]);
 
+            return redirect()
+                ->route('financial.quotes.create', $queryParams)
+                ->with('info', "Copying quote #{$quote->getFullNumber()}. You can modify any details before saving.");
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
-            Log::error('Quote duplication failed', [
+            Log::error('Quote copy failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id()
             ]);
 
-            return back()->with('error', 'Failed to duplicate quote: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to copy quote: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to copy quote: ' . $e->getMessage());
         }
     }
 
@@ -919,43 +985,74 @@ class QuoteController extends Controller
      */
     public function destroy(Request $request, Quote $quote)
     {
-        $this->authorize('delete', $quote);
-
-        // Only allow deletion of draft quotes
-        if (!$quote->isDraft()) {
-            return back()->with('error', 'Only draft quotes can be deleted');
-        }
-
         try {
-            $quoteNumber = $quote->getFullNumber();
-            $quote->delete();
-            
-            Log::warning('Quote deleted', [
+            $this->authorize('delete', $quote);
+
+            $this->quoteService->deleteQuote($quote);
+
+            if ($request->wantsJson()) {
+                return ApiResponse::deleted('Quote deleted successfully');
+            }
+
+            return redirect()
+                ->route('financial.quotes.index')
+                ->with('success', "Quote #{$quote->quote_number} deleted successfully");
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
+        }
+    }
+
+    /**
+     * Cancel the specified quote
+     */
+    public function cancel(Request $request, Quote $quote)
+    {
+        try {
+            $this->authorize('cancel', $quote);
+
+            // Validate that quote can be cancelled
+            if (in_array($quote->status, [Quote::STATUS_CANCELLED, Quote::STATUS_EXPIRED, Quote::STATUS_CONVERTED])) {
+                throw new FinancialException('Quote cannot be cancelled in its current status.', 'invalid_status');
+            }
+
+            // Update quote status to cancelled
+            $quote->update([
+                'status' => Quote::STATUS_CANCELLED,
+            ]);
+
+            // Log the cancellation
+            Log::info('Quote cancelled', [
                 'quote_id' => $quote->id,
-                'quote_number' => $quoteNumber,
-                'user_id' => Auth::id(),
-                'ip' => $request->ip()
+                'quote_number' => $quote->getFullNumber(),
+                'previous_status' => $quote->getOriginal('status'),
+                'user_id' => auth()->id()
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Quote deleted successfully'
+                    'message' => 'Quote cancelled successfully',
+                    'quote' => [
+                        'id' => $quote->id,
+                        'status' => $quote->status,
+                        'number' => $quote->getFullNumber()
+                    ]
                 ]);
             }
 
             return redirect()
                 ->route('financial.quotes.index')
-                ->with('success', "Quote #{$quoteNumber} deleted successfully");
+                ->with('success', "Quote #{$quote->getFullNumber()} cancelled successfully");
 
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
-            Log::error('Quote deletion failed', [
-                'quote_id' => $quote->id,
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            return back()->with('error', 'Failed to delete quote: ' . $e->getMessage());
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
         }
     }
 
@@ -1245,5 +1342,354 @@ class QuoteController extends Controller
         ];
 
         return response()->json($status);
+    }
+
+    /**
+     * Auto-save quote draft
+     */
+    public function autoSave(Request $request)
+    {
+        $request->validate([
+            'quote_id' => 'nullable|exists:quotes,id',
+            'document' => 'required|array'
+        ]);
+
+        try {
+            $result = $this->quoteService->autoSave($request->input('document'));
+
+            return ApiResponse::success($result, 'Draft auto-saved successfully');
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
+        }
+    }
+
+    /**
+     * Generate PDF preview
+     */
+    public function previewPdf(Request $request)
+    {
+        $request->validate([
+            'document' => 'required|array',
+            'preview' => 'boolean'
+        ]);
+
+        try {
+            $data = $request->input('document');
+            
+            // Create temporary quote object for preview
+            $quote = new Quote($data);
+            $quote->items = collect($data['items'] ?? [])->map(function ($item) {
+                return (object) $item;
+            });
+            
+            // Generate preview URL (implement based on your PDF service)
+            $previewUrl = $this->pdfService->generatePreviewUrl('quote', $data);
+            $downloadUrl = $this->pdfService->generateDownloadUrl('quote', $data);
+
+            return response()->json([
+                'success' => true,
+                'preview_url' => $previewUrl,
+                'download_url' => $downloadUrl
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Quote PDF preview failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'PDF preview generation failed'
+            ], 500);
+        }
+    }
+
+    /**
+     * Email PDF
+     */
+    public function emailPdf(Request $request)
+    {
+        $request->validate([
+            'document' => 'required|array',
+            'recipient_email' => 'required|email',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'nullable|string',
+            'cc_self' => 'boolean'
+        ]);
+
+        try {
+            $data = $request->input('document');
+            
+            // Create temporary quote object for emailing
+            $quote = new Quote($data);
+            $quote->items = collect($data['items'] ?? [])->map(function ($item) {
+                return (object) $item;
+            });
+
+            // Send email (implement based on your email service)
+            $this->emailService->sendQuotePdf(
+                $quote,
+                $request->input('recipient_email'),
+                $request->input('subject', 'Quote from ' . config('app.name')),
+                $request->input('message', ''),
+                $request->boolean('cc_self', false)
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Quote emailed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Quote email failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sending failed'
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk update quote statuses (optimized)
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        $request->validate([
+            'quote_ids' => 'required|array|min:1',
+            'quote_ids.*' => 'integer|exists:quotes,id',
+            'status' => 'required|string|in:draft,sent,accepted,rejected,expired'
+        ]);
+
+        try {
+            $companyId = auth()->user()->company_id;
+            $updated = $this->quoteService->bulkUpdateStatus(
+                $request->input('quote_ids'),
+                $request->input('status'),
+                $companyId
+            );
+
+            if ($request->wantsJson()) {
+                return ApiResponse::success([
+                    'updated_count' => $updated
+                ], "Successfully updated {$updated} quotes");
+            }
+
+            return redirect()->back()->with('success', "Successfully updated {$updated} quotes");
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
+        }
+    }
+
+    /**
+     * Get quote statistics (optimized)
+     */
+    public function statistics(Request $request)
+    {
+        try {
+            $companyId = auth()->user()->company_id;
+            $statistics = $this->quoteService->getQuoteStatistics($companyId);
+
+            if ($request->wantsJson()) {
+                return ApiResponse::success($statistics, 'Statistics retrieved successfully');
+            }
+
+            return view('financial.quotes.statistics', compact('statistics'));
+
+        } catch (FinancialException $e) {
+            return QuoteExceptionHandler::handle($e, $request);
+        } catch (\Exception $e) {
+            $exception = QuoteExceptionHandler::normalize($e);
+            return QuoteExceptionHandler::handle($exception, $request);
+        }
+    }
+
+    /**
+     * Search products, services, and bundles for AJAX calls
+     */
+    public function searchProducts(Request $request)
+    {
+        $searchService = app(\App\Domains\Financial\Services\ProductSearchService::class);
+        
+        $filters = $request->only([
+            'search', 'category', 'billing_model', 'type',
+            'min_price', 'max_price', 'sort_by', 'sort_order'
+        ]);
+
+        $client = null;
+        if ($request->client_id) {
+            $client = Client::where('company_id', auth()->user()->company_id)
+                ->find($request->client_id);
+        }
+
+        $type = $request->get('type', 'products'); // Default to products
+        
+        // Get the appropriate data based on the requested type
+        switch ($type) {
+            case 'services':
+                $items = $searchService->searchServices($filters, $client);
+                return response()->json([
+                    'success' => true,
+                    'services' => $items->toArray(),
+                    'total' => $items->count()
+                ]);
+                
+            case 'bundles':
+                $items = $searchService->searchBundles($filters, $client);
+                return response()->json([
+                    'success' => true,
+                    'bundles' => $items->toArray(),
+                    'total' => $items->count()
+                ]);
+                
+            case 'products':
+            default:
+                $items = $searchService->searchProducts($filters, $client);
+                return response()->json([
+                    'success' => true,
+                    'products' => $items->toArray(),
+                    'total' => $items->count()
+                ]);
+        }
+    }
+
+    /**
+     * Search clients for AJAX calls
+     */
+    public function searchClients(Request $request)
+    {
+        $clientService = app(\App\Domains\Client\Services\ClientService::class);
+        
+        $query = $request->get('q', '');
+        $limit = $request->get('limit', 10);
+        
+        $clients = $clientService->searchClients($query, $limit);
+
+        return response()->json([
+            'success' => true,
+            'clients' => $clients
+        ]);
+    }
+
+    /**
+     * Get product categories for AJAX calls
+     */
+    public function getProductCategories(Request $request)
+    {
+        $categories = Product::where('company_id', auth()->user()->company_id)
+            ->whereNotNull('category_id')
+            ->with('category')
+            ->get()
+            ->pluck('category')
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'categories' => $categories
+        ]);
+    }
+
+    /**
+     * Get product details for AJAX calls
+     */
+    public function getProductDetails(Product $product, Request $request)
+    {
+        // Ensure product belongs to current company
+        if ($product->company_id !== auth()->user()->company_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        try {
+            $product->load(['service', 'category']);
+            
+            // For now, return basic product details
+            // Can be enhanced later with compatible products, pricing tiers, etc.
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'description' => $product->description,
+                    'category' => $product->category?->name,
+                    'base_price' => $product->base_price,
+                    'billing_cycle' => $product->billing_cycle,
+                    'features' => $product->features ?? [],
+                    'pricing_tiers' => [],
+                    'availability' => ['status' => 'available']
+                ],
+                'compatible_products' => [],
+                'pricing_tiers' => [],
+                'availability' => ['status' => 'available']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading product details'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get active keyboard shortcuts for AJAX calls
+     */
+    public function getActiveShortcuts(Request $request)
+    {
+        $shortcuts = [
+            [
+                'key' => 'ctrl+s',
+                'action' => 'save',
+                'description' => 'Save quote'
+            ],
+            [
+                'key' => 'ctrl+n',
+                'action' => 'new',
+                'description' => 'New quote'
+            ],
+            [
+                'key' => '/',
+                'action' => 'search',
+                'description' => 'Focus search'
+            ],
+            [
+                'key' => 'ctrl+d',
+                'action' => 'duplicate',
+                'description' => 'Duplicate quote'
+            ],
+            [
+                'key' => 'escape',
+                'action' => 'cancel',
+                'description' => 'Cancel/Close'
+            ]
+        ];
+
+        return response()->json([
+            'shortcuts' => $shortcuts,
+            'enabled' => true
+        ]);
     }
 }

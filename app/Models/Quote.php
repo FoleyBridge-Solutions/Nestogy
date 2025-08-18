@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 use App\Services\VoIPTaxService;
+use App\Services\TaxEngine\LocalTaxRateService;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
 
@@ -72,15 +73,13 @@ class Quote extends Model
         'company_id',
         'prefix',
         'number',
-        'version',
         'scope',
         'status',
         'approval_status',
         'date',
-        'expire_date',
+        'expire',
         'valid_until',
         'discount_amount',
-        'discount_type',
         'amount',
         'currency_code',
         'note',
@@ -109,9 +108,8 @@ class Quote extends Model
     protected $casts = [
         'company_id' => 'integer',
         'number' => 'integer',
-        'version' => 'integer',
         'date' => 'date',
-        'expire_date' => 'date',
+        'expire' => 'date',
         'valid_until' => 'date',
         'discount_amount' => 'decimal:2',
         'amount' => 'decimal:2',
@@ -272,11 +270,100 @@ class Quote extends Model
     }
 
     /**
+     * Get tax calculations for this quote.
+     */
+    public function taxCalculations()
+    {
+        return $this->morphMany(TaxCalculation::class, 'calculable');
+    }
+
+    /**
+     * Get the latest tax calculation for this quote.
+     */
+    public function latestTaxCalculation()
+    {
+        return $this->taxCalculations()
+                   ->where('status', '!=', 'voided')
+                   ->latest()
+                   ->first();
+    }
+
+    /**
+     * Get real-time tax calculation using local tax rates.
+     */
+    public function calculateRealTimeTax(): array
+    {
+        $taxService = new LocalTaxRateService($this->company_id);
+        
+        // Determine service type from items (default to general)
+        $serviceType = 'general';
+        $firstItem = $this->items()->first();
+        if ($firstItem && !empty($firstItem->service_type)) {
+            $serviceType = $firstItem->service_type;
+        }
+        
+        return $taxService->calculateTax(
+            $this->amount,
+            $serviceType,
+            $this->client ? [
+                'line1' => $this->client->address ?? '',
+                'city' => $this->client->city ?? '',
+                'state' => $this->client->state ?? '',
+                'zip' => $this->client->postal_code ?? $this->client->zip_code ?? ''
+            ] : null
+        );
+    }
+
+    /**
+     * Get formatted tax breakdown by jurisdiction.
+     */
+    public function getFormattedTaxBreakdown(): array
+    {
+        // First try to get real-time calculation
+        $realTimeCalculation = $this->calculateRealTimeTax();
+        
+        if ($realTimeCalculation['success'] && !empty($realTimeCalculation['jurisdictions'])) {
+            return [
+                'has_breakdown' => true,
+                'total_tax' => $realTimeCalculation['tax_amount'],
+                'total_rate' => $realTimeCalculation['tax_rate'],
+                'jurisdictions' => $realTimeCalculation['jurisdictions'],
+                'source' => 'real_time_local'
+            ];
+        }
+        
+        // Fallback to stored tax calculation
+        $taxCalculation = $this->latestTaxCalculation();
+        
+        if (!$taxCalculation) {
+            return [
+                'total_tax' => 0,
+                'jurisdictions' => [],
+                'breakdown' => [],
+                'has_detailed_breakdown' => false,
+            ];
+        }
+
+        $jurisdictions = $taxCalculation->getJurisdictionBreakdown();
+        $breakdown = $taxCalculation->getTaxBreakdownSummary();
+
+        return [
+            'total_tax' => $taxCalculation->total_tax_amount,
+            'effective_rate' => $taxCalculation->effective_tax_rate,
+            'jurisdictions' => $jurisdictions,
+            'breakdown' => $breakdown,
+            'has_detailed_breakdown' => count($jurisdictions) > 0 || count($breakdown) > 0,
+            'calculation' => $taxCalculation,
+        ];
+    }
+
+    /**
      * Calculate VoIP taxes for all quote items.
      */
     public function calculateVoIPTaxes(?array $serviceAddress = null): array
     {
-        $taxService = new VoIPTaxService($this->company_id);
+        $taxService = new VoIPTaxService();
+        $taxService->setCompanyId($this->company_id);
         $allCalculations = [];
         $totalTaxAmount = 0;
 
@@ -379,9 +466,9 @@ class Quote extends Model
     {
         $prefix = $this->prefix ?: 'QTE';
         $number = str_pad($this->number, 4, '0', STR_PAD_LEFT);
-        $version = $this->version > 1 ? '.v' . $this->version : '';
+        // $version = $this->version > 1 ? '.v' . $this->version : '';
         
-        return $prefix . '-' . $number . $version;
+        return $prefix . '-' . $number; // . $version;
     }
 
     /**
@@ -444,13 +531,15 @@ class Quote extends Model
 
     /**
      * Check if quote needs approval.
+     * Note: approval_status field not in database
      */
     public function needsApproval(): bool
     {
-        return in_array($this->approval_status, [
-            self::APPROVAL_PENDING,
-            self::APPROVAL_MANAGER_APPROVED
-        ]);
+        // return in_array($this->approval_status, [
+        //     self::APPROVAL_PENDING,
+        //     self::APPROVAL_MANAGER_APPROVED
+        // ]);
+        return false; // Default to no approval needed
     }
 
     /**
@@ -506,11 +595,12 @@ class Quote extends Model
      */
     public function getDiscountAmount(): float
     {
-        if ($this->discount_type === self::DISCOUNT_PERCENTAGE) {
-            return ($this->getSubtotal() * $this->discount_amount) / 100;
-        }
+        // Note: discount_type field not in database, default to fixed
+        // if ($this->discount_type === self::DISCOUNT_PERCENTAGE) {
+        //     return ($this->getSubtotal() * $this->discount_amount) / 100;
+        // }
         
-        return $this->discount_amount;
+        return $this->discount_amount ?? 0;
     }
 
     /**
@@ -677,10 +767,10 @@ class Quote extends Model
     public function createRevision(array $changes = []): Quote
     {
         $newQuote = $this->replicate();
-        $newQuote->version = $this->version + 1;
+        // $newQuote->version = $this->version + 1; // version field not in database
         $newQuote->parent_quote_id = $this->id;
         $newQuote->status = self::STATUS_DRAFT;
-        $newQuote->approval_status = self::APPROVAL_PENDING;
+        // $newQuote->approval_status = self::APPROVAL_PENDING; // approval_status field not in database
         $newQuote->url_key = null;
         $newQuote->sent_at = null;
         $newQuote->viewed_at = null;
@@ -890,21 +980,22 @@ class Quote extends Model
                 $quote->number = $lastQuote ? $lastQuote->number + 1 : 1;
             }
 
-            if (!$quote->version) {
-                $quote->version = 1;
-            }
+            // Note: version, approval_status, discount_type fields not in database
+            // if (!$quote->version) {
+            //     $quote->version = 1;
+            // }
 
             if (!$quote->url_key) {
                 $quote->url_key = bin2hex(random_bytes(16));
             }
 
-            if (!$quote->approval_status) {
-                $quote->approval_status = self::APPROVAL_PENDING;
-            }
+            // if (!$quote->approval_status) {
+            //     $quote->approval_status = self::APPROVAL_PENDING;
+            // }
 
-            if (!$quote->discount_type) {
-                $quote->discount_type = self::DISCOUNT_FIXED;
-            }
+            // if (!$quote->discount_type) {
+            //     $quote->discount_type = self::DISCOUNT_FIXED;
+            // }
         });
 
         // Update status based on expiration

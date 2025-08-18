@@ -17,18 +17,22 @@ use App\Models\Contact;
 use App\Models\Payment;
 use App\Models\Project;
 use App\Services\DashboardDataService;
+use App\Services\RealtimeDashboardService;
 use App\Services\NavigationService;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     protected DashboardDataService $dashboardService;
+    protected ?RealtimeDashboardService $realtimeService = null;
+    
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             if ($user && $user->company_id) {
                 $this->dashboardService = new DashboardDataService($user->company_id);
+                $this->realtimeService = new RealtimeDashboardService($user->company_id);
             }
             return $next($request);
         });
@@ -199,13 +203,48 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get ticket chart data for the last 30 days
+     * Get ticket chart data - status distribution for pie chart
      */
     private function getTicketChartData($companyId)
     {
+        // Get ticket status distribution
+        $statusCounts = Ticket::where('company_id', $companyId)
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+        
+        // Map to expected statuses
+        $statusMap = [
+            'New' => 'Open',
+            'Open' => 'Open',
+            'In Progress' => 'In Progress',
+            'Waiting' => 'In Progress',
+            'Resolved' => 'Resolved',
+            'Closed' => 'Closed'
+        ];
+        
+        $mappedCounts = ['Open' => 0, 'In Progress' => 0, 'Resolved' => 0, 'Closed' => 0];
+        
+        foreach ($statusCounts as $status => $count) {
+            $mappedStatus = $statusMap[$status] ?? 'Open';
+            $mappedCounts[$mappedStatus] += $count;
+        }
+
+        return [
+            'labels' => array_keys($mappedCounts),
+            'data' => array_values($mappedCounts),
+        ];
+    }
+    
+    /**
+     * Get ticket trend data for the last 30 days
+     */
+    private function getTicketTrendData($companyId)
+    {
         $tickets = Ticket::where('company_id', $companyId)
             ->where('created_at', '>=', now()->subDays(30))
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->selectRaw('created_at::date as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -224,7 +263,7 @@ class DashboardController extends Controller
         $revenue = Invoice::where('company_id', $companyId)
             ->where('status', 'Paid')
             ->where('created_at', '>=', now()->subMonths(12))
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(amount) as total')
+            ->selectRaw('EXTRACT(year from created_at) as year, EXTRACT(month from created_at) as month, SUM(amount) as total')
             ->groupBy('year', 'month')
             ->orderBy('year')
             ->orderBy('month')
@@ -324,6 +363,11 @@ class DashboardController extends Controller
         $user = Auth::user();
         $type = $request->get('type', 'all');
         
+        // Use realtime service for widget data
+        if ($request->has('widget_type') && $this->realtimeService) {
+            return $this->getWidgetData($request);
+        }
+        
         if (!$this->dashboardService) {
             return response()->json(['error' => 'Dashboard service not available'], 500);
         }
@@ -372,10 +416,8 @@ class DashboardController extends Controller
                             'tickets' => $this->getRecentTickets($user->company_id, 5),
                             'invoices' => $this->getRecentInvoices($user->company_id, 5),
                         ],
-                        'charts' => [
-                            'revenue' => $this->getRevenueChartData($user->company_id),
-                            'tickets' => $this->getTicketChartData($user->company_id),
-                        ],
+                        'revenueChartData' => $this->getRevenueChartData($user->company_id),
+                        'ticketChartData' => $this->getTicketChartData($user->company_id),
                         'alerts' => $this->getPerformanceAlerts($user->company_id),
                         'updated_at' => now()->toISOString(),
                     ]);
@@ -584,13 +626,16 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
             
-        // Get client impact analysis
+        // Get client impact analysis - PostgreSQL compatible approach
         $clientImpact = Client::where('company_id', $userContext->company_id)
+            ->whereHas('tickets', function($query) {
+                $query->whereIn('priority', ['Critical', 'High'])
+                      ->whereIn('status', ['Open', 'In Progress']);
+            })
             ->withCount(['tickets as critical_tickets' => function($query) {
                 $query->whereIn('priority', ['Critical', 'High'])
                       ->whereIn('status', ['Open', 'In Progress']);
             }])
-            ->having('critical_tickets', '>', 0)
             ->orderBy('critical_tickets', 'desc')
             ->limit(10)
             ->get();
@@ -614,7 +659,7 @@ class DashboardController extends Controller
         $sevenDayTrend = Ticket::where($baseQuery)
             ->whereIn('priority', ['Critical', 'High'])
             ->where('created_at', '>', now()->subDays(7))
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->selectRaw('created_at::date as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -722,9 +767,9 @@ class DashboardController extends Controller
         // Get hourly breakdown
         $hourlyBreakdown = Ticket::where($baseQuery)
             ->whereBetween('created_at', [$today, $endOfDay])
-            ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count, AVG(CASE WHEN priority = "Critical" THEN 3 WHEN priority = "High" THEN 2 ELSE 1 END) as avg_priority')
-            ->groupBy('hour')
-            ->orderBy('hour')
+            ->selectRaw("EXTRACT(hour from created_at) as hour, COUNT(*) as count, AVG(CASE WHEN priority = 'Critical' THEN 3 WHEN priority = 'High' THEN 2 ELSE 1 END) as avg_priority")
+            ->groupByRaw('EXTRACT(hour from created_at)')
+            ->orderByRaw('EXTRACT(hour from created_at)')
             ->get();
             
         // Get recent solutions/knowledge base (recently closed tickets)
@@ -946,14 +991,14 @@ class DashboardController extends Controller
         if (DB::getSchemaBuilder()->hasTable('recurring')) {
             $monthlyRecurring = DB::table('recurring')
                 ->where('company_id', $baseQuery['company_id'])
-                ->where('status', 'Active')
+                ->where('status', true)
                 ->sum('amount');
         }
         
         // Get 30-day revenue trend
         $revenueeTrend = Payment::where($baseQuery)
             ->where('created_at', '>', now()->subDays(30))
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->selectRaw('created_at::date as date, SUM(amount) as total')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -1372,8 +1417,8 @@ class DashboardController extends Controller
             'recent_tickets' => $this->getRecentTickets($companyId, 5),
             'recent_invoices' => $this->getRecentInvoices($companyId, 5),
             'upcoming_tasks' => $this->getUpcomingTasks($companyId, 5),
-            'ticket_chart' => $this->getTicketChartData($companyId),
-            'revenue_chart' => $this->getRevenueChartData($companyId)
+            'ticketChartData' => $this->getTicketChartData($companyId),
+            'revenueChartData' => $this->getRevenueChartData($companyId)
         ];
     }
     
@@ -1483,8 +1528,8 @@ class DashboardController extends Controller
         
         $activities = Ticket::where($baseQuery)
             ->whereDate('created_at', today())
-            ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count')
-            ->groupBy('hour')
+            ->selectRaw('EXTRACT(hour from created_at) as hour, COUNT(*) as count')
+            ->groupByRaw('EXTRACT(hour from created_at)')
             ->pluck('count', 'hour')
             ->toArray();
             
@@ -1498,5 +1543,238 @@ class DashboardController extends Controller
             'labels' => array_keys($hourlyData),
             'data' => array_values($hourlyData)
         ];
+    }
+    
+    /**
+     * Get widget data using real-time service
+     */
+    public function getWidgetData(Request $request)
+    {
+        $widgetType = $request->get('widget_type');
+        $config = $request->get('config', []);
+        
+        if (!$this->realtimeService) {
+            return response()->json(['error' => 'Realtime service not available'], 500);
+        }
+        
+        try {
+            $data = $this->realtimeService->getWidgetData($widgetType, $config);
+            return response()->json($data);
+        } catch (\Exception $e) {
+            Log::error('Widget data error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch widget data'], 500);
+        }
+    }
+    
+    /**
+     * Get multiple widget data
+     */
+    public function getMultipleWidgetData(Request $request)
+    {
+        $widgets = $request->get('widgets', []);
+        
+        if (!$this->realtimeService) {
+            return response()->json(['error' => 'Realtime service not available'], 500);
+        }
+        
+        try {
+            $data = $this->realtimeService->getMultipleWidgetData($widgets);
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'timestamp' => now()->toISOString(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Multiple widget data error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch widget data'], 500);
+        }
+    }
+    
+    /**
+     * Save user dashboard configuration
+     */
+    public function saveDashboardConfig(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'dashboard_name' => 'string|max:50',
+            'layout' => 'required|array',
+            'widgets' => 'required|array',
+            'preferences' => 'array',
+        ]);
+        
+        try {
+            $config = \DB::table('user_dashboard_configs')->updateOrInsert(
+                [
+                    'user_id' => $user->id,
+                    'company_id' => $user->company_id,
+                    'dashboard_name' => $request->get('dashboard_name', 'main'),
+                ],
+                [
+                    'layout' => json_encode($request->get('layout')),
+                    'widgets' => json_encode($request->get('widgets')),
+                    'preferences' => json_encode($request->get('preferences', [])),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Dashboard configuration saved',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Save dashboard config error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to save configuration'], 500);
+        }
+    }
+    
+    /**
+     * Load user dashboard configuration
+     */
+    public function loadDashboardConfig(Request $request)
+    {
+        $user = Auth::user();
+        $dashboardName = $request->get('dashboard_name', 'main');
+        
+        try {
+            $config = \DB::table('user_dashboard_configs')
+                ->where('user_id', $user->id)
+                ->where('dashboard_name', $dashboardName)
+                ->first();
+            
+            if (!$config) {
+                // Return default configuration
+                return response()->json([
+                    'success' => true,
+                    'is_default' => true,
+                    'config' => $this->getDefaultDashboardConfig(),
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'is_default' => false,
+                'config' => [
+                    'layout' => json_decode($config->layout, true),
+                    'widgets' => json_decode($config->widgets, true),
+                    'preferences' => json_decode($config->preferences, true),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Load dashboard config error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load configuration'], 500);
+        }
+    }
+    
+    /**
+     * Get default dashboard configuration
+     */
+    protected function getDefaultDashboardConfig(): array
+    {
+        return [
+            'layout' => [
+                'columns' => 12,
+                'rows' => 'auto',
+                'gap' => 20,
+            ],
+            'widgets' => [
+                ['type' => 'revenue_kpi', 'x' => 0, 'y' => 0, 'w' => 3, 'h' => 2],
+                ['type' => 'mrr_kpi', 'x' => 3, 'y' => 0, 'w' => 3, 'h' => 2],
+                ['type' => 'ticket_status', 'x' => 6, 'y' => 0, 'w' => 3, 'h' => 2],
+                ['type' => 'client_health', 'x' => 9, 'y' => 0, 'w' => 3, 'h' => 2],
+                ['type' => 'revenue_chart', 'x' => 0, 'y' => 2, 'w' => 6, 'h' => 4],
+                ['type' => 'ticket_trend', 'x' => 6, 'y' => 2, 'w' => 6, 'h' => 4],
+                ['type' => 'activity_feed', 'x' => 0, 'y' => 6, 'w' => 4, 'h' => 4],
+                ['type' => 'team_performance', 'x' => 4, 'y' => 6, 'w' => 4, 'h' => 4],
+                ['type' => 'alerts', 'x' => 8, 'y' => 6, 'w' => 4, 'h' => 4],
+            ],
+            'preferences' => [
+                'theme' => 'light',
+                'refresh_interval' => 30,
+                'show_animations' => true,
+            ],
+        ];
+    }
+    
+    /**
+     * Get available dashboard presets
+     */
+    public function getPresets(Request $request)
+    {
+        $user = Auth::user();
+        
+        try {
+            $presets = \DB::table('dashboard_presets')
+                ->where(function ($query) use ($user) {
+                    $query->where('is_system', true)
+                          ->orWhere('company_id', $user->company_id);
+                })
+                ->where('is_active', true)
+                ->get(['id', 'name', 'slug', 'description', 'role']);
+            
+            return response()->json([
+                'success' => true,
+                'presets' => $presets,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get presets error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch presets'], 500);
+        }
+    }
+    
+    /**
+     * Apply dashboard preset
+     */
+    public function applyPreset(Request $request)
+    {
+        $user = Auth::user();
+        $presetId = $request->get('preset_id');
+        
+        try {
+            $preset = \DB::table('dashboard_presets')->find($presetId);
+            
+            if (!$preset) {
+                return response()->json(['error' => 'Preset not found'], 404);
+            }
+            
+            // Check access
+            if (!$preset->is_system && $preset->company_id !== $user->company_id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
+            // Apply preset to user's dashboard
+            \DB::table('user_dashboard_configs')->updateOrInsert(
+                [
+                    'user_id' => $user->id,
+                    'company_id' => $user->company_id,
+                    'dashboard_name' => 'main',
+                ],
+                [
+                    'layout' => $preset->layout,
+                    'widgets' => $preset->widgets,
+                    'preferences' => json_encode(array_merge(
+                        json_decode($preset->default_preferences, true),
+                        ['preset_id' => $preset->id]
+                    )),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+            
+            // Increment usage count
+            \DB::table('dashboard_presets')
+                ->where('id', $presetId)
+                ->increment('usage_count');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Preset applied successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Apply preset error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to apply preset'], 500);
+        }
     }
 }

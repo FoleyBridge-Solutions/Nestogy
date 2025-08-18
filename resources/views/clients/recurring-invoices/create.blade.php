@@ -3,29 +3,29 @@
 @section('title', 'Create Recurring Invoice')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Create Recurring Invoice</h1>
                 <a href="{{ route('clients.recurring-invoices.standalone.index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Recurring Invoices
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Recurring Invoices
                 </a>
             </div>
 
-            <div class="row">
+            <div class="flex flex-wrap -mx-4">
                 <div class="col-lg-8 col-xl-6">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6">
                             <form method="POST" action="{{ route('clients.recurring-invoices.standalone.store') }}">
                                 @csrf
 
                                 <!-- Client Selection -->
                                 <div class="mb-3">
-                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
+                                    <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client <span class="text-red-600">*</span></label>
                                     <select name="client_id" 
                                             id="client_id" 
-                                            class="form-select @error('client_id') is-invalid @enderror" 
+                                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" 
                                             required>
                                         <option value="">Select a client...</option>
                                         @foreach($clients as $client)
@@ -42,11 +42,11 @@
 
                                 <!-- Template Name -->
                                 <div class="mb-3">
-                                    <label for="template_name" class="form-label">Template Name <span class="text-danger">*</span></label>
+                                    <label for="template_name" class="block text-sm font-medium text-gray-700 mb-1">Template Name <span class="text-red-600">*</span></label>
                                     <input type="text" 
                                            name="template_name" 
                                            id="template_name" 
-                                           class="form-control @error('template_name') is-invalid @enderror" 
+                                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('template_name') is-invalid @enderror" 
                                            value="{{ old('template_name') }}" 
                                            required 
                                            maxlength="255"
@@ -61,7 +61,7 @@
                                     <label for="description" class="form-label">Description</label>
                                     <textarea name="description" 
                                               id="description" 
-                                              class="form-control @error('description') is-invalid @enderror" 
+                                              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('description') is-invalid @enderror" 
                                               rows="3" 
                                               placeholder="Invoice description...">{{ old('description') }}</textarea>
                                     @error('description')
@@ -71,7 +71,7 @@
 
                                 <!-- Amount and Currency -->
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="amount" class="form-label">Amount <span class="text-danger">*</span></label>
                                             <input type="number" 
@@ -88,12 +88,12 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="md:w-1/2 px-4">
                                         <div class="mb-3">
                                             <label for="currency" class="form-label">Currency <span class="text-danger">*</span></label>
                                             <select name="currency" 
                                                     id="currency" 
-                                                    class="form-select @error('currency') is-invalid @enderror" 
+                                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('currency') is-invalid @enderror" 
                                                     required>
                                                 @foreach($currencies as $key => $value)
                                                     <option value="{{ $key }}" {{ old('currency', 'USD') == $key ? 'selected' : '' }}>
@@ -382,9 +382,9 @@
                                     @enderror
                                 </div>
 
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Create Recurring Invoice
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-save mr-2"></i>Create Recurring Invoice
                                     </button>
                                     <a href="{{ route('clients.recurring-invoices.standalone.index') }}" class="btn btn-outline-secondary">
                                         Cancel
@@ -396,14 +396,14 @@
                 </div>
 
                 <div class="col-lg-4 col-xl-6">
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-info-circle me-2"></i>Recurring Invoice Setup
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="small text-muted">
+                        <div class="p-6">
+                            <div class="small text-gray-600">
                                 <h6>Frequency Options:</h6>
                                 <ul class="list-unstyled">
                                     <li><strong>Daily:</strong> Invoice generated every day(s)</li>

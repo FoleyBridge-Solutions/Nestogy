@@ -14,6 +14,10 @@ use App\Models\ContractMilestone;
 use App\Models\ContractAmendment;
 use App\Models\Client;
 use App\Models\Quote;
+use App\Domains\Financial\Services\ContractService;
+use App\Domains\Financial\Requests\StoreContractRequest;
+use App\Domains\Financial\Requests\UpdateContractRequest;
+use App\Domains\Financial\Requests\ContractStatusRequest;
 use App\Services\ContractGenerationService;
 use App\Services\QuoteInvoiceConversionService;
 use App\Services\DigitalSignatureService;
@@ -27,18 +31,24 @@ use Carbon\Carbon;
  */
 class ContractController extends Controller
 {
+    protected $contractService;
     protected $contractGenerationService;
     protected $conversionService;
     protected $signatureService;
 
     public function __construct(
+        ContractService $contractService,
         ContractGenerationService $contractGenerationService,
         QuoteInvoiceConversionService $conversionService,
         DigitalSignatureService $signatureService = null
     ) {
+        $this->contractService = $contractService;
         $this->contractGenerationService = $contractGenerationService;
         $this->conversionService = $conversionService;
         $this->signatureService = $signatureService;
+        
+        // Apply middleware
+        $this->middleware('auth');
     }
 
     /**
@@ -46,57 +56,32 @@ class ContractController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $query = Contract::with(['client', 'quote', 'template'])
-            ->where('company_id', $user->company_id);
+        $this->authorize('viewAny', Contract::class);
 
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->get('status'));
-        }
+        // Get filters from request
+        $filters = $request->only([
+            'status', 'contract_type', 'client_id', 'signature_status',
+            'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to', 'search'
+        ]);
 
-        if ($request->filled('contract_type')) {
-            $query->where('contract_type', $request->get('contract_type'));
-        }
-
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->get('client_id'));
-        }
-
-        if ($request->filled('signature_status')) {
-            $query->where('signature_status', $request->get('signature_status'));
-        }
-
-        if ($request->filled('start_date_from')) {
-            $query->where('start_date', '>=', $request->get('start_date_from'));
-        }
-
-        if ($request->filled('start_date_to')) {
-            $query->where('start_date', '<=', $request->get('start_date_to'));
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('contract_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $contracts = $query->orderBy('created_at', 'desc')->paginate(25);
-
-        // Calculate dashboard statistics
-        $statistics = $this->getContractStatistics($user->company_id);
+        $perPage = $request->get('per_page', 25);
+        $contracts = $this->contractService->getContracts($filters, $perPage);
+        $statistics = $this->contractService->getDashboardStatistics();
 
         if ($request->wantsJson()) {
             return response()->json([
-                'contracts' => $contracts,
-                'statistics' => $statistics
+                'success' => true,
+                'data' => [
+                    'contracts' => $contracts,
+                    'statistics' => $statistics
+                ]
             ]);
         }
 
-        return view('financial.contracts.index', compact('contracts', 'statistics'));
+        // Get clients for filter
+        $clients = Client::where('company_id', Auth::user()->company_id)->orderBy('name')->get();
+        
+        return view('financial.contracts.index', compact('contracts', 'statistics', 'clients'));
     }
 
     /**
@@ -104,6 +89,8 @@ class ContractController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', Contract::class);
+
         $user = Auth::user();
         
         // Get all clients for dropdown
@@ -119,55 +106,65 @@ class ContractController extends Controller
         
         // Handle pre-selected quote or client
         $quoteId = $request->get('quote_id');
-        $quote = $quoteId ? Quote::findOrFail($quoteId) : null;
+        $quote = $quoteId ? Quote::where('company_id', $user->company_id)->findOrFail($quoteId) : null;
         $selectedClient = $quote ? $quote->client : null;
         
-        return view('financial.contracts.create', compact('clients', 'templates', 'quote', 'selectedClient'));
+        $contractTypes = Contract::getAvailableTypes();
+        $availableStatuses = Contract::getAvailableStatuses();
+        
+        // Billing models for programmable contracts
+        $billingModels = [
+            'fixed' => 'Fixed Price',
+            'per_asset' => 'Per Asset/Device',
+            'per_contact' => 'Per Contact/Seat',
+            'tiered' => 'Tiered Pricing',
+            'hybrid' => 'Hybrid Model'
+        ];
+        
+        // Template types
+        $templateTypes = [
+            'service_agreement' => 'Service Agreement',
+            'maintenance_contract' => 'Maintenance Contract',
+            'support_contract' => 'Support Contract',
+            'managed_services' => 'Managed Services',
+            'consulting' => 'Consulting Agreement',
+            'custom' => 'Custom Contract'
+        ];
+        
+        return view('financial.contracts.create', compact(
+            'clients', 'templates', 'quote', 'selectedClient', 'contractTypes', 'availableStatuses',
+            'billingModels', 'templateTypes'
+        ));
     }
 
     /**
      * Store a newly created contract
      */
-    public function store(Request $request)
+    public function store(StoreContractRequest $request)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'contract_type' => 'required|in:' . implode(',', array_keys(Contract::getAvailableTypes())),
-            'title' => 'required|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'term_months' => 'nullable|integer|min:1|max:120',
-            'contract_value' => 'required|numeric|min:0',
-            'currency_code' => 'required|string|size:3',
-            'template_id' => 'nullable|exists:contract_templates,id',
-            'quote_id' => 'nullable|exists:quotes,id',
-        ]);
-
         try {
-            $client = Client::findOrFail($request->client_id);
-            $validated = $request->validated();
+            $data = $request->validatedWithComputed();
 
-            if ($request->quote_id) {
-                // Generate from quote
-                $quote = Quote::findOrFail($request->quote_id);
-                $template = ContractTemplate::find($request->template_id);
+            // Handle quote-based contract creation
+            if (!empty($data['quote_id'])) {
+                $quote = Quote::where('company_id', auth()->user()->company_id)
+                    ->findOrFail($data['quote_id']);
                 
-                if (!$template) {
-                    throw new \Exception('Template is required for quote-based contracts');
+                $template = null;
+                if (!empty($data['template_id'])) {
+                    $template = ContractTemplate::where('company_id', auth()->user()->company_id)
+                        ->findOrFail($data['template_id']);
                 }
 
-                $contract = $this->contractGenerationService->generateFromQuote($quote, $template, $validated);
-            } elseif ($request->template_id) {
-                // Generate from template
-                $template = ContractTemplate::findOrFail($request->template_id);
-                $contract = $this->contractGenerationService->generateFromTemplate($client, $template, $validated);
+                $contract = $this->contractService->createFromQuote($quote, $data, $template);
             } else {
-                // Create custom contract
-                $contract = $this->contractGenerationService->createCustomContract($validated);
+                // Create standard contract
+                $contract = $this->contractService->createContract($data);
             }
 
             Log::info('Contract created', [
                 'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
                 'user_id' => Auth::id(),
                 'ip' => $request->ip()
             ]);
@@ -176,7 +173,9 @@ class ContractController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Contract created successfully',
-                    'contract' => $contract
+                    'data' => [
+                        'contract' => $contract->load(['client', 'quote', 'template'])
+                    ]
                 ], 201);
             }
 
@@ -187,14 +186,15 @@ class ContractController extends Controller
         } catch (\Exception $e) {
             Log::error('Contract creation failed', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
+                'request_data' => $request->validated()
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create contract: ' . $e->getMessage()
-                ], 500);
+                ], 422);
             }
 
             return back()->withInput()->with('error', 'Failed to create contract: ' . $e->getMessage());
@@ -279,40 +279,15 @@ class ContractController extends Controller
     /**
      * Update the specified contract
      */
-    public function update(Request $request, Contract $contract)
+    public function update(UpdateContractRequest $request, Contract $contract)
     {
-        $this->authorize('update', $contract);
-
-        // Only allow editing of draft contracts
-        if (!in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_PENDING_REVIEW])) {
-            return back()->with('error', 'Only draft and pending review contracts can be edited');
-        }
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'term_months' => 'nullable|integer|min:1|max:120',
-            'contract_value' => 'required|numeric|min:0',
-            'currency_code' => 'required|string|size:3',
-            'payment_terms' => 'nullable|string',
-            'renewal_type' => 'required|in:' . implode(',', [
-                Contract::RENEWAL_NONE,
-                Contract::RENEWAL_MANUAL,
-                Contract::RENEWAL_AUTOMATIC,
-                Contract::RENEWAL_NEGOTIATED,
-            ]),
-        ]);
-
         try {
-            $contract = $this->contractGenerationService->regenerateContract(
-                $contract, 
-                $request->validated()
-            );
+            $data = $request->getUpdatableFields();
+            $contract = $this->contractService->updateContract($contract, $data);
             
             Log::info('Contract updated', [
                 'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
                 'user_id' => Auth::id(),
                 'ip' => $request->ip()
             ]);
@@ -321,7 +296,9 @@ class ContractController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Contract updated successfully',
-                    'contract' => $contract
+                    'data' => [
+                        'contract' => $contract->load(['client', 'quote', 'template'])
+                    ]
                 ]);
             }
 
@@ -340,7 +317,7 @@ class ContractController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to update contract: ' . $e->getMessage()
-                ], 500);
+                ], 422);
             }
 
             return back()->withInput()->with('error', 'Failed to update contract: ' . $e->getMessage());
@@ -502,51 +479,50 @@ class ContractController extends Controller
     /**
      * Update contract status
      */
-    public function updateStatus(Request $request, Contract $contract)
+    public function updateStatus(ContractStatusRequest $request, Contract $contract)
     {
-        $this->authorize('update', $contract);
-
-        $request->validate([
-            'status' => 'required|in:' . implode(',', array_keys(Contract::getAvailableStatuses())),
-            'reason' => 'nullable|string|max:500'
-        ]);
-
         try {
-            $oldStatus = $contract->status;
-            $newStatus = $request->status;
-            $reason = $request->reason;
+            $data = $request->getProcessedData();
+            $newStatus = $data['status'];
+            $reason = $data['reason'] ?? null;
+            $effectiveDate = $data['effective_date'] ? Carbon::parse($data['effective_date']) : null;
 
-            // Handle special status transitions
+            // Handle special status transitions using service methods
             switch ($newStatus) {
                 case Contract::STATUS_ACTIVE:
-                    $contract->markAsActive();
+                    $contract = $this->contractService->activateContract($contract, $effectiveDate);
                     break;
                     
                 case Contract::STATUS_TERMINATED:
-                    $contract->terminate($reason);
+                    $contract = $this->contractService->terminateContract($contract, $reason, $effectiveDate);
                     break;
                     
                 case Contract::STATUS_SUSPENDED:
-                    $contract->suspend($reason);
+                    $contract = $this->contractService->suspendContract($contract, $reason);
                     break;
                     
                 default:
-                    $contract->update(['status' => $newStatus]);
+                    $contract = $this->contractService->updateContract($contract, ['status' => $newStatus]);
                     break;
             }
 
             Log::info('Contract status updated', [
                 'contract_id' => $contract->id,
-                'old_status' => $oldStatus,
+                'contract_number' => $contract->contract_number,
+                'old_status' => $data['previous_status'],
                 'new_status' => $newStatus,
                 'reason' => $reason,
+                'effective_date' => $effectiveDate,
                 'user_id' => Auth::id()
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Contract status updated to {$newStatus}"
+                    'message' => "Contract status updated to {$newStatus}",
+                    'data' => [
+                        'contract' => $contract->load(['client'])
+                    ]
                 ]);
             }
 
@@ -560,6 +536,13 @@ class ContractController extends Controller
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id()
             ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update contract status: ' . $e->getMessage()
+                ], 422);
+            }
 
             return back()->with('error', 'Failed to update contract status: ' . $e->getMessage());
         }
@@ -650,16 +633,9 @@ class ContractController extends Controller
      */
     public function destroy(Request $request, Contract $contract)
     {
-        $this->authorize('delete', $contract);
-
-        // Only allow deletion of draft contracts
-        if ($contract->status !== Contract::STATUS_DRAFT) {
-            return back()->with('error', 'Only draft contracts can be deleted');
-        }
-
         try {
             $contractNumber = $contract->contract_number;
-            $contract->delete();
+            $this->contractService->deleteContract($contract);
             
             Log::warning('Contract deleted', [
                 'contract_id' => $contract->id,
@@ -686,7 +662,238 @@ class ContractController extends Controller
                 'user_id' => Auth::id()
             ]);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete contract: ' . $e->getMessage()
+                ], 422);
+            }
+
             return back()->with('error', 'Failed to delete contract: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get dashboard data
+     */
+    public function dashboard(Request $request)
+    {
+        $this->authorize('viewAny', Contract::class);
+
+        try {
+            $statistics = $this->contractService->getDashboardStatistics();
+            $expiringContracts = $this->contractService->getExpiringContracts(30);
+            $contractsDueForRenewal = $this->contractService->getContractsDueForRenewal(60);
+
+            $dashboardData = [
+                'statistics' => $statistics,
+                'expiring_contracts' => $expiringContracts,
+                'contracts_due_for_renewal' => $contractsDueForRenewal,
+            ];
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $dashboardData
+                ]);
+            }
+
+            return view('financial.contracts.dashboard', $dashboardData);
+
+        } catch (\Exception $e) {
+            Log::error('Contract dashboard data failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load dashboard data'
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to load dashboard data');
+        }
+    }
+
+    /**
+     * Get contracts expiring soon
+     */
+    public function expiring(Request $request)
+    {
+        $this->authorize('viewAny', Contract::class);
+
+        try {
+            $days = $request->get('days', 30);
+            $contracts = $this->contractService->getExpiringContracts($days);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'contracts' => $contracts,
+                        'days_ahead' => $days
+                    ]
+                ]);
+            }
+
+            return view('financial.contracts.expiring', compact('contracts', 'days'));
+
+        } catch (\Exception $e) {
+            Log::error('Get expiring contracts failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to get expiring contracts'
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to get expiring contracts');
+        }
+    }
+
+    /**
+     * Search contracts
+     */
+    public function search(Request $request)
+    {
+        $this->authorize('viewAny', Contract::class);
+
+        $request->validate([
+            'q' => 'required|string|min:2|max:100'
+        ]);
+
+        try {
+            $query = $request->get('q');
+            $limit = $request->get('limit', 25);
+            
+            $contracts = $this->contractService->searchContracts($query, $limit);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'contracts' => $contracts,
+                    'query' => $query,
+                    'total' => $contracts->count()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Contract search failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'query' => $request->get('q')
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed'
+            ], 500);
+        }
+    }
+
+    /**
+     * Activate a contract
+     */
+    public function activate(Request $request, Contract $contract)
+    {
+        $this->authorize('activate', $contract);
+
+        try {
+            $activationDate = $request->get('activation_date') ? 
+                Carbon::parse($request->get('activation_date')) : null;
+
+            $contract = $this->contractService->activateContract($contract, $activationDate);
+
+            Log::info('Contract activated', [
+                'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
+                'activation_date' => $activationDate,
+                'user_id' => Auth::id()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Contract activated successfully',
+                    'data' => [
+                        'contract' => $contract->load(['client'])
+                    ]
+                ]);
+            }
+
+            return redirect()
+                ->route('financial.contracts.show', $contract)
+                ->with('success', 'Contract activated successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Contract activation failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to activate contract: ' . $e->getMessage()
+                ], 422);
+            }
+
+            return back()->with('error', 'Failed to activate contract: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reactivate a suspended contract
+     */
+    public function reactivate(Request $request, Contract $contract)
+    {
+        $this->authorize('reactivate', $contract);
+
+        try {
+            $contract = $this->contractService->reactivateContract($contract);
+
+            Log::info('Contract reactivated', [
+                'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
+                'user_id' => Auth::id()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Contract reactivated successfully',
+                    'data' => [
+                        'contract' => $contract->load(['client'])
+                    ]
+                ]);
+            }
+
+            return redirect()
+                ->route('financial.contracts.show', $contract)
+                ->with('success', 'Contract reactivated successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Contract reactivation failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to reactivate contract: ' . $e->getMessage()
+                ], 422);
+            }
+
+            return back()->with('error', 'Failed to reactivate contract: ' . $e->getMessage());
         }
     }
 
@@ -727,5 +934,630 @@ class ContractController extends Controller
             'signatures_pending' => $contract->signatures->where('status', ContractSignature::STATUS_PENDING)->count(),
             'signatures_completed' => $contract->signatures->where('status', ContractSignature::STATUS_SIGNED)->count(),
         ];
+    }
+
+    /**
+     * Get contract templates
+     */
+    public function getTemplates(Request $request, string $type = 'all')
+    {
+        $user = Auth::user();
+        
+        // For now, return a simple templates page
+        // This can be expanded later to show actual template management
+        return view('financial.contracts.templates', [
+            'type' => $type,
+            'templates' => [], // Placeholder for future template functionality
+        ]);
+    }
+
+    // ====================================
+    // CONTRACT TEMPLATES MANAGEMENT
+    // ====================================
+
+    /**
+     * Display contract templates listing
+     */
+    public function templatesIndex(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            $query = \App\Models\Financial\ContractTemplate::where('company_id', $user->company_id);
+            
+            // Search filter
+            if ($request->filled('search')) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhere('template_type', 'like', "%{$search}%");
+                });
+            }
+            
+            // Status filter
+            if ($request->filled('status')) {
+                $query->where('status', $request->get('status'));
+            }
+            
+            // Type filter
+            if ($request->filled('type')) {
+                $query->where('template_type', $request->get('type'));
+            }
+            
+            // Billing model filter
+            if ($request->filled('billing_model')) {
+                $query->where('billing_model', $request->get('billing_model'));
+            }
+            
+            $templates = $query->with(['creator', 'updater'])
+                              ->orderBy('created_at', 'desc')
+                              ->paginate(20);
+            
+            // Statistics
+            $stats = [
+                'total' => \App\Models\Financial\ContractTemplate::where('company_id', $user->company_id)->count(),
+                'active' => \App\Models\Financial\ContractTemplate::where('company_id', $user->company_id)->where('status', 'active')->count(),
+                'draft' => \App\Models\Financial\ContractTemplate::where('company_id', $user->company_id)->where('status', 'draft')->count(),
+                'programmable' => \App\Models\Financial\ContractTemplate::where('company_id', $user->company_id)->programmable()->count(),
+            ];
+            
+            return view('financial.contracts.templates.index', compact('templates', 'stats'));
+            
+        } catch (\Exception $e) {
+            Log::error('Contract templates listing failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load contract templates');
+        }
+    }
+
+    /**
+     * Show form for creating a new contract template
+     */
+    public function templatesCreate(Request $request)
+    {
+        try {
+            $templateTypes = [
+                'service_agreement' => 'Service Agreement',
+                'maintenance' => 'Maintenance Contract',
+                'support' => 'Support Contract',
+                'msp_contract' => 'MSP Contract',
+                'voip_service' => 'VoIP Service',
+                'security' => 'Security Services',
+                'backup' => 'Backup Services',
+                'monitoring' => 'Monitoring Services',
+            ];
+            
+            $billingModels = [
+                'fixed' => 'Fixed Price',
+                'per_asset' => 'Per Asset/Device',
+                'per_contact' => 'Per Contact/Seat',
+                'tiered' => 'Tiered Pricing',
+                'hybrid' => 'Hybrid Model',
+            ];
+            
+            return view('financial.contracts.templates.create', compact('templateTypes', 'billingModels'));
+            
+        } catch (\Exception $e) {
+            Log::error('Contract template create form failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load template creation form');
+        }
+    }
+
+    /**
+     * Store a new contract template
+     */
+    public function templatesStore(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'template_type' => 'required|string',
+            'billing_model' => 'required|string',
+            'template_content' => 'required|string',
+            'variable_fields' => 'nullable|array',
+            'default_values' => 'nullable|array',
+            'required_fields' => 'nullable|array',
+            'asset_billing_rules' => 'nullable|array',
+            'contact_billing_rules' => 'nullable|array',
+            'calculation_formulas' => 'nullable|array',
+            'automation_settings' => 'nullable|array',
+        ]);
+        
+        try {
+            $user = Auth::user();
+            
+            $template = \App\Models\Financial\ContractTemplate::create([
+                'company_id' => $user->company_id,
+                'name' => $request->get('name'),
+                'description' => $request->get('description'),
+                'template_type' => $request->get('template_type'),
+                'billing_model' => $request->get('billing_model'),
+                'template_content' => $request->get('template_content'),
+                'variable_fields' => $request->get('variable_fields'),
+                'default_values' => $request->get('default_values'),
+                'required_fields' => $request->get('required_fields'),
+                'asset_billing_rules' => $request->get('asset_billing_rules'),
+                'contact_billing_rules' => $request->get('contact_billing_rules'),
+                'calculation_formulas' => $request->get('calculation_formulas'),
+                'automation_settings' => $request->get('automation_settings'),
+                'status' => 'draft',
+                'created_by' => $user->id,
+            ]);
+            
+            Log::info('Contract template created', [
+                'template_id' => $template->id,
+                'template_name' => $template->name,
+                'user_id' => $user->id
+            ]);
+            
+            return redirect()
+                ->route('financial.contracts.templates.show', $template)
+                ->with('success', 'Contract template created successfully');
+                
+        } catch (\Exception $e) {
+            Log::error('Contract template creation failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'input' => $request->all()
+            ]);
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to create contract template: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified contract template
+     */
+    public function templatesShow(\App\Models\Financial\ContractTemplate $template)
+    {
+        try {
+            $template->load(['creator', 'updater', 'contracts']);
+            
+            return view('financial.contracts.templates.show', compact('template'));
+            
+        } catch (\Exception $e) {
+            Log::error('Contract template show failed', [
+                'template_id' => $template->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load contract template');
+        }
+    }
+
+    /**
+     * Show form for editing the specified contract template
+     */
+    public function templatesEdit(\App\Models\Financial\ContractTemplate $template)
+    {
+        try {
+            $templateTypes = [
+                'service_agreement' => 'Service Agreement',
+                'maintenance' => 'Maintenance Contract',
+                'support' => 'Support Contract',
+                'msp_contract' => 'MSP Contract',
+                'voip_service' => 'VoIP Service',
+                'security' => 'Security Services',
+                'backup' => 'Backup Services',
+                'monitoring' => 'Monitoring Services',
+            ];
+            
+            $billingModels = [
+                'fixed' => 'Fixed Price',
+                'per_asset' => 'Per Asset/Device',
+                'per_contact' => 'Per Contact/Seat',
+                'tiered' => 'Tiered Pricing',
+                'hybrid' => 'Hybrid Model',
+            ];
+            
+            return view('financial.contracts.templates.edit', compact('template', 'templateTypes', 'billingModels'));
+            
+        } catch (\Exception $e) {
+            Log::error('Contract template edit form failed', [
+                'template_id' => $template->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load template edit form');
+        }
+    }
+
+    /**
+     * Update the specified contract template
+     */
+    public function templatesUpdate(Request $request, \App\Models\Financial\ContractTemplate $template)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'template_type' => 'required|string',
+            'billing_model' => 'required|string',
+            'template_content' => 'required|string',
+            'variable_fields' => 'nullable|array',
+            'default_values' => 'nullable|array',
+            'required_fields' => 'nullable|array',
+            'asset_billing_rules' => 'nullable|array',
+            'contact_billing_rules' => 'nullable|array',
+            'calculation_formulas' => 'nullable|array',
+        ]);
+        
+        try {
+            $template->update([
+                'name' => $request->get('name'),
+                'description' => $request->get('description'),
+                'template_type' => $request->get('template_type'),
+                'billing_model' => $request->get('billing_model'),
+                'template_content' => $request->get('template_content'),
+                'variable_fields' => $request->get('variable_fields'),
+                'default_values' => $request->get('default_values'),
+                'required_fields' => $request->get('required_fields'),
+                'asset_billing_rules' => $request->get('asset_billing_rules'),
+                'contact_billing_rules' => $request->get('contact_billing_rules'),
+                'calculation_formulas' => $request->get('calculation_formulas'),
+                'updated_by' => Auth::id(),
+            ]);
+            
+            Log::info('Contract template updated', [
+                'template_id' => $template->id,
+                'template_name' => $template->name,
+                'user_id' => Auth::id()
+            ]);
+            
+            return redirect()
+                ->route('financial.contracts.templates.show', $template)
+                ->with('success', 'Contract template updated successfully');
+                
+        } catch (\Exception $e) {
+            Log::error('Contract template update failed', [
+                'template_id' => $template->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to update contract template: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified contract template
+     */
+    public function templatesDestroy(\App\Models\Financial\ContractTemplate $template)
+    {
+        try {
+            $templateName = $template->name;
+            
+            // Check if template is in use
+            if ($template->contracts()->count() > 0) {
+                return back()->with('error', 'Cannot delete template that is used by contracts');
+            }
+            
+            $template->delete();
+            
+            Log::warning('Contract template deleted', [
+                'template_id' => $template->id,
+                'template_name' => $templateName,
+                'user_id' => Auth::id()
+            ]);
+            
+            return redirect()
+                ->route('financial.contracts.templates.index')
+                ->with('success', "Contract template '{$templateName}' deleted successfully");
+                
+        } catch (\Exception $e) {
+            Log::error('Contract template deletion failed', [
+                'template_id' => $template->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to delete contract template: ' . $e->getMessage());
+        }
+    }
+
+    // ====================================
+    // PROGRAMMABLE CONTRACT FEATURES
+    // ====================================
+
+    /**
+     * Show asset assignments page for per-device billing
+     */
+    public function assetAssignments(Request $request, Contract $contract)
+    {
+        $this->authorize('view', $contract);
+        
+        try {
+            // Load contract with relationships
+            $contract->load(['client', 'assetAssignments.asset']);
+            
+            // Get all client assets
+            $assets = $contract->client->assets()
+                ->with(['assetType', 'location'])
+                ->orderBy('hostname')
+                ->get();
+                
+            // Group assets by type for easier management
+            $assetsByType = $assets->groupBy('asset_type');
+            
+            // Calculate current billing for assigned assets
+            $assignedAssets = $contract->assetAssignments()
+                ->with('asset')
+                ->where('status', 'active')
+                ->get();
+                
+            $billingCalculation = $this->calculateAssetBilling($contract, $assignedAssets);
+            
+            return view('financial.contracts.asset-assignments', compact(
+                'contract', 'assets', 'assetsByType', 'assignedAssets', 'billingCalculation'
+            ));
+            
+        } catch (\Exception $e) {
+            Log::error('Asset assignments page failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load asset assignments page');
+        }
+    }
+
+    /**
+     * Show contact assignments page for per-seat billing
+     */
+    public function contactAssignments(Request $request, Contract $contract)
+    {
+        $this->authorize('view', $contract);
+        
+        try {
+            // Load contract with relationships
+            $contract->load(['client', 'contactAssignments.contact']);
+            
+            // Get all client contacts
+            $contacts = $contract->client->contacts()
+                ->orderBy('name')
+                ->get();
+                
+            // Get available access tiers from contract template
+            $accessTiers = [];
+            if ($contract->template && $contract->template->contact_billing_rules) {
+                $accessTiers = $contract->template->contact_billing_rules['access_tiers'] ?? [];
+            }
+            
+            // Calculate current billing for assigned contacts
+            $assignedContacts = $contract->contactAssignments()
+                ->with('contact')
+                ->where('status', 'active')
+                ->get();
+                
+            $billingCalculation = $this->calculateContactBilling($contract, $assignedContacts);
+            
+            return view('financial.contracts.contact-assignments', compact(
+                'contract', 'contacts', 'accessTiers', 'assignedContacts', 'billingCalculation'
+            ));
+            
+        } catch (\Exception $e) {
+            Log::error('Contact assignments page failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load contact assignments page');
+        }
+    }
+
+    /**
+     * Show usage tracking dashboard
+     */
+    public function usageDashboard(Request $request, Contract $contract)
+    {
+        $this->authorize('view', $contract);
+        
+        try {
+            // Load contract with relationships
+            $contract->load([
+                'client',
+                'template',
+                'assetAssignments.asset',
+                'contactAssignments.contact',
+                'billingCalculations' => function($query) {
+                    $query->orderBy('billing_period', 'desc')->limit(12);
+                }
+            ]);
+            
+            // Get billing data for dashboard
+            $billingData = $this->gatherBillingData($contract);
+            
+            return view('financial.contracts.usage-dashboard', compact(
+                'contract', 'billingData'
+            ));
+            
+        } catch (\Exception $e) {
+            Log::error('Usage dashboard failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return back()->with('error', 'Failed to load usage dashboard');
+        }
+    }
+
+    /**
+     * Calculate asset billing for contract
+     */
+    protected function calculateAssetBilling(Contract $contract, $assignedAssets)
+    {
+        $total = 0;
+        $breakdown = [];
+        
+        if ($contract->template && $contract->template->asset_billing_rules) {
+            $rules = $contract->template->asset_billing_rules;
+            
+            foreach ($assignedAssets as $assignment) {
+                $asset = $assignment->asset;
+                $assetType = $asset->asset_type;
+                
+                // Find rate for this asset type
+                $rate = $rules['rates'][$assetType] ?? $rules['default_rate'] ?? 0;
+                
+                $total += $rate;
+                
+                if (!isset($breakdown[$assetType])) {
+                    $breakdown[$assetType] = [
+                        'count' => 0,
+                        'rate' => $rate,
+                        'total' => 0
+                    ];
+                }
+                
+                $breakdown[$assetType]['count']++;
+                $breakdown[$assetType]['total'] += $rate;
+            }
+        }
+        
+        return [
+            'total_monthly' => $total,
+            'breakdown_by_type' => $breakdown,
+            'assigned_count' => $assignedAssets->count()
+        ];
+    }
+
+    /**
+     * Calculate contact billing for contract
+     */
+    protected function calculateContactBilling(Contract $contract, $assignedContacts)
+    {
+        $total = 0;
+        $breakdown = [];
+        
+        if ($contract->template && $contract->template->contact_billing_rules) {
+            $rules = $contract->template->contact_billing_rules;
+            $accessTiers = $rules['access_tiers'] ?? [];
+            
+            foreach ($assignedContacts as $assignment) {
+                $tierName = $assignment->access_tier;
+                $tier = collect($accessTiers)->firstWhere('name', $tierName);
+                
+                if ($tier) {
+                    $rate = $tier['monthly_rate'] ?? 0;
+                    $total += $rate;
+                    
+                    if (!isset($breakdown[$tierName])) {
+                        $breakdown[$tierName] = [
+                            'count' => 0,
+                            'rate' => $rate,
+                            'total' => 0,
+                            'tier' => $tier
+                        ];
+                    }
+                    
+                    $breakdown[$tierName]['count']++;
+                    $breakdown[$tierName]['total'] += $rate;
+                }
+            }
+        }
+        
+        return [
+            'total_monthly' => $total,
+            'breakdown_by_tier' => $breakdown,
+            'assigned_count' => $assignedContacts->count()
+        ];
+    }
+
+    /**
+     * Gather comprehensive billing data for dashboard
+     */
+    protected function gatherBillingData(Contract $contract)
+    {
+        $data = [];
+        
+        // Current MRR calculation
+        $assetBilling = 0;
+        $contactBilling = 0;
+        
+        if ($contract->billing_model === 'per_asset' || $contract->billing_model === 'hybrid') {
+            $assignedAssets = $contract->assetAssignments()->where('status', 'active')->get();
+            $assetCalc = $this->calculateAssetBilling($contract, $assignedAssets);
+            $assetBilling = $assetCalc['total_monthly'];
+            
+            $data['asset_breakdown'] = $assetCalc['breakdown_by_type'];
+            $data['asset_details'] = $assignedAssets->map(function($assignment) {
+                return [
+                    'id' => $assignment->asset->id,
+                    'hostname' => $assignment->asset->hostname,
+                    'name' => $assignment->asset->name,
+                    'ip_address' => $assignment->asset->ip_address,
+                    'asset_type' => $assignment->asset->asset_type,
+                    'is_online' => $assignment->asset->is_online ?? true,
+                    'assigned_date' => $assignment->assigned_date,
+                    'monthly_rate' => $assignment->monthly_rate ?? 0,
+                    'period_total' => $assignment->monthly_rate ?? 0, // Simplified for now
+                ];
+            });
+        }
+        
+        if ($contract->billing_model === 'per_contact' || $contract->billing_model === 'hybrid') {
+            $assignedContacts = $contract->contactAssignments()->where('status', 'active')->get();
+            $contactCalc = $this->calculateContactBilling($contract, $assignedContacts);
+            $contactBilling = $contactCalc['total_monthly'];
+            
+            $data['contact_tier_breakdown'] = collect($contactCalc['breakdown_by_tier'])->map(function($tier, $name) {
+                return [
+                    'id' => $name,
+                    'name' => $name,
+                    'contact_count' => $tier['count'],
+                    'rate' => $tier['rate'],
+                    'total_amount' => $tier['total']
+                ];
+            })->values();
+            
+            $data['contact_details'] = $assignedContacts->map(function($assignment) {
+                return [
+                    'id' => $assignment->contact->id,
+                    'name' => $assignment->contact->name,
+                    'email' => $assignment->contact->email,
+                    'access_tier_name' => $assignment->access_tier,
+                    'login_count' => 0, // Would come from actual portal usage tracking
+                    'last_login' => null,
+                    'assigned_date' => $assignment->assigned_date,
+                    'monthly_rate' => $assignment->monthly_rate ?? 0,
+                    'period_total' => $assignment->monthly_rate ?? 0, // Simplified for now
+                ];
+            });
+        }
+        
+        $data['current_mrr'] = $assetBilling + $contactBilling;
+        $data['assigned_assets_count'] = $contract->assetAssignments()->where('status', 'active')->count();
+        $data['assigned_contacts_count'] = $contract->contactAssignments()->where('status', 'active')->count();
+        
+        // Billing calculations history
+        $data['calculations'] = $contract->billingCalculations()->orderBy('billing_period', 'desc')->get()->map(function($calc) {
+            return [
+                'id' => $calc->id,
+                'billing_period' => $calc->billing_period,
+                'calculated_at' => $calc->calculated_at,
+                'asset_billing_amount' => $calc->asset_billing_amount ?? 0,
+                'contact_billing_amount' => $calc->contact_billing_amount ?? 0,
+                'total_amount' => $calc->total_amount,
+                'status' => $calc->status ?? 'calculated',
+            ];
+        });
+        
+        return $data;
     }
 }

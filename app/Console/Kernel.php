@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Services\DistributedSchedulerService;
 
 class Kernel extends ConsoleKernel
 {
@@ -48,19 +49,30 @@ class Kernel extends ConsoleKernel
             ->daily()
             ->at('09:00')
             ->withoutOverlapping()
+            ->onOneServer()
             ->appendOutputTo(storage_path('logs/invoice-reminders.log'));
 
-        // Recurring Invoices - Generate recurring invoices
-        $schedule->command('invoices:generate-recurring')
+        // Recurring Invoices - Generate recurring invoices (DISTRIBUTED)
+        $schedule->call(function () {
+            $scheduler = app(DistributedSchedulerService::class);
+            $scheduler->executeIfNotRunning('recurring-invoices-daily', function () {
+                \Artisan::call('billing:process-recurring-distributed');
+            });
+        })
             ->daily()
             ->at('00:30')
-            ->withoutOverlapping()
+            ->name('recurring-invoices-distributed')
             ->appendOutputTo(storage_path('logs/recurring-invoices.log'));
 
-        // Process Failed Payments - Retry failed payments hourly
-        $schedule->command('payments:retry-failed')
+        // Process Failed Payments - Retry failed payments hourly (DISTRIBUTED)
+        $schedule->call(function () {
+            $scheduler = app(DistributedSchedulerService::class);
+            $scheduler->executeIfNotRunning('retry-failed-payments-hourly', function () {
+                \Artisan::call('payments:retry-failed');
+            });
+        })
             ->hourly()
-            ->withoutOverlapping()
+            ->name('retry-failed-payments-distributed')
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/failed-payments.log'));
 
@@ -153,12 +165,18 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/daily-summary.log'));
 
-        // Sync with external integrations
-        $schedule->command('integrations:sync')
+        // RMM Agent Sync - Sync agents from all active RMM integrations
+        $schedule->call(function () {
+            $integrations = \App\Domains\Integration\Models\RmmIntegration::where('is_active', true)->get();
+            foreach ($integrations as $integration) {
+                \App\Jobs\SyncRmmAgents::dispatch($integration);
+            }
+        })
             ->everyThirtyMinutes()
             ->withoutOverlapping()
             ->runInBackground()
-            ->appendOutputTo(storage_path('logs/integrations-sync.log'));
+            ->name('sync-rmm-agents')
+            ->appendOutputTo(storage_path('logs/rmm-sync.log'));
 
         // Clean up orphaned files
         $schedule->command('storage:clean-orphaned')
@@ -183,12 +201,23 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/search-index.log'));
 
-        // CRITICAL: Process contract renewals and send notifications
+        // Clean up old scheduler coordination records
+        $schedule->command('scheduler:cleanup')
+            ->daily()
+            ->at('05:30')
+            ->appendOutputTo(storage_path('logs/scheduler-cleanup.log'));
+
+        // CRITICAL: Process contract renewals and send notifications (DISTRIBUTED)
         // This protects MSP revenue by ensuring contracts auto-renew
-        $schedule->command('contracts:process-renewals')
+        $schedule->call(function () {
+            $scheduler = app(DistributedSchedulerService::class);
+            $scheduler->executeIfNotRunning('contract-renewals-daily', function () {
+                \Artisan::call('contracts:process-renewals');
+            });
+        })
             ->daily()
             ->at('01:00')
-            ->withoutOverlapping()
+            ->name('contract-renewals-distributed')
             ->appendOutputTo(storage_path('logs/contract-renewals.log'));
 
         // Check and notify about expiring contracts
@@ -218,19 +247,62 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/disk-usage.log'));
 
-        // SaaS Subscription Management Jobs
+        // SaaS Subscription Management Jobs (DISTRIBUTED)
         // Check trial expirations and send notifications
-        $schedule->job(new \App\Jobs\CheckTrialExpirations())
+        $schedule->call(function () {
+            $scheduler = app(DistributedSchedulerService::class);
+            $scheduler->executeIfNotRunning('check-trial-expirations-daily', function () {
+                dispatch(new \App\Jobs\CheckTrialExpirations());
+            });
+        })
             ->daily()
             ->at('10:00')
-            ->withoutOverlapping()
-            ->name('check-trial-expirations');
+            ->name('check-trial-expirations-distributed');
 
         // Sync subscription statuses with Stripe
-        $schedule->job(new \App\Jobs\SyncStripeSubscriptions())
+        $schedule->call(function () {
+            $scheduler = app(DistributedSchedulerService::class);
+            $scheduler->executeIfNotRunning('sync-stripe-subscriptions-hourly', function () {
+                dispatch(new \App\Jobs\SyncStripeSubscriptions());
+            });
+        })
             ->hourly()
+            ->name('sync-stripe-subscriptions-distributed');
+
+        // TEXAS TAX DATA AUTOMATION
+        // Update Texas Comptroller tax data quarterly (free official data)
+        $schedule->command('nestogy:update-texas-tax-data')
+            ->quarterly()
+            ->at('02:00')
             ->withoutOverlapping()
-            ->name('sync-stripe-subscriptions');
+            ->appendOutputTo(storage_path('logs/texas-tax-data.log'));
+
+        // Check for new quarterly tax data monthly and update if available
+        $schedule->command('nestogy:update-texas-tax-data --force')
+            ->monthlyOn(15, '03:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/texas-tax-data-monthly.log'));
+
+        // Update address mapping data for major counties weekly
+        $schedule->command('nestogy:update-texas-tax-data --addresses --counties=201,113,029,453,439')
+            ->weekly()
+            ->saturdays()
+            ->at('01:30')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/texas-address-data.log'));
+
+        // RMM Agent Sync - Sync agents from all active RMM integrations every 30 minutes
+        $schedule->call(function () {
+            $integrations = \App\Domains\Integration\Models\RmmIntegration::where('is_active', true)->get();
+            foreach ($integrations as $integration) {
+                \App\Jobs\SyncRmmAgents::dispatch($integration);
+            }
+        })
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->name('sync-rmm-agents')
+            ->appendOutputTo(storage_path('logs/rmm-sync.log'));
     }
 
     /**

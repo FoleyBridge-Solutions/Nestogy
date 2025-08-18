@@ -3,7 +3,7 @@
 @section('title', 'Recurring Billing')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Recurring Billing</h1>
@@ -345,7 +345,7 @@
                     </label>
                 </div>
                 <input type="hidden" name="selected_ids" id="selectedIds" value="">
-                <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-flex flex-wrap -mx-4-reverse">
                     <button type="submit"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Generate Invoices

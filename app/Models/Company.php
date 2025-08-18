@@ -113,6 +113,14 @@ class Company extends Model
     }
 
     /**
+     * Get the company's customizations.
+     */
+    public function customization(): HasOne
+    {
+        return $this->hasOne(CompanyCustomization::class);
+    }
+
+    /**
      * Get the client record in Company 1 for billing (for tenant companies).
      */
     public function clientRecord()

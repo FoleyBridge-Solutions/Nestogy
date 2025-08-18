@@ -3,20 +3,20 @@
 @section('title', 'Import Assets')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Import Assets from CSV/Excel</h3>
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
+        <div class="md:w-2/3 px-4 offset-md-2">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                    <h3 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title">Import Assets from CSV/Excel</h3>
                 </div>
                 
                 <form action="{{ route('assets.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
-                    <div class="card-body">
+                    <div class="p-6">
                         @if(session('error'))
-                            <div class="alert alert-danger">
+                            <div class="px-4 py-3 rounded bg-red-100 border border-red-400 text-red-700">
                                 {{ session('error') }}
                             </div>
                         @endif
@@ -32,8 +32,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
-                            <select name="client_id" id="client_id" class="form-select @error('client_id') is-invalid @enderror" required>
+                            <label for="client_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client <span class="text-red-600">*</span></label>
+                            <select name="client_id" id="client_id" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') is-invalid @enderror" required>
                                 <option value="">Select Client</option>
                                 @foreach($clients as $client)
                                     <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
@@ -47,17 +47,17 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="file" class="form-label">CSV/Excel File <span class="text-danger">*</span></label>
+                            <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CSV/Excel File <span class="text-red-600">*</span></label>
                             <input type="file" name="file" id="file" 
-                                   class="form-control @error('file') is-invalid @enderror" 
+                                   class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('file') is-invalid @enderror" 
                                    accept=".csv,.xlsx" required>
-                            <small class="text-muted">Accepted formats: CSV (.csv) or Excel (.xlsx)</small>
+                            <small class="text-gray-600 dark:text-gray-400">Accepted formats: CSV (.csv) or Excel (.xlsx)</small>
                             @error('file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="alert alert-info">
+                        <div class="px-4 py-3 rounded bg-cyan-100 border border-cyan-400 text-cyan-700">
                             <h6 class="alert-heading">CSV Format Requirements:</h6>
                             <p class="mb-0">The CSV file must contain the following columns in order:</p>
                             <ul class="mb-0 mt-2">
@@ -73,7 +73,7 @@
                             </ul>
                         </div>
 
-                        <div class="alert alert-warning">
+                        <div class="px-4 py-3 rounded bg-yellow-100 border border-yellow-400 text-yellow-700">
                             <h6 class="alert-heading">Important Notes:</h6>
                             <ul class="mb-0">
                                 <li>The first row must contain column headers</li>
@@ -85,10 +85,10 @@
                     </div>
 
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-upload"></i> Import Assets
                         </button>
-                        <a href="{{ route('assets.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('assets.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                             <i class="fas fa-times"></i> Cancel
                         </a>
                     </div>

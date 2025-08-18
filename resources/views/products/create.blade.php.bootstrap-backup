@@ -1,0 +1,565 @@
+@extends('layouts.app')
+
+@section('title', $type === 'service' ? 'Create Service' : 'Create Product')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">{{ $type === 'service' ? 'Create Service' : 'Create Product' }}</h1>
+                <a href="{{ $type === 'service' ? route('services.index') : route('products.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to {{ $type === 'service' ? 'Services' : 'Products' }}
+                </a>
+            </div>
+
+            <form method="POST" action="{{ $type === 'service' ? route('services.store') : route('products.store') }}" id="product-form">
+                @csrf
+                
+                <div class="row">
+                    <div class="col-lg-8">
+                        <!-- Basic Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Basic Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                                id="name" name="name" value="{{ old('name') }}" required>
+                                            @error('name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="sku" class="form-label">SKU</label>
+                                            <input type="text" class="form-control @error('sku') is-invalid @enderror" 
+                                                id="sku" name="sku" value="{{ old('sku') }}" placeholder="Auto-generated if empty">
+                                            @error('sku')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="form-text">Leave empty to auto-generate from product name</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control @error('description') is-invalid @enderror" 
+                                        id="description" name="description" rows="3">{{ old('description') }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Type Selection - Hidden when route-specific -->
+                                @if(!isset($type))
+                                <div class="mb-3">
+                                    <label class="form-label">Type <span class="text-danger">*</span></label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="type" 
+                                                       id="type_product" value="product" {{ old('type', 'product') === 'product' ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="type_product">
+                                                    <strong>Product</strong> - Physical or digital items
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="type" 
+                                                       id="type_service" value="service" {{ old('type') === 'service' ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="type_service">
+                                                    <strong>Service</strong> - Time-based or subscription services
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @error('type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                @else
+                                <!-- Hidden input for route-specific type -->
+                                <input type="hidden" name="type" value="{{ $type }}">
+                                @endif
+
+                                <div class="mb-3">
+                                    <label for="short_description" class="form-label">Short Description</label>
+                                    <textarea class="form-control @error('short_description') is-invalid @enderror" 
+                                        id="short_description" name="short_description" rows="2" maxlength="500">{{ old('short_description') }}</textarea>
+                                    @error('short_description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Used in summaries and previews (max 500 characters)</div>
+                                </div>
+
+                                <div class="row">
+                                    @if(!isset($type))
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+                                            <select class="form-select @error('type') is-invalid @enderror" id="type" name="type" required>
+                                                <option value="">Select Type</option>
+                                                <option value="product" {{ old('type') === 'product' ? 'selected' : '' }}>Product</option>
+                                                <option value="service" {{ old('type') === 'service' ? 'selected' : '' }}>Service</option>
+                                            </select>
+                                            @error('type')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    @endif
+                                    <div class="col-md-{{ isset($type) ? '6' : '4' }}">
+                                        <div class="mb-3">
+                                            <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
+                                            <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
+                                                <option value="">Select Category</option>
+                                                @foreach($categories as $category)
+                                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                        {{ $category->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('category_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-{{ isset($type) ? '6' : '4' }}">
+                                        <div class="mb-3">
+                                            <label for="unit_type" class="form-label">Unit Type <span class="text-danger">*</span></label>
+                                            <select class="form-select @error('unit_type') is-invalid @enderror" id="unit_type" name="unit_type" required>
+                                                <option value="units" {{ old('unit_type', 'units') === 'units' ? 'selected' : '' }}>Units</option>
+                                                <option value="hours" {{ old('unit_type') === 'hours' ? 'selected' : '' }}>Hours</option>
+                                                <option value="days" {{ old('unit_type') === 'days' ? 'selected' : '' }}>Days</option>
+                                                <option value="weeks" {{ old('unit_type') === 'weeks' ? 'selected' : '' }}>Weeks</option>
+                                                <option value="months" {{ old('unit_type') === 'months' ? 'selected' : '' }}>Months</option>
+                                                <option value="years" {{ old('unit_type') === 'years' ? 'selected' : '' }}>Years</option>
+                                                <option value="fixed" {{ old('unit_type') === 'fixed' ? 'selected' : '' }}>Fixed</option>
+                                                <option value="subscription" {{ old('unit_type') === 'subscription' ? 'selected' : '' }}>Subscription</option>
+                                            </select>
+                                            @error('unit_type')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pricing -->
+                        <div class="card mb-4" id="pricing-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                    Pricing
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="base_price" class="form-label">Base Price <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <select class="form-select" id="currency_code" name="currency_code" style="max-width: 80px;">
+                                                    <option value="USD" {{ old('currency_code', 'USD') === 'USD' ? 'selected' : '' }}>USD</option>
+                                                    <option value="EUR" {{ old('currency_code') === 'EUR' ? 'selected' : '' }}>EUR</option>
+                                                    <option value="GBP" {{ old('currency_code') === 'GBP' ? 'selected' : '' }}>GBP</option>
+                                                    <option value="CAD" {{ old('currency_code') === 'CAD' ? 'selected' : '' }}>CAD</option>
+                                                </select>
+                                                <input type="number" class="form-control @error('base_price') is-invalid @enderror" 
+                                                    id="base_price" name="base_price" value="{{ old('base_price') }}" 
+                                                    step="0.01" min="0" required>
+                                            </div>
+                                            @error('base_price')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="cost" class="form-label">Cost</label>
+                                            <input type="number" class="form-control @error('cost') is-invalid @enderror" 
+                                                id="cost" name="cost" value="{{ old('cost') }}" step="0.01" min="0">
+                                            @error('cost')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="form-text">Your cost for this product/service</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="pricing_model" class="form-label">Pricing Model <span class="text-danger">*</span></label>
+                                            <select class="form-select @error('pricing_model') is-invalid @enderror" id="pricing_model" name="pricing_model" required>
+                                                <option value="fixed" {{ old('pricing_model', 'fixed') === 'fixed' ? 'selected' : '' }}>Fixed Price</option>
+                                                <option value="tiered" {{ old('pricing_model') === 'tiered' ? 'selected' : '' }}>Tiered Pricing</option>
+                                                <option value="volume" {{ old('pricing_model') === 'volume' ? 'selected' : '' }}>Volume Discount</option>
+                                                <option value="usage" {{ old('pricing_model') === 'usage' ? 'selected' : '' }}>Usage Based</option>
+                                                <option value="value" {{ old('pricing_model') === 'value' ? 'selected' : '' }}>Value Based</option>
+                                                <option value="custom" {{ old('pricing_model') === 'custom' ? 'selected' : '' }}>Custom</option>
+                                            </select>
+                                            @error('pricing_model')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Service-Specific Fields -->
+                                <div id="service-fields" style="display: none;">
+                                    <h6 class="mt-4 mb-3">Service Configuration</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="unit_type" class="form-label">Unit Type</label>
+                                                <select name="unit_type" id="unit_type" class="form-select">
+                                                    <option value="hours" {{ old('unit_type') === 'hours' ? 'selected' : '' }}>Hours</option>
+                                                    <option value="days" {{ old('unit_type') === 'days' ? 'selected' : '' }}>Days</option>
+                                                    <option value="weeks" {{ old('unit_type') === 'weeks' ? 'selected' : '' }}>Weeks</option>
+                                                    <option value="months" {{ old('unit_type') === 'months' ? 'selected' : '' }}>Months</option>
+                                                    <option value="years" {{ old('unit_type') === 'years' ? 'selected' : '' }}>Years</option>
+                                                    <option value="fixed" {{ old('unit_type') === 'fixed' ? 'selected' : '' }}>Fixed Price</option>
+                                                    <option value="subscription" {{ old('unit_type') === 'subscription' ? 'selected' : '' }}>Subscription</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="billing_model" class="form-label">Billing Model</label>
+                                                <select name="billing_model" id="billing_model" class="form-select">
+                                                    <option value="one_time" {{ old('billing_model') === 'one_time' ? 'selected' : '' }}>One-time</option>
+                                                    <option value="subscription" {{ old('billing_model') === 'subscription' ? 'selected' : '' }}>Subscription</option>
+                                                    <option value="usage_based" {{ old('billing_model') === 'usage_based' ? 'selected' : '' }}>Usage-based</option>
+                                                    <option value="hybrid" {{ old('billing_model') === 'hybrid' ? 'selected' : '' }}>Hybrid</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Subscription Billing Fields -->
+                                    <div id="subscription-billing-fields" class="row" style="display: none;">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="billing_cycle" class="form-label">Billing Cycle</label>
+                                                <select name="billing_cycle" id="billing_cycle" class="form-select">
+                                                    <option value="day" {{ old('billing_cycle') === 'day' ? 'selected' : '' }}>Daily</option>
+                                                    <option value="week" {{ old('billing_cycle') === 'week' ? 'selected' : '' }}>Weekly</option>
+                                                    <option value="month" {{ old('billing_cycle', 'month') === 'month' ? 'selected' : '' }}>Monthly</option>
+                                                    <option value="quarter" {{ old('billing_cycle') === 'quarter' ? 'selected' : '' }}>Quarterly</option>
+                                                    <option value="year" {{ old('billing_cycle') === 'year' ? 'selected' : '' }}>Yearly</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="billing_interval" class="form-label">Billing Interval</label>
+                                                <input type="number" class="form-control" id="billing_interval" 
+                                                       name="billing_interval" value="{{ old('billing_interval', 1) }}" min="1" max="12">
+                                                <small class="form-text text-muted">How often to bill (e.g., every 2 months)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tax Settings -->
+                                <h6 class="mt-4 mb-3">Tax Settings</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="is_taxable" name="is_taxable" 
+                                                {{ old('is_taxable', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_taxable">
+                                                Taxable
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="tax_inclusive" name="tax_inclusive" 
+                                                {{ old('tax_inclusive') ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="tax_inclusive">
+                                                Tax Inclusive Pricing
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="allow_discounts" name="allow_discounts" 
+                                                {{ old('allow_discounts', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="allow_discounts">
+                                                Allow Discounts
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="requires_approval" name="requires_approval" 
+                                                {{ old('requires_approval') ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="requires_approval">
+                                                Requires Approval
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Billing -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Billing Configuration</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="billing_model" class="form-label">Billing Model <span class="text-danger">*</span></label>
+                                            <select class="form-select @error('billing_model') is-invalid @enderror" id="billing_model" name="billing_model" required>
+                                                <option value="one_time" {{ old('billing_model', 'one_time') === 'one_time' ? 'selected' : '' }}>One Time</option>
+                                                <option value="subscription" {{ old('billing_model') === 'subscription' ? 'selected' : '' }}>Subscription</option>
+                                                <option value="usage_based" {{ old('billing_model') === 'usage_based' ? 'selected' : '' }}>Usage Based</option>
+                                                <option value="hybrid" {{ old('billing_model') === 'hybrid' ? 'selected' : '' }}>Hybrid</option>
+                                            </select>
+                                            @error('billing_model')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="billing_cycle" class="form-label">Billing Cycle <span class="text-danger">*</span></label>
+                                            <select class="form-select @error('billing_cycle') is-invalid @enderror" id="billing_cycle" name="billing_cycle" required>
+                                                <option value="one_time" {{ old('billing_cycle', 'one_time') === 'one_time' ? 'selected' : '' }}>One Time</option>
+                                                <option value="hourly" {{ old('billing_cycle') === 'hourly' ? 'selected' : '' }}>Hourly</option>
+                                                <option value="daily" {{ old('billing_cycle') === 'daily' ? 'selected' : '' }}>Daily</option>
+                                                <option value="weekly" {{ old('billing_cycle') === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                                                <option value="monthly" {{ old('billing_cycle') === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                                <option value="quarterly" {{ old('billing_cycle') === 'quarterly' ? 'selected' : '' }}>Quarterly</option>
+                                                <option value="semi_annually" {{ old('billing_cycle') === 'semi_annually' ? 'selected' : '' }}>Semi-Annually</option>
+                                                <option value="annually" {{ old('billing_cycle') === 'annually' ? 'selected' : '' }}>Annually</option>
+                                            </select>
+                                            @error('billing_cycle')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="billing_interval" class="form-label">Billing Interval</label>
+                                            <input type="number" class="form-control @error('billing_interval') is-invalid @enderror" 
+                                                id="billing_interval" name="billing_interval" value="{{ old('billing_interval', 1) }}" min="1">
+                                            @error('billing_interval')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="form-text">Every X billing cycles</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Billing Cycle Preview -->
+                        <div id="billing-cycle-preview"></div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <!-- Status & Settings -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Status & Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                        {{ old('is_active', true) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_active">
+                                        <strong>Active</strong>
+                                    </label>
+                                    <div class="form-text">Product is available for selection</div>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" 
+                                        {{ old('is_featured') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_featured">
+                                        Featured Product
+                                    </label>
+                                    <div class="form-text">Highlight in product lists</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="sort_order" class="form-label">Sort Order</label>
+                                    <input type="number" class="form-control @error('sort_order') is-invalid @enderror" 
+                                        id="sort_order" name="sort_order" value="{{ old('sort_order', 0) }}" min="0">
+                                    @error('sort_order')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Lower numbers appear first</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Inventory Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="track_inventory" name="track_inventory" 
+                                        {{ old('track_inventory') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="track_inventory">
+                                        <strong>Track Inventory</strong>
+                                    </label>
+                                    <div class="form-text">Monitor stock levels for this product</div>
+                                </div>
+
+                                <div id="inventory-fields" style="display: {{ old('track_inventory') ? 'block' : 'none' }};">
+                                    <div class="mb-3">
+                                        <label for="current_stock" class="form-label">Current Stock</label>
+                                        <input type="number" class="form-control @error('current_stock') is-invalid @enderror" 
+                                            id="current_stock" name="current_stock" value="{{ old('current_stock', 0) }}" min="0">
+                                        @error('current_stock')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="min_stock_level" class="form-label">Minimum Stock Level</label>
+                                        <input type="number" class="form-control @error('min_stock_level') is-invalid @enderror" 
+                                            id="min_stock_level" name="min_stock_level" value="{{ old('min_stock_level', 0) }}" min="0">
+                                        @error('min_stock_level')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <div class="form-text">Alert when stock falls below this level</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="reorder_level" class="form-label">Reorder Level</label>
+                                        <input type="number" class="form-control @error('reorder_level') is-invalid @enderror" 
+                                            id="reorder_level" name="reorder_level" value="{{ old('reorder_level') }}" min="0">
+                                        @error('reorder_level')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <div class="form-text">Trigger reorder when stock reaches this level</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="max_quantity_per_order" class="form-label">Max Quantity Per Order</label>
+                                        <input type="number" class="form-control @error('max_quantity_per_order') is-invalid @enderror" 
+                                            id="max_quantity_per_order" name="max_quantity_per_order" value="{{ old('max_quantity_per_order') }}" min="1">
+                                        @error('max_quantity_per_order')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <div class="form-text">Maximum quantity allowed per order</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Create {{ $type === 'service' ? 'Service' : 'Product' }}
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='{{ $type === 'service' ? route('services.index') : route('products.index') }}'">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+// Pass server-side type to JavaScript
+window.productType = @json($type ?? null);
+
+// Legacy fallback - the ProductServiceBuilder component will override this if loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if ProductServiceBuilder is available
+    if (window.productServiceBuilder) {
+        return; // Use the advanced component instead
+    }
+    
+    // Legacy functionality for basic form handling
+    const trackInventoryCheckbox = document.getElementById('track_inventory');
+    const inventoryFields = document.getElementById('inventory-fields');
+
+    if (trackInventoryCheckbox) {
+        trackInventoryCheckbox.addEventListener('change', function() {
+            if (inventoryFields) {
+                inventoryFields.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+    }
+
+    // Type selection handling
+    const typeRadios = document.querySelectorAll('input[name="type"][type="radio"]');
+    const typeSelect = document.getElementById('type');
+    const serviceFields = document.getElementById('service-fields');
+    const hiddenTypeInput = document.querySelector('input[name="type"][type="hidden"]');
+    
+    function toggleServiceFields() {
+        let selectedType;
+        
+        // Check if we have a hidden type input (route-specific)
+        if (hiddenTypeInput) {
+            selectedType = hiddenTypeInput.value;
+        } else if (typeSelect) {
+            // Check dropdown
+            selectedType = typeSelect.value;
+        } else {
+            // Check radio buttons
+            selectedType = document.querySelector('input[name="type"]:checked')?.value;
+        }
+        
+        if (serviceFields) {
+            serviceFields.style.display = (selectedType === 'service') ? 'block' : 'none';
+        }
+    }
+
+    // Add listeners only if the elements exist
+    typeRadios.forEach(radio => {
+        radio.addEventListener('change', toggleServiceFields);
+    });
+    
+    if (typeSelect) {
+        typeSelect.addEventListener('change', toggleServiceFields);
+    }
+
+    // Billing model handling for services
+    const billingModelSelect = document.getElementById('billing_model');
+    const subscriptionBillingFields = document.getElementById('subscription-billing-fields');
+
+    function toggleSubscriptionFields() {
+        if (billingModelSelect && subscriptionBillingFields) {
+            subscriptionBillingFields.style.display = 
+                (billingModelSelect.value === 'subscription') ? 'block' : 'none';
+        }
+    }
+
+    if (billingModelSelect) {
+        billingModelSelect.addEventListener('change', toggleSubscriptionFields);
+    }
+
+    // Initialize on page load
+    toggleServiceFields();
+    toggleSubscriptionFields();
+});
+</script>
+@endpush
+@endsection

@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="h3 mb-0">Maintenance Details</h1>
-                    <p class="text-muted mb-0">View maintenance information and history</p>
+                    <p class="text-gray-600 mb-0">View maintenance information and history</p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="flex gap-2">
                     <a href="{{ route('assets.maintenance.edit', $maintenance ?? 1) }}" class="btn btn-outline-primary">
                         <i class="fas fa-edit"></i> Edit
                     </a>
                     @if(isset($maintenance) && in_array($maintenance->status ?? 'scheduled', ['scheduled', 'in_progress']))
-                        <button type="button" class="btn btn-success" onclick="markCompleted()">
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="markCompleted()">
                             <i class="fas fa-check"></i> Mark Complete
                         </button>
                     @endif
@@ -30,13 +30,13 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-8">
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-4">
                     <!-- Main Details -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">{{ $maintenance->title ?? 'Sample Maintenance Task' }}</h5>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div class="d-flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">{{ $maintenance->title ?? 'Sample Maintenance Task' }}</h5>
                                 <div class="d-flex gap-2">
                                     @php
                                         $status = $maintenance->status ?? 'scheduled';
@@ -47,7 +47,7 @@
                                             'cancelled' => 'bg-secondary'
                                         ];
                                     @endphp
-                                    <span class="badge {{ $statusColors[$status] ?? 'bg-secondary' }}">
+                                    <span class="badge {{ $statusColors[$status] ?? 'bg-gray-600' }}">
                                         {{ ucfirst(str_replace('_', ' ', $status)) }}
                                     </span>
                                     @php
@@ -59,24 +59,24 @@
                                             'critical' => 'bg-danger'
                                         ];
                                     @endphp
-                                    <span class="badge {{ $priorityColors[$priority] ?? 'bg-secondary' }}">
+                                    <span class="badge {{ $priorityColors[$priority] ?? 'bg-gray-600' }}">
                                         {{ ucfirst($priority) }} Priority
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="md:w-1/2 px-4">
                                     <strong>Asset:</strong>
-                                    <div class="ms-3">
+                                    <div class="ml-3">
                                         {{ $maintenance->asset->name ?? 'Sample Asset' }}
-                                        <br><small class="text-muted">{{ $maintenance->asset->asset_tag ?? 'AST-001' }}</small>
+                                        <br><small class="text-gray-600">{{ $maintenance->asset->asset_tag ?? 'AST-001' }}</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Maintenance Type:</strong>
-                                    <div class="ms-3">
+                                    <div class="ml-3">
                                         <span class="badge bg-secondary">{{ ucfirst($maintenance->maintenance_type ?? 'Preventive') }}</span>
                                     </div>
                                 </div>
@@ -95,7 +95,7 @@
                                 <div class="mb-3">
                                     <strong>Instructions:</strong>
                                     <div class="ms-3 mt-1">
-                                        <div class="bg-light p-3 rounded">
+                                        <div class="bg-gray-100 p-3 rounded">
                                             {!! nl2br(e($maintenance->instructions ?? "1. Power down the asset safely\n2. Perform visual inspection\n3. Clean components\n4. Check connections\n5. Test functionality\n6. Document findings")) !!}
                                         </div>
                                     </div>
@@ -106,7 +106,7 @@
                                 <div class="mb-3">
                                     <strong>Notes:</strong>
                                     <div class="ms-3 mt-1">
-                                        <div class="bg-light p-3 rounded">
+                                        <div class="bg-gray-100 p-3 rounded">
                                             {{ $maintenance->notes ?? 'Additional maintenance notes and observations will be recorded here.' }}
                                         </div>
                                     </div>
@@ -117,10 +117,10 @@
 
                     <!-- Schedule & Assignment -->
                     <div class="card mb-4">
-                        <div class="card-header">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                             <h6 class="card-title mb-0">Schedule & Assignment</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="p-6">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -132,7 +132,7 @@
                                             @endphp
                                             {{ $scheduledDate->format('M d, Y') }}
                                             @if($isOverdue)
-                                                <span class="text-danger ms-2">
+                                                <span class="text-red-600 ms-2">
                                                     <i class="fas fa-exclamation-triangle"></i> Overdue
                                                 </span>
                                             @endif
@@ -151,7 +151,7 @@
                                         <div class="ms-3">
                                             @if(isset($maintenance->assignedUser))
                                                 <div class="d-flex align-items-center">
-                                                    <div class="me-2">
+                                                    <div class="mr-2">
                                                         <i class="fas fa-user-circle fa-lg text-secondary"></i>
                                                     </div>
                                                     <div>
@@ -311,9 +311,9 @@
                                 @endphp
                                 @foreach($recentMaintenance as $item)
                                     <div class="d-flex align-items-center mb-3">
-                                        <div class="me-3">
+                                        <div class="mr-3">
                                             @if($item['status'] === 'completed')
-                                                <i class="fas fa-check-circle text-success"></i>
+                                                <i class="fas fa-check-circle text-green-600"></i>
                                             @else
                                                 <i class="fas fa-clock text-warning"></i>
                                             @endif
@@ -348,7 +348,7 @@
                                     <button type="button" class="btn btn-warning btn-sm" onclick="postponeMaintenance()">
                                         <i class="fas fa-calendar-plus"></i> Postpone
                                     </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="cancelMaintenance()">
+                                    <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 btn-sm" onclick="cancelMaintenance()">
                                         <i class="fas fa-times"></i> Cancel
                                     </button>
                                 @endif
@@ -373,17 +373,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">Confirm Action</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body" id="modalBody">
                 <!-- Dynamic content -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="actionForm" method="POST" style="display: inline;">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="btn btn-primary" id="confirmButton">Confirm</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="confirmButton">Confirm</button>
                 </form>
             </div>
         </div>

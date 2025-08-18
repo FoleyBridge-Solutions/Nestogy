@@ -3,14 +3,14 @@
 @section('title', 'Contract Analytics')
 
 @section('content')
-<div class="container-fluid">
+<div class="w-full px-4">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-md-8">
+    <div class="flex flex-wrap -mx-4 mb-4">
+        <div class="md:w-2/3 px-4">
             <h1 class="h3 mb-0 text-gray-800">Contract Analytics Dashboard</h1>
-            <p class="text-muted">Comprehensive insights into contract performance, revenue, and business metrics</p>
+            <p class="text-gray-600">Comprehensive insights into contract performance, revenue, and business metrics</p>
         </div>
-        <div class="col-md-4 text-right">
+        <div class="md:w-1/3 px-4 text-right">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#filtersModal">
                     <i class="fas fa-filter"></i> Filters
@@ -18,7 +18,7 @@
                 <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#exportModal">
                     <i class="fas fa-download"></i> Export
                 </button>
-                <button type="button" class="btn btn-primary" onclick="refreshDashboard()">
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="refreshDashboard()">
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
             </div>
@@ -26,13 +26,13 @@
     </div>
 
     <!-- Overview Cards -->
-    <div class="row mb-4">
+    <div class="flex flex-wrap -mx-4 mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border-left-primary shadow h-100 py-2">
+                <div class="p-6">
+                    <div class="row no-gutters items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Contract Value</div>
+                            <div class="text-xs font-weight-bold text-blue-600 text-uppercase mb-1">Total Contract Value</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 ${{ number_format($analytics['overview_metrics']['total_contract_value'] ?? 0, 2) }}
                             </div>
@@ -46,11 +46,11 @@
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border-left-success shadow h-100 py-2">
+                <div class="p-6">
+                    <div class="row no-gutters items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Contracts</div>
+                            <div class="text-xs font-weight-bold text-green-600 text-uppercase mb-1">Active Contracts</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 {{ $analytics['overview_metrics']['active_contracts'] ?? 0 }}
                             </div>
@@ -105,8 +105,8 @@
         <!-- Revenue Trend Chart -->
         <div class="col-xl-8 col-lg-7">
             <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Revenue Trends</h6>
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 py-3 flex flex-row align-items-center justify-between">
+                    <h6 class="m-0 font-weight-bold text-blue-600">Revenue Trends</h6>
                     <div class="dropdown no-arrow">
                         <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">
                             <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
@@ -128,7 +128,7 @@
         <!-- Contract Status Pie Chart -->
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 py-3 flex flex-row align-items-center justify-between">
                     <h6 class="m-0 font-weight-bold text-primary">Contract Distribution</h6>
                 </div>
                 <div class="card-body">
@@ -137,7 +137,7 @@
                     </div>
                     <div class="mt-4 text-center small">
                         <span class="mr-2">
-                            <i class="fas fa-circle text-success"></i> Active
+                            <i class="fas fa-circle text-green-600"></i> Active
                         </span>
                         <span class="mr-2">
                             <i class="fas fa-circle text-info"></i> Draft
@@ -146,7 +146,7 @@
                             <i class="fas fa-circle text-warning"></i> Pending
                         </span>
                         <span class="mr-2">
-                            <i class="fas fa-circle text-danger"></i> Terminated
+                            <i class="fas fa-circle text-red-600"></i> Terminated
                         </span>
                     </div>
                 </div>
@@ -213,7 +213,7 @@
                     <div class="row">
                         <div class="col-6">
                             <div class="text-center">
-                                <div class="h4 font-weight-bold text-danger">
+                                <div class="h4 font-weight-bold text-red-600">
                                     {{ $analytics['risk_analytics']['contracts_at_risk'] ?? 0 }}
                                 </div>
                                 <div class="text-xs text-gray-600">Contracts at Risk</div>
@@ -260,8 +260,8 @@
                     <h6 class="m-0 font-weight-bold text-primary">Top Clients by Contract Value</h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
+                    <div class="min-w-full divide-y divide-gray-200-responsive">
+                        <table class="min-w-full divide-y divide-gray-200 [&>tbody>tr:hover]:bg-gray-100">
                             <thead>
                                 <tr>
                                     <th>Client</th>
@@ -275,7 +275,7 @@
                                 <tr>
                                     <td>
                                         <div class="font-weight-bold">{{ $client['name'] }}</div>
-                                        <div class="text-muted small">{{ $client['email'] }}</div>
+                                        <div class="text-gray-600 small">{{ $client['email'] }}</div>
                                     </td>
                                     <td>{{ $client['active_contracts'] }}</td>
                                     <td>${{ number_format($client['total_value'], 2) }}</td>
@@ -381,14 +381,14 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="start_date">Start Date</label>
-                                <input type="date" class="form-control" name="start_date" 
+                                <input type="date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" name="start_date" 
                                        value="{{ $filters['start_date'] ?? '' }}">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="end_date">End Date</label>
-                                <input type="date" class="form-control" name="end_date" 
+                                <input type="date" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" name="end_date" 
                                        value="{{ $filters['end_date'] ?? '' }}">
                             </div>
                         </div>
@@ -420,8 +420,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Apply Filters</button>
                 </div>
             </form>
         </div>
@@ -462,8 +462,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                         <i class="fas fa-download"></i> Export Report
                     </button>
                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,13 +23,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $currency_code
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property int|null $tax_id
  * @property int $category_id
+ * @property string $type
+ * @property string $unit_type
+ * @property string $billing_model
+ * @property bool $is_active
  */
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -39,32 +44,73 @@ class Product extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'company_id',
         'name',
         'description',
-        'price',
+        'sku',
+        'type',
+        'subcategory_id',
+        'base_price',
         'cost',
         'currency_code',
         'tax_id',
+        'tax_profile_id',
         'category_id',
+        'tax_inclusive',
+        'tax_rate',
+        'unit_type',
+        'billing_model',
+        'billing_cycle',
+        'billing_interval',
+        'track_inventory',
+        'current_stock',
+        'reserved_stock',
+        'min_stock_level',
+        'max_quantity_per_order',
+        'reorder_level',
+        'supplier_id',
+        'supplier_sku',
+        'lead_time_days',
+        'weight',
+        'dimensions',
+        'warranty_period',
+        'tags',
+        'is_active',
+        'sort_order',
+        'short_description',
     ];
 
     /**
      * The attributes that should be cast.
      */
     protected $casts = [
-        'price' => 'decimal:2',
-        'cost' => 'integer',
+        'base_price' => 'decimal:2',
+        'cost' => 'decimal:2',
         'tax_id' => 'integer',
+        'tax_profile_id' => 'integer',
         'category_id' => 'integer',
+        'subcategory_id' => 'integer',
+        'tax_inclusive' => 'boolean',
+        'tax_rate' => 'decimal:4',
+        'billing_cycle' => 'string',
+        'billing_interval' => 'integer',
+        'track_inventory' => 'boolean',
+        'current_stock' => 'integer',
+        'reserved_stock' => 'integer',
+        'min_stock_level' => 'integer',
+        'max_quantity_per_order' => 'integer',
+        'reorder_level' => 'integer',
+        'supplier_id' => 'integer',
+        'lead_time_days' => 'integer',
+        'weight' => 'decimal:2',
+        'tags' => 'array',
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'archived_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
-    /**
-     * The name of the "deleted at" column for soft deletes.
-     */
-    const DELETED_AT = 'archived_at';
 
     /**
      * Get the tax rate for this product.
@@ -72,6 +118,14 @@ class Product extends Model
     public function tax(): BelongsTo
     {
         return $this->belongsTo(Tax::class);
+    }
+    
+    /**
+     * Get the tax profile that determines calculation requirements.
+     */
+    public function taxProfile(): BelongsTo
+    {
+        return $this->belongsTo(TaxProfile::class);
     }
 
     /**
@@ -95,15 +149,32 @@ class Product extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return !is_null($this->deleted_at);
     }
+
+    /**
+     * Price accessor for backward compatibility
+     */
+    public function getPriceAttribute()
+    {
+        return $this->base_price;
+    }
+
+    /**
+     * Price mutator for backward compatibility
+     */
+    public function setPriceAttribute($value)
+    {
+        $this->attributes['base_price'] = $value;
+    }
+
 
     /**
      * Get formatted price.
      */
     public function getFormattedPrice(): string
     {
-        return $this->formatCurrency($this->price);
+        return $this->formatCurrency($this->base_price);
     }
 
     /**
@@ -146,10 +217,10 @@ class Product extends Model
     public function getPriceWithTax(): float
     {
         if (!$this->tax) {
-            return $this->price;
+            return $this->base_price;
         }
 
-        return $this->tax->calculateTotalWithTax($this->price);
+        return $this->tax->calculateTotalWithTax($this->base_price);
     }
 
     /**
@@ -169,7 +240,7 @@ class Product extends Model
             return 0;
         }
 
-        return $this->tax->calculateTaxAmount($this->price);
+        return $this->tax->calculateTaxAmount($this->base_price);
     }
 
     /**
@@ -189,7 +260,7 @@ class Product extends Model
             return null;
         }
 
-        return round((($this->price - $this->cost) / $this->price) * 100, 2);
+        return round((($this->base_price - $this->cost) / $this->base_price) * 100, 2);
     }
 
     /**
@@ -210,7 +281,7 @@ class Product extends Model
             return null;
         }
 
-        return round((($this->price - $this->cost) / $this->cost) * 100, 2);
+        return round((($this->base_price - $this->cost) / $this->cost) * 100, 2);
     }
 
     /**
@@ -294,7 +365,7 @@ class Product extends Model
      */
     public function scopeByPriceRange($query, float $min, float $max)
     {
-        return $query->whereBetween('price', [$min, $max]);
+        return $query->whereBetween('base_price', [$min, $max]);
     }
 
     /**
@@ -326,7 +397,7 @@ class Product extends Model
      */
     public function scopeOrderByPrice($query, string $direction = 'asc')
     {
-        return $query->orderBy('price', $direction);
+        return $query->orderBy('base_price', $direction);
     }
 
     /**
@@ -336,6 +407,139 @@ class Product extends Model
     {
         return $query->withCount('invoiceItems')
                     ->orderBy('invoice_items_count', $direction);
+    }
+
+    /**
+     * Scope to get only products.
+     */
+    public function scopeProducts($query)
+    {
+        return $query->where('type', 'product');
+    }
+
+    /**
+     * Scope to get only services.
+     */
+    public function scopeServices($query)
+    {
+        return $query->where('type', 'service');
+    }
+
+    /**
+     * Scope to get active items.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope to get by billing model.
+     */
+    public function scopeByBillingModel($query, string $billingModel)
+    {
+        return $query->where('billing_model', $billingModel);
+    }
+
+    /**
+     * Check if this is a service.
+     */
+    public function isService(): bool
+    {
+        return $this->type === 'service';
+    }
+
+    /**
+     * Check if this is a product.
+     */
+    public function isProduct(): bool
+    {
+        return $this->type === 'product';
+    }
+
+    /**
+     * Check if this is a subscription service.
+     */
+    public function isSubscription(): bool
+    {
+        return $this->billing_model === 'subscription';
+    }
+
+    /**
+     * Check if this is usage-based billing.
+     */
+    public function isUsageBased(): bool
+    {
+        return $this->billing_model === 'usage_based';
+    }
+
+    /**
+     * Get formatted unit type for display.
+     */
+    public function getFormattedUnitType(): string
+    {
+        return match($this->unit_type) {
+            'hours' => 'per hour',
+            'days' => 'per day',
+            'weeks' => 'per week',
+            'months' => 'per month',
+            'years' => 'per year',
+            'fixed' => 'fixed price',
+            'subscription' => 'subscription',
+            'units' => 'per unit',
+            default => $this->unit_type,
+        };
+    }
+
+    /**
+     * Get billing cycle description.
+     */
+    public function getBillingCycleDescription(): string
+    {
+        if (!$this->isSubscription()) {
+            return 'N/A';
+        }
+
+        $interval = $this->billing_interval ?: 1;
+        $cycle = $this->billing_cycle ?: 'month';
+        
+        if ($interval === 1) {
+            return "Every {$cycle}";
+        }
+        
+        return "Every {$interval} {$cycle}s";
+    }
+
+    /**
+     * Get required tax fields for invoice calculations.
+     */
+    public function getRequiredTaxFields(): array
+    {
+        if (!$this->taxProfile) {
+            return [];
+        }
+        
+        return $this->taxProfile->required_fields ?? [];
+    }
+
+    /**
+     * Check if this product requires specific tax data for calculations.
+     */
+    public function requiresTaxData(): bool
+    {
+        return !empty($this->getRequiredTaxFields());
+    }
+
+    /**
+     * Get tax calculation engine type for this product.
+     */
+    public function getTaxEngineType(): string
+    {
+        if (!$this->taxProfile) {
+            return 'general';
+        }
+        
+        return $this->taxProfile->profile_type ?? 'general';
     }
 
     /**

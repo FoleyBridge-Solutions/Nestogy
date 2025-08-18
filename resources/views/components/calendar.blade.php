@@ -81,12 +81,12 @@ document.addEventListener('alpine:init', () => {
                 title: 'Create New Event',
                 html: `
                     <div class="mb-3">
-                        <label for="event-title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="event-title" placeholder="Event title">
+                        <label for="event-title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="event-title" placeholder="Event title">
                     </div>
                     <div class="mb-3">
-                        <label for="event-description" class="form-label">Description</label>
-                        <textarea class="form-control" id="event-description" rows="3" placeholder="Event description"></textarea>
+                        <label for="event-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="event-description" rows="3" placeholder="Event description"></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="event-location" class="form-label">Location</label>

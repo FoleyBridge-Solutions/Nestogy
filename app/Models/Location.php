@@ -149,6 +149,35 @@ class Location extends Model
     }
 
     /**
+     * Get the formatted address (multi-line for display).
+     */
+    public function getFormattedAddressAttribute(): string
+    {
+        $parts = array_filter([
+            $this->address,
+            $this->city && $this->state && $this->zip ? 
+                $this->city . ', ' . $this->state . ' ' . $this->zip : null,
+            $this->country && $this->country !== 'US' ? $this->country : null,
+        ]);
+
+        return implode("\n", $parts);
+    }
+
+    /**
+     * Get the display name for location address.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        $name = $this->name;
+        
+        if ($this->isPrimary()) {
+            $name .= ' (Primary Location)';
+        }
+
+        return $name;
+    }
+
+    /**
      * Get the photo URL.
      */
     public function getPhotoUrl(): ?string

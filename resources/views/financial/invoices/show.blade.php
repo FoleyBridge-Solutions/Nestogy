@@ -3,7 +3,7 @@
 @section('title', 'Invoice #' . $invoice->getFullNumber())
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -32,13 +32,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">Invoice Status</h3>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        @if($invoice->status === 'Draft') bg-gray-100 text-gray-800
-                        @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800
-                        @elseif($invoice->status === 'Paid') bg-green-100 text-green-800
-                        @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800
-                        @else bg-gray-100 text-gray-800
-                        @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-800 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
                         {{ $invoice->status }}
                     </span>
                 </div>
@@ -139,10 +133,17 @@
                         <span class="text-sm text-gray-900">-${{ number_format($totals['discount'], 2) }}</span>
                     </div>
                     @endif
-                    @if($totals['tax'] > 0)
-                    <div class="flex justify-between py-2">
-                        <span class="text-sm text-gray-600">Tax:</span>
-                        <span class="text-sm text-gray-900">${{ number_format($totals['tax'], 2) }}</span>
+                    @php
+                        $calculatedTax = ($totals['total'] - $totals['subtotal'] + ($totals['discount'] ?? 0));
+                        $hasTaxCalculation = $invoice->latestTaxCalculation();
+                    @endphp
+                    @if($totals['tax'] > 0 || $calculatedTax > 0 || $hasTaxCalculation)
+                    <div class="py-2">
+                        <x-tax-jurisdiction-breakdown 
+                            :tax-calculation="$invoice->latestTaxCalculation()" 
+                            :collapsible="true" 
+                            :fallback-tax-amount="$calculatedTax"
+                        />
                     </div>
                     @endif
                     <div class="flex justify-between py-2 border-t border-gray-200 font-medium">
@@ -188,12 +189,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_method }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($payment->amount, 2) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @if($payment->status === 'completed') bg-green-100 text-green-800
-                                    @elseif($payment->status === 'pending') bg-yellow-100 text-yellow-800
-                                    @elseif($payment->status === 'failed') bg-red-100 text-red-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($payment->status === 'completed') bg-green-100 text-green-800 @elseif($payment->status === 'pending') bg-yellow-100 text-yellow-800 @elseif($payment->status === 'failed') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
                                     {{ ucfirst($payment->status) }}
                                 </span>
                             </td>

@@ -3,43 +3,43 @@
 @section('title', 'Client Recurring Invoices')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="w-full px-4">
+    <div class="flex flex-wrap -mx-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <h1 class="h3 mb-0">Client Recurring Invoices</h1>
                 <div class="btn-group">
-                    <a href="{{ route('clients.recurring-invoices.standalone.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Add New Recurring Invoice
+                    <a href="{{ route('clients.recurring-invoices.standalone.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>Add New Recurring Invoice
                     </a>
-                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" x-data="{ open: false }" @click="open = !open">
                         <i class="fas fa-download"></i> Export
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ route('clients.recurring-invoices.standalone.export', request()->query()) }}">
-                            <i class="fas fa-file-csv me-2"></i>Export to CSV
+                            <i class="fas fa-file-csv mr-2"></i>Export to CSV
                         </a></li>
                     </ul>
                 </div>
             </div>
 
             <!-- Filters -->
-            <div class="card mb-4">
-                <div class="card-body">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+                <div class="p-6">
                     <form method="GET" action="{{ route('clients.recurring-invoices.standalone.index') }}">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="search" class="form-label">Search</label>
+                        <div class="flex flex-wrap -mx-4 g-3">
+                            <div class="md:w-1/4 px-4">
+                                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
                                        id="search" 
                                        name="search" 
                                        value="{{ request('search') }}" 
                                        placeholder="Search template name, description...">
                             </div>
-                            <div class="col-md-2">
-                                <label for="client_id" class="form-label">Client</label>
-                                <select name="client_id" id="client_id" class="form-select">
+                            <div class="md:w-1/6 px-4">
+                                <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                                <select name="client_id" id="client_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                     <option value="">All Clients</option>
                                     @foreach($clients as $client)
                                         <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
@@ -50,7 +50,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label for="status" class="form-label">Status</label>
-                                <select name="status" id="status" class="form-select">
+                                <select name="status" id="status" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                     <option value="">All Statuses</option>
                                     @foreach($statuses as $key => $value)
                                         <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
@@ -82,8 +82,8 @@
                                 </select>
                             </div>
                             <div class="col-md-1">
-                                <label class="form-label d-block">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary">
+                                <label class="form-label block">&nbsp;</label>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-search"></i>
                                 </button>
                             </div>
@@ -93,7 +93,7 @@
                             <div class="col-md-2">
                                 <label for="min_amount" class="form-label">Min Amount</label>
                                 <input type="number" 
-                                       class="form-control" 
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
                                        id="min_amount" 
                                        name="min_amount" 
                                        value="{{ request('min_amount') }}" 
@@ -111,7 +111,7 @@
                                        placeholder="0.00">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label d-block">&nbsp;</label>
+                                <label class="form-label block">&nbsp;</label>
                                 <div class="form-check">
                                     <input class="form-check-input" 
                                            type="checkbox" 
@@ -150,11 +150,11 @@
             </div>
 
             <!-- Recurring Invoices Table -->
-            <div class="card">
-                <div class="card-body">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
                     @if($invoices->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                        <div class="min-w-full divide-y divide-gray-200-responsive">
+                            <table class="table min-w-full divide-y divide-gray-200-striped [&>tbody>tr:hover]:bg-gray-100">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Invoice Details</th>
@@ -174,10 +174,10 @@
                                                 <div>
                                                     <div class="fw-bold">{{ $invoice->template_name }}</div>
                                                     @if($invoice->description)
-                                                        <small class="text-muted">{{ Str::limit($invoice->description, 60) }}</small>
+                                                        <small class="text-gray-600">{{ Str::limit($invoice->description, 60) }}</small>
                                                     @endif
-                                                    <div class="small text-muted mt-1">
-                                                        <span class="badge bg-light text-dark">{{ $invoice->invoice_prefix }}</span>
+                                                    <div class="small text-gray-600 mt-1">
+                                                        <span class="badge bg-gray-100 text-dark">{{ $invoice->invoice_prefix }}</span>
                                                         @if($invoice->auto_send)
                                                             <span class="badge bg-info">Auto Send</span>
                                                         @endif
@@ -231,7 +231,7 @@
                                             <td>
                                                 @switch($invoice->status)
                                                     @case('draft')
-                                                        <span class="badge bg-secondary">Draft</span>
+                                                        <span class="badge bg-gray-600">Draft</span>
                                                         @break
                                                     @case('active')
                                                         <span class="badge bg-success">Active</span>
@@ -243,21 +243,21 @@
                                                         <span class="badge bg-danger">Cancelled</span>
                                                         @break
                                                     @case('expired')
-                                                        <span class="badge bg-dark">Expired</span>
+                                                        <span class="badge bg-gray-900">Expired</span>
                                                         @break
                                                     @default
-                                                        <span class="badge bg-secondary">{{ ucfirst($invoice->status) }}</span>
+                                                        <span class="badge bg-gray-600">{{ ucfirst($invoice->status) }}</span>
                                                 @endswitch
                                             </td>
                                             <td>
                                                 <div class="small">
-                                                    <div class="d-flex justify-content-between">
+                                                    <div class="flex justify-between">
                                                         <span>Invoices:</span>
                                                         <span class="fw-bold">{{ $invoice->invoice_count ?? 0 }}</span>
                                                     </div>
                                                     <div class="d-flex justify-content-between">
                                                         <span>Revenue:</span>
-                                                        <span class="fw-bold text-success">{{ $invoice->getCurrencySymbol() }}{{ number_format($invoice->total_revenue ?? 0, 0) }}</span>
+                                                        <span class="fw-bold text-green-600">{{ $invoice->getCurrencySymbol() }}{{ number_format($invoice->total_revenue ?? 0, 0) }}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -298,7 +298,7 @@
                         </div>
 
                         <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="d-flex justify-content-between items-center mt-4">
                             <div class="text-muted small">
                                 Showing {{ $invoices->firstItem() }} to {{ $invoices->lastItem() }} of {{ $invoices->total() }} results
                             </div>
@@ -326,17 +326,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Delete Recurring Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to delete this recurring invoice? This action cannot be undone.
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="deleteInvoiceForm" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Invoice</button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Invoice</button>
                 </form>
             </div>
         </div>
@@ -349,13 +349,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Generate Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" @click="$dispatch('close-modal')"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to generate an invoice from this recurring invoice template?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
                 <form id="generateInvoiceForm" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-primary">Generate Invoice</button>

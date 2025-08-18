@@ -357,6 +357,7 @@ class DashboardDataService
             'outstanding_receivables' => $this->getOutstandingReceivables(),
             'quote_conversion_rate' => $this->getQuoteConversionRate($startDate, $endDate),
             'avg_deal_size' => $this->getAverageDealSize($startDate, $endDate),
+            'sentiment_metrics' => $this->getSentimentMetrics($startDate, $endDate),
         ];
     }
 
@@ -741,5 +742,244 @@ class DashboardDataService
         return Invoice::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->avg('amount') ?? 0;
+    }
+    
+    /**
+     * Get sentiment analysis metrics for executive dashboard
+     */
+    private function getSentimentMetrics(Carbon $startDate, Carbon $endDate): array
+    {
+        // Import the Ticket model
+        $ticketModel = \App\Domains\Ticket\Models\Ticket::class;
+        $replyModel = \App\Models\TicketReply::class;
+        
+        // Get ticket sentiment stats
+        $ticketStats = DB::table('tickets')
+            ->where('company_id', $this->companyId)
+            ->whereNotNull('sentiment_analyzed_at')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('
+                sentiment_label,
+                COUNT(*) as count,
+                AVG(sentiment_score) as avg_score,
+                AVG(sentiment_confidence) as avg_confidence
+            ')
+            ->groupBy('sentiment_label')
+            ->get()
+            ->keyBy('sentiment_label');
+
+        // Get reply sentiment stats  
+        $replyStats = DB::table('ticket_replies')
+            ->where('company_id', $this->companyId)
+            ->whereNotNull('sentiment_analyzed_at')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('
+                sentiment_label,
+                COUNT(*) as count,
+                AVG(sentiment_score) as avg_score
+            ')
+            ->groupBy('sentiment_label')
+            ->get()
+            ->keyBy('sentiment_label');
+
+        // Calculate overall metrics
+        $totalTickets = $ticketStats->sum('count');
+        $totalReplies = $replyStats->sum('count');
+        $totalInteractions = $totalTickets + $totalReplies;
+
+        // Count negative sentiment items that need attention
+        $negativeTickets = DB::table('tickets')
+            ->where('company_id', $this->companyId)
+            ->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
+            ->where('sentiment_confidence', '>', 0.6)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        // Calculate sentiment distribution
+        $positiveCount = ($ticketStats->get('POSITIVE')->count ?? 0) + ($ticketStats->get('WEAK_POSITIVE')->count ?? 0) +
+                        ($replyStats->get('POSITIVE')->count ?? 0) + ($replyStats->get('WEAK_POSITIVE')->count ?? 0);
+        
+        $neutralCount = ($ticketStats->get('NEUTRAL')->count ?? 0) + ($replyStats->get('NEUTRAL')->count ?? 0);
+        
+        $negativeCount = ($ticketStats->get('NEGATIVE')->count ?? 0) + ($ticketStats->get('WEAK_NEGATIVE')->count ?? 0) +
+                        ($replyStats->get('NEGATIVE')->count ?? 0) + ($replyStats->get('WEAK_NEGATIVE')->count ?? 0);
+
+        // Calculate average sentiment score
+        $avgSentimentScore = 0;
+        if ($totalInteractions > 0) {
+            $ticketScoreSum = $ticketStats->sum(function($stat) {
+                return $stat->avg_score * $stat->count;
+            });
+            $replyScoreSum = $replyStats->sum(function($stat) {
+                return $stat->avg_score * $stat->count;
+            });
+            $avgSentimentScore = ($ticketScoreSum + $replyScoreSum) / $totalInteractions;
+        }
+
+        // Get previous period for comparison
+        $previousStart = $startDate->copy()->sub($startDate->diffAsCarbonInterval($endDate));
+        $previousEnd = $startDate->copy()->subDay();
+        
+        $previousTotal = DB::table('tickets')
+            ->where('company_id', $this->companyId)
+            ->whereNotNull('sentiment_analyzed_at')
+            ->whereBetween('created_at', [$previousStart, $previousEnd])
+            ->count() + 
+            DB::table('ticket_replies')
+            ->where('company_id', $this->companyId)
+            ->whereNotNull('sentiment_analyzed_at')
+            ->whereBetween('created_at', [$previousStart, $previousEnd])
+            ->count();
+
+        $previousNegative = DB::table('tickets')
+            ->where('company_id', $this->companyId)
+            ->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
+            ->whereBetween('created_at', [$previousStart, $previousEnd])
+            ->count() +
+            DB::table('ticket_replies')
+            ->where('company_id', $this->companyId)
+            ->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
+            ->whereBetween('created_at', [$previousStart, $previousEnd])
+            ->count();
+
+        // Calculate trends
+        $totalTrend = $previousTotal > 0 ? (($totalInteractions - $previousTotal) / $previousTotal) * 100 : 0;
+        $negativeTrend = $previousNegative > 0 ? (($negativeCount - $previousNegative) / $previousNegative) * 100 : 0;
+
+        return [
+            'overall_sentiment_score' => [
+                'value' => round($avgSentimentScore, 2),
+                'label' => $this->getSentimentLabel($avgSentimentScore),
+                'color' => $this->getSentimentColor($avgSentimentScore),
+                'icon' => 'fas fa-heart-pulse',
+                'description' => 'Average sentiment across all interactions'
+            ],
+            'positive_sentiment_rate' => [
+                'value' => $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100, 1) : 0,
+                'label' => 'Positive Rate',
+                'color' => '#10b981',
+                'icon' => 'fas fa-smile',
+                'description' => 'Percentage of positive interactions',
+                'trend' => $totalTrend
+            ],
+            'negative_sentiment_alerts' => [
+                'value' => $negativeTickets,
+                'label' => 'Need Attention',
+                'color' => $negativeTickets > 0 ? '#ef4444' : '#64748b',
+                'icon' => 'fas fa-exclamation-triangle',
+                'description' => 'High-confidence negative tickets requiring immediate attention',
+                'trend' => $negativeTrend
+            ],
+            'total_analyzed' => [
+                'value' => $totalInteractions,
+                'label' => 'Analyzed Interactions',
+                'color' => '#6366f1',
+                'icon' => 'fas fa-chart-line',
+                'description' => 'Total tickets and replies analyzed for sentiment',
+                'trend' => $totalTrend
+            ],
+            'sentiment_distribution' => [
+                'positive' => [
+                    'count' => $positiveCount,
+                    'percentage' => $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100, 1) : 0,
+                    'color' => '#10b981'
+                ],
+                'neutral' => [
+                    'count' => $neutralCount,
+                    'percentage' => $totalInteractions > 0 ? round(($neutralCount / $totalInteractions) * 100, 1) : 0,
+                    'color' => '#64748b'
+                ],
+                'negative' => [
+                    'count' => $negativeCount,
+                    'percentage' => $totalInteractions > 0 ? round(($negativeCount / $totalInteractions) * 100, 1) : 0,
+                    'color' => '#ef4444'
+                ]
+            ],
+            'sentiment_trends' => $this->getSentimentTrends($startDate, $endDate),
+        ];
+    }
+
+    /**
+     * Get sentiment trends over time
+     */
+    private function getSentimentTrends(Carbon $startDate, Carbon $endDate): array
+    {
+        $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+        $trends = [];
+
+        foreach ($period as $date) {
+            $dayStart = $date->copy()->startOfDay();
+            $dayEnd = $date->copy()->endOfDay();
+
+            $dailyStats = DB::table('tickets')
+                ->where('company_id', $this->companyId)
+                ->whereNotNull('sentiment_analyzed_at')
+                ->whereBetween('created_at', [$dayStart, $dayEnd])
+                ->selectRaw('
+                    AVG(sentiment_score) as avg_score,
+                    COUNT(*) as total_count,
+                    SUM(CASE WHEN sentiment_label IN ("POSITIVE", "WEAK_POSITIVE") THEN 1 ELSE 0 END) as positive_count,
+                    SUM(CASE WHEN sentiment_label IN ("NEGATIVE", "WEAK_NEGATIVE") THEN 1 ELSE 0 END) as negative_count
+                ')
+                ->first();
+
+            $replyStats = DB::table('ticket_replies')
+                ->where('company_id', $this->companyId)
+                ->whereNotNull('sentiment_analyzed_at')
+                ->whereBetween('created_at', [$dayStart, $dayEnd])
+                ->selectRaw('
+                    AVG(sentiment_score) as avg_score,
+                    COUNT(*) as total_count,
+                    SUM(CASE WHEN sentiment_label IN ("POSITIVE", "WEAK_POSITIVE") THEN 1 ELSE 0 END) as positive_count,
+                    SUM(CASE WHEN sentiment_label IN ("NEGATIVE", "WEAK_NEGATIVE") THEN 1 ELSE 0 END) as negative_count
+                ')
+                ->first();
+
+            $totalCount = ($dailyStats->total_count ?? 0) + ($replyStats->total_count ?? 0);
+            $positiveCount = ($dailyStats->positive_count ?? 0) + ($replyStats->positive_count ?? 0);
+            $negativeCount = ($dailyStats->negative_count ?? 0) + ($replyStats->negative_count ?? 0);
+
+            // Calculate weighted average sentiment score
+            $avgScore = 0;
+            if ($totalCount > 0) {
+                $ticketScoreSum = ($dailyStats->avg_score ?? 0) * ($dailyStats->total_count ?? 0);
+                $replyScoreSum = ($replyStats->avg_score ?? 0) * ($replyStats->total_count ?? 0);
+                $avgScore = ($ticketScoreSum + $replyScoreSum) / $totalCount;
+            }
+
+            $trends[] = [
+                'date' => $date->toDateString(),
+                'avg_sentiment_score' => round($avgScore, 2),
+                'total_interactions' => $totalCount,
+                'positive_rate' => $totalCount > 0 ? round(($positiveCount / $totalCount) * 100, 1) : 0,
+                'negative_rate' => $totalCount > 0 ? round(($negativeCount / $totalCount) * 100, 1) : 0,
+            ];
+        }
+
+        return $trends;
+    }
+
+    /**
+     * Get sentiment label from score
+     */
+    private function getSentimentLabel(float $score): string
+    {
+        if ($score > 0.5) return 'Very Positive';
+        if ($score > 0.1) return 'Positive';
+        if ($score > -0.1) return 'Neutral';
+        if ($score > -0.5) return 'Negative';
+        return 'Very Negative';
+    }
+
+    /**
+     * Get sentiment color from score
+     */
+    private function getSentimentColor(float $score): string
+    {
+        if ($score > 0.5) return '#10b981'; // emerald-500
+        if ($score > 0.1) return '#84cc16'; // lime-500
+        if ($score > -0.1) return '#64748b'; // slate-500
+        if ($score > -0.5) return '#f97316'; // orange-500
+        return '#ef4444'; // red-500
     }
 }

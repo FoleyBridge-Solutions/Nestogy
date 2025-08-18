@@ -105,6 +105,34 @@ class AssignmentController extends Controller
     }
 
     /**
+     * Assign ticket to current user (simplified version for "Assign to Me" action)
+     */
+    public function assignToMe(Ticket $ticket)
+    {
+        $this->authorize('update', $ticket);
+
+        $previousAssignee = $ticket->assignee;
+        $currentUser = auth()->user();
+
+        $ticket->update([
+            'assigned_to' => $currentUser->id,
+        ]);
+
+        // Add automatic assignment note
+        $note = "Ticket assigned to {$currentUser->name}";
+        if ($previousAssignee) {
+            $note = "Ticket reassigned from {$previousAssignee->name} to {$currentUser->name}";
+        }
+        
+        // Check if the ticket has an addNote method, if not skip adding the note
+        if (method_exists($ticket, 'addNote')) {
+            $ticket->addNote($note, 'assignment');
+        }
+
+        return redirect()->back()->with('success', 'Ticket assigned to you successfully');
+    }
+
+    /**
      * Assign ticket to user
      */
     public function assign(Request $request, Ticket $ticket)
@@ -138,7 +166,9 @@ class AssignmentController extends Controller
 
         // Add assignment note if provided
         if ($request->filled('notes')) {
-            $ticket->addNote($request->notes, 'assignment');
+            if (method_exists($ticket, 'addNote')) {
+                $ticket->addNote($request->notes, 'assignment');
+            }
         }
 
         // Add automatic assignment note
@@ -148,9 +178,13 @@ class AssignmentController extends Controller
             if ($previousAssignee) {
                 $note = "Ticket reassigned from {$previousAssignee->name} to {$assignee->name}";
             }
-            $ticket->addNote($note, 'assignment');
+            if (method_exists($ticket, 'addNote')) {
+                $ticket->addNote($note, 'assignment');
+            }
         } else {
-            $ticket->addNote('Ticket unassigned', 'assignment');
+            if (method_exists($ticket, 'addNote')) {
+                $ticket->addNote('Ticket unassigned', 'assignment');
+            }
         }
 
         // Send notifications if enabled

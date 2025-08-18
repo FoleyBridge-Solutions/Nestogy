@@ -12,7 +12,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('users.view');
+        return $user->can('users.view');
     }
 
     /**
@@ -26,7 +26,7 @@ class UserPolicy
         }
 
         // Check permission and company scope
-        return $user->hasPermission('users.view') && $this->sameCompany($user, $model);
+        return $user->can('users.view') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -34,7 +34,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('users.create');
+        return $user->can('users.create');
     }
 
     /**
@@ -48,7 +48,7 @@ class UserPolicy
         }
 
         // Check permission and company scope for managing other users
-        return $user->hasPermission('users.edit') && $this->sameCompany($user, $model);
+        return $user->can('users.edit') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -61,7 +61,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasPermission('users.delete') && $this->sameCompany($user, $model);
+        return $user->can('users.delete') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -69,7 +69,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -82,7 +82,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -90,7 +90,7 @@ class UserPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('users.export');
+        return $user->can('users.export');
     }
 
     /**
@@ -104,7 +104,7 @@ class UserPolicy
         }
 
         // Admin users can update other users' passwords
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -117,7 +117,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -130,7 +130,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -143,7 +143,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasPermission('users.edit') && $this->sameCompany($user, $model);
+        return $user->can('users.edit') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -156,7 +156,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -169,7 +169,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'users.manage',
             'system.permissions.manage'
         ]) && $this->sameCompany($user, $model);
@@ -185,7 +185,7 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasAnyPermission([
+        return $user->canAny([
             'users.manage',
             'system.permissions.manage'
         ]) && $this->sameCompany($user, $model);
@@ -202,7 +202,7 @@ class UserPolicy
         }
 
         // Only super admins can impersonate
-        return $user->hasPermission('system.permissions.manage') && $this->sameCompany($user, $model);
+        return $user->can('system.permissions.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -215,7 +215,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasPermission('users.view') && $this->sameCompany($user, $model);
+        return $user->can('users.view') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -228,7 +228,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -241,7 +241,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -254,7 +254,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**
@@ -267,7 +267,7 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasPermission('users.manage') && $this->sameCompany($user, $model);
+        return $user->can('users.manage') && $this->sameCompany($user, $model);
     }
 
     /**

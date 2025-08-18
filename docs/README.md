@@ -10,6 +10,12 @@ Welcome to the comprehensive documentation for the **Nestogy MSP Platform**, a L
 - **[Configuration Guide](CONFIGURATION.md)** - System configuration and customization
 - **[MariaDB Setup](MARIADB_SETUP.md)** - Database setup and optimization
 
+### Developer Resources
+- **[Developer Guide](../DEVELOPER_README.md)** - Technical architecture and development patterns
+- **[Migration Guide](../MIGRATION_GUIDE.md)** - Migrating to base classes and standardized patterns
+- **[Deduplication Summary](../DEDUPLICATION_SUMMARY.md)** - Technical achievements and benefits
+- **[Development Rules](../CLAUDE.md)** - Critical development guidelines and patterns
+
 ### Documentation Standards
 - **[Documentation Style Guide](STYLE_GUIDE.md)** - Standards and conventions for all documentation
 
@@ -32,7 +38,7 @@ Welcome to the comprehensive documentation for the **Nestogy MSP Platform**, a L
 
 ## 🏗️ System Overview
 
-The Nestogy MSP Platform is built on **Laravel 11** with PHP 8.2+ and follows domain-driven design principles. The system serves multiple MSP companies through a secure multi-tenant architecture.
+The Nestogy MSP Platform is built on **Laravel 12** with PHP 8.2+ and follows domain-driven design principles. The system serves multiple MSP companies through a secure multi-tenant architecture with standardized base classes and components for rapid development.
 
 ### Core Capabilities
 - **Client Management** - Comprehensive client relationship management with contacts and locations
@@ -44,10 +50,11 @@ The Nestogy MSP Platform is built on **Laravel 11** with PHP 8.2+ and follows do
 - **Reporting & Analytics** - Business intelligence and custom reporting *(planned)*
 
 ### Technology Stack
-- **Backend**: Laravel 11, PHP 8.2+, MySQL 8.0+
-- **Frontend**: Vue.js 3, Blade Templates, Tailwind CSS
+- **Backend**: Laravel 12, PHP 8.2+, MySQL 8.0+
+- **Frontend**: Vue.js 3, Blade Templates, Tailwind CSS, Alpine.js 3.x
 - **Infrastructure**: Apache/Nginx, Redis, Supervisor
 - **Deployment**: Docker, Kubernetes support
+- **Architecture**: Domain-Driven Design with BaseResourceController patterns
 
 ## 🚀 Quick Start
 

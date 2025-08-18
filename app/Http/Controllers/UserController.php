@@ -13,14 +13,17 @@ use App\Models\Company;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Services\UserService;
+use App\Services\RoleService;
 
 class UserController extends Controller
 {
     protected $userService;
+    protected $roleService;
 
-    public function __construct(UserService $userService)
+    public function __construct(UserService $userService, RoleService $roleService)
     {
         $this->userService = $userService;
+        $this->roleService = $roleService;
     }
 
     /**
@@ -77,8 +80,13 @@ class UserController extends Controller
             // Regular admins can only add users to their own company
             $companies = collect([$user->company]);
         }
+
+        // Get available roles based on current user's permissions
+        $currentUserRole = $this->roleService->getUserRole($user);
+        $canAssignSuperAdmin = $currentUserRole['legacy_id'] >= 4; // Only super admins can assign super admin
+        $availableRoles = $this->roleService->getAvailableRoles($canAssignSuperAdmin);
         
-        return view('users.create', compact('companies'));
+        return view('users.create', compact('companies', 'availableRoles'));
     }
 
     /**
@@ -171,7 +179,13 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
         
-        return view('users.edit', compact('user'));
+        // Get available roles based on current user's permissions
+        $currentUser = Auth::user();
+        $currentUserRole = $this->roleService->getUserRole($currentUser);
+        $canAssignSuperAdmin = $currentUserRole['legacy_id'] >= 4; // Only super admins can assign super admin
+        $availableRoles = $this->roleService->getAvailableRoles($canAssignSuperAdmin);
+        
+        return view('users.edit', compact('user', 'availableRoles'));
     }
 
     /**
@@ -498,7 +512,12 @@ class UserController extends Controller
     public function profile(Request $request)
     {
         $user = Auth::user();
-        $user->load(['company']);
+        $user->load(['company', 'userSetting']);
+
+        // Ensure user has settings
+        if (!$user->userSetting) {
+            $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_ACCOUNTANT, $user->company_id);
+        }
 
         if ($request->wantsJson()) {
             return response()->json($user);
@@ -567,12 +586,38 @@ class UserController extends Controller
             'timezone' => 'nullable|string|max:50',
             'date_format' => 'nullable|string|max:20',
             'time_format' => 'nullable|string|max:20',
-            'notifications_email' => 'boolean',
-            'notifications_browser' => 'boolean',
+            'records_per_page' => 'nullable|integer|min:10|max:100',
+            'dashboard_financial_enable' => 'nullable|boolean',
+            'dashboard_technical_enable' => 'nullable|boolean',
+            'notifications_email' => 'nullable|boolean',
+            'notifications_browser' => 'nullable|boolean',
             'theme' => 'nullable|in:light,dark,auto',
         ]);
 
         try {
+            // Ensure user has settings
+            if (!$user->userSetting) {
+                $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_ACCOUNTANT, $user->company_id);
+            }
+
+            // Update UserSetting fields
+            if ($request->has('records_per_page')) {
+                $user->userSetting->update(['records_per_page' => $request->get('records_per_page')]);
+            }
+            
+            if ($request->has('dashboard_financial_enable')) {
+                $user->userSetting->update(['dashboard_financial_enable' => $request->boolean('dashboard_financial_enable')]);
+            }
+            
+            if ($request->has('dashboard_technical_enable')) {
+                $user->userSetting->update(['dashboard_technical_enable' => $request->boolean('dashboard_technical_enable')]);
+            }
+
+            if ($request->has('theme')) {
+                $user->userSetting->update(['theme' => $request->get('theme')]);
+            }
+
+            // Update other user preferences through the service
             $this->userService->updateUserSettings($user, $request->all());
             
             Log::info('User settings updated', [
@@ -598,6 +643,61 @@ class UserController extends Controller
             ]);
 
             return back()->with('error', 'Failed to update settings');
+        }
+    }
+
+    /**
+     * Update own password from profile
+     */
+    public function updateOwnPassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'current_password' => 'required|current_password',
+            'password' => 'required|string|min:8|confirmed',
+            'force_mfa' => 'nullable|boolean',
+        ]);
+
+        try {
+            // Update password
+            $user->update([
+                'password' => Hash::make($request->password)
+            ]);
+
+            // Update MFA setting if provided
+            if ($request->has('force_mfa')) {
+                // Ensure user has settings
+                if (!$user->userSetting) {
+                    $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_ACCOUNTANT, $user->company_id);
+                }
+                
+                $user->userSetting->update(['force_mfa' => $request->boolean('force_mfa')]);
+            }
+            
+            Log::info('User password updated', [
+                'user_id' => $user->id,
+                'ip' => $request->ip()
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Security settings updated successfully'
+                ]);
+            }
+
+            return redirect()
+                ->route('users.profile')
+                ->with('success', 'Security settings updated successfully');
+
+        } catch (\Exception $e) {
+            Log::error('User password update failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to update security settings');
         }
     }
 

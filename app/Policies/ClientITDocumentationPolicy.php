@@ -13,8 +13,8 @@ class ClientITDocumentationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('clients.documents.view') || 
-               $user->hasAnyRole(['admin', 'technician']);
+        return $user->can('clients.documents.view') || 
+               $user->isAn(['admin', 'technician']);
     }
 
     /**
@@ -36,8 +36,8 @@ class ClientITDocumentationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('clients.documents.manage') || 
-               $user->hasAnyRole(['admin', 'technician']);
+        return $user->can('clients.documents.manage') || 
+               $user->isAn(['admin', 'technician']);
     }
 
     /**
@@ -61,7 +61,7 @@ class ClientITDocumentationPolicy
         }
 
         // Technicians can update if they have specific permission and access level allows
-        if ($user->hasPermission('clients.documents.manage')) {
+        if ($user->can('clients.documents.manage')) {
             return $this->canAccessLevel($user, $documentation->access_level);
         }
 
@@ -80,7 +80,7 @@ class ClientITDocumentationPolicy
 
         // Only admins can delete, or authors of their own docs
         return $user->hasRole('admin') || 
-               ($documentation->authored_by === $user->id && $user->hasPermission('clients.documents.manage'));
+               ($documentation->authored_by === $user->id && $user->can('clients.documents.manage'));
     }
 
     /**
@@ -141,7 +141,7 @@ class ClientITDocumentationPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('clients.documents.export') || 
+        return $user->can('clients.documents.export') || 
                $user->hasRole('admin');
     }
 
@@ -168,10 +168,10 @@ class ClientITDocumentationPolicy
     {
         return match($accessLevel) {
             'public' => true,
-            'confidential' => $user->hasAnyRole(['admin', 'technician']) || 
-                            $user->hasPermission('clients.documents.view'),
+            'confidential' => $user->isAn(['admin', 'technician']) || 
+                            $user->can('clients.documents.view'),
             'restricted' => $user->hasRole('admin') || 
-                          $user->hasPermission('clients.documents.manage'),
+                          $user->can('clients.documents.manage'),
             'admin_only' => $user->hasRole('admin'),
             default => false,
         };

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\BelongsToCompany;
 use App\Services\VoIPTaxService;
 use App\Models\TaxCategory;
 use App\Models\TaxExemptionUsage;
@@ -39,7 +40,7 @@ use App\Models\TaxExemptionUsage;
  */
 class InvoiceItem extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -50,6 +51,7 @@ class InvoiceItem extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'company_id',
         'name',
         'description',
         'quantity',
@@ -179,7 +181,8 @@ class InvoiceItem extends Model
         $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
         $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;
 
-        $taxService = new VoIPTaxService($companyId);
+        $taxService = new VoIPTaxService();
+        $taxService->setCompanyId($companyId);
 
         $params = [
             'amount' => $this->subtotal - $this->discount,

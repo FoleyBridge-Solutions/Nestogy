@@ -152,7 +152,7 @@
         </div>
     </div>
 
-    <table class="items-table">
+    <table class="items-min-w-full divide-y divide-gray-200">
         <thead>
             <tr>
                 <th>Description</th>
@@ -179,7 +179,7 @@
     </table>
 
     <div class="totals-section">
-        <table class="totals-table">
+        <table class="totals-min-w-full divide-y divide-gray-200">
             <tr>
                 <td>Subtotal:</td>
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice['subtotal'] ?? 0, 2) }}</td>
@@ -196,7 +196,7 @@
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice['tax_amount'], 2) }}</td>
             </tr>
             @endif
-            <tr class="total-row">
+            <tr class="total-flex flex-wrap -mx-4">
                 <td>Total:</td>
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice['total'] ?? 0, 2) }}</td>
             </tr>

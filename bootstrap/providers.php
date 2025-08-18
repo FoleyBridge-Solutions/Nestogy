@@ -6,4 +6,5 @@ return [
     App\Providers\FortifyServiceProvider::class,
     App\Providers\EmailServiceProvider::class,
     App\Providers\PdfServiceProvider::class,
+    App\Providers\RmmServiceProvider::class,
 ];

@@ -24,7 +24,7 @@
             <p class="text-xl md:text-2xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed">
                 Nestogy is the ultimate all-in-one business management platform. Streamline client relationships, track assets, manage tickets, and optimize your financial operations.
             </p>
-            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div class="flex flex-col sm:flex-flex flex-wrap -mx-4 gap-6 justify-center items-center">
                 @guest
                     <a href="{{ route('signup.form') }}" class="bg-white text-blue-600 hover:bg-blue-50 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
                         Start Free Trial
@@ -32,9 +32,15 @@
                     <a href="{{ route('login') }}" class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
                         Sign In →
                     </a>
+                    <a href="{{ route('client.login') }}" class="bg-yellow-400 text-gray-900 hover:bg-yellow-300 px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
+                        <i class="fas fa-user-circle mr-2"></i>Client Portal
+                    </a>
                 @else
                     <a href="{{ route('dashboard') }}" class="bg-white text-blue-600 hover:bg-blue-50 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
                         Go to Dashboard
+                    </a>
+                    <a href="{{ route('client.login') }}" class="bg-yellow-400 text-gray-900 hover:bg-yellow-300 px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
+                        <i class="fas fa-user-circle mr-2"></i>Client Portal
                     </a>
                 @endguest
             </div>
@@ -523,6 +529,80 @@
     </div>
 </div>
 
+<!-- Client Portal Section -->
+<div class="py-20 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-gray-800 dark:to-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="inline-flex items-center bg-yellow-100 dark:bg-yellow-900/30 px-4 py-2 rounded-full mb-6">
+                    <i class="fas fa-star text-yellow-600 mr-2"></i>
+                    <span class="text-sm font-semibold text-yellow-800 dark:text-yellow-300">CLIENT PORTAL</span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
+                    Empower Your Clients with
+                    <span class="text-yellow-600">Self-Service Access</span>
+                </h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+                    Give your clients 24/7 access to their contracts, invoices, and project updates through our secure client portal. 
+                    Reduce support tickets and improve client satisfaction with transparent, real-time information sharing.
+                </p>
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">View and sign contracts digitally</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Access invoices and payment history</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Track project milestones and progress</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Submit and track support tickets</span>
+                    </div>
+                </div>
+                <a href="{{ route('client.login') }}" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Access Client Portal
+                </a>
+            </div>
+            <div class="relative">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                    <div class="bg-gradient-to-r from-yellow-400 to-orange-400 text-white p-4 rounded-t-xl -mt-8 -mx-8 mb-6">
+                        <h3 class="font-bold text-lg">Client Dashboard</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Active Contracts</span>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">3</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Outstanding Invoices</span>
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">$2,450</span>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Due in 15 days</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Open Tickets</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Final CTA Section -->
 <div class="relative bg-gradient-to-r from-gray-900 to-black py-20 overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
@@ -534,7 +614,7 @@
             Transform your business operations today. No setup fees, no long-term contracts, just results.
         </p>
         @guest
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <div class="flex flex-col sm:flex-flex flex-wrap -mx-4 gap-4 justify-center">
                 <a href="{{ route('signup.form') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl">
                     Start Free Trial
                 </a>

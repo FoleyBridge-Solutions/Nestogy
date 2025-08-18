@@ -2,41 +2,31 @@
 
 namespace App\Domains\Client\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Client;
 use Illuminate\Support\Facades\Auth;
 
-class StoreClientRequest extends FormRequest
+class StoreClientRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
+    protected function initializeRequest(): void
     {
-        return Auth::check() && Auth::user()->can('create', \App\Models\Client::class);
+        $this->modelClass = Client::class;
+        $this->requiresCompanyValidation = true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
-    public function rules(): array
+    protected function getSpecificRules(): array
     {
         return [
-            // Client basic information
-            'name' => 'required|string|max:255',
+            // Client specific information
             'company_name' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:100',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'website' => 'nullable|url|max:255',
             'referral' => 'nullable|string|max:255',
             'rate' => 'nullable|numeric|min:0|max:999999.99',
-            'currency_code' => 'nullable|string|size:3',
+            'currency_code' => $this->getCurrencyValidationRule(),
             'net_terms' => 'nullable|integer|min:0|max:365',
             'tax_id_number' => 'nullable|string|max:50',
             'rmm_id' => 'nullable|integer',
             'lead' => 'boolean',
-            'notes' => 'nullable|string|max:65535',
-            'status' => 'nullable|in:active,inactive,suspended',
             'hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
 
             // Primary location information
@@ -65,6 +55,13 @@ class StoreClientRequest extends FormRequest
 
             // Tags
             'tags' => 'nullable|json',
+        ];
+    }
+
+    protected function getExpectedFields(): array
+    {
+        return [
+            'name', 'email', 'phone', 'website', 'notes', 'status'
         ];
     }
 
@@ -196,7 +193,12 @@ class StoreClientRequest extends FormRequest
         $validator->after(function ($validator) {
             // Ensure at least client name is provided
             if (empty($this->name)) {
-                $validator->errors()->add('name', 'Client name is required.');
+                $validator->errors()->add('name', 'The name field is required.');
+            }
+
+            // Ensure email is provided
+            if (empty($this->email)) {
+                $validator->errors()->add('email', 'The email field is required.');
             }
 
             // If contact email is provided, validate it's unique for this company

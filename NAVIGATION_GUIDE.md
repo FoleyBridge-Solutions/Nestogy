@@ -15,16 +15,16 @@ The command palette is the main way to navigate and execute commands in Nestogy.
 ##### Natural Language Commands:
 
 **Creating Items:**
-- `create ticket` - Create a new support ticket
-- `create invoice` - Create a new invoice
-- `create quote` - Create a new quote
-- `create project` - Create a new project
-- `create asset` - Add a new asset
-- `create contract` - Create a new contract
-- `create expense` - Add a new expense
-- `create payment` - Record a payment
-- `create user` - Add a new user
-- `create article` - Create knowledge base article
+- `create ticket` / `new ticket` / `add ticket` - Create a new support ticket
+- `create invoice` / `new invoice` - Create a new invoice  
+- `create quote` / `new quote` - Create a new quote
+- `create project` / `new project` - Create a new project
+- `create asset` / `add asset` - Add a new asset
+- `create contract` / `new contract` - Create a new contract
+- `create expense` / `add expense` - Add a new expense
+- `create payment` / `new payment` - Record a payment
+- `create user` / `add user` - Add a new user
+- `create article` / `new article` - Create knowledge base article
 
 **Viewing/Showing Items:**
 - `show urgent` - View all urgent items
@@ -48,6 +48,47 @@ The command palette is the main way to navigate and execute commands in Nestogy.
 - `go to assets` - Navigate to assets
 - `go to projects` - Navigate to projects
 - `go to knowledge base` - Navigate to KB
+
+**MSP Operations:**
+- `assign ticket` - Assign ticket to technician
+- `escalate ticket` - Escalate ticket to higher tier  
+- `resolve ticket` - Mark ticket as resolved
+- `close ticket` - Close completed ticket
+- `schedule ticket` - Schedule maintenance work
+
+**System Management:**
+- `monitor asset` - Monitor system performance
+- `restart asset` - Restart system/service
+- `backup asset` - Create system backup
+- `patch asset` - Apply system updates
+- `configure asset` - Configure system settings
+- `enable asset` / `disable asset` - Control system state
+
+**Communication:**
+- `send invoice` - Send invoice to client
+- `notify client` - Send notification to client
+- `alert ticket` - Send alert about ticket
+- `email client` - Send email to client
+
+**Data Operations:**
+- `export invoices` - Export invoice data
+- `import clients` - Import client data  
+- `sync invoices` - Synchronize billing data
+- `archive project` - Archive completed project
+
+**Analysis & Reports:**
+- `analyze client` - Analyze client data patterns
+- `report tickets` - Generate ticket reports
+- `audit invoices` - Audit financial records
+- `investigate ticket` - Investigate technical issues
+- `troubleshoot asset` - Diagnose system problems
+
+**Workflow Automation:**
+- `trigger asset` - Trigger automated workflows
+- `execute asset` - Run scripts and commands
+- `automate ticket` - Set up workflow automation
+- `validate invoice` - Validate billing data
+- `test asset` - Test system functionality
 
 **Searching:**
 - `find server down` - Search for tickets containing "server down"
@@ -221,36 +262,192 @@ The navigation system provides comprehensive access to ALL features:
 
 ## Tips & Tricks
 
-1. **Use Natural Language**: Instead of memorizing commands, just type what you want to do
-   - "find overdue invoices for acme corp"
-   - "show me urgent tickets"
-   - "create quote for current client"
+### 🧠 Natural Language Processing
+The command system understands natural language and can interpret various ways of expressing the same intent:
 
-2. **Context Awareness**: The system remembers your selected client and shows relevant options
-   - When a client is selected, "create invoice" automatically associates it
-   - Search results prioritize the selected client's data
+#### Intent Recognition Examples
+```
+"show me overdue invoices" = "overdue invoices" = "invoices overdue"
+"create ticket for acme" = "new ticket acme" = "add ticket @acme"  
+"find server issues" = "search server" = "/server problems"
+"what tickets are urgent" = "urgent tickets" = "!tickets"
+```
 
-3. **Entity-Specific Searches**: Use entity prefixes for targeted searching
-   - `quote:` - Search only quotes
-   - `asset:` - Search only assets
-   - `project:` - Search only projects
-   - `contract:` - Search only contracts
+#### Smart Entity Resolution
+The system can resolve entities using various identifiers:
+- **Direct IDs**: `#123` (ticket), `INV-456` (invoice), `@acme` (client)
+- **Fuzzy Names**: "acme corp" matches "Acme Corporation" 
+- **Abbreviations**: "inv" → "invoice", "tix" → "tickets"
+- **Typo Tolerance**: "tiket" → "ticket", "clint" → "client"
 
-4. **Smart Filtering**: Commands understand context
-   - "show pending" - Shows pending items across all types
-   - "show overdue" - Shows overdue invoices, projects, tickets
-   - "show my" - Shows items assigned to you
+### 🎯 Quick Shortcuts
 
-5. **Comprehensive Search**: One search queries ALL entities
-   - Type "server" to find:
-     - Tickets mentioning server
-     - Assets named server
-     - IT Documentation about servers
-     - Knowledge articles about servers
+#### Shortcut Symbols
+- **@client_name** - Switch to or reference client (e.g., `@acme`)
+- **#ticket_id** - Open specific ticket (e.g., `#123`)
+- **$invoice_number** - Open specific invoice (e.g., `$INV-456`)
+- **!urgent** - Show urgent items
+- **+entity** - Create new entity (e.g., `+ticket`)
+- **/search_term** - Search across all entities
 
-6. **Quick Creation**: Create anything from anywhere
-   - No need to navigate to specific pages
-   - Context is preserved (selected client, current view)
+#### Quick Access Shortcuts
+- **Ctrl+0** - Dashboard
+- **Ctrl+1** - Urgent items  
+- **Ctrl+2** - Today's tasks
+- **Ctrl+3** - Scheduled items
+- **Ctrl+4** - All tickets
+
+### 🎛️ Context Awareness
+
+#### Current Client Context
+When a client is selected, commands automatically apply to that client:
+```
+With Acme Corp selected:
+- "tickets" → Show Acme Corp tickets
+- "create invoice" → Create invoice for Acme Corp  
+- "assets" → Show Acme Corp assets
+- "new project" → Create project for Acme Corp
+```
+
+#### Page Context Awareness
+Commands adapt based on your current page:
+- **On Tickets page**: "create" defaults to creating a ticket
+- **On Financial page**: "create" shows invoice/quote options
+- **On Client page**: Commands scope to current client
+
+#### Smart Context Switching
+```
+"switch to acme" → Changes client context
+"@contoso" → Switches to Contoso client
+"back to dashboard" → Returns to main dashboard
+```
+
+### 🔍 Advanced Search Patterns
+
+#### Entity-Specific Searches
+Use prefixes to search within specific entity types:
+```
+ticket: server down       → Search only tickets for "server down"
+client: acme             → Search only clients for "acme"  
+invoice: overdue         → Search only invoices for "overdue"
+asset: laptop            → Search only assets for "laptop"
+project: website         → Search only projects for "website"
+```
+
+#### Multi-Entity Search
+```
+"server" → Searches across:
+- Tickets mentioning "server"
+- Assets with "server" in name
+- IT Documentation about servers
+- Knowledge articles on servers
+- Client networks with server info
+```
+
+#### Filter Combinations
+```
+"overdue invoices acme"     → Overdue invoices for Acme Corp
+"urgent tickets unassigned" → Urgent tickets with no assignee
+"scheduled today"           → All items scheduled for today
+"my overdue tasks"          → Your overdue items across all types
+```
+
+### 🚀 Power User Features
+
+#### Smart Command Variations
+The system understands many ways to express the same intent:
+
+**Creation Commands:**
+```
+"create ticket acme" = "new ticket @acme" = "add ticket acme" = "make ticket acme"
+"new client" = "create client" = "add client" = "build client"
+"generate invoice" = "create invoice" = "new invoice"
+```
+
+**MSP Operations:**
+```
+"assign ticket" = "assign ticket to technician"
+"escalate issue" = "escalate ticket" = "escalate problem"
+"resolve ticket" = "close ticket" = "finish ticket"
+"backup server" = "backup asset" = "create backup"
+```
+
+**Analysis & Reporting:**
+```
+"analyze performance" = "report performance" = "investigate performance"
+"troubleshoot issue" = "investigate problem" = "diagnose issue"
+"audit compliance" = "check compliance" = "validate compliance"
+```
+
+**System Management:**
+```
+"restart service" = "restart asset" = "reboot system"
+"enable service" = "activate service" = "start service"
+"patch system" = "update system" = "upgrade system"
+```
+
+**Communication:**
+```
+"send notification" = "notify client" = "alert client"
+"email invoice" = "send invoice" = "deliver invoice"
+```
+
+#### Workflow Automation
+```
+"morning routine" → Shows:
+- Urgent overnight tickets
+- Today's scheduled maintenance  
+- Backup status alerts
+- SLA breach warnings
+
+"billing workflow" → Shows:
+- Clients ready for invoicing
+- Overdue payments
+- Pending quote approvals
+- Usage reports to process
+```
+
+#### Adaptive Intelligence
+The system continuously learns and adapts:
+- **Personal Patterns**: Your frequently used commands rank higher
+- **Context Learning**: Understands what works in different situations  
+- **Smart Suggestions**: Improves autocomplete based on your behavior
+- **Error Prevention**: Learns from mistakes to prevent future issues
+- **Performance**: Caches your common entities for faster access
+
+### 🎨 Command Categories
+
+#### Creation Commands (Verb + Entity)
+```
+create|new|add + ticket|invoice|quote|client|project|asset|user
+"create ticket acme urgent"
+"new invoice for current client"  
+"add asset dell laptop"
+```
+
+#### Display Commands (Show + Filter)
+```
+show|display|list + entity + filter
+"show urgent tickets"
+"display overdue invoices" 
+"list active projects"
+```
+
+#### Navigation Commands (Go + Destination)  
+```
+go to|open|visit + page|client|entity
+"go to billing dashboard"
+"open client acme corp"
+"visit project website redesign"
+```
+
+#### Action Commands (Action + Target)
+```
+email|send|export|print + entity + identifier
+"email invoice INV-123"
+"export asset report"
+"print ticket #456"
+```
 
 ## Troubleshooting
 
@@ -305,19 +502,87 @@ fetch('/api/search/query?query=server+down');
 
 ## Complete Command Reference
 
-### Creation Commands
-| Command | Description | Shortcut |
-|---------|-------------|----------|
-| `create ticket` | New support ticket | - |
-| `create invoice` | New invoice | - |
-| `create quote` | New quote | - |
-| `create project` | New project | - |
-| `create asset` | New asset | - |
-| `create contract` | New contract | - |
-| `create expense` | New expense | - |
-| `create payment` | New payment | - |
-| `create user` | New user | - |
-| `create article` | New KB article | - |
+### Creation Commands  
+| Command | Variations | Description |
+|---------|------------|-------------|
+| `create ticket` | `new ticket`, `add ticket` | New support ticket |
+| `create invoice` | `new invoice`, `generate invoice` | New invoice |
+| `create quote` | `new quote`, `add quote` | New quote |
+| `create project` | `new project`, `make project` | New project |
+| `create asset` | `add asset`, `new asset` | New asset |
+| `create contract` | `new contract` | New contract |
+| `create expense` | `add expense` | New expense |
+| `create payment` | `new payment` | New payment |
+| `create user` | `add user`, `new user` | New user |
+| `create article` | `new article` | New KB article |
+
+### MSP Operations
+| Command | Description |
+|---------|-------------|
+| `assign ticket` | Assign ticket to technician |
+| `escalate ticket` | Escalate to higher tier |
+| `resolve ticket` | Mark as resolved |
+| `close ticket` | Close completed ticket |
+| `schedule ticket` | Schedule maintenance |
+
+### System Management
+| Command | Description |
+|---------|-------------|
+| `monitor asset` | Monitor performance |
+| `restart asset` | Restart service/system |
+| `backup asset` | Create backup |
+| `restore asset` | Restore from backup |
+| `patch asset` | Apply patches |
+| `configure asset` | Configure settings |
+| `deploy asset` | Deploy to system |
+| `update asset` | Update software |
+| `install asset` | Install software |
+| `upgrade asset` | Upgrade system |
+
+### State Management
+| Command | Description |
+|---------|-------------|
+| `enable asset` | Enable service |
+| `disable asset` | Disable service |
+| `start asset` | Start service |
+| `stop asset` | Stop service |
+| `activate client` | Activate account |
+| `deactivate client` | Deactivate account |
+
+### Communication
+| Command | Description |
+|---------|-------------|
+| `send invoice` | Email invoice to client |
+| `notify client` | Send notification |
+| `alert ticket` | Send ticket alert |
+| `email client` | Send email |
+| `message user` | Send message |
+
+### Data Operations
+| Command | Description |
+|---------|-------------|
+| `export invoices` | Export data |
+| `import clients` | Import data |
+| `sync invoices` | Synchronize data |
+| `archive project` | Archive completed |
+
+### Analysis & Reports
+| Command | Description |
+|---------|-------------|
+| `analyze client` | Analyze patterns |
+| `report tickets` | Generate reports |
+| `audit invoices` | Audit records |
+| `investigate ticket` | Investigate issues |
+| `troubleshoot asset` | Diagnose problems |
+
+### Workflow Automation
+| Command | Description |
+|---------|-------------|
+| `trigger asset` | Trigger workflows |
+| `execute asset` | Run commands |
+| `automate ticket` | Set up automation |
+| `validate invoice` | Validate data |
+| `test asset` | Test functionality |
 
 ### Navigation Commands
 | Command | Description | Route |

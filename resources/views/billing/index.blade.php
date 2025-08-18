@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Billing & Subscription') }}
             </h2>
         </div>
@@ -10,10 +10,10 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Current Subscription Card -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Current Subscription</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Current Subscription</h3>
                         @if($client->subscription_status === 'trialing')
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                                 Free Trial
@@ -27,7 +27,7 @@
                                 Past Due
                             </span>
                         @else
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                                 {{ ucfirst($client->subscription_status) }}
                             </span>
                         @endif
@@ -36,11 +36,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <h4 class="text-sm font-medium text-gray-500">Plan</h4>
-                            <p class="text-lg font-semibold text-gray-900">
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
                                 {{ $client->subscriptionPlan->name ?? 'No Plan' }}
                             </p>
                             @if($client->subscriptionPlan)
-                                <p class="text-sm text-gray-600">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
                                     ${{ number_format($client->subscriptionPlan->price_monthly, 2) }}/month
                                 </p>
                             @endif
@@ -54,7 +54,7 @@
                                     Next Billing Date
                                 @endif
                             </h4>
-                            <p class="text-lg font-semibold text-gray-900">
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
                                 @if($client->subscription_status === 'trialing' && $client->trial_ends_at)
                                     {{ $client->trial_ends_at->format('M j, Y') }}
                                 @elseif($client->next_billing_date)
@@ -64,7 +64,7 @@
                                 @endif
                             </p>
                             @if($client->subscription_status === 'trialing' && $client->trial_ends_at)
-                                <p class="text-sm text-gray-600">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
                                     {{ $client->trial_ends_at->diffForHumans() }}
                                 </p>
                             @endif
@@ -72,7 +72,7 @@
 
                         <div>
                             <h4 class="text-sm font-medium text-gray-500">Users</h4>
-                            <p class="text-lg font-semibold text-gray-900">
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
                                 {{ $client->current_user_count ?? 0 }}
                                 @if($client->subscriptionPlan && $client->subscriptionPlan->max_users)
                                     / {{ $client->subscriptionPlan->max_users }}
@@ -80,7 +80,7 @@
                                     / Unlimited
                                 @endif
                             </p>
-                            <p class="text-sm text-gray-600">Active users</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Active users</p>
                         </div>
                     </div>
 
@@ -92,16 +92,16 @@
                             </a>
                         @endif
                         
-                        <a href="{{ route('billing.payment-methods') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium">
+                        <a href="{{ route('billing.payment-methods') }}" class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium">
                             Manage Payment Methods
                         </a>
                         
-                        <a href="{{ route('billing.invoices') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium">
+                        <a href="{{ route('billing.invoices') }}" class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium">
                             View Invoices
                         </a>
 
                         @if($client->stripe_customer_id)
-                            <a href="{{ route('billing.portal') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium">
+                            <a href="{{ route('billing.portal') }}" class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium">
                                 Billing Portal
                             </a>
                         @endif
@@ -171,10 +171,10 @@
             @endif
 
             <!-- Payment Methods Card -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Payment Methods</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Payment Methods</h3>
                         <a href="{{ route('billing.payment-methods') }}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
                             Manage →
                         </a>
@@ -183,7 +183,7 @@
                     @if($client->paymentMethods->count() > 0)
                         <div class="space-y-3">
                             @foreach($client->paymentMethods->take(2) as $paymentMethod)
-                                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+                                <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-md">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
                                             @if($paymentMethod->isCard())
@@ -197,7 +197,7 @@
                                             @endif
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-sm font-medium text-gray-900">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">
                                                 {{ $paymentMethod->getDisplayName() }}
                                             </p>
                                             @if($paymentMethod->is_default)
@@ -230,7 +230,7 @@
             <!-- Quick Actions -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Usage Stats -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
@@ -239,8 +239,8 @@
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h4 class="text-lg font-semibold text-gray-900">Usage Stats</h4>
-                                <p class="text-sm text-gray-600">View detailed usage metrics</p>
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Usage Stats</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">View detailed usage metrics</p>
                             </div>
                         </div>
                         <div class="mt-4">
@@ -252,7 +252,7 @@
                 </div>
 
                 <!-- Subscription History -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
@@ -261,8 +261,8 @@
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h4 class="text-lg font-semibold text-gray-900">Subscription Details</h4>
-                                <p class="text-sm text-gray-600">View subscription history</p>
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Subscription Details</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">View subscription history</p>
                             </div>
                         </div>
                         <div class="mt-4">
@@ -274,7 +274,7 @@
                 </div>
 
                 <!-- Support -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
@@ -283,8 +283,8 @@
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h4 class="text-lg font-semibold text-gray-900">Need Help?</h4>
-                                <p class="text-sm text-gray-600">Contact our support team</p>
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Need Help?</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Contact our support team</p>
                             </div>
                         </div>
                         <div class="mt-4">

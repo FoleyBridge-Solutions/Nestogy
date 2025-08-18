@@ -19,7 +19,7 @@ class QuotePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.view');
+        return $user->can('financial.quotes.view');
     }
 
     /**
@@ -28,7 +28,7 @@ class QuotePolicy
     public function view(User $user, Quote $quote): bool
     {
         // User can view if they have permission and quote belongs to their company
-        return $user->hasPermission('financial.quotes.view') 
+        return $user->can('financial.quotes.view') 
             && $quote->company_id === $user->company_id;
     }
 
@@ -37,7 +37,7 @@ class QuotePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.manage');
+        return $user->can('financial.quotes.manage');
     }
 
     /**
@@ -46,15 +46,15 @@ class QuotePolicy
     public function update(User $user, Quote $quote): bool
     {
         // User can update if they have permission and quote belongs to their company
-        if (!$user->hasPermission('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
+        if (!$user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
             return false;
         }
 
         // Additional business rules for updating quotes
         // Only draft quotes or rejected quotes can be edited by regular users
         if (!$quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
-            // Admins can edit non-draft quotes
-            return $user->hasRole('admin');
+            // Admins and super-admins can edit non-draft quotes
+            return $user->isAn('admin') || $user->isA('super-admin');
         }
 
         return true;
@@ -66,14 +66,14 @@ class QuotePolicy
     public function delete(User $user, Quote $quote): bool
     {
         // User can delete if they have permission and quote belongs to their company
-        if (!$user->hasPermission('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
+        if (!$user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
             return false;
         }
 
         // Only draft quotes can be deleted
         if (!$quote->isDraft()) {
             // Admins can delete non-draft quotes
-            return $user->hasRole('admin');
+            return ($user->isAn('admin') || $user->isA('super-admin'));
         }
 
         return true;
@@ -84,7 +84,7 @@ class QuotePolicy
      */
     public function restore(User $user, Quote $quote): bool
     {
-        return $user->hasPermission('financial.quotes.manage')
+        return $user->can('financial.quotes.manage')
             && $quote->company_id === $user->company_id;
     }
 
@@ -93,9 +93,9 @@ class QuotePolicy
      */
     public function forceDelete(User $user, Quote $quote): bool
     {
-        return $user->hasPermission('financial.quotes.manage')
+        return $user->can('financial.quotes.manage')
             && $quote->company_id === $user->company_id
-            && $user->isAdmin();
+            && ($user->isAn('admin') || $user->isA('super-admin'));
     }
 
     /**
@@ -104,7 +104,7 @@ class QuotePolicy
     public function approve(User $user, Quote $quote): bool
     {
         // Must have approval permission and quote must belong to company
-        if (!$user->hasPermission('financial.quotes.approve') || $quote->company_id !== $user->company_id) {
+        if (!$user->can('financial.quotes.approve') || $quote->company_id !== $user->company_id) {
             return false;
         }
 
@@ -123,7 +123,7 @@ class QuotePolicy
     public function send(User $user, Quote $quote): bool
     {
         // Must have permission and quote must belong to company
-        if (!$user->hasPermission('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
+        if (!$user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
             return false;
         }
 
@@ -137,8 +137,8 @@ class QuotePolicy
     public function convert(User $user, Quote $quote): bool
     {
         // Must have both quote and invoice permissions
-        if (!$user->hasPermission('financial.quotes.manage') || 
-            !$user->hasPermission('financial.invoices.manage') ||
+        if (!$user->can('financial.quotes.manage') || 
+            !$user->can('financial.invoices.manage') ||
             $quote->company_id !== $user->company_id) {
             return false;
         }
@@ -162,7 +162,7 @@ class QuotePolicy
     public function revise(User $user, Quote $quote): bool
     {
         // Must have permission and quote must belong to company
-        if (!$user->hasPermission('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
+        if (!$user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
             return false;
         }
 
@@ -180,7 +180,7 @@ class QuotePolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.export');
+        return $user->can('financial.quotes.export');
     }
 
     /**
@@ -197,7 +197,7 @@ class QuotePolicy
     public function viewApprovals(User $user, Quote $quote): bool
     {
         // Can view if they can view the quote and have approval permission
-        return $this->view($user, $quote) && $user->hasPermission('financial.quotes.approve');
+        return $this->view($user, $quote) && $user->can('financial.quotes.approve');
     }
 
     /**
@@ -205,7 +205,7 @@ class QuotePolicy
      */
     public function manageTemplates(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.templates');
+        return $user->can('financial.quotes.templates');
     }
 
     /**
@@ -213,7 +213,7 @@ class QuotePolicy
      */
     public function useTemplates(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.manage');
+        return $user->can('financial.quotes.manage');
     }
 
     /**
@@ -229,8 +229,8 @@ class QuotePolicy
      */
     public function viewAnalytics(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.analytics') || 
-               $user->hasPermission('reports.financial');
+        return $user->can('financial.quotes.analytics') || 
+               $user->can('reports.financial');
     }
 
     /**
@@ -243,23 +243,23 @@ class QuotePolicy
         $executiveThreshold = 25000;
 
         // Admins can approve anything
-        if ($user->hasRole('admin')) {
+        if (($user->isAn('admin') || $user->isA('super-admin'))) {
             return true;
         }
 
         // Executives can approve up to executive threshold
-        if ($user->hasRole('executive')) {
+        if ($user->isAn('executive')) {
             return $amount <= $executiveThreshold;
         }
 
         // Managers can approve up to manager threshold
-        if ($user->hasRole('manager')) {
+        if ($user->isAn('manager')) {
             return $amount <= $managerThreshold;
         }
 
         // Finance users can approve based on their specific permissions
-        if ($user->hasRole('finance')) {
-            return $user->hasPermission('financial.quotes.approve.unlimited') || 
+        if ($user->isAn('finance')) {
+            return $user->can('financial.quotes.approve.unlimited') || 
                    $amount <= $managerThreshold;
         }
 
@@ -272,7 +272,7 @@ class QuotePolicy
     public function approveAsManager(User $user, Quote $quote): bool
     {
         return $this->approve($user, $quote) && 
-               ($user->hasRole('manager') || $user->hasRole('executive') || $user->hasRole('admin'));
+               ($user->isAn('manager') || $user->isAn('executive') || ($user->isAn('admin') || $user->isA('super-admin')));
     }
 
     /**
@@ -281,7 +281,7 @@ class QuotePolicy
     public function approveAsExecutive(User $user, Quote $quote): bool
     {
         return $this->approve($user, $quote) && 
-               ($user->hasRole('executive') || $user->hasRole('admin'));
+               ($user->isAn('executive') || ($user->isAn('admin') || $user->isA('super-admin')));
     }
 
     /**
@@ -290,7 +290,7 @@ class QuotePolicy
     public function approveAsFinance(User $user, Quote $quote): bool
     {
         return $this->approve($user, $quote) && 
-               ($user->hasRole('finance') || $user->hasRole('executive') || $user->hasRole('admin'));
+               ($user->isAn('finance') || $user->isAn('executive') || ($user->isAn('admin') || $user->isA('super-admin')));
     }
 
     /**
@@ -298,8 +298,8 @@ class QuotePolicy
      */
     public function manageVoipConfig(User $user): bool
     {
-        return $user->hasPermission('financial.quotes.manage') && 
-               $user->hasPermission('voip.configuration');
+        return $user->can('financial.quotes.manage') && 
+               $user->can('voip.configuration');
     }
 
     /**
@@ -307,7 +307,7 @@ class QuotePolicy
      */
     public function manageWorkflow(User $user, Quote $quote): bool
     {
-        return $user->hasPermission('financial.quotes.workflow') && 
+        return $user->can('financial.quotes.workflow') && 
                $quote->company_id === $user->company_id;
     }
 
@@ -316,17 +316,86 @@ class QuotePolicy
      */
     public function changeStatus(User $user, Quote $quote): bool
     {
-        if (!$user->hasPermission('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
+        if (!$user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
             return false;
         }
 
         // Admins can change any status
-        if ($user->hasRole('admin')) {
+        if (($user->isAn('admin') || $user->isA('super-admin'))) {
             return true;
         }
 
         // Regular users can only change status of their own quotes in certain states
         return $quote->created_by === $user->id && 
                in_array($quote->status, [Quote::STATUS_DRAFT, Quote::STATUS_SENT, Quote::STATUS_VIEWED]);
+    }
+
+    /**
+     * Determine whether the user can cancel the quote.
+     */
+    public function cancel(User $user, Quote $quote): bool
+    {
+        // Super admins can cancel any quote (except those in final states)
+        if ($user->isSuperAdmin()) {
+            // Cannot cancel quotes that are already in final states
+            if (in_array($quote->status, [Quote::STATUS_CANCELLED, Quote::STATUS_EXPIRED, Quote::STATUS_CONVERTED])) {
+                return false;
+            }
+            // Can cancel quotes that have been sent out (not drafts)
+            return in_array($quote->status, [Quote::STATUS_SENT, Quote::STATUS_VIEWED, Quote::STATUS_ACCEPTED, Quote::STATUS_DECLINED]);
+        }
+
+        // Must have permission and quote must belong to company
+        if (!$user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
+            return false;
+        }
+
+        // Cannot cancel quotes that are already in final states
+        if (in_array($quote->status, [Quote::STATUS_CANCELLED, Quote::STATUS_EXPIRED, Quote::STATUS_CONVERTED])) {
+            return false;
+        }
+
+        // Can only cancel quotes that have been sent out (not drafts)
+        return in_array($quote->status, [Quote::STATUS_SENT, Quote::STATUS_VIEWED, Quote::STATUS_ACCEPTED, Quote::STATUS_DECLINED]);
+    }
+
+    /**
+     * Determine whether a client contact can view the quote in the client portal.
+     */
+    public function viewInClientPortal(\App\Models\Contact $contact, Quote $quote): bool
+    {
+        // Must be an authenticated client contact
+        if (!$contact || !$contact->client) {
+            return false;
+        }
+
+        // Quote must belong to the client
+        if ($quote->client_id !== $contact->client_id) {
+            return false;
+        }
+
+        // Contact must have portal access
+        if (!$contact->has_portal_access || !$contact->canAccessPortal()) {
+            return false;
+        }
+
+        // Contact must have quote viewing permissions
+        $canView = $contact->isPrimary() || 
+                   $contact->isBilling() || 
+                   in_array('can_view_quotes', $contact->portal_permissions ?? []);
+
+        if (!$canView) {
+            return false;
+        }
+
+        // Quote must be in a state where it can be viewed by clients
+        // Only allow viewing of quotes that have been sent out (not drafts)
+        return in_array($quote->status, [
+            Quote::STATUS_SENT,
+            Quote::STATUS_VIEWED,
+            Quote::STATUS_ACCEPTED,
+            Quote::STATUS_DECLINED,
+            Quote::STATUS_EXPIRED,
+        ]);
     }
 }

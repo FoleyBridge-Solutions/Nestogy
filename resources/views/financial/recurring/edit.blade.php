@@ -3,7 +3,7 @@
 @section('title', 'Edit Recurring Billing')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -329,7 +329,7 @@
                 </div>
 
                 <!-- Submit Buttons -->
-                <div class="flex flex-col sm:flex-row justify-end items-center pt-6 border-t border-gray-200 gap-3">
+                <div class="flex flex-col sm:flex-flex flex-wrap -mx-4 justify-end items-center pt-6 border-t border-gray-200 gap-3">
                     <a href="{{ route('financial.recurring.show', $recurring) }}"
                        class="w-full sm:w-auto inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
@@ -411,8 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label class="block text-sm font-medium text-gray-700">Service Type *</label>
                         <input type="text" name="service_tiers[${tierIndex}][service_type]" required
                                value="${data.service_type || ''}"
-                               class="mt-
-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                               class="mt- 1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                                placeholder="e.g., minutes, extensions">
                     </div>
                     <div>

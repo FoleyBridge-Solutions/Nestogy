@@ -8,11 +8,13 @@ use App\Services\NavigationService;
 use App\Services\VoIPTaxService;
 use App\Services\VoIPUsageService;
 use App\Services\VoIPTieredPricingService;
+use App\Services\ClaudePTYService;
 use App\Http\ViewComposers\NavigationComposer;
 use App\Http\ViewComposers\ClientViewComposer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,6 +49,29 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(VoIPTieredPricingService::class, function ($app) {
             return new VoIPTieredPricingService();
         });
+
+        // Register Claude PTY service as singleton for session management
+        $this->app->singleton(ClaudePTYService::class, function ($app) {
+            return new ClaudePTYService();
+        });
+
+        // Register Tax Profile Service with company context
+        $this->app->bind(\App\Services\TaxEngine\TaxProfileService::class, function ($app) {
+            $service = new \App\Services\TaxEngine\TaxProfileService();
+            if (Auth::check() && Auth::user()->company_id) {
+                $service->setCompanyId(Auth::user()->company_id);
+            }
+            return $service;
+        });
+
+        // Register Tax Engine Router with company context
+        $this->app->bind(\App\Services\TaxEngine\TaxEngineRouter::class, function ($app) {
+            $service = new \App\Services\TaxEngine\TaxEngineRouter();
+            if (Auth::check() && Auth::user()->company_id) {
+                $service->setCompanyId(Auth::user()->company_id);
+            }
+            return $service;
+        });
     }
 
     /**
@@ -69,6 +94,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register view composers
         $this->registerViewComposers();
+        
+        // Configure Bouncer
+        $this->configureBouncer();
     }
 
     /**
@@ -126,5 +154,21 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         }
+    }
+    
+    /**
+     * Configure Bouncer for multi-tenancy
+     */
+    protected function configureBouncer(): void
+    {
+        // Set custom table names
+        \Bouncer::tables([
+            'abilities' => 'bouncer_abilities',
+            'assigned_roles' => 'bouncer_assigned_roles', 
+            'permissions' => 'bouncer_permissions',
+            'roles' => 'bouncer_roles',
+        ]);
+        
+        // Note: Bouncer scope is set per-request via SetBouncerScope middleware
     }
 }

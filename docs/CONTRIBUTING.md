@@ -300,9 +300,56 @@ public function create($data)
 ### Architecture Patterns
 
 - **Domain-Driven Design**: Follow existing domain structure
-- **Service Layer**: Business logic in service classes
-- **Repository Pattern**: For complex queries (when needed)
+- **Base Class Pattern**: Use BaseResourceController, BaseService, BaseRequest
+- **Service Layer**: Business logic in domain-specific base services
+- **Multi-Tenancy**: Mandatory BelongsToCompany trait on all models
 - **Event-Driven**: Use Laravel events for decoupled communication
+
+### Base Class Requirements (CRITICAL)
+
+**All new controllers MUST extend BaseResourceController:**
+```php
+class YourController extends BaseResourceController
+{
+    use HasClientRelation; // Add domain-specific traits
+    
+    protected function initializeController(): void
+    {
+        $this->service = app(YourService::class);
+        $this->resourceName = 'resource';
+        $this->viewPath = 'domain.resources';
+        $this->routePrefix = 'domain.resources';
+    }
+    
+    protected function getModelClass(): string
+    {
+        return YourModel::class;
+    }
+}
+```
+
+**All new services MUST extend domain-specific base services:**
+```php
+class YourService extends ClientBaseService // or FinancialBaseService, AssetBaseService
+{
+    protected function initializeService(): void
+    {
+        $this->modelClass = YourModel::class;
+        $this->defaultEagerLoad = ['client', 'user'];
+        $this->searchableFields = ['name', 'description'];
+    }
+}
+```
+
+**All new models MUST use BelongsToCompany trait:**
+```php
+use App\Traits\BelongsToCompany;
+
+class YourModel extends Model
+{
+    use HasFactory, SoftDeletes, BelongsToCompany; // REQUIRED
+}
+```
 
 ### Frontend Guidelines
 
@@ -326,13 +373,17 @@ public function create($data)
    ```php
    public function test_client_service_creates_client_with_valid_data()
    {
-       $service = new ClientService();
+       $user = User::factory()->create();
+       $this->actingAs($user);
+       
+       $service = app(ClientService::class);
        $data = ['name' => 'Test Client', 'email' => 'test@example.com'];
        
        $client = $service->create($data);
        
        $this->assertInstanceOf(Client::class, $client);
        $this->assertEquals('Test Client', $client->name);
+       $this->assertEquals($user->company_id, $client->company_id); // Test multi-tenancy
    }
    ```
 
@@ -352,7 +403,8 @@ public function create($data)
            ->assertSessionHas('success');
        
        $this->assertDatabaseHas('clients', [
-           'name' => 'Test Client'
+           'name' => 'Test Client',
+           'company_id' => $user->company_id // Test multi-tenancy
        ]);
    }
    ```
@@ -484,4 +536,4 @@ Don't hesitate to ask questions! We're here to help:
 
 Your contributions help MSPs worldwide operate more efficiently and serve their clients better.
 
-**Version**: 1.0.0 | **Last Updated**: January 2024 | **Platform**: Laravel 11 + PHP 8.2+
+**Version**: 2.0.0 | **Last Updated**: August 2024 | **Platform**: Laravel 12 + PHP 8.2+ + Modern Base Class Architecture

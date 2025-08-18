@@ -341,7 +341,7 @@
         </div>
     </div>
     
-    @if($quote->isFullyApproved())
+    @if($quote->approval_status === 'executive_approved' || $quote->approval_status === 'manager_approved')
     <div class="approval-badge">APPROVED</div>
     @endif
     
@@ -385,7 +385,7 @@
     </div>
     @endif
     
-    <table class="items-table">
+    <table class="items-min-w-full divide-y divide-gray-200">
         <thead>
             <tr>
                 <th style="width: 40%;">Item</th>
@@ -436,7 +436,7 @@
     </table>
     
     <div class="totals-section">
-        <table class="totals-table">
+        <table class="totals-min-w-full divide-y divide-gray-200">
             <tr>
                 <td class="label">Subtotal:</td>
                 <td class="value">${{ number_format($quote->getSubtotal(), 2) }}</td>
@@ -462,7 +462,7 @@
             </tr>
             @endif
             
-            <tr class="total-row">
+            <tr class="total-flex flex-wrap -mx-4">
                 <td class="label">Total:</td>
                 <td class="value">${{ number_format($quote->amount, 2) }}</td>
             </tr>

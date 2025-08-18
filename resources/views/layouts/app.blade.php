@@ -5,7 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Nestogy ERP') }} - @yield('title', 'Dashboard')</title>
+    <!-- Apply theme IMMEDIATELY before any CSS loads -->
+    <script>
+        @php
+            $userTheme = optional(optional(auth()->user())->userSetting)->theme ?? 'light';
+        @endphp
+        (function() {
+            const userTheme = '{{ $userTheme }}';
+            if (userTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (userTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else if (userTheme === 'auto') {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        })();
+    </script>
+
+    <title>{{ $currentCompany?->name ?? config('app.name', 'Nestogy ERP') }} - @yield('title', 'Dashboard')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -14,10 +35,33 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
+    <!-- Current User Context for JavaScript -->
+    <script>
+        window.CURRENT_USER = {!! json_encode([
+            'id' => auth()->id(),
+            'company_id' => optional(auth()->user())->company_id,
+            'name' => optional(auth()->user())->name,
+            'theme' => optional(optional(auth()->user())->userSetting)->theme ?? 'light',
+            'selected_client_id' => session('selected_client_id'),
+            'selected_client' => session('selected_client_id') ? optional(\App\Models\Client::where('company_id', optional(auth()->user())->company_id)->find(session('selected_client_id')))->only(['id', 'name', 'company_name', 'email']) : null
+        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
+    </script>
+    
+    <!-- Company Customization Styles -->
+    @if(auth()->check() && auth()->user()->company_id)
+        @php
+            $settingsService = app(\App\Services\SettingsService::class);
+            $companyCss = $settingsService->generateCompanyCss(auth()->user()->company);
+        @endphp
+        <style>
+            {!! $companyCss !!}
+        </style>
+    @endif
+    
     <!-- Additional Styles -->
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen" 
+<body class="font-sans antialiased bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen" 
       x-data="modernLayout()" x-init="init()">
     
     <!-- Command Palette -->
@@ -37,55 +81,56 @@
             aside[data-sidebar] { width: 3rem; /* w-12 */ }
         }
         
-        @media (min-width: 768px) and (max-width: 1279px) {
-            aside[data-sidebar] { width: 4rem; /* w-16 */ }
-        }
-        
-        @media (min-width: 1280px) {
-            aside[data-sidebar] { width: 13rem; /* w-52 */ }
+        @media (min-width: 768px) {
+            aside[data-sidebar] { width: 13rem; /* w-52 - full sidebar for tablets and desktops */ }
         }
     </style>
     <div class="min-h-screen relative overflow-x-hidden" x-data="layoutManager()" x-init="init()">
         <!-- Workflow Navigation Bar -->
         <x-workflow-navbar :active-domain="$activeDomain" />
 
-        <div class="flex h-screen pt-16 lg:pt-16 transition-all duration-300 ease-in-out navbar-padding" x-data="{ sidebarMode: 'expanded' }" @sidebar-mode-changed.window="sidebarMode = $event.detail.mode"> 
-            <!-- Responsive padding for navbar -->
-            <!-- Domain Sidebar -->
+        <div class="flex h-screen transition-all duration-300 ease-in-out" x-data="{ 
+            sidebarMode: 'expanded',
+            sidebarOpen: false,
+            toggleSidebar() {
+                if (window.innerWidth <= 1024) {
+                    this.sidebarOpen = !this.sidebarOpen;
+                } else {
+                    // Desktop mode - toggle sidebar mode
+                    this.$dispatch('toggle-sidebar-mode');
+                }
+            },
+            closeSidebar() {
+                this.sidebarOpen = false;
+            }
+        }" 
+        @sidebar-mode-changed.window="sidebarMode = $event.detail.mode"
+        @close-sidebar.window="closeSidebar()"
+        @toggle-mobile-sidebar.window="toggleSidebar()"
+            <!-- Desktop Domain Sidebar -->
             @if($activeDomain)
                 <x-domain-sidebar
                     :active-domain="$activeDomain"
                     :active-item="$activeItem"
-                    x-show="!sidebarOpen || window.innerWidth >= 1024"
                     class="hidden lg:block transform transition-all duration-300 ease-in-out"
-                    x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="-translate-x-full opacity-0"
-                    x-transition:enter-end="translate-x-0 opacity-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="translate-x-0 opacity-100"
-                    x-transition:leave-end="-translate-x-full opacity-0"
                 />
             @endif
 
             <!-- Dynamic Main Content Area -->
-            <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
-                 :class="{
-                     'lg:ml-0': sidebarMode === 'expanded',
-                     'lg:ml-0': sidebarMode === 'compact',
-                     'lg:ml-0': sidebarMode === 'mini'
-                 }">
+            <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out pt-16"
+                 :class="{ 'lg:ml-0': sidebarMode === 'expanded', 'lg:ml-0': sidebarMode === 'compact', 'lg:ml-0': sidebarMode === 'mini' }">
                 <!-- Modern Page Header with Breadcrumbs -->
                 @if(!empty($breadcrumbs) || isset($header))
-                    <header class="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200/60">
-                        <div class="max-w-full mx-auto py-5 px-4 sm:px-6 lg:px-8">
+                    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border-b border-gray-200/60 dark:border-gray-700/60">
+                        <div class="max-w-full mx-auto py-2 px-4 sm:px-6 lg:px-8">
                             @if(!empty($breadcrumbs))
-                                <nav class="flex mb-3" aria-label="Breadcrumb">
+                                <nav class="flex" aria-label="Breadcrumb">
                                     <ol class="inline-flex items-center space-x-1 md:space-x-3 breadcrumbs">
                                         @foreach($breadcrumbs as $index => $breadcrumb)
                                             @if($loop->first)
                                                 <li class="inline-flex items-center">
-                                                    <a href="{{ route($breadcrumb['route']) }}" class="inline-flex items-center text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors duration-200 group">
-                                                        <svg class="w-4 h-4 mr-2 transition-transform duration-200 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+                                                    <a href="{{ route($breadcrumb['route']) }}" class="inline-flex items-center text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 group">
+                                                        <svg class="w-3 h-3 mr-1.5 transition-transform duration-200 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
                                                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
                                                         </svg>
                                                         {{ $breadcrumb['name'] }}
@@ -94,15 +139,15 @@
                                             @else
                                                 <li>
                                                     <div class="flex items-center">
-                                                        <svg class="w-4 h-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                        <svg class="w-3 h-3 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                                                         </svg>
                                                         @if(isset($breadcrumb['route']) && !($breadcrumb['active'] ?? false))
-                                                            <a href="{{ route($breadcrumb['route']) }}" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors duration-200">
+                                                            <a href="{{ route($breadcrumb['route']) }}" class="text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
                                                                 {{ $breadcrumb['name'] }}
                                                             </a>
                                                         @else
-                                                            <span class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
+                                                            <span class="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50 px-1.5 py-0.5 rounded">
                                                                 {{ $breadcrumb['name'] }}
                                                             </span>
                                                         @endif
@@ -122,12 +167,12 @@
                 @endif
 
                 <!-- Dynamic Page Content -->
-                <main class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <div class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8 flash-messages-container">
+                <main class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
+                    <div class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8 flash-messages-container mx-auto px-4 mx-auto px-4">
                         <!-- Modern Flash Messages -->
                         <div class="flash-messages mb-6">
                             @if (session('success'))
-                                <div class="flash-message relative border-l-4 border-green-400 bg-green-50 p-4 mb-4 rounded-r-lg shadow-sm animate-slide-in" role="alert">
+                                <div class="flash-message relative border-l-4 border-green-400 bg-green-50 dark:bg-green-900/20 p-4 mb-4 rounded-r-lg shadow-sm animate-slide-in" role="alert">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
                                             <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,9 +180,9 @@
                                             </svg>
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                                            <p class="text-sm font-medium text-green-800 dark:text-green-300">{!! session('success') !!}</p>
                                         </div>
-                                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-600 p-1.5 hover:bg-green-200 transition-colors duration-200" onclick="this.parentElement.parentElement.remove()">
+                                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-green-50 dark:bg-green-900/20 text-green-500 dark:text-green-400 rounded-lg focus:ring-2 focus:ring-green-600 p-1.5 hover:bg-green-200 dark:hover:bg-green-800/30 transition-colors duration-200" onclick="this.parentElement.parentElement.remove()">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>
@@ -147,7 +192,7 @@
                             @endif
 
                             @if (session('error'))
-                                <div class="flash-message relative border-l-4 border-red-400 bg-red-50 p-4 mb-4 rounded-r-lg shadow-sm animate-slide-in" role="alert">
+                                <div class="flash-message relative border-l-4 border-red-400 bg-red-50 dark:bg-red-900/20 p-4 mb-4 rounded-r-lg shadow-sm animate-slide-in" role="alert">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
                                             <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,9 +200,9 @@
                                             </svg>
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                                            <p class="text-sm font-medium text-red-800 dark:text-red-300">{!! session('error') !!}</p>
                                         </div>
-                                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-600 p-1.5 hover:bg-red-200 transition-colors duration-200" onclick="this.parentElement.parentElement.remove()">
+                                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg focus:ring-2 focus:ring-red-600 p-1.5 hover:bg-red-200 dark:hover:bg-red-800/30 transition-colors duration-200" onclick="this.parentElement.parentElement.remove()">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>
@@ -167,7 +212,7 @@
                             @endif
 
                             @if ($errors->any())
-                                <div class="flash-message relative border-l-4 border-red-400 bg-red-50 p-4 mb-4 rounded-r-lg shadow-sm animate-slide-in" role="alert">
+                                <div class="flash-message relative border-l-4 border-red-400 bg-red-50 dark:bg-red-900/20 p-4 mb-4 rounded-r-lg shadow-sm animate-slide-in" role="alert">
                                     <div class="flex items-start">
                                         <div class="flex-shrink-0 mt-0.5">
                                             <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,14 +220,14 @@
                                             </svg>
                                         </div>
                                         <div class="ml-3 flex-1">
-                                            <h3 class="text-sm font-medium text-red-800 mb-2">Please correct the following errors:</h3>
-                                            <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+                                            <h3 class="text-sm font-medium text-red-800 dark:text-red-300 mb-2">Please correct the following errors:</h3>
+                                            <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400 space-y-1">
                                                 @foreach ($errors->all() as $error)
                                                     <li>{{ $error }}</li>
                                                 @endforeach
                                             </ul>
                                         </div>
-                                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-600 p-1.5 hover:bg-red-200 transition-colors duration-200" onclick="this.parentElement.parentElement.remove()">
+                                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg focus:ring-2 focus:ring-red-600 p-1.5 hover:bg-red-200 dark:hover:bg-red-800/30 transition-colors duration-200" onclick="this.parentElement.parentElement.remove()">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>
@@ -198,7 +243,7 @@
             </div>
         </div>
 
-        <!-- Enhanced Mobile Sidebar Overlay -->
+        <!-- Mobile Sidebar Overlay -->
         @if($activeDomain)
             <div x-show="sidebarOpen"
                  x-transition:enter="transition-all ease-out duration-300"
@@ -208,43 +253,249 @@
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  class="fixed inset-0 z-50 lg:hidden"
-                 style="display: none;">
+                 style="display: none;"
+                 @click.away="closeSidebar()"
+                 x-trap.noscroll.inert="sidebarOpen">
                 
-                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="closeSidebar()"></div>
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+                     @click="closeSidebar()"></div>
                 
-                <div class="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-white shadow-2xl"
+                <!-- Mobile Sidebar -->
+                <div class="relative flex flex-col w-80 max-w-[85vw] h-full bg-white dark:bg-gray-800 shadow-2xl"
                      x-transition:enter="transition-transform ease-out duration-300"
                      x-transition:enter-start="-translate-x-full"
                      x-transition:enter-end="translate-x-0"
                      x-transition:leave="transition-transform ease-in duration-200"
                      x-transition:leave-start="translate-x-0"
-                     x-transition:leave-end="-translate-x-full">
-                    <div class="absolute top-0 right-0 -mr-12 pt-2">
+                     x-transition:leave-end="-translate-x-full"
+                     x-data="{ 
+                        startX: 0, 
+                        currentX: 0,
+                        handleTouchStart(e) {
+                            this.startX = e.touches[0].clientX;
+                        },
+                        handleTouchMove(e) {
+                            this.currentX = e.touches[0].clientX;
+                        },
+                        handleTouchEnd(e) {
+                            const deltaX = this.currentX - this.startX;
+                            if (deltaX < -50) { // Swipe left to close
+                                this.$parent.closeSidebar();
+                            }
+                        }
+                     }"
+                     @touchstart="handleTouchStart($event)"
+                     @touchmove="handleTouchMove($event)"
+                     @touchend="handleTouchEnd($event)">
+                    
+                    <!-- Mobile Close Button -->
+                    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ $activeDomain ? ucfirst($activeDomain) : 'Menu' }}
+                        </h2>
                         <button @click="closeSidebar()"
-                                class="ml-1 flex items-center justify-center h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-all duration-200 hover:bg-white/20">
-                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors touch-manipulation">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
                     
-                    <x-domain-sidebar :active-domain="$activeDomain" :active-item="$activeItem" />
+                    <!-- Mobile Sidebar Content -->
+                    <div class="flex-1 overflow-y-auto">
+                        <x-domain-sidebar :active-domain="$activeDomain" :active-item="$activeItem" mobile="true" />
+                    </div>
                 </div>
             </div>
         @endif
     </div>
 
-    <!-- Enhanced Mobile Sidebar Toggle Button -->
+    <!-- Mobile Swipe Detection for Left Edge -->
     @if($activeDomain)
-        <!-- Adaptive Mobile Sidebar Toggle -->
-        <button @click="toggleSidebar()"
-                class="fixed bottom-6 left-6 lg:hidden z-50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white p-4 rounded-full shadow-xl transform hover:scale-110 transition-all duration-200 ring-4 ring-white/20 backdrop-blur-sm"
-                x-data="{ currentMode: 'mini' }" 
-                @sidebar-mode-changed.window="currentMode = $event.detail.mode">
-            <svg class="h-6 w-6 transition-transform duration-200" :class="sidebarOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
+        <div class="fixed inset-y-0 left-0 w-5 z-40 lg:hidden"
+             x-data="{ 
+                startX: 0, 
+                startY: 0, 
+                startTime: 0,
+                handleTouchStart(e) {
+                    this.startX = e.touches[0].clientX;
+                    this.startY = e.touches[0].clientY;
+                    this.startTime = Date.now();
+                },
+                handleTouchEnd(e) {
+                    const endX = e.changedTouches[0].clientX;
+                    const endY = e.changedTouches[0].clientY;
+                    const deltaX = endX - this.startX;
+                    const deltaY = endY - this.startY;
+                    const deltaTime = Date.now() - this.startTime;
+                    
+                    // Swipe right from left edge
+                    if (deltaX > 50 && Math.abs(deltaY) < 100 && deltaTime < 300 && this.startX < 20) {
+                        this.$parent.toggleSidebar();
+                    }
+                }
+             }"
+             @touchstart="handleTouchStart($event)"
+             @touchend="handleTouchEnd($event)">
+        </div>
+        
+        <!-- Enhanced Mobile Virtual Keyboard Detection -->
+        <script>
+            // Enhanced virtual keyboard detection and form handling
+            let initialViewportHeight = window.innerHeight;
+            let keyboardTimer = null;
+            let focusedElement = null;
+            
+            // Viewport height change detection
+            window.addEventListener('resize', handleViewportChange);
+            
+            // Focus/blur tracking for better keyboard detection
+            document.addEventListener('focusin', handleInputFocus);
+            document.addEventListener('focusout', handleInputBlur);
+            
+            function handleViewportChange() {
+                clearTimeout(keyboardTimer);
+                
+                keyboardTimer = setTimeout(() => {
+                    const currentHeight = window.innerHeight;
+                    const heightDiff = initialViewportHeight - currentHeight;
+                    
+                    // More sophisticated keyboard detection
+                    const isKeyboardVisible = heightDiff > 150 && window.innerWidth < 1024;
+                    
+                    if (isKeyboardVisible) {
+                        document.body.classList.add('keyboard-visible');
+                        // Scroll focused element into view
+                        if (focusedElement) {
+                            scrollToElement(focusedElement);
+                        }
+                    } else {
+                        document.body.classList.remove('keyboard-visible');
+                        // Update initial height if keyboard is closed
+                        if (heightDiff <= 50) {
+                            initialViewportHeight = currentHeight;
+                        }
+                    }
+                }, 150);
+            }
+            
+            function handleInputFocus(e) {
+                const element = e.target;
+                
+                // Only handle form inputs
+                if (!isFormInput(element)) return;
+                
+                focusedElement = element;
+                
+                // Add focused class for styling
+                element.classList.add('input-focused');
+                
+                // Ensure proper input types for mobile keyboards
+                optimizeInputForMobile(element);
+                
+                // Scroll into view after a brief delay to account for keyboard animation
+                setTimeout(() => {
+                    if (document.body.classList.contains('keyboard-visible')) {
+                        scrollToElement(element);
+                    }
+                }, 300);
+            }
+            
+            function handleInputBlur(e) {
+                const element = e.target;
+                
+                if (!isFormInput(element)) return;
+                
+                element.classList.remove('input-focused');
+                
+                // Clear focused element if it's the one being blurred
+                if (focusedElement === element) {
+                    focusedElement = null;
+                }
+            }
+            
+            function isFormInput(element) {
+                const formInputs = ['INPUT', 'TEXTAREA', 'SELECT'];
+                return formInputs.includes(element.tagName);
+            }
+            
+            function optimizeInputForMobile(element) {
+                // Set appropriate input modes and keyboard types
+                if (element.type === 'email' && !element.getAttribute('inputmode')) {
+                    element.setAttribute('inputmode', 'email');
+                }
+                if (element.type === 'tel' && !element.getAttribute('inputmode')) {
+                    element.setAttribute('inputmode', 'tel');
+                }
+                if (element.type === 'number' && !element.getAttribute('inputmode')) {
+                    element.setAttribute('inputmode', 'numeric');
+                }
+                if (element.type === 'url' && !element.getAttribute('inputmode')) {
+                    element.setAttribute('inputmode', 'url');
+                }
+                
+                // Set enter key hint for better UX
+                if (!element.getAttribute('enterkeyhint')) {
+                    if (element.form) {
+                        element.setAttribute('enterkeyhint', 'next');
+                    }
+                }
+            }
+            
+            function scrollToElement(element) {
+                if (!element || window.innerWidth >= 1024) return;
+                
+                // Calculate the scroll position to center the input in the visible area
+                const elementRect = element.getBoundingClientRect();
+                const visibleHeight = window.innerHeight;
+                const keyboardHeight = initialViewportHeight - visibleHeight;
+                const availableHeight = visibleHeight - keyboardHeight;
+                
+                // Scroll to center the input in the available space above the keyboard
+                const targetY = elementRect.top - (availableHeight / 2) + (elementRect.height / 2);
+                
+                window.scrollBy({
+                    top: targetY,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Prevent zoom on double-tap for iOS
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Initialize on page load
+            window.addEventListener('load', () => {
+                initialViewportHeight = window.innerHeight;
+            });
+        </script>
+        
+        <style>
+            /* Virtual keyboard handling */
+            .keyboard-visible {
+                --safe-area-inset-bottom: 0px;
+            }
+            
+            /* Touch optimization */
+            .touch-manipulation {
+                touch-action: manipulation;
+            }
+            
+            /* Better scroll behavior on mobile */
+            @media (max-width: 1024px) {
+                body {
+                    -webkit-overflow-scrolling: touch;
+                    overscroll-behavior-y: contain;
+                }
+            }
+        </style>
     @endif
 
     <!-- Layout Manager Alpine.js Component -->
@@ -284,6 +535,11 @@
         };
     }
     </script>
+
+    <!-- Quote System Integration -->
+    @if(request()->route() && (request()->route()->getName() === 'financial.quotes.create' || request()->route()->getName() === 'financial.quotes.edit'))
+        <script src="{{ asset('js/quote-integration-simple.js') }}"></script>
+    @endif
 
     <!-- Additional Scripts -->
     @stack('scripts')
