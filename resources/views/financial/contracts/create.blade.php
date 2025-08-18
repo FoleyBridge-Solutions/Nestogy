@@ -13,18 +13,18 @@ $breadcrumbs = [
 @section('title', 'Create Contract')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" x-data="contractCreator()">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800" x-data="contractCreator()">
     <!-- Modern Header -->
-    <div class="bg-white shadow-sm border-b border-gray-200">
+    <div class="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Create New Contract</h1>
-                    <p class="mt-1 text-lg text-gray-600">Build intelligent contracts with templates, automation, and real-time collaboration</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Create New Contract</h1>
+                    <p class="mt-1 text-lg text-gray-600 dark:text-gray-300">Build intelligent contracts with templates, automation, and real-time collaboration</p>
                 </div>
                 <div class="flex items-center space-x-4">
                     <!-- AI Assistant -->
-                    <button class="inline-flex items-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                    <button class="inline-flex items-center px-4 py-2 border border-purple-300 dark:border-purple-600 rounded-lg text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-800/50 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
@@ -32,7 +32,7 @@ $breadcrumbs = [
                     </button>
                     
                     <!-- Save as Draft -->
-                    <button @click="saveDraft()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <button @click="saveDraft()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
                         </svg>
@@ -41,7 +41,7 @@ $breadcrumbs = [
                     
                     <!-- Cancel -->
                     <a href="{{ route('financial.contracts.index') }}" 
-                       class="inline-flex items-center px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors">
+                       class="inline-flex items-center px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -55,15 +55,15 @@ $breadcrumbs = [
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- Enhanced Progress Steps -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
             <div class="p-6">
                 <!-- Progress Bar -->
                 <div class="mb-8">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm font-medium text-gray-900">Progress</span>
-                        <span class="text-sm text-gray-500" x-text="Math.round((currentStep / 4) * 100) + '% complete'"></span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">Progress</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400" x-text="Math.round((currentStep / 4) * 100) + '% complete'"></span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div class="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out" 
                              :style="`width: ${(currentStep / 4) * 100}%`"></div>
                     </div>
@@ -76,16 +76,16 @@ $breadcrumbs = [
                             :disabled="!canGoToStep(1)"
                             class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
                             :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200': currentStep === 1,
-                                'bg-green-50 border-green-200': currentStep > 1,
-                                'bg-gray-50 border-gray-200 cursor-not-allowed': !canGoToStep(1) && currentStep !== 1,
-                                'hover:bg-gray-100': canGoToStep(1) && currentStep !== 1
+                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 1,
+                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 1,
+                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(1) && currentStep !== 1,
+                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(1) && currentStep !== 1
                             }">
                         <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
                              :class="{
                                  'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 1,
                                  'bg-green-500 text-white': currentStep > 1,
-                                 'bg-gray-300 text-gray-500': currentStep < 1
+                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 1
                              }">
                             <span x-show="currentStep <= 1" class="text-sm font-bold">1</span>
                             <svg x-show="currentStep > 1" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,8 +93,8 @@ $breadcrumbs = [
                             </svg>
                         </div>
                         <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 1 ? 'text-blue-900' : currentStep > 1 ? 'text-green-700' : 'text-gray-500'">Template Selection</h4>
-                            <p class="text-xs text-gray-600 mt-1">Choose your foundation</p>
+                            <h4 class="text-sm font-semibold" :class="currentStep === 1 ? 'text-blue-900 dark:text-blue-300' : currentStep > 1 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Template Selection</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Choose your foundation</p>
                         </div>
                         <div x-show="currentStep === 1" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                     </button>
@@ -104,16 +104,16 @@ $breadcrumbs = [
                             :disabled="!canGoToStep(2)"
                             class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
                             :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200': currentStep === 2,
-                                'bg-green-50 border-green-200': currentStep > 2,
-                                'bg-gray-50 border-gray-200 cursor-not-allowed': !canGoToStep(2) && currentStep !== 2,
-                                'hover:bg-gray-100': canGoToStep(2) && currentStep !== 2
+                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 2,
+                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 2,
+                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(2) && currentStep !== 2,
+                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(2) && currentStep !== 2
                             }">
                         <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
                              :class="{
                                  'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 2,
                                  'bg-green-500 text-white': currentStep > 2,
-                                 'bg-gray-300 text-gray-500': currentStep < 2
+                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 2
                              }">
                             <span x-show="currentStep <= 2" class="text-sm font-bold">2</span>
                             <svg x-show="currentStep > 2" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,8 +121,8 @@ $breadcrumbs = [
                             </svg>
                         </div>
                         <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 2 ? 'text-blue-900' : currentStep > 2 ? 'text-green-700' : 'text-gray-500'">Basic Information</h4>
-                            <p class="text-xs text-gray-600 mt-1">Contract essentials</p>
+                            <h4 class="text-sm font-semibold" :class="currentStep === 2 ? 'text-blue-900 dark:text-blue-300' : currentStep > 2 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Basic Information</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Contract essentials</p>
                         </div>
                         <div x-show="currentStep === 2" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                     </button>
@@ -132,16 +132,16 @@ $breadcrumbs = [
                             :disabled="!canGoToStep(3)"
                             class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
                             :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200': currentStep === 3,
-                                'bg-green-50 border-green-200': currentStep > 3,
-                                'bg-gray-50 border-gray-200 cursor-not-allowed': !canGoToStep(3) && currentStep !== 3,
-                                'hover:bg-gray-100': canGoToStep(3) && currentStep !== 3
+                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 3,
+                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 3,
+                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(3) && currentStep !== 3,
+                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(3) && currentStep !== 3
                             }">
                         <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
                              :class="{
                                  'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 3,
                                  'bg-green-500 text-white': currentStep > 3,
-                                 'bg-gray-300 text-gray-500': currentStep < 3
+                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 3
                              }">
                             <span x-show="currentStep <= 3" class="text-sm font-bold">3</span>
                             <svg x-show="currentStep > 3" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,8 +149,8 @@ $breadcrumbs = [
                             </svg>
                         </div>
                         <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 3 ? 'text-blue-900' : currentStep > 3 ? 'text-green-700' : 'text-gray-500'">Configuration</h4>
-                            <p class="text-xs text-gray-600 mt-1">Terms & automation</p>
+                            <h4 class="text-sm font-semibold" :class="currentStep === 3 ? 'text-blue-900 dark:text-blue-300' : currentStep > 3 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Configuration</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Terms & automation</p>
                         </div>
                         <div x-show="currentStep === 3" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                     </button>
@@ -160,16 +160,16 @@ $breadcrumbs = [
                             :disabled="!canGoToStep(4)"
                             class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
                             :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200': currentStep === 4,
-                                'bg-green-50 border-green-200': currentStep > 4,
-                                'bg-gray-50 border-gray-200 cursor-not-allowed': !canGoToStep(4) && currentStep !== 4,
-                                'hover:bg-gray-100': canGoToStep(4) && currentStep !== 4
+                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 4,
+                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 4,
+                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(4) && currentStep !== 4,
+                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(4) && currentStep !== 4
                             }">
                         <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
                              :class="{
                                  'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 4,
                                  'bg-green-500 text-white': currentStep > 4,
-                                 'bg-gray-300 text-gray-500': currentStep < 4
+                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 4
                              }">
                             <span x-show="currentStep <= 4" class="text-sm font-bold">4</span>
                             <svg x-show="currentStep > 4" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,24 +177,24 @@ $breadcrumbs = [
                             </svg>
                         </div>
                         <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 4 ? 'text-blue-900' : currentStep > 4 ? 'text-green-700' : 'text-gray-500'">Review & Create</h4>
-                            <p class="text-xs text-gray-600 mt-1">Final verification</p>
+                            <h4 class="text-sm font-semibold" :class="currentStep === 4 ? 'text-blue-900 dark:text-blue-300' : currentStep > 4 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Review & Create</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Final verification</p>
                         </div>
                         <div x-show="currentStep === 4" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                     </button>
                 </div>
                 
                 <!-- Smart Suggestions -->
-                <div x-show="suggestions.length > 0" class="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div x-show="suggestions.length > 0" class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
                     <div class="flex items-start">
                         <svg class="w-5 h-5 text-purple-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
                         <div>
-                            <h4 class="text-sm font-medium text-purple-900 mb-2">AI Suggestions</h4>
-                            <ul class="text-sm text-purple-800 space-y-1">
+                            <h4 class="text-sm font-medium text-purple-900 dark:text-purple-300 mb-2">AI Suggestions</h4>
+                            <ul class="text-sm text-purple-800 dark:text-purple-300 space-y-1">
                                 <template x-for="suggestion in suggestions" :key="suggestion.id">
-                                    <li class="flex items-center cursor-pointer hover:text-purple-900" @click="applySuggestion(suggestion)">
+                                    <li class="flex items-center cursor-pointer hover:text-purple-900 dark:hover:text-purple-200" @click="applySuggestion(suggestion)">
                                         <svg class="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                                         </svg>
@@ -209,7 +209,7 @@ $breadcrumbs = [
         </div>
 
         <!-- Smart Form Container -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
             <form action="{{ route('financial.contracts.store') }}" method="POST" @submit="prepareSubmission">
             @csrf
             
@@ -217,19 +217,19 @@ $breadcrumbs = [
             <div x-show="currentStep === 1" x-transition class="space-y-6">
                 <!-- Template Selection -->
                 <div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Choose a Template (Optional)</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Choose a Template (Optional)</h3>
                     <p class="text-sm text-gray-600 mb-6">Select a pre-configured template to get started quickly, or create a custom contract from scratch.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                         <!-- No Template Option -->
                         <div class="border-2 rounded-lg p-4 cursor-pointer transition-all"
-                             :class="!selectedTemplate ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+                             :class="!selectedTemplate ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
                              @click="selectTemplate(null)">
                             <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-medium text-gray-900">Custom Contract</h4>
+                                <h4 class="font-medium text-gray-900 dark:text-white">Custom Contract</h4>
                                 <div class="w-4 h-4 rounded-full border-2 transition-colors"
                                      :class="!selectedTemplate ? 'border-blue-500 bg-blue-500' : 'border-gray-300'">
-                                    <div x-show="!selectedTemplate" class="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                                    <div x-show="!selectedTemplate" class="w-2 h-2 bg-white dark:bg-gray-800 rounded-full mx-auto mt-0.5"></div>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600">Create a contract from scratch with your own terms and content</p>
@@ -241,17 +241,17 @@ $breadcrumbs = [
                         <!-- Template Options -->
                         @foreach($templates as $template)
                         <div class="border-2 rounded-lg p-4 cursor-pointer transition-all"
-                             :class="selectedTemplate && selectedTemplate.id === {{ $template->id }} ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+                             :class="selectedTemplate && selectedTemplate.id === {{ $template->id }} ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
                              @click="selectTemplate(@js($template))">
                             <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-medium text-gray-900">{{ $template->name }}</h4>
+                                <h4 class="font-medium text-gray-900 dark:text-white">{{ $template->name }}</h4>
                                 <div class="w-4 h-4 rounded-full border-2 transition-colors"
                                      :class="selectedTemplate && selectedTemplate.id === {{ $template->id }} ? 'border-blue-500 bg-blue-500' : 'border-gray-300'">
                                     <div x-show="selectedTemplate && selectedTemplate.id === {{ $template->id }}" 
-                                         class="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                                         class="w-2 h-2 bg-white dark:bg-gray-800 rounded-full mx-auto mt-0.5"></div>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-600 mb-3">{{ $template->description ?: 'Professional contract template' }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ $template->description ?: 'Professional contract template' }}</p>
                             <div class="flex items-center gap-2 text-xs">
                                 <span class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-700">
                                     {{ ucfirst(str_replace('_', ' ', $template->template_type)) }}
@@ -313,24 +313,24 @@ $breadcrumbs = [
                 </div>
 
                 <!-- Basic Contract Info -->
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <!-- Contract Title -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Contract Title *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Title *</label>
                             <input type="text" name="title" x-model="form.title" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                                    placeholder="e.g., IT Support Agreement - Company ABC">
                             @error('title')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                         </div>
 
                         <!-- Contract Type -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Contract Type *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Type *</label>
                             <select name="contract_type" x-model="form.contract_type" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
                                 <option value="">Select type...</option>
                                 <option value="one_time_service">One-time Service</option>
                                 <option value="recurring_service">Recurring Service</option>
@@ -344,9 +344,9 @@ $breadcrumbs = [
 
                     <!-- Client Selection -->
                     <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Client *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client *</label>
                         <select name="client_id" x-model="form.client_id" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
                             <option value="">Select client...</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}">{{ $client->name }}</option>
@@ -357,9 +357,9 @@ $breadcrumbs = [
 
                     <!-- Description -->
                     <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
                         <textarea name="description" x-model="form.description" rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                                   placeholder="Brief description of the contract scope and objectives..."></textarea>
                         @error('description')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>
@@ -368,23 +368,23 @@ $breadcrumbs = [
 
             <!-- Step 2: Contract Details -->
             <div x-show="currentStep === 2" x-transition class="space-y-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Contract Details</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contract Details</h3>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Start Date -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date *</label>
                         <input type="date" name="start_date" x-model="form.start_date" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
                         @error('start_date')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>
 
                     <!-- End Date -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
                         <input type="date" name="end_date" x-model="form.end_date"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <p class="text-xs text-gray-500 mt-1">Leave blank for open-ended contracts</p>
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave blank for open-ended contracts</p>
                         @error('end_date')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>
                 </div>
@@ -392,10 +392,10 @@ $breadcrumbs = [
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Contract Value (only for fixed billing) -->
                     <div x-show="!selectedTemplate || selectedTemplate.billing_model === 'fixed'">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Contract Value *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Value *</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
+                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">$</span>
                             </div>
                             <input type="number" step="0.01" name="contract_value" x-model="form.contract_value" 
                                    :required="!selectedTemplate || selectedTemplate.billing_model === 'fixed'"
@@ -407,14 +407,14 @@ $breadcrumbs = [
                     
                     <!-- Usage-Based Billing Notice -->
                     <div x-show="selectedTemplate && selectedTemplate.billing_model !== 'fixed'" class="col-span-2">
-                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>
                                 <div>
-                                    <h4 class="font-medium text-purple-900">Usage-Based Billing</h4>
-                                    <p class="text-sm text-purple-700">Contract value will be calculated automatically based on assigned assets and contacts. No fixed value needed.</p>
+                                    <h4 class="font-medium text-purple-900 dark:text-purple-300">Usage-Based Billing</h4>
+                                    <p class="text-sm text-purple-700 dark:text-purple-300">Contract value will be calculated automatically based on assigned assets and contacts. No fixed value needed.</p>
                                 </div>
                             </div>
                         </div>
@@ -422,9 +422,9 @@ $breadcrumbs = [
 
                     <!-- Currency -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</label>
                         <select name="currency" x-model="form.currency"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
                             <option value="USD">USD - US Dollar</option>
                             <option value="EUR">EUR - Euro</option>
                             <option value="GBP">GBP - British Pound</option>
@@ -436,9 +436,9 @@ $breadcrumbs = [
 
                 <!-- Payment Terms -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Terms</label>
                     <select name="payment_terms" x-model="form.payment_terms"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
                         <option value="">Select payment terms...</option>
                         <option value="net_15">Net 15 days</option>
                         <option value="net_30">Net 30 days</option>
@@ -455,10 +455,10 @@ $breadcrumbs = [
             <div x-show="currentStep === 3" x-transition class="space-y-6">
                 <!-- Billing Model Selection (if using template) -->
                 <div x-show="selectedTemplate && selectedTemplate.billing_model !== 'fixed'">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Billing Configuration</h3>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Billing Configuration</h3>
                     
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <p class="text-sm text-blue-700">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
                             This template uses <strong x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></strong> billing.
                             Configure the billing parameters below.
                         </p>
@@ -466,17 +466,17 @@ $breadcrumbs = [
 
                     <!-- Asset Assignment (for per-asset billing) -->
                     <div x-show="selectedTemplate && ['per_asset', 'hybrid'].includes(selectedTemplate.billing_model)" class="mb-6">
-                        <h4 class="font-medium text-gray-700 mb-3">Asset Assignment</h4>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-sm text-gray-600 mb-3">Select which client assets will be covered under this contract</p>
+                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Asset Assignment</h4>
+                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Select which client assets will be covered under this contract</p>
                             <div class="space-y-2">
                                 <label class="flex items-center">
                                     <input type="checkbox" x-model="billingConfig.auto_assign_assets" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700">Automatically assign all current client assets</span>
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign all current client assets</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" x-model="billingConfig.auto_assign_new_assets" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700">Automatically assign future client assets</span>
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign future client assets</span>
                                 </label>
                             </div>
                         </div>
@@ -484,17 +484,17 @@ $breadcrumbs = [
 
                     <!-- Contact Assignment (for per-contact billing) -->
                     <div x-show="selectedTemplate && ['per_contact', 'hybrid'].includes(selectedTemplate.billing_model)" class="mb-6">
-                        <h4 class="font-medium text-gray-700 mb-3">Contact Assignment</h4>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-sm text-gray-600 mb-3">Select which client contacts will have portal access under this contract</p>
+                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Contact Assignment</h4>
+                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Select which client contacts will have portal access under this contract</p>
                             <div class="space-y-2">
                                 <label class="flex items-center">
                                     <input type="checkbox" x-model="billingConfig.auto_assign_contacts" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700">Automatically assign all current client contacts</span>
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign all current client contacts</span>
                                 </label>
                                 <label class="flex items-center">
                                     <input type="checkbox" x-model="billingConfig.auto_assign_new_contacts" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700">Automatically assign future client contacts</span>
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign future client contacts</span>
                                 </label>
                             </div>
                         </div>
@@ -503,32 +503,32 @@ $breadcrumbs = [
 
                 <!-- Variable Fields (if using template with variables) -->
                 <div x-show="selectedTemplate && selectedTemplate.variable_fields && selectedTemplate.variable_fields.length > 0">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Template Variables</h3>
-                    <p class="text-sm text-gray-600 mb-4">Fill in the variable values for this contract</p>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Template Variables</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Fill in the variable values for this contract</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <template x-for="field in (selectedTemplate ? selectedTemplate.variable_fields : [])" :key="field.name">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2" 
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" 
                                        x-text="field.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) + (field.required ? ' *' : '')"></label>
                                 <input :type="field.type === 'currency' ? 'number' : field.type"
                                        :step="field.type === 'currency' ? '0.01' : null"
                                        x-model="variableValues[field.name]"
                                        :placeholder="field.default_value || 'Enter ' + field.name"
                                        :required="field.required"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
                             </div>
                         </template>
                     </div>
                 </div>
 
                 <!-- Contract Content -->
-                <div class="border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Contract Content</h3>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contract Content</h3>
                     
                     <div x-show="selectedTemplate">
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                            <p class="text-sm text-green-700">
+                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-600 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-green-700 dark:text-green-300">
                                 Content will be generated from the selected template with your variable values.
                                 You can preview and edit the content after creating the contract.
                             </p>
@@ -536,7 +536,7 @@ $breadcrumbs = [
                     </div>
 
                     <div x-show="!selectedTemplate">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Contract Content *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Content *</label>
                         <textarea name="content" x-model="form.content" rows="12" 
                                   :required="!selectedTemplate"
                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
@@ -548,52 +548,52 @@ $breadcrumbs = [
 
             <!-- Step 4: Review -->
             <div x-show="currentStep === 4" x-transition class="space-y-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Review Contract</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Review Contract</h3>
                 
-                <div class="bg-gray-50 rounded-lg p-6">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Contract Summary -->
                         <div>
-                            <h4 class="font-medium text-gray-900 mb-3">Contract Summary</h4>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">Contract Summary</h4>
                             <dl class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600">Title:</dt>
-                                    <dd class="text-gray-900" x-text="form.title"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Title:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="form.title"></dd>
                                 </div>
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600">Type:</dt>
-                                    <dd class="text-gray-900" x-text="form.contract_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Type:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="form.contract_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></dd>
                                 </div>
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600">Value:</dt>
-                                    <dd class="text-gray-900" x-text="'$' + parseFloat(form.contract_value || 0).toLocaleString()"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Value:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="'$' + parseFloat(form.contract_value || 0).toLocaleString()"></dd>
                                 </div>
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600">Start Date:</dt>
-                                    <dd class="text-gray-900" x-text="form.start_date"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Start Date:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="form.start_date"></dd>
                                 </div>
                                 <div class="flex justify-between" x-show="form.end_date">
-                                    <dt class="text-gray-600">End Date:</dt>
-                                    <dd class="text-gray-900" x-text="form.end_date"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">End Date:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="form.end_date"></dd>
                                 </div>
                             </dl>
                         </div>
 
                         <!-- Template & Billing Info -->
                         <div>
-                            <h4 class="font-medium text-gray-900 mb-3">Template & Billing</h4>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">Template & Billing</h4>
                             <dl class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <dt class="text-gray-600">Template:</dt>
-                                    <dd class="text-gray-900" x-text="selectedTemplate ? selectedTemplate.name : 'Custom Contract'"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Template:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="selectedTemplate ? selectedTemplate.name : 'Custom Contract'"></dd>
                                 </div>
                                 <div x-show="selectedTemplate" class="flex justify-between">
-                                    <dt class="text-gray-600">Billing Model:</dt>
-                                    <dd class="text-gray-900" x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Billing Model:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></dd>
                                 </div>
                                 <div x-show="selectedTemplate && selectedTemplate.variable_fields && selectedTemplate.variable_fields.length > 0" class="flex justify-between">
-                                    <dt class="text-gray-600">Variables:</dt>
-                                    <dd class="text-gray-900" x-text="Object.keys(variableValues).length + ' configured'"></dd>
+                                    <dt class="text-gray-600 dark:text-gray-400">Variables:</dt>
+                                    <dd class="text-gray-900 dark:text-white" x-text="Object.keys(variableValues).length + ' configured'"></dd>
                                 </div>
                             </dl>
                         </div>
@@ -601,14 +601,14 @@ $breadcrumbs = [
                 </div>
 
                 <!-- Final Review -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                     <div class="flex items-start">
                         <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <div>
-                            <h4 class="text-sm font-medium text-blue-800">Ready to Create</h4>
-                            <p class="text-sm text-blue-700 mt-1">
+                            <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Ready to Create</h4>
+                            <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
                                 Review the information above and click "Create Contract" to proceed. 
                                 You'll be able to edit the contract content and send it for approval after creation.
                             </p>
@@ -623,12 +623,12 @@ $breadcrumbs = [
             <input type="hidden" name="billing_config" x-model="billingConfigJson">
 
                 <!-- Enhanced Navigation -->
-                <div class="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200 mt-6">
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 rounded-b-xl border-t border-gray-200 dark:border-gray-700 mt-6">
                     <div class="flex items-center justify-between">
                         <!-- Left: Back Button -->
                         <button type="button" @click="previousStep()" 
                                 x-show="currentStep > 1"
-                                class="inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition-colors">
+                                class="inline-flex items-center px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
@@ -636,7 +636,7 @@ $breadcrumbs = [
                         </button>
                         
                         <!-- Center: Step Indicator -->
-                        <div class="text-sm text-gray-500">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
                             Step <span x-text="currentStep"></span> of 4
                         </div>
                         
@@ -644,7 +644,7 @@ $breadcrumbs = [
                         <div class="flex items-center space-x-3">
                             <!-- Save Draft -->
                             <button type="button" @click="saveDraft()" 
-                                    class="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                    class="inline-flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
                                 </svg>
@@ -677,21 +677,21 @@ $breadcrumbs = [
                     </div>
                     
                     <!-- Progress Details -->
-                    <div class="mt-4 flex items-center justify-center space-x-6 text-xs text-gray-500">
+                    <div class="mt-4 flex items-center justify-center space-x-6 text-xs text-gray-500 dark:text-gray-400">
                         <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 1 ? 'bg-green-500' : 'bg-gray-300'"></div>
+                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 1 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
                             Template Selected
                         </div>
                         <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 2 ? 'bg-green-500' : 'bg-gray-300'"></div>
+                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 2 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
                             Basic Info Complete
                         </div>
                         <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 3 ? 'bg-green-500' : 'bg-gray-300'"></div>
+                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 3 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
                             Configuration Set
                         </div>
                         <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 4 ? 'bg-green-500' : 'bg-gray-300'"></div>
+                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 4 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
                             Ready to Create
                         </div>
                     </div>
