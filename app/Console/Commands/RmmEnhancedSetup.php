@@ -11,12 +11,14 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * RMM Enhanced Setup Command
- * 
+ *
  * Helps set up and test the enhanced RMM capabilities.
  */
 class RmmEnhancedSetup extends Command
 {
-    protected $signature = 'rmm:enhanced-setup 
+    private const DEFAULT_BATCH_SIZE = 100;
+
+    protected $signature = 'rmm:enhanced-setup
                             {action : Action to perform (test|sync|status|capabilities)}
                             {--integration= : Specific integration ID to work with}
                             {--asset= : Specific asset ID to work with}
@@ -55,11 +57,11 @@ class RmmEnhancedSetup extends Command
         $this->info('Testing RMM connections and enhanced capabilities...');
 
         $query = RmmIntegration::where('is_active', true);
-        
+
         if ($integrationId = $this->option('integration')) {
             $query->where('id', $integrationId);
         }
-        
+
         if ($companyId = $this->option('company')) {
             $query->where('company_id', $companyId);
         }
@@ -73,23 +75,23 @@ class RmmEnhancedSetup extends Command
 
         foreach ($integrations as $integration) {
             $this->line("\n=== Testing {$integration->name} (ID: {$integration->id}) ===");
-            
+
             try {
                 $rmmService = $this->rmmFactory->create($integration);
-                
+
                 // Test basic connection
                 $this->info('Testing basic connection...');
                 $connectionTest = $rmmService->testConnection();
-                
+
                 if ($connectionTest['success']) {
                     $this->info('✓ Connection successful');
-                    
+
                     // Test enhanced capabilities
                     $this->testEnhancedCapabilities($rmmService, $integration);
                 } else {
                     $this->error('✗ Connection failed: ' . ($connectionTest['message'] ?? 'Unknown error'));
                 }
-                
+
             } catch (\Exception $e) {
                 $this->error('✗ Integration test failed: ' . $e->getMessage());
             }
@@ -104,59 +106,59 @@ class RmmEnhancedSetup extends Command
     protected function testEnhancedCapabilities($rmmService, $integration): void
     {
         $this->info('Testing enhanced capabilities...');
-        
+
         // Get agents
         $this->info('- Testing agent retrieval...');
         $agentsResult = $rmmService->getAgents(['limit' => 1]);
-        
+
         if ($agentsResult['success'] && !empty($agentsResult['data'])) {
             $this->info('✓ Agent retrieval working');
-            
+
             $testAgent = $agentsResult['data'][0];
             $agentId = $testAgent['id'];
-            
+
             // Test comprehensive inventory
             $this->info('- Testing comprehensive inventory...');
             $inventoryResult = $rmmService->getFullDeviceInventory($agentId);
-            
+
             if ($inventoryResult['success']) {
                 $this->info('✓ Comprehensive inventory working');
                 $this->line('  Data sections: ' . implode(', ', array_keys($inventoryResult['data'])));
             } else {
                 $this->warn('⚠ Comprehensive inventory has issues');
             }
-            
+
             // Test hardware info
             $this->info('- Testing hardware information...');
             $hardwareResult = $rmmService->getDeviceHardware($agentId);
-            
+
             if ($hardwareResult['success']) {
                 $this->info('✓ Hardware information working');
             } else {
                 $this->warn('⚠ Hardware information has issues');
             }
-            
+
             // Test performance metrics
             $this->info('- Testing performance metrics...');
             $perfResult = $rmmService->getDevicePerformance($agentId);
-            
+
             if ($perfResult['success']) {
                 $this->info('✓ Performance metrics working');
             } else {
                 $this->warn('⚠ Performance metrics have issues');
             }
-            
+
             // Test services
             $this->info('- Testing service management...');
             $servicesResult = $rmmService->getAgentServices($agentId);
-            
+
             if ($servicesResult['success']) {
                 $this->info('✓ Service management working');
                 $this->line('  Services found: ' . count($servicesResult['data']));
             } else {
                 $this->warn('⚠ Service management has issues');
             }
-            
+
         } else {
             $this->warn('⚠ No agents found to test advanced capabilities');
         }
@@ -171,23 +173,23 @@ class RmmEnhancedSetup extends Command
 
         if ($companyId = $this->option('company')) {
             $result = $this->syncService->syncAllAssetsForCompany($companyId);
-            
+
             $this->info("Sync completed for company {$companyId}:");
             $this->line("- Total synced: {$result['total_synced']}");
             $this->line("- Total errors: {$result['total_errors']}");
-            
+
             foreach ($result['integration_results'] as $integration => $intResult) {
                 $this->line("  {$integration}: {$intResult['synced_count']} synced, {$intResult['error_count']} errors");
             }
-            
+
         } elseif ($integrationId = $this->option('integration')) {
             $integration = RmmIntegration::findOrFail($integrationId);
             $result = $this->syncService->syncAssetsFromIntegration($integration);
-            
+
             $this->info("Sync completed for integration {$integration->name}:");
             $this->line("- Synced: {$result['synced_count']}");
             $this->line("- Errors: {$result['error_count']}");
-            
+
         } else {
             $this->error('Please specify either --company or --integration option');
             return 1;
@@ -207,7 +209,7 @@ class RmmEnhancedSetup extends Command
         // Show integrations
         $integrations = RmmIntegration::with('company')->get();
         $this->line("\nActive Integrations:");
-        
+
         foreach ($integrations as $integration) {
             $status = $integration->is_active ? '✓' : '✗';
             $this->line("  {$status} {$integration->name} ({$integration->provider}) - Company: {$integration->company->name}");
@@ -217,9 +219,9 @@ class RmmEnhancedSetup extends Command
         $assetsWithRmm = Asset::whereHas('deviceMappings', function ($query) {
             $query->active();
         })->count();
-        
+
         $totalAssets = Asset::count();
-        
+
         $this->line("\nAsset Statistics:");
         $this->line("  Total assets: {$totalAssets}");
         $this->line("  Assets with RMM connections: {$assetsWithRmm}");
@@ -233,7 +235,7 @@ class RmmEnhancedSetup extends Command
                 COUNT(CASE WHEN is_active = true THEN 1 END) as active
             ')
             ->first();
-        
+
         $this->line("\nDevice Mappings:");
         $this->line("  Total mappings: {$mappings->total}");
         $this->line("  Mapped to assets: {$mappings->mapped}");

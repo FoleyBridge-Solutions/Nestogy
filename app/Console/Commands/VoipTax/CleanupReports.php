@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 /**
  * Cleanup Old VoIP Tax Reports
- * 
+ *
  * Artisan command to cleanup old tax reports based on retention policy.
  */
 class CleanupReports extends Command
@@ -17,7 +17,7 @@ class CleanupReports extends Command
      *
      * @var string
      */
-    protected $signature = 'voip-tax:cleanup-reports 
+    protected $signature = 'voip-tax:cleanup-reports
                             {--retention-days=90 : Number of days to retain reports}
                             {--dry-run : Run without actually deleting files}
                             {--force : Force cleanup without confirmation}';
@@ -89,7 +89,7 @@ class CleanupReports extends Command
         if ($results['files_deleted'] > 0) {
             $this->line('');
             $this->line('Deleted files (showing first 10):');
-            
+
             foreach (array_slice($results['deleted_files'], 0, 10) as $file) {
                 $this->line("  - {$file['file']} ({$this->formatBytes($file['size'])}, last modified: {$file['last_modified']})");
             }

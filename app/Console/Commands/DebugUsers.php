@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class DebugUsers extends Command
 {
@@ -15,7 +14,7 @@ class DebugUsers extends Command
     public function handle()
     {
         $this->info('=== USER DEBUG INFO ===');
-        
+
         // Check database connection
         try {
             DB::connection()->getPdo();
@@ -51,19 +50,19 @@ class DebugUsers extends Command
         $this->info("\n=== TESTING ADMIN USER ===");
         $adminEmail = 'admin@nestogy.com';
         $adminUser = DB::table('users')->where('email', $adminEmail)->first();
-        
+
         if ($adminUser) {
             $this->info('✅ Admin user found:');
             $this->line('  Email: ' . $adminUser->email);
             $this->line('  Status: ' . ($adminUser->status ? 'Active' : 'Inactive'));
             $this->line('  Company ID: ' . $adminUser->company_id);
             $this->line('  Created: ' . $adminUser->created_at);
-            
+
             // Test password hashing
             $testPassword = 'Admin@123456';
             $isValid = Hash::check($testPassword, $adminUser->password);
             $this->line('  Password check for "Admin@123456": ' . ($isValid ? '✅ VALID' : '❌ INVALID'));
-            
+
             $testPassword2 = 'password';
             $isValid2 = Hash::check($testPassword2, $adminUser->password);
             $this->line('  Password check for "password": ' . ($isValid2 ? '✅ VALID' : '❌ INVALID'));

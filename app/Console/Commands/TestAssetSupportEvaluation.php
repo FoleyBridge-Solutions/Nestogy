@@ -110,7 +110,7 @@ class TestAssetSupportEvaluation extends Command
 
         // Test with assets from this client
         $assets = Asset::where('client_id', $client->id)->limit(5)->get();
-        
+
         if ($assets->isEmpty()) {
             $this->warn('No assets found for this client.');
             // Test with any asset but update its client_id temporarily
@@ -160,25 +160,25 @@ class TestAssetSupportEvaluation extends Command
         // Show summary statistics
         $this->info("\nSupport Status Summary:");
         $this->info("======================");
-        
+
         $stats = $assetSupportService->getClientSupportStatistics($client->id);
         $this->info("Total assets: {$stats['total_assets']}");
-        
+
         foreach ($stats['by_status'] as $status => $count) {
             $this->info("- {$status}: {$count}");
         }
-        
+
         if (!empty($stats['by_level'])) {
             $this->info("Support levels:");
             foreach ($stats['by_level'] as $level => $count) {
                 $this->info("- {$level}: {$count}");
             }
         }
-        
+
         $this->info("Auto-assigned: {$stats['auto_assigned_percentage']}%");
 
         $this->info("\n✅ Asset support evaluation test completed successfully!");
-        
+
         return 0;
     }
 }

@@ -10,12 +10,23 @@ use Illuminate\Support\Facades\DB;
 
 class ParseTemplateIntoClauses extends Command
 {
+    private const DEFAULT_TIMEOUT = 30;
+
+    private const DEFAULT_PAGE_SIZE = 50;
+
+    private const DEFAULT_BATCH_SIZE = 100;
+
+    // Class constants to reduce duplication
+    private const CLAUSE_TYPE_STANDARD = 'standard';
+    private const CLAUSE_TYPE_CUSTOM = 'custom';
+    private const MSG_PARSE_START = 'Parsing template into clauses...';
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'nestogy:parse-template-clauses 
+    protected $signature = 'nestogy:parse-template-clauses
                             {template? : The template name or ID to parse}
                             {--company-id= : Company ID to create clauses for}
                             {--dry-run : Show what would be created without actually creating}';
@@ -137,7 +148,7 @@ class ParseTemplateIntoClauses extends Command
     protected function parseRecurringServicesTemplate(ContractTemplate $template, int $companyId): array
     {
         $content = $template->template_content;
-        
+
         // Define clause boundaries based on the actual template structure
         $clauseDefinitions = [
             [
@@ -153,7 +164,7 @@ class ParseTemplateIntoClauses extends Command
             [
                 'name' => 'Recitals',
                 'slug' => 'recitals-msp',
-                'category' => 'header', 
+                'category' => 'header',
                 'clause_type' => 'required',
                 'start' => 'RECITALS:',
                 'end' => 'DEFINITIONS:',
@@ -167,7 +178,7 @@ class ParseTemplateIntoClauses extends Command
                 'clause_type' => 'required',
                 'start' => 'DEFINITIONS:',
                 'end' => 'SCOPE OF SUPPORT SERVICES:',
-                'sort_order' => 30,
+                'sort_order' => self::DEFAULT_TIMEOUT,
                 'is_required' => true,
                 'metadata' => ['section_numbering' => ['type' => 'numbered', 'level' => 1, 'format' => 'numeric']],
             ],
@@ -189,7 +200,7 @@ class ParseTemplateIntoClauses extends Command
                 'clause_type' => 'required',
                 'start' => 'CLIENT OBLIGATIONS AND RESPONSIBILITIES:',
                 'end' => 'FEES AND PAYMENT TERMS:',
-                'sort_order' => 50,
+                'sort_order' => self::DEFAULT_PAGE_SIZE,
                 'is_required' => true,
                 'metadata' => ['section_numbering' => ['type' => 'numbered', 'level' => 1, 'format' => 'numeric']],
             ],
@@ -244,7 +255,7 @@ class ParseTemplateIntoClauses extends Command
                 'clause_type' => 'required',
                 'start' => 'LIMITATION OF LIABILITY:',
                 'end' => 'CONFIDENTIALITY:',
-                'sort_order' => 100,
+                'sort_order' => self::DEFAULT_BATCH_SIZE,
                 'is_required' => true,
                 'metadata' => ['section_numbering' => ['type' => 'numbered', 'level' => 1, 'format' => 'numeric']],
             ],
@@ -298,10 +309,10 @@ class ParseTemplateIntoClauses extends Command
 
         foreach ($clauseDefinitions as $clauseDef) {
             $clauseContent = $this->extractClauseContent($content, $clauseDef['start'], $clauseDef['end']);
-            
+
             if (!empty($clauseContent)) {
                 $variables = $this->extractVariables($clauseContent);
-                
+
                 $parsedClauses[] = [
                     'company_id' => $companyId,
                     'name' => $clauseDef['name'],
@@ -360,24 +371,24 @@ class ParseTemplateIntoClauses extends Command
     {
         $pattern = '/\{\{([^}#\/]+)\}\}/';
         preg_match_all($pattern, $content, $matches);
-        
+
         $variables = [];
         foreach ($matches[1] ?? [] as $match) {
             $variable = trim($match);
-            
+
             // Skip conditional directives
             if (strpos($variable, '#if') === 0 || strpos($variable, '/if') === 0) {
                 continue;
             }
-            
+
             // Extract base variable name from formatted variables
             if (strpos($variable, '|') !== false) {
                 $variable = trim(explode('|', $variable)[0]);
             }
-            
+
             $variables[] = $variable;
         }
-        
+
         return array_unique($variables);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Services\DistributedSchedulerService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class ProcessRecurringBillingDistributed extends Command
 {
@@ -14,21 +13,21 @@ class ProcessRecurringBillingDistributed extends Command
     public function handle(DistributedSchedulerService $scheduler)
     {
         $jobName = 'recurring-billing-daily';
-        
+
         $result = $scheduler->executeIfNotRunning($jobName, function() {
             // Your existing recurring billing logic here
             $this->info('Processing recurring billing...');
-            
+
             // Example: Call existing command or service
             $this->call('invoices:generate-recurring');
-            
+
             $this->info('Recurring billing completed successfully');
         });
-        
+
         if (!$result) {
             $this->info('Recurring billing already running on another server - skipping');
         }
-        
+
         return $result ? 0 : 1;
     }
 }

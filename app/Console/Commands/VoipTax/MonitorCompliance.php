@@ -7,17 +7,19 @@ use Illuminate\Console\Command;
 
 /**
  * Monitor VoIP Tax Compliance
- * 
+ *
  * Artisan command to monitor compliance status and send alerts.
  */
 class MonitorCompliance extends Command
 {
+    private const MAX_RETRIES = 3;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'voip-tax:monitor-compliance 
+    protected $signature = 'voip-tax:monitor-compliance
                             {--company= : Specific company ID to monitor}
                             {--send-alerts : Send alert notifications}
                             {--critical-only : Only show critical alerts}';
@@ -65,7 +67,7 @@ class MonitorCompliance extends Command
             if ($criticalOnly) {
                 $alerts = array_map(function ($companyAlerts) {
                     $companyAlerts['alerts'] = array_filter(
-                        $companyAlerts['alerts'], 
+                        $companyAlerts['alerts'],
                         fn($alert) => $alert['severity'] === 'critical'
                     );
                     $companyAlerts['alert_count'] = count($companyAlerts['alerts']);

@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\ContractSignature;
 use App\Models\ContractMilestone;
 use App\Services\ContractClauseService;
+use App\Services\TemplateVariableMapper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,15 +30,18 @@ class ContractGenerationService
     protected $signatureService;
     protected $templateEngine;
     protected $clauseService;
+    protected $variableMapper;
 
     public function __construct(
         PdfService $pdfService = null,
         DigitalSignatureService $signatureService = null,
-        ContractClauseService $clauseService = null
+        ContractClauseService $clauseService = null,
+        TemplateVariableMapper $variableMapper = null
     ) {
         $this->pdfService = $pdfService;
         $this->signatureService = $signatureService;
         $this->clauseService = $clauseService ?: new ContractClauseService();
+        $this->variableMapper = $variableMapper ?: new TemplateVariableMapper();
     }
 
     /**
@@ -664,61 +668,31 @@ class ContractGenerationService
     {
         $variables = $this->buildTemplateVariables($contract);
         
-        // Check if template has clauses (new modular system)
+        // Use modern clause-based contract generation for all templates
         if ($contract->template && $contract->template->clauses()->exists()) {
             Log::info('Using clause-based contract generation', [
                 'contract_id' => $contract->id,
-                'template_id' => $contract->template->id
+                'template_id' => $contract->template->id,
+                'clause_count' => $contract->template->clauses()->count()
             ]);
             
-            // Use clause-based generation
+            // Generate contract from template clauses
             $processedContent = $this->clauseService->generateContractFromClauses($contract->template, $variables);
         } else {
-            Log::info('Using legacy template-based generation', [
+            // This should not happen anymore since all templates should have clauses
+            Log::error('Template has no clauses - this should not occur', [
                 'contract_id' => $contract->id,
-                'template_id' => $contract->template->id ?? null
+                'template_id' => $contract->template->id ?? null,
+                'template_type' => $contract->template->template_type ?? null
             ]);
             
-            // Legacy template processing
-            $processedContent = $templateContent;
-            
-            // First, handle handlebars-style conditionals ({{#if variable}}...{{/if}})
-            $processedContent = $this->processConditionals($processedContent, $variables);
-            
-            // Then replace regular variables
-            foreach ($variables as $key => $value) {
-                // Convert boolean values to strings for template
-                if (is_bool($value)) {
-                    $value = $value ? 'true' : 'false';
-                }
-                $processedContent = str_replace("{{" . $key . "}}", $value, $processedContent);
-            }
+            throw new \Exception('Contract template has no clauses configured. All templates must use the modern clause-based system.');
         }
 
         // Convert plain text to HTML format
         return $this->convertPlainTextToHtml($processedContent);
     }
 
-    /**
-     * Process handlebars-style conditionals in template content
-     */
-    protected function processConditionals(string $content, array $variables): string
-    {
-        // Process {{#if variable}}...{{/if}} blocks
-        $pattern = '/\{\{\#if\s+(\w+)\}\}(.*?)\{\{\/if\}\}/s';
-        
-        return preg_replace_callback($pattern, function ($matches) use ($variables) {
-            $variable = $matches[1];
-            $conditionalContent = $matches[2];
-            
-            // Check if the variable exists and is truthy
-            if (isset($variables[$variable]) && $variables[$variable]) {
-                return $conditionalContent;
-            }
-            
-            return ''; // Remove the block if condition is false
-        }, $content);
-    }
 
     /**
      * Convert plain text contract to properly formatted HTML
@@ -915,16 +889,29 @@ class ContractGenerationService
     }
 
     /**
-     * Build template variables
+     * Build template variables using new TemplateVariableMapper
      */
     protected function buildTemplateVariables(Contract $contract): array
     {
+        // Use the new TemplateVariableMapper for template-aware variable generation
+        $variables = $this->variableMapper->generateVariables($contract);
+        
+        // Add legacy compatibility variables for existing contracts
+        $legacyVariables = $this->buildLegacyVariables($contract);
+        
+        // Merge variables with new template-aware variables taking precedence
+        return array_merge($legacyVariables, $variables);
+    }
+
+    /**
+     * Build legacy variables for backward compatibility
+     */
+    protected function buildLegacyVariables(Contract $contract): array
+    {
         $contract->load(['client', 'quote', 'template', 'company']);
-
-        // Get the service provider company (the company that owns the contract)
         $serviceProviderCompany = $contract->company;
-
-        // Get contract schedules from either legacy fields or ContractSchedule models
+        
+        // Get legacy schedule data
         $scheduleA = $contract->schedule_a ?? [];
         $scheduleB = $contract->schedule_b ?? [];
         $scheduleC = $contract->schedule_c ?? [];
@@ -933,74 +920,47 @@ class ContractGenerationService
         if (is_string($scheduleA)) $scheduleA = json_decode($scheduleA, true) ?? [];
         if (is_string($scheduleB)) $scheduleB = json_decode($scheduleB, true) ?? [];
         if (is_string($scheduleC)) $scheduleC = json_decode($scheduleC, true) ?? [];
-        
-        // If no legacy schedule data, try to get from ContractSchedule models
-        if (empty($scheduleA) && empty($scheduleB) && empty($scheduleC) && $contract->schedules) {
-            $schedules = $contract->schedules;
-            foreach ($schedules as $schedule) {
-                $scheduleData = $schedule->variable_values ?? [];
-                
-                switch ($schedule->schedule_letter) {
-                    case 'A':
-                        $scheduleA = $scheduleData;
-                        break;
-                    case 'B':
-                        $scheduleB = $scheduleData;
-                        break;
-                    case 'C':
-                        $scheduleC = $scheduleData;
-                        break;
-                }
-            }
-        }
 
         return [
             // Basic contract info
             'contract_number' => $contract->contract_number,
-            'contract_title' => $contract->title,
             'contract_value' => $contract->formatCurrency($contract->contract_value ?? 0),
             'start_date' => $contract->start_date->format('F j, Y'),
             'end_date' => $contract->end_date ? $contract->end_date->format('F j, Y') : 'Ongoing',
-            'effective_date' => $contract->start_date->format('F j, Y'),
             'current_date' => now()->format('F j, Y'),
             
             // Terms and conditions
             'initial_term' => $contract->term_months ? $contract->term_months . ' months' : '12 months',
-            'renewal_term' => '12 months', // Default renewal term
+            'renewal_term' => '12 months',
             'termination_notice_days' => '30',
             'term_months' => $contract->term_months ?? 12,
             'payment_terms' => $contract->payment_terms ?? 'Net 30',
             'billing_frequency' => $contract->billing_frequency ?? 'monthly',
             
-            // Client information
-            'client_name' => $contract->client->name,
-            'client_address' => $this->formatCompanyAddress($contract->client),
+            // Client information (legacy format)
             'client_signatory_name' => $contract->client->primary_contact ?? 'Authorized Representative',
             'client_signatory_title' => 'Authorized Representative',
             
-            // Service provider information (from contract's company)
-            'service_provider_name' => $serviceProviderCompany->name,
-            'service_provider_short_name' => $this->getCompanyShortName($serviceProviderCompany->name),
-            'service_provider_address' => $this->formatCompanyAddress($serviceProviderCompany),
+            // Service provider information (legacy format)
+            'service_provider_short_name_upper' => strtoupper($this->getCompanyShortName($serviceProviderCompany->name)),
             'service_provider_signatory_name' => auth()->user()->name ?? 'Authorized Representative',
             'service_provider_signatory_title' => auth()->user()->title ?? 'Service Manager',
-            'service_provider_short_name_upper' => strtoupper($this->getCompanyShortName($serviceProviderCompany->name)),
             
-            // Service configuration
+            // Legacy service configuration
             'service_tier' => $scheduleA['service_tier'] ?? $scheduleA['sla']['serviceTier'] ?? 'Standard',
             'business_hours' => $scheduleA['business_hours'] ?? 'Monday through Friday, 8:00 AM to 6:00 PM EST',
             
-            // Service section enablement - determine from actual schedule data
-            'service_section_a' => $this->isServiceSectionEnabled($contract, 'A', $scheduleA),
-            'service_section_b' => $this->isServiceSectionEnabled($contract, 'B', $scheduleB),
-            'service_section_c' => $this->isServiceSectionEnabled($contract, 'C', $scheduleC),
+            // Asset-based service enablement (replaced legacy sections)
+            'has_server_support' => $this->hasAssetTypeSupport($contract, ['hypervisor_node', 'server']),
+            'has_workstation_support' => $this->hasAssetTypeSupport($contract, ['workstation']),
+            'has_network_support' => $this->hasAssetTypeSupport($contract, ['network_device']),
             
             // Legal and governance
             'governing_state' => $contract->governing_law ?? 'Texas',
             'governing_law' => $contract->governing_law ? 'State of ' . $contract->governing_law : 'State of Texas',
             'arbitration_location' => config('app.arbitration_location', 'Dallas, Texas'),
             
-            // Formatted content (using company data)
+            // Formatted content
             'company_name' => $serviceProviderCompany->name,
             'company_address' => $this->formatCompanyAddress($serviceProviderCompany),
             'voip_services' => $this->formatVoipServices($contract),
@@ -1181,44 +1141,27 @@ class ContractGenerationService
     }
 
     /**
-     * Determine if a service section is enabled based on contract configuration
+     * Check if contract has support for specific asset types
      */
-    protected function isServiceSectionEnabled(Contract $contract, string $section, array $scheduleData): bool
+    protected function hasAssetTypeSupport(Contract $contract, array $targetAssetTypes): bool
     {
-        // Check if explicitly enabled/disabled in schedule data
-        if (isset($scheduleData['enabled'])) {
-            return (bool) $scheduleData['enabled'];
+        if ($contract->schedules && $contract->schedules->isNotEmpty()) {
+            $infraSchedule = $contract->schedules->where('schedule_type', 'infrastructure')->first();
+            if ($infraSchedule && isset($infraSchedule->schedule_data['supportedAssetTypes'])) {
+                $supportedTypes = $infraSchedule->schedule_data['supportedAssetTypes'];
+                
+                // Check if any of the target asset types are supported
+                foreach ($targetAssetTypes as $targetType) {
+                    if (in_array($targetType, $supportedTypes)) {
+                        return true;
+                    }
+                }
+            }
         }
         
-        // Check for section-specific configuration that would indicate it's enabled
-        switch ($section) {
-            case 'A':
-                // Infrastructure/SLA section is enabled if there are supported asset types or SLA terms
-                return !empty($scheduleData['supported_asset_types']) 
-                    || !empty($scheduleData['sla']) 
-                    || !empty($contract->sla_terms);
-                    
-            case 'B':
-                // Pricing section is enabled if there's pricing structure
-                return !empty($scheduleData['billing_model']) 
-                    || !empty($scheduleData['basePricing']) 
-                    || !empty($contract->pricing_structure);
-                    
-            case 'C':
-                // Additional terms section is enabled if there are custom terms
-                return !empty($scheduleData['termination']) 
-                    || !empty($scheduleData['liability']) 
-                    || !empty($scheduleData['dataProtection']);
-        }
-        
-        // Check if contract has schedule records for this section
-        if ($contract->schedules) {
-            return $contract->schedules->where('schedule_letter', $section)->isNotEmpty();
-        }
-        
-        // Default to false (section disabled) if no configuration found
         return false;
     }
+
     
     protected function formatVoipServices(Contract $contract): string
     {

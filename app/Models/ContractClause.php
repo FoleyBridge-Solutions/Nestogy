@@ -283,7 +283,7 @@ class ContractClause extends Model
     }
 
     /**
-     * Process variable substitutions in clause content.
+     * Process variable substitutions in clause content with enhanced formatting.
      */
     protected function processVariables(string $content, array $variables): string
     {
@@ -299,7 +299,96 @@ class ContractClause extends Model
             );
         }
         
+        // Process list generation patterns (e.g., {{#list asset_types}}...{{/list}})
+        $content = $this->processListBlocks($content, $variables);
+        
+        // Process conditional existence checks (e.g., {{#exists variable}})
+        $content = $this->processExistenceBlocks($content, $variables);
+        
         return $content;
+    }
+
+    /**
+     * Process list generation blocks for arrays and comma-separated values.
+     */
+    protected function processListBlocks(string $content, array $variables): string
+    {
+        // Pattern to match {{#list variable}}template{{/list}} blocks
+        $pattern = '/\{\{#list\s+([^}]+)\}\}(.*?)\{\{\/list\}\}/s';
+        
+        return preg_replace_callback($pattern, function ($matches) use ($variables) {
+            $variable = trim($matches[1]);
+            $template = $matches[2];
+            
+            if (!isset($variables[$variable])) {
+                return '';
+            }
+            
+            $items = $this->getArrayFromVariable($variables[$variable]);
+            
+            if (empty($items)) {
+                return '';
+            }
+            
+            $output = '';
+            foreach ($items as $index => $item) {
+                $itemTemplate = $template;
+                $itemTemplate = str_replace('{{item}}', $item, $itemTemplate);
+                $itemTemplate = str_replace('{{index}}', $index + 1, $itemTemplate);
+                $itemTemplate = str_replace('{{index0}}', $index, $itemTemplate);
+                $output .= $itemTemplate;
+            }
+            
+            return $output;
+        }, $content);
+    }
+
+    /**
+     * Process existence check blocks for conditional content based on variable presence.
+     */
+    protected function processExistenceBlocks(string $content, array $variables): string
+    {
+        // Pattern to match {{#exists variable}}content{{/exists}} blocks
+        $pattern = '/\{\{#exists\s+([^}]+)\}\}(.*?)\{\{\/exists\}\}/s';
+        
+        return preg_replace_callback($pattern, function ($matches) use ($variables) {
+            $variable = trim($matches[1]);
+            $conditionalContent = $matches[2];
+            
+            // Check if variable exists and has a non-empty value
+            if (isset($variables[$variable]) && !empty($variables[$variable])) {
+                return $conditionalContent;
+            }
+            
+            return '';
+        }, $content);
+    }
+
+    /**
+     * Convert variable to array for list processing.
+     */
+    protected function getArrayFromVariable($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        if (is_string($value)) {
+            // Handle comma-separated lists
+            if (strpos($value, ',') !== false) {
+                return array_map('trim', explode(',', $value));
+            }
+            
+            // Handle "and" separated lists
+            if (strpos($value, ' and ') !== false) {
+                return array_map('trim', explode(' and ', $value));
+            }
+            
+            // Single item
+            return [$value];
+        }
+        
+        return [];
     }
 
     /**
@@ -372,9 +461,85 @@ class ContractClause extends Model
                 return strtolower($value);
             case 'title':
                 return ucwords($value);
+            case 'capitalize':
+                return ucfirst($value);
+            case 'currency':
+                return '$' . number_format((float) $value, 2);
+            case 'number':
+                return number_format((float) $value);
+            case 'percent':
+                return number_format((float) $value, 1) . '%';
+            case 'date':
+                return date('F j, Y', strtotime($value));
+            case 'date_short':
+                return date('m/d/Y', strtotime($value));
+            case 'replace_underscore':
+                return str_replace('_', ' ', $value);
+            case 'replace_underscore_title':
+                return ucwords(str_replace('_', ' ', $value));
+            case 'list':
+                // Format arrays or comma-separated values as a proper list
+                if (is_array($value)) {
+                    return $this->formatList($value);
+                }
+                if (is_string($value) && strpos($value, ',') !== false) {
+                    return $this->formatList(array_map('trim', explode(',', $value)));
+                }
+                return (string) $value;
+            case 'bullet_list':
+                // Format as bullet list
+                if (is_array($value)) {
+                    return "- " . implode("\n- ", $value);
+                }
+                if (is_string($value) && strpos($value, ',') !== false) {
+                    $items = array_map('trim', explode(',', $value));
+                    return "- " . implode("\n- ", $items);
+                }
+                return "- " . $value;
+            case 'hours':
+                // Format numbers as hour descriptions
+                $hours = (int) $value;
+                if ($hours === 1) {
+                    return '1 hour';
+                }
+                return $hours . ' hours';
+            case 'days':
+                // Format numbers as day descriptions
+                $days = (int) $value;
+                if ($days === 1) {
+                    return '1 day';
+                }
+                return $days . ' days';
+            case 'boolean_text':
+                // Convert boolean to Yes/No text
+                return $this->isTruthy($value) ? 'Yes' : 'No';
+            case 'boolean_enabled':
+                // Convert boolean to Enabled/Disabled text
+                return $this->isTruthy($value) ? 'Enabled' : 'Disabled';
             default:
                 return (string) $value;
         }
+    }
+
+    /**
+     * Format an array as a grammatically correct list
+     */
+    protected function formatList(array $items): string
+    {
+        if (empty($items)) {
+            return '';
+        }
+
+        if (count($items) === 1) {
+            return $items[0];
+        }
+
+        if (count($items) === 2) {
+            return implode(' and ', $items);
+        }
+
+        $last = array_pop($items);
+        return implode(', ', $items) . ', and ' . $last;
     }
 
     /**

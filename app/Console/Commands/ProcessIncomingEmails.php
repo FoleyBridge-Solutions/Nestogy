@@ -12,12 +12,20 @@ use Illuminate\Support\Facades\Log;
 
 class ProcessIncomingEmails extends Command
 {
+    private const DEFAULT_PAGE_SIZE = 50;
+
+    // Class constants to reduce duplication
+    private const STATUS_UNREAD = 'unread';
+    private const STATUS_PROCESSED = 'processed';
+    private const DEFAULT_BATCH_SIZE = 50;
+    private const MSG_EMAIL_START = 'Processing incoming emails...';
+
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'emails:process-incoming 
+    protected $signature = 'emails:process-incoming
                             {--account=default : IMAP account to process}
-                            {--limit=50 : Maximum number of emails to process}';
+                            {--limit=self::DEFAULT_PAGE_SIZE : Maximum number of emails to process}';
 
     /**
      * The console command description.
@@ -53,7 +61,7 @@ class ProcessIncomingEmails extends Command
 
             // Get unread messages
             $messages = $this->imapService->getUnreadMessages('INBOX', $limit);
-            
+
             if ($messages->isEmpty()) {
                 $this->info('No unread messages found');
                 $this->imapService->disconnect();
@@ -70,12 +78,12 @@ class ProcessIncomingEmails extends Command
                     $this->processMessage($message);
                     $this->imapService->markAsRead($message);
                     $processed++;
-                    
+
                     $this->line("✓ Processed message: {$message->getSubject()}");
                 } catch (\Exception $e) {
                     $errors++;
                     $this->error("✗ Failed to process message: {$message->getSubject()} - {$e->getMessage()}");
-                    
+
                     Log::error('Email processing failed', [
                         'message_id' => $message->getMessageId(),
                         'subject' => $message->getSubject(),
@@ -87,7 +95,7 @@ class ProcessIncomingEmails extends Command
             $this->imapService->disconnect();
 
             $this->info("Processing complete: {$processed} processed, {$errors} errors");
-            
+
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
@@ -95,7 +103,7 @@ class ProcessIncomingEmails extends Command
             Log::error('Process incoming emails command failed', [
                 'error' => $e->getMessage()
             ]);
-            
+
             return Command::FAILURE;
         }
     }
@@ -109,13 +117,13 @@ class ProcessIncomingEmails extends Command
         $fromName = $message->getFrom()->first()->personal ?? '';
         $subject = $message->getSubject();
         $body = $message->getHTMLBody() ?: $message->getTextBody();
-        
+
         // Find or create contact
         $contact = $this->findOrCreateContact($fromEmail, $fromName);
-        
+
         // Check if this is a reply to existing ticket
         $existingTicket = $this->findExistingTicket($subject, $fromEmail);
-        
+
         if ($existingTicket) {
             // Add reply to existing ticket
             $this->addTicketReply($existingTicket, $body, $contact);
@@ -132,7 +140,7 @@ class ProcessIncomingEmails extends Command
     {
         // Try to find existing contact
         $contact = Contact::where('email', $email)->first();
-        
+
         if ($contact) {
             return $contact;
         }
@@ -140,7 +148,7 @@ class ProcessIncomingEmails extends Command
         // Try to find client by email domain
         $domain = substr(strrchr($email, "@"), 1);
         $client = Client::where('website', 'like', "%{$domain}%")->first();
-        
+
         if (!$client) {
             // Create a generic client for unknown senders
             $client = Client::create([
@@ -232,7 +240,7 @@ class ProcessIncomingEmails extends Command
             try {
                 $filename = $attachment->getName();
                 $tempPath = sys_get_temp_dir() . '/' . $filename;
-                
+
                 if ($this->imapService->downloadAttachment($attachment, $tempPath)) {
                     // Here you could use FileUploadService to store the attachment
                     // For now, just log it
@@ -240,7 +248,7 @@ class ProcessIncomingEmails extends Command
                         'ticket_id' => $ticket['ticket_id'],
                         'filename' => $filename
                     ]);
-                    
+
                     // Clean up temp file
                     if (file_exists($tempPath)) {
                         unlink($tempPath);

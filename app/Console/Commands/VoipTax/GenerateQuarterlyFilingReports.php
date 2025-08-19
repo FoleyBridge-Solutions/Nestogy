@@ -8,17 +8,19 @@ use Carbon\Carbon;
 
 /**
  * Generate Quarterly VoIP Tax Filing Reports
- * 
+ *
  * Artisan command to generate quarterly tax filing reports for regulatory compliance.
  */
 class GenerateQuarterlyFilingReports extends Command
 {
+    private const DEFAULT_TIMEOUT = 30;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'voip-tax:generate-quarterly-filing-reports 
+    protected $signature = 'voip-tax:generate-quarterly-filing-reports
                             {--quarter= : Specific quarter to generate reports for (YYYY-Q format, e.g., 2024-1)}
                             {--company= : Specific company ID to generate report for}
                             {--dry-run : Run without actually generating reports}';
@@ -92,20 +94,20 @@ class GenerateQuarterlyFilingReports extends Command
     protected function parseQuarterParameter(): Carbon
     {
         $quarterParam = $this->option('quarter');
-        
+
         if ($quarterParam) {
             // Parse YYYY-Q format (e.g., "2024-1")
             if (preg_match('/^(\d{4})-([1-4])$/', $quarterParam, $matches)) {
                 $year = (int)$matches[1];
                 $quarterNum = (int)$matches[2];
-                
+
                 // Create Carbon instance for the start of the specified quarter
                 return Carbon::create($year)->quarter($quarterNum);
             } else {
                 throw new \InvalidArgumentException('Quarter must be in YYYY-Q format (e.g., 2024-1)');
             }
         }
-        
+
         // Default to previous quarter
         return Carbon::now()->subQuarter();
     }
@@ -142,7 +144,7 @@ class GenerateQuarterlyFilingReports extends Command
                 $this->line("  <fg=yellow>Jurisdiction: {$filingReport['jurisdiction']}</>");
                 $this->line("  Authority: {$filingReport['authority']}");
                 $this->line("  Filing Due Date: <fg=red>{$filingReport['filing_due_date']}</>");
-                
+
                 // Display tax collection summary
                 $taxCollected = '$' . number_format($filingReport['tax_collected'], 2);
                 $this->line("  Tax Collected: <fg=green>{$taxCollected}</>");
@@ -166,7 +168,7 @@ class GenerateQuarterlyFilingReports extends Command
                 // Calculate days until due
                 $dueDate = Carbon::parse($filingReport['filing_due_date']);
                 $daysUntilDue = now()->diffInDays($dueDate, false);
-                
+
                 if ($daysUntilDue < 0) {
                     $this->line("  <fg=red>⚠️ OVERDUE by " . abs($daysUntilDue) . " days!</>");
                 } elseif ($daysUntilDue <= 7) {
@@ -217,11 +219,11 @@ class GenerateQuarterlyFilingReports extends Command
         $this->line("Quarter: Q{$quarter->quarter} {$quarter->year}");
         $this->line("Total Jurisdictions: {$totalJurisdictions}");
         $this->line('Total Tax Collected: $' . number_format($totalTaxCollected, 2));
-        
+
         if ($overdueFilings > 0) {
             $this->line("<fg=red>Overdue Filings: {$overdueFilings}</>");
         }
-        
+
         if ($upcomingFilings > 0) {
             $this->line("<fg=yellow>Upcoming Filings (30 days): {$upcomingFilings}</>");
         }

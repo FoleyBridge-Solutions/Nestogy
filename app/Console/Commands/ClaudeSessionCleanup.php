@@ -27,26 +27,26 @@ class ClaudeSessionCleanup extends Command
     public function handle(ClaudePTYService $ptyService)
     {
         $this->info('🤖 Starting Claude session cleanup...');
-        
+
         try {
             if ($this->option('force')) {
                 $this->warn('⚠️  Force cleanup mode - stopping ALL Claude sessions');
                 $sessions = $ptyService->getActiveSessions();
                 $cleanedCount = count($sessions);
-                
+
                 foreach ($sessions as $session) {
                     $ptyService->stopSession($session['session_id']);
                 }
-                
+
                 $this->info("✅ Force cleaned {$cleanedCount} sessions");
             } else {
                 $cleanedCount = $ptyService->cleanupExpiredSessions();
                 $this->info("✅ Cleaned up {$cleanedCount} expired sessions");
             }
-            
+
             $activeSessions = $ptyService->getActiveSessions();
             $activeCount = count($activeSessions);
-            
+
             if ($activeCount > 0) {
                 $this->line("📊 {$activeCount} active sessions remaining:");
                 foreach ($activeSessions as $session) {
@@ -56,12 +56,12 @@ class ClaudeSessionCleanup extends Command
             } else {
                 $this->line('📊 No active sessions');
             }
-            
+
         } catch (\Exception $e) {
             $this->error('❌ Cleanup failed: ' . $e->getMessage());
             return Command::FAILURE;
         }
-        
+
         return Command::SUCCESS;
     }
 }

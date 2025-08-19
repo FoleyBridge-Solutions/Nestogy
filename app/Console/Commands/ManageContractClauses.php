@@ -9,12 +9,19 @@ use Illuminate\Console\Command;
 
 class ManageContractClauses extends Command
 {
+
+    // Class constants to reduce duplication
+    private const ACTION_LIST = 'list';
+    private const ACTION_ADD = 'add';
+    private const ACTION_REMOVE = 'remove';
+    private const MSG_MANAGE_START = 'Managing contract clauses...';
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'nestogy:manage-clauses 
+    protected $signature = 'nestogy:manage-clauses
                             {action : Action to perform (list, validate, create, update)}
                             {--company-id=1 : Company ID to work with}
                             {--template= : Template name or ID for validation}
@@ -64,15 +71,15 @@ class ManageContractClauses extends Command
     protected function listClauses(int $companyId): int
     {
         $category = $this->option('category');
-        
+
         $query = ContractClause::where('company_id', $companyId);
-        
+
         if ($category) {
             $query->where('category', $category);
         }
-        
+
         $clauses = $query->orderBy('category')->orderBy('sort_order')->get();
-        
+
         if ($clauses->isEmpty()) {
             $this->info('No clauses found.');
             return 0;
@@ -87,18 +94,18 @@ class ManageContractClauses extends Command
                 $currentCategory = $clause->category;
                 $this->line("<fg=yellow>Category: {$currentCategory}</>");
             }
-            
+
             $status = $clause->status === 'active' ? '✓' : '✗';
             $type = $clause->clause_type;
             $required = $clause->is_required ? '[REQ]' : '[OPT]';
-            
+
             $this->line("  {$status} {$clause->name} {$required} ({$type})");
-            
+
             if ($clause->hasDependencies()) {
                 $deps = implode(', ', $clause->getDependencies());
                 $this->line("    <fg=cyan>Dependencies: {$deps}</>");
             }
-            
+
             if ($clause->hasConflicts()) {
                 $conflicts = implode(', ', $clause->getConflicts());
                 $this->line("    <fg=red>Conflicts: {$conflicts}</>");
@@ -111,7 +118,7 @@ class ManageContractClauses extends Command
     protected function validateTemplate(): int
     {
         $templateIdentifier = $this->option('template');
-        
+
         if (!$templateIdentifier) {
             $this->error('Template name or ID required for validation');
             return 1;
@@ -134,7 +141,7 @@ class ManageContractClauses extends Command
 
         // Check dependencies
         $dependencyErrors = $this->clauseService->validateClauseDependencies($template);
-        
+
         if (!empty($dependencyErrors)) {
             $this->error('Dependency Validation Errors:');
             foreach ($dependencyErrors as $error) {
@@ -146,7 +153,7 @@ class ManageContractClauses extends Command
 
         // Check missing required clauses
         $missingCategories = $this->clauseService->getMissingRequiredClauses($template);
-        
+
         if (!empty($missingCategories)) {
             $this->warn('Missing Required Categories:');
             foreach ($missingCategories as $category) {
@@ -171,18 +178,18 @@ class ManageContractClauses extends Command
     {
         $name = $this->option('name');
         $content = $this->option('content');
-        
+
         if (!$name) {
             $name = $this->ask('Clause name');
         }
-        
+
         if (!$content) {
             $content = $this->ask('Clause content (use {{variable}} for template variables)');
         }
 
         $categories = ContractClause::getAvailableCategories();
         $categoryKeys = array_keys($categories);
-        
+
         $category = $this->choice('Select category', $categoryKeys);
         $type = $this->choice('Clause type', ['required', 'conditional', 'optional']);
 
@@ -199,7 +206,7 @@ class ManageContractClauses extends Command
         ]);
 
         $this->info("✓ Created clause: {$clause->name} (ID: {$clause->id})");
-        
+
         return 0;
     }
 

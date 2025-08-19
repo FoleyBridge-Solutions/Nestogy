@@ -8,12 +8,19 @@ use Illuminate\Console\Command;
 
 class SetupRmmIntegration extends Command
 {
+
+    // Class constants to reduce duplication
+    private const PROVIDER_CONNECTWISE = 'connectwise';
+    private const PROVIDER_DATTO = 'datto';
+    private const PROVIDER_NINJA = 'ninja';
+    private const MSG_SETUP_START = 'Setting up RMM integration...';
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'rmm:setup 
+    protected $signature = 'rmm:setup
                             {company_id=1 : The company ID to set up RMM integration for}
                             {--type=TRMM : RMM type (TRMM for TacticalRMM)}
                             {--name= : Name for the integration}
@@ -35,7 +42,7 @@ class SetupRmmIntegration extends Command
     {
         $companyId = $this->argument('company_id');
         $rmmType = $this->option('type');
-        
+
         // Validate company exists
         $company = Company::find($companyId);
         if (!$company) {
@@ -83,7 +90,7 @@ class SetupRmmIntegration extends Command
                 $integration->api_key = $apiKey;
                 $integration->is_active = true;
                 $integration->save();
-                
+
                 $this->info('Integration updated successfully!');
             } else {
                 $integration = RmmIntegration::createWithCredentials([
@@ -94,7 +101,7 @@ class SetupRmmIntegration extends Command
                     'api_key' => $apiKey,
                     'is_active' => true,
                 ]);
-                
+
                 $this->info('Integration created successfully!');
             }
 
@@ -112,9 +119,9 @@ class SetupRmmIntegration extends Command
             if ($this->option('test') || $this->confirm('Do you want to test the connection?', true)) {
                 $this->line('');
                 $this->info('Testing connection...');
-                
+
                 $connectionTest = $integration->testConnection();
-                
+
                 if ($connectionTest['success']) {
                     $this->line('<info>✓ Connection test successful!</info>');
                     if (isset($connectionTest['data']['version'])) {
@@ -129,7 +136,7 @@ class SetupRmmIntegration extends Command
 
             $this->line('');
             $this->line('<info>Setup completed successfully!</info>');
-            
+
             // Show next steps
             $this->line('');
             $this->line('<comment>Next steps:</comment>');

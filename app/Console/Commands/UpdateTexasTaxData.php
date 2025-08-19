@@ -8,10 +8,17 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Storage;
 
 class UpdateTexasTaxData extends Command
 {
+    private const MAX_RETRIES = 3;
+    private const DEFAULT_BATCH_SIZE = 100;
+
+    // Class constants to reduce duplication
+    private const API_BASE_URL = 'https://api.example.com';
+    private const MSG_UPDATE_START = 'Starting Texas tax data update...';
+    private const MSG_UPDATE_COMPLETE = 'Texas tax data update completed';
+
     /**
      * The name and signature of the console command.
      */
@@ -83,7 +90,7 @@ class UpdateTexasTaxData extends Command
                 $this->newLine();
             }
 
-            // Step 3: Update system metadata
+            // Step self::MAX_RETRIES: Update system metadata
             $this->updateSystemMetadata($quarter);
             $this->info("✅ Updated system metadata for {$quarter}");
 
@@ -118,9 +125,9 @@ class UpdateTexasTaxData extends Command
         try {
             // Try to download from API first
             $this->line("Downloading tax rates from Texas Comptroller API...");
-            
+
             $download = $this->service->downloadTaxRatesFile();
-            
+
             if ($download['success']) {
                 $this->info("✅ Downloaded from API");
                 $content = $download['content'];
@@ -128,7 +135,7 @@ class UpdateTexasTaxData extends Command
                 // Fallback to local file if API fails
                 $this->warn("⚠️ API download failed, checking for local file...");
                 $localPath = base_path('tax_jurisdiction_rates-' . $quarter . '.csv');
-                
+
                 if (file_exists($localPath)) {
                     $this->info("✅ Using local file: {$localPath}");
                     $content = file_get_contents($localPath);
@@ -154,7 +161,7 @@ class UpdateTexasTaxData extends Command
             $progressBar->start();
 
             $updateResult = $this->service->updateDatabaseWithTexasRates($parseResult['jurisdictions']);
-            
+
             $progressBar->finish();
             $this->newLine();
 
@@ -193,7 +200,7 @@ class UpdateTexasTaxData extends Command
 
             $totalCounties = count($counties);
             $parallelLimit = (int)$this->option('parallel');
-            
+
             $this->line("Processing address data for {$totalCounties} counties...");
             $this->line("Parallel processing: {$parallelLimit} counties at a time");
             $this->newLine();
@@ -210,13 +217,13 @@ class UpdateTexasTaxData extends Command
 
             // Process counties in parallel batches
             $countyBatches = array_chunk($counties, $parallelLimit);
-            
+
             foreach ($countyBatches as $batchIndex => $batch) {
                 $batchResults = $this->processBatchParallel($quarter, $batch, $batchIndex + 1, count($countyBatches));
-                
+
                 foreach ($batchResults as $countyFips => $result) {
                     $progressBar->advance();
-                    
+
                     if ($result['success']) {
                         $processedCounties++;
                         $totalAddresses += $result['addresses'];
@@ -278,28 +285,28 @@ class UpdateTexasTaxData extends Command
     protected function processBatchParallel(string $quarter, array $counties, int $batchNumber, int $totalBatches): array
     {
         $results = [];
-        
+
         $this->newLine();
         $this->line("📦 Processing batch {$batchNumber}/{$totalBatches} (" . count($counties) . " counties)");
-        
+
         // For now, process sequentially but prepare for parallel execution
         // In the future, this could use PHP parallel processing or queue jobs
         foreach ($counties as $countyFips) {
             $countyFips = trim($countyFips);
-            
+
             try {
                 $startTime = microtime(true);
                 $result = $this->processCountyAddressData($quarter, $countyFips);
                 $processingTime = microtime(true) - $startTime;
-                
+
                 if ($result['success']) {
                     $this->line("   ✅ {$countyFips}: " . number_format($result['addresses']) . " addresses (" . number_format($processingTime, 1) . "s)");
                 } else {
                     $this->line("   ❌ {$countyFips}: " . $result['error']);
                 }
-                
+
                 $results[$countyFips] = $result;
-                
+
             } catch (\Exception $e) {
                 $this->line("   ❌ {$countyFips}: " . $e->getMessage());
                 $results[$countyFips] = [
@@ -308,11 +315,11 @@ class UpdateTexasTaxData extends Command
                     'addresses' => 0
                 ];
             }
-            
+
             // Add small delay to prevent overwhelming the API
             usleep(100000); // 0.1 second delay between counties
         }
-        
+
         return $results;
     }
 
@@ -384,7 +391,7 @@ class UpdateTexasTaxData extends Command
     protected function getCurrentQuarter(): string
     {
         $year = date('Y');
-        $quarter = 'Q' . ceil(date('n') / 3);
+        $quarter = 'Q' . ceil(date('n') / self::MAX_RETRIES);
         return $year . $quarter;
     }
 
@@ -413,8 +420,8 @@ class UpdateTexasTaxData extends Command
         ];
 
         // Store in cache for quick access
-        cache(['texas_tax_data_metadata' => $metadata], now()->addMonths(3));
-        
+        cache(['texas_tax_data_metadata' => $metadata], now()->addMonths(self::MAX_RETRIES));
+
         // Also store in database if table exists
         try {
             if (DB::getSchemaBuilder()->hasTable('system_settings')) {
@@ -453,10 +460,10 @@ class UpdateTexasTaxData extends Command
 
             if (!empty($emails)) {
                 $this->line("Sending notifications to " . count($emails) . " recipients...");
-                
+
                 Notification::route('mail', $emails)
                     ->notify(new TexasTaxDataUpdated($updateData));
-                
+
                 $this->info("✅ Notifications sent successfully");
             } else {
                 $this->warn("⚠️ No notification emails configured");

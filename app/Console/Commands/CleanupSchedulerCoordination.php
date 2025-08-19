@@ -13,9 +13,9 @@ class CleanupSchedulerCoordination extends Command
     public function handle(DistributedSchedulerService $scheduler)
     {
         $this->info('Cleaning up old scheduler coordination records...');
-        
+
         $scheduler->cleanup();
-        
+
         $this->info('Cleanup completed successfully');
         return 0;
     }

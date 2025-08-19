@@ -102,20 +102,126 @@ class DefinitionRegistry
             'always_include' => false,
         ],
         
+        // MSP-specific definitions
         'supported_infrastructure' => [
             'term' => 'Supported Infrastructure',
-            'definition' => 'Shall mean the specific information technology hardware, software, and systems components designated for coverage under this Agreement{{#if has_service_sections}}, corresponding to the service sections selected by the Client{{#if service_section_a}} (Section A{{/if}}{{#if service_section_b}}, Section B{{/if}}{{#if service_section_c}}, Section C{{/if}}{{#if service_section_a}}){{/if}}{{/if}} and enumerated with specificity in Schedule A.',
-            'required_by' => ['scope_of_services', 'asset_coverage'],
-            'depends_on_variables' => ['service_section_a', 'service_section_b', 'service_section_c'],
+            'definition' => 'Shall mean the specific information technology hardware, software, and systems components designated for coverage under this Agreement, encompassing {{supported_asset_types}} as enumerated with specificity in Schedule A.',
+            'required_by' => ['msp_services', 'scope_of_services'],
+            'depends_on_variables' => ['supported_asset_types'],
             'always_include' => false,
+            'template_category' => 'msp',
         ],
         
-        'term' => [
+        'managed_infrastructure' => [
+            'term' => 'Managed Infrastructure',
+            'definition' => 'The {{supported_asset_types}} and associated systems under active management and monitoring by {{service_provider_short_name}}, providing {{service_tier}} tier service levels.',
+            'required_by' => ['msp_services'],
+            'depends_on_variables' => ['supported_asset_types', 'service_provider_short_name', 'service_tier'],
+            'always_include' => false,
+            'template_category' => 'msp',
+        ],
+        
+        // VoIP-specific definitions
+        'voip_services' => [
+            'term' => 'VoIP Services',
+            'definition' => 'Voice over Internet Protocol telecommunications services including {{channel_count}} concurrent channels using {{protocol|upper}} protocol with {{calling_plan}} calling capabilities.',
+            'required_by' => ['voip_services', 'telecommunications'],
+            'depends_on_variables' => ['channel_count', 'protocol', 'calling_plan'],
+            'always_include' => false,
+            'template_category' => 'voip',
+        ],
+        
+        'quality_of_service' => [
+            'term' => 'Quality of Service (QoS)',
+            'definition' => 'The measurement of service performance including call completion rates, latency ({{latency_ms}}ms max), jitter ({{jitter_ms}}ms max), packet loss (<{{packet_loss_percent}}%), and Mean Opinion Score ({{mos_score}} minimum).',
+            'required_by' => ['voip_qos', 'telecommunications_sla'],
+            'depends_on_variables' => ['latency_ms', 'jitter_ms', 'packet_loss_percent', 'mos_score'],
+            'always_include' => false,
+            'template_category' => 'voip',
+        ],
+        
+        'emergency_services' => [
+            'term' => 'Emergency Services',
+            'definition' => 'Enhanced 911 (E911) services providing emergency response capabilities including {{#if karis_law}}Kari\'s Law compliance for direct 911 dialing{{/if}}{{#if ray_baums}} and RAY BAUM\'s Act compliance for dispatchable location information{{/if}}.',
+            'required_by' => ['e911_services', 'telecommunications'],
+            'depends_on_variables' => ['karis_law', 'ray_baums'],
+            'always_include' => false,
+            'template_category' => 'voip',
+        ],
+        
+        // VAR-specific definitions
+        'hardware_procurement' => [
+            'term' => 'Hardware Procurement Services',
+            'definition' => 'Professional services for sourcing, purchasing, and delivering {{hardware_categories}} using {{procurement_model|replace_underscore}} model with {{lead_time_days}} {{lead_time_type}} standard lead time.',
+            'required_by' => ['var_services', 'procurement'],
+            'depends_on_variables' => ['hardware_categories', 'procurement_model', 'lead_time_days', 'lead_time_type'],
+            'always_include' => false,
+            'template_category' => 'var',
+        ],
+        
+        'installation_services' => [
+            'term' => 'Installation Services',
+            'definition' => 'Hardware installation and configuration services including {{#if includes_installation}}basic installation{{/if}}{{#if includes_rack_stack}}, rack and stack services{{/if}}{{#if includes_configuration}}, system configuration{{/if}}{{#if includes_project_management}}, and project management{{/if}}.',
+            'required_by' => ['var_services', 'installation'],
+            'depends_on_variables' => ['includes_installation', 'includes_rack_stack', 'includes_configuration', 'includes_project_management'],
+            'always_include' => false,
+            'template_category' => 'var',
+        ],
+        
+        'warranty_coverage' => [
+            'term' => 'Warranty Coverage',
+            'definition' => 'Hardware warranty protection for {{hardware_warranty_period|replace_underscore}} with support coverage for {{support_warranty_period|replace_underscore}}{{#if onsite_warranty_support}}, including on-site warranty support{{/if}}{{#if advanced_replacement}} and advanced replacement services{{/if}}.',
+            'required_by' => ['var_warranty', 'hardware_services'],
+            'depends_on_variables' => ['hardware_warranty_period', 'support_warranty_period', 'onsite_warranty_support', 'advanced_replacement'],
+            'always_include' => false,
+            'template_category' => 'var',
+        ],
+        
+        // Compliance-specific definitions
+        'compliance_frameworks' => [
+            'term' => 'Compliance Frameworks',
+            'definition' => 'The regulatory and industry standards applicable to this engagement, specifically {{compliance_frameworks}}, with {{risk_level}} risk assessment level{{#if industry_sector}} for the {{industry_sector}} industry sector{{/if}}.',
+            'required_by' => ['compliance_services', 'regulatory'],
+            'depends_on_variables' => ['compliance_frameworks', 'risk_level', 'industry_sector'],
+            'always_include' => false,
+            'template_category' => 'compliance',
+        ],
+        
+        'audit_services' => [
+            'term' => 'Audit Services',
+            'definition' => 'Compliance assessment and validation services including {{#if includes_internal_audits}}internal audits{{/if}}{{#if includes_external_audits}}, external audit coordination{{/if}}{{#if includes_penetration_testing}}, penetration testing{{/if}}{{#if includes_vulnerability_scanning}}, and vulnerability scanning{{/if}} performed {{comprehensive_audit_frequency}}.',
+            'required_by' => ['compliance_audits', 'regulatory_services'],
+            'depends_on_variables' => ['includes_internal_audits', 'includes_external_audits', 'includes_penetration_testing', 'includes_vulnerability_scanning', 'comprehensive_audit_frequency'],
+            'always_include' => false,
+            'template_category' => 'compliance',
+        ],
+        
+        'training_programs' => [
+            'term' => 'Training Programs',
+            'definition' => 'Compliance and security awareness training including {{training_programs}} delivered via {{training_delivery_method|replace_underscore}} method on a {{training_frequency}} basis.',
+            'required_by' => ['compliance_training', 'security_awareness'],
+            'depends_on_variables' => ['training_programs', 'training_delivery_method', 'training_frequency'],
+            'always_include' => false,
+            'template_category' => 'compliance',
+        ],
+        
+        // Financial definitions
+        'billing_model' => [
+            'term' => 'Billing Model',
+            'definition' => '{{billing_model|replace_underscore_title}} billing structure{{#if monthly_base_rate}} with {{monthly_base_rate}} monthly base rate{{/if}}{{#if hourly_rate}} and {{hourly_rate}} hourly rate for additional services{{/if}}.',
+            'required_by' => ['financial_terms', 'pricing'],
+            'depends_on_variables' => ['billing_model', 'monthly_base_rate', 'hourly_rate'],
+            'always_include' => false,
+            'template_category' => ['msp', 'voip', 'var'],
+        ],
+        
+        // General definitions
+        'contract_term' => [
             'term' => 'Term',
             'definition' => 'Shall mean the duration of this Agreement as defined in Section 5.a, including the Initial Term and any Renewal Terms.',
             'required_by' => ['legal', 'termination'],
             'depends_on_variables' => [],
-            'always_include' => false,
+            'always_include' => true,
         ],
     ];
 
@@ -165,6 +271,58 @@ class DefinitionRegistry
     }
 
     /**
+     * Get definitions for specific template category
+     */
+    public function getDefinitionsForTemplateCategory(string $templateCategory): array
+    {
+        $definitions = [];
+        
+        foreach ($this->definitions as $key => $definition) {
+            // Always include definitions
+            if ($definition['always_include'] ?? false) {
+                $definitions[$key] = $definition;
+                continue;
+            }
+            
+            // Check template category match
+            $defCategory = $definition['template_category'] ?? null;
+            if ($defCategory) {
+                if (is_array($defCategory) && in_array($templateCategory, $defCategory)) {
+                    $definitions[$key] = $definition;
+                } elseif (is_string($defCategory) && $defCategory === $templateCategory) {
+                    $definitions[$key] = $definition;
+                }
+            } elseif (!isset($definition['template_category'])) {
+                // Include general definitions for all templates
+                $definitions[$key] = $definition;
+            }
+        }
+        
+        return $definitions;
+    }
+
+    /**
+     * Check if variables are available for a definition
+     */
+    public function hasRequiredVariables(string $termKey, array $variables): bool
+    {
+        $definition = $this->getDefinition($termKey);
+        if (!$definition) {
+            return false;
+        }
+        
+        $requiredVars = $definition['depends_on_variables'] ?? [];
+        
+        foreach ($requiredVars as $var) {
+            if (!isset($variables[$var]) || empty($variables[$var])) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
      * Generate definition content with variable substitution
      */
     public function generateDefinitionContent(string $termKey, array $variables): string
@@ -176,12 +334,10 @@ class DefinitionRegistry
 
         $content = $definition['definition'];
         
-        // Add service section logic for supported_infrastructure
+        // Add modern asset-based logic for supported_infrastructure
         if ($termKey === 'supported_infrastructure') {
-            $variables['has_service_sections'] = 
-                ($variables['service_section_a'] ?? false) || 
-                ($variables['service_section_b'] ?? false) || 
-                ($variables['service_section_c'] ?? false);
+            $variables['has_asset_types'] = 
+                !empty($variables['supported_asset_types']);
         }
 
         // Process handlebars conditionals

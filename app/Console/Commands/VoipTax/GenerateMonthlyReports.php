@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 /**
  * Generate Monthly VoIP Tax Reports
- * 
+ *
  * Artisan command to generate monthly compliance reports for all companies.
  */
 class GenerateMonthlyReports extends Command
@@ -18,7 +18,7 @@ class GenerateMonthlyReports extends Command
      *
      * @var string
      */
-    protected $signature = 'voip-tax:generate-monthly-reports 
+    protected $signature = 'voip-tax:generate-monthly-reports
                             {--month= : Specific month to generate reports for (YYYY-MM format)}
                             {--company= : Specific company ID to generate report for}
                             {--dry-run : Run without actually generating reports}';
@@ -36,10 +36,10 @@ class GenerateMonthlyReports extends Command
     public function handle(): int
     {
         $this->info('Starting VoIP Tax Monthly Report Generation...');
-        
+
         try {
             // Parse month parameter
-            $month = $this->option('month') 
+            $month = $this->option('month')
                 ? Carbon::createFromFormat('Y-m', $this->option('month'))
                 : Carbon::now()->subMonth();
 
@@ -57,7 +57,7 @@ class GenerateMonthlyReports extends Command
             }
 
             $reportService = new VoIPTaxScheduledReportService();
-            
+
             if ($dryRun) {
                 $this->info('Would generate monthly reports for specified period.');
                 return Command::SUCCESS;
@@ -124,7 +124,7 @@ class GenerateMonthlyReports extends Command
         }
 
         $this->table([
-            'Company ID', 'Status', 'Tax Collected', 'Invoices', 
+            'Company ID', 'Status', 'Tax Collected', 'Invoices',
             'Compliance Score', 'Action Items', 'File'
         ], $tableData);
     }

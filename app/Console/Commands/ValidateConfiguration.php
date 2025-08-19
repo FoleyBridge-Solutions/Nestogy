@@ -7,12 +7,18 @@ use App\Services\ConfigurationValidationService;
 
 class ValidateConfiguration extends Command
 {
+
+    // Class constants to reduce duplication
+    private const VALIDATION_PASS = 'pass';
+    private const VALIDATION_FAIL = 'fail';
+    private const MSG_VALIDATE_START = 'Validating configuration...';
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'config:validate 
+    protected $signature = 'config:validate
                             {--show-warnings : Show configuration warnings}
                             {--check-missing : Show only missing required configurations}
                             {--json : Output results as JSON}';
@@ -117,7 +123,7 @@ class ValidateConfiguration extends Command
         if ($report['valid']) {
             $this->newLine();
             $this->info('✓ Configuration validation passed!');
-            
+
             if ($report['warning_count'] > 0 && !$this->option('show-warnings')) {
                 $this->line('  (Use --show-warnings to see warnings)');
             }

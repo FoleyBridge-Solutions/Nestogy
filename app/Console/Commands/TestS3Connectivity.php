@@ -4,10 +4,13 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 class TestS3Connectivity extends Command
 {
+    private const MAX_RETRIES = 3;
+
+    private const DEFAULT_BATCH_SIZE = 100;
+
     protected $signature = 'nestogy:test-s3 {--detailed : Show detailed output}';
     protected $description = 'Test S3/DigitalOcean Spaces connectivity and configuration';
 
@@ -21,7 +24,7 @@ class TestS3Connectivity extends Command
 
         // Test 1: Environment Configuration
         $this->info('1. Checking environment configuration...');
-        
+
         $envVars = [
             'AWS_ACCESS_KEY_ID' => env('AWS_ACCESS_KEY_ID'),
             'AWS_SECRET_ACCESS_KEY' => env('AWS_SECRET_ACCESS_KEY'),
@@ -37,8 +40,8 @@ class TestS3Connectivity extends Command
                 $allTestsPassed = false;
             } else {
                 if ($verbose) {
-                    $displayValue = in_array($key, ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']) 
-                        ? substr($value, 0, 8) . '...' 
+                    $displayValue = in_array($key, ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])
+                        ? substr($value, 0, 8) . '...'
                         : $value;
                     $this->info("   ✅ $key: $displayValue");
                 } else {
@@ -60,11 +63,11 @@ class TestS3Connectivity extends Command
 
         // Test 2: S3 Disk Configuration
         $this->info('2. Testing S3 disk configuration...');
-        
+
         try {
             $s3Disk = Storage::disk('s3');
             $this->info('   ✅ S3 disk loaded successfully');
-            
+
             if ($verbose) {
                 $adapter = $s3Disk->getAdapter();
                 $this->info('   ℹ️  Adapter: ' . get_class($adapter));
@@ -79,13 +82,13 @@ class TestS3Connectivity extends Command
 
         // Test 3: Write Test
         $this->info('3. Testing write operation...');
-        
+
         $testFile = 'test/connectivity_test_' . time() . '.txt';
         $testContent = 'S3 connectivity test at ' . now()->toDateTimeString();
 
         try {
             $result = Storage::disk('s3')->put($testFile, $testContent);
-            
+
             if ($result) {
                 $this->info('   ✅ File written successfully');
             } else {
@@ -107,16 +110,16 @@ class TestS3Connectivity extends Command
 
         // Test 4: Read Test
         $this->info('4. Testing read operation...');
-        
+
         try {
             if (Storage::disk('s3')->exists($testFile)) {
                 $this->info('   ✅ File exists in S3');
-                
+
                 $readContent = Storage::disk('s3')->get($testFile);
-                
+
                 if (strlen($readContent) > 0) {
                     $this->info('   ✅ File read successfully (' . strlen($readContent) . ' bytes)');
-                    
+
                     if ($readContent === $testContent) {
                         $this->info('   ✅ Content integrity verified');
                     } else {
@@ -140,7 +143,7 @@ class TestS3Connectivity extends Command
 
         // Test 5: List Test
         $this->info('5. Testing list operation...');
-        
+
         try {
             $files = Storage::disk('s3')->files('test');
             $this->info('   ✅ Listed ' . count($files) . ' files in test directory');
@@ -153,21 +156,21 @@ class TestS3Connectivity extends Command
 
         // Test 6: PDF Storage Test (simulating actual usage)
         $this->info('6. Testing PDF storage (real-world simulation)...');
-        
+
         $pdfPath = 'pdfs/test_contract_' . time() . '.pdf';
         $fakePdfContent = '%PDF-1.4' . str_repeat("\nTest PDF content line", 100);
-        
+
         try {
             Storage::put($pdfPath, $fakePdfContent); // Uses default disk (should be s3)
             $this->info('   ✅ PDF stored using default Storage facade');
-            
+
             $retrievedSize = strlen(Storage::get($pdfPath));
             $this->info("   ✅ PDF retrieved successfully ($retrievedSize bytes)");
-            
+
             // Cleanup
             Storage::delete($pdfPath);
             $this->info('   ✅ PDF cleaned up');
-            
+
         } catch (\Exception $e) {
             $this->error('   ❌ PDF storage test failed: ' . $e->getMessage());
             $allTestsPassed = false;

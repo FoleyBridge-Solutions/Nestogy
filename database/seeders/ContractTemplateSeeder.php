@@ -78,10 +78,8 @@ class ContractTemplateSeeder extends Seeder
                     'business_hours' => ['type' => 'text', 'required' => true, 'default_value' => 'Monday through Friday, 9:00 AM to 5:00 PM Central Time', 'label' => 'Business Hours Definition'],
                     'billing_frequency' => ['type' => 'select', 'required' => true, 'options' => ['Monthly', 'Quarterly', 'Annual'], 'default_value' => 'Monthly', 'label' => 'Billing Frequency'],
                     
-                    // Service Sections Selection
-                    'service_section_a' => ['type' => 'checkbox', 'required' => false, 'default_value' => false, 'label' => 'Include Section A: Proxmox Infrastructure Support'],
-                    'service_section_b' => ['type' => 'checkbox', 'required' => false, 'default_value' => false, 'label' => 'Include Section B: Virtual Machines Support'],
-                    'service_section_c' => ['type' => 'checkbox', 'required' => false, 'default_value' => false, 'label' => 'Include Section C: Workstation & End User Support'],
+                    // Modern Asset-Based Service Configuration (replaces legacy service sections)
+                    'supported_asset_types' => ['type' => 'multiselect', 'required' => true, 'default_value' => ['server', 'workstation'], 'label' => 'Supported Asset Types', 'options' => ['server', 'hypervisor_node', 'workstation', 'network_device', 'mobile_device', 'storage', 'security_device', 'printer']],
                     
                     // Legal Terms
                     'governing_state' => ['type' => 'select', 'required' => true, 'options' => ['Texas', 'California', 'New York', 'Florida'], 'default_value' => 'Texas', 'label' => 'Governing State Law'],
@@ -4512,7 +4510,8 @@ Date: ___________________               Date: ___________________";
      */
     private function getRecurringSupportTemplate(): string
     {
-        return "RECURRING SUPPORT SERVICES AGREEMENT
+        return <<<'EOD'
+RECURRING SUPPORT SERVICES AGREEMENT
 
 Date: {{effective_date}}
 
@@ -4540,25 +4539,27 @@ Service Levels: Shall mean the standards, performance metrics, Response Times, a
 Service Tier: Shall mean the specific level of service (e.g., {{service_tier}}) selected by the Client for the Supported Infrastructure, as designated in Schedule A, which dictates the applicable Service Levels and fees (Schedule B).
 Support Request: Shall mean a request for technical assistance pertaining to the Supported Infrastructure, submitted by an authorized Client representative to {{service_provider_short_name}} in compliance with the procedures stipulated in Schedule A.
 Support Services: Shall mean the recurring information technology support services to be furnished by {{service_provider_short_name}} to the Client, as delineated in Section 2 hereof and further specified in Schedule A, corresponding to the Supported Infrastructure and Service Tier selected by the Client.
-Supported Infrastructure: Shall mean the specific information technology hardware, software, and systems components designated for coverage under this Agreement, corresponding to the service sections selected by the Client{{#if service_section_a}} (Section A{{/if}}{{#if service_section_b}}, Section B{{/if}}{{#if service_section_c}}, Section C{{/if}}{{#if service_section_a}}){{/if}} and enumerated with specificity in Schedule A.
+Supported Infrastructure: Shall mean the specific information technology hardware, software, and systems components designated for coverage under this Agreement, encompassing {{supported_asset_types}} as enumerated with specificity in Schedule A.
 Term: Shall mean the duration of this Agreement as defined in Section 5.a, including the Initial Term and any Renewal Terms.
 
 SCOPE OF SUPPORT SERVICES:
-{{service_provider_short_name}} shall provide the Support Services to the Client for the Supported Infrastructure selected by the Client and detailed in Schedule A. The Client may elect one or more of the following service sections:
+{{service_provider_short_name}} shall provide the Support Services to the Client for the Supported Infrastructure selected by the Client and detailed in Schedule A.
 
-{{#if service_section_a}}
-Section A: Proxmox Infrastructure Support: Support pertaining to the core Proxmox virtualization environment (\"Managed Hyperconverged Nodes\"), encompassing hypervisor hosts, management interface, cluster functionality, underlying server hardware (if specified in Schedule A as managed by {{service_provider_short_name}}), directly connected storage infrastructure utilized by Proxmox (as specified in Schedule A), and network configurations intrinsic to the Proxmox cluster's operation (as specified in Schedule A). [Other specific components may be added in Schedule A]. Excluded from this Section A are: support for operating systems or applications within virtual machines hosted thereon, and direct end-user support unless covered under Section B or C.
+Support services cover the following asset types: {{supported_asset_types}}.
+
+{{#if has_server_support}}
+**Server & Infrastructure Support:** Support pertaining to server infrastructure and virtualization environments ("Managed Server Infrastructure"), encompassing physical servers, hypervisor hosts, management interfaces, cluster functionality, and directly connected storage infrastructure. Support includes monitoring, maintenance, performance optimization, and troubleshooting of server hardware and virtualization platforms as specified in Schedule A.
 {{/if}}
 
-{{#if service_section_b}}
-Section B: Virtual Machines Support: Support pertaining to the operating systems within Client's designated virtual machines (\"Managed Virtual Machines\") hosted on a Proxmox Infrastructure (whether managed by Client or under Section A), and standard business applications installed thereon (as listed in Schedule A). Support focuses on the functionality and availability of said Managed Virtual Machines. Excluded from this Section B are: support for the underlying Proxmox Infrastructure (unless covered by Section A), and general end-user support unrelated to accessing the specified Managed Virtual Machines (covered under Section C).
+{{#if has_workstation_support}}
+**Workstation Support:** Support pertaining to Client-owned physical and virtual workstations ("Managed Workstations") as specified in Schedule A, including their operating systems and standard installed business applications. Services include hardware troubleshooting coordination, software support, and direct end-user assistance for issues related to workstation functionality, connectivity, and productivity applications.
 {{/if}}
 
-{{#if service_section_c}}
-Section C: Managed Workstation and End User Support: Support pertaining to Client-owned physical or virtual workstations (\"Managed End User Workstations\" and \"Managed Kiosks\") specified in Schedule A, including their operating systems (as listed in Schedule A) and standard installed business applications (as listed in Schedule A). Services include hardware troubleshooting coordination (subject to Client warranties; repair costs are Client's responsibility unless otherwise agreed), and direct end-user assistance for issues related to the Managed Workstation/Kiosk, its OS, and supported applications (logins, application errors, workstation connectivity, peripherals). Excluded from this Section C are: server/network infrastructure support (unless covered by Section A/B), non-standard or personal devices (see Sec 6.6), application development, and issues from unauthorized changes. Kiosk support may be limited per Schedule A.
+{{#if has_network_support}}
+**Network Infrastructure Support:** Support for network devices including routers, switches, firewalls, and wireless access points ("Managed Network Infrastructure"). Services encompass configuration management, performance monitoring, security policy implementation, and troubleshooting of network connectivity and performance issues.
 {{/if}}
 
-The specific Service Levels, Response Times, and Resolution Times applicable to the chosen Support Services section(s) and selected Service Tier shall be delineated in Schedule A.
+The specific Service Levels, Response Times, and Resolution Times applicable to the selected Service Tier shall be delineated in Schedule A.
 
 Changes to Supported Infrastructure: Client shall provide {{service_provider_short_name}} with prompt written notification (minimum fifteen (15) days' advance notice recommended) of any material changes to the Supported Infrastructure. Such changes require documentation in an updated Schedule A and may necessitate a mutually agreed-upon written adjustment to the fees (Schedule B) and Service Levels (Schedule A).
 
@@ -4703,6 +4704,7 @@ Title: {{service_provider_signatory_title}}
 
 By: _______________________________
 Name: {{client_signatory_name}}
-Title: {{client_signatory_title}}";
+Title: {{client_signatory_title}}
+EOD;
     }
 }

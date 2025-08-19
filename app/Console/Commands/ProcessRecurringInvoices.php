@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * ProcessRecurringInvoices Command
- * 
+ *
  * Artisan command to automatically process due recurring invoices
  * based on active contracts. Can be scheduled to run daily.
  */
@@ -51,7 +51,7 @@ class ProcessRecurringInvoices extends Command
     public function handle(): int
     {
         $this->info('Starting recurring invoice processing...');
-        
+
         // Parse options
         $date = $this->option('date') ? Carbon::parse($this->option('date')) : now();
         $isDryRun = $this->option('dry-run');
@@ -59,7 +59,7 @@ class ProcessRecurringInvoices extends Command
         $force = $this->option('force');
 
         $this->info("Processing date: {$date->toDateString()}");
-        
+
         if ($isDryRun) {
             $this->warn('DRY RUN MODE - No invoices will be created');
         }
@@ -122,7 +122,7 @@ class ProcessRecurringInvoices extends Command
             foreach ($dueRecurringInvoices as $recurring) {
                 try {
                     $invoice = $this->processRecurringInvoice($recurring, $date);
-                    
+
                     if ($invoice) {
                         $results['generated']++;
                         $results['total_amount'] += $invoice->amount;
@@ -134,7 +134,7 @@ class ProcessRecurringInvoices extends Command
                             'status' => 'success'
                         ];
                     }
-                    
+
                     $results['processed']++;
                 } catch (\Exception $e) {
                     $results['errors']++;
@@ -192,7 +192,7 @@ class ProcessRecurringInvoices extends Command
         // Validate contract is still active
         if (!$recurring->contract || !$recurring->contract->isActive()) {
             $this->warn("Skipping recurring invoice {$recurring->id} - contract not active");
-            
+
             // Pause the recurring invoice
             $recurring->pause('Contract no longer active');
             return null;
@@ -208,7 +208,7 @@ class ProcessRecurringInvoices extends Command
     protected function displaySummaryTable($recurringInvoices): void
     {
         $headers = ['ID', 'Client', 'Contract', 'Amount', 'Frequency', 'Next Due', 'Status'];
-        
+
         $rows = $recurringInvoices->map(function ($recurring) {
             return [
                 $recurring->id,
@@ -238,7 +238,7 @@ class ProcessRecurringInvoices extends Command
         if ($results['errors'] > 0) {
             $this->newLine();
             $this->error('Errors occurred during processing:');
-            
+
             foreach ($results['details'] as $detail) {
                 if ($detail['status'] === 'error') {
                     $this->error("- Recurring ID {$detail['recurring_id']} ({$detail['client']}): {$detail['error']}");
@@ -249,7 +249,7 @@ class ProcessRecurringInvoices extends Command
         if ($results['generated'] > 0) {
             $this->newLine();
             $this->info('Successfully generated invoices:');
-            
+
             foreach ($results['details'] as $detail) {
                 if ($detail['status'] === 'success') {
                     $this->info("- Invoice #{$detail['invoice_id']} for {$detail['client']}: $" . number_format($detail['amount'], 2));

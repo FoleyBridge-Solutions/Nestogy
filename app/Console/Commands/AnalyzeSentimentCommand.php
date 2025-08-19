@@ -6,16 +6,17 @@ use App\Jobs\AnalyzeTicketSentiment;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\TicketReply;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class AnalyzeSentimentCommand extends Command
 {
+    private const DEFAULT_PAGE_SIZE = 50;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'sentiment:analyze 
+    protected $signature = 'sentiment:analyze
                             {--company-id= : Analyze sentiment for specific company}
                             {--batch-size=50 : Number of items to process per batch}
                             {--type=all : Type to analyze (tickets, replies, all)}
@@ -49,7 +50,7 @@ class AnalyzeSentimentCommand extends Command
         }
 
         $this->info('Sentiment analysis jobs have been queued.');
-        
+
         return self::SUCCESS;
     }
 
@@ -104,13 +105,13 @@ class AnalyzeSentimentCommand extends Command
     protected function analyzeTicketsForCompany(int $companyId, int $batchSize, bool $force): void
     {
         $query = Ticket::where('company_id', $companyId);
-        
+
         if (!$force) {
             $query->whereNull('sentiment_analyzed_at');
         }
 
         $totalTickets = $query->count();
-        
+
         if ($totalTickets === 0) {
             $this->line("No tickets to analyze for company {$companyId}");
             return;
@@ -139,13 +140,13 @@ class AnalyzeSentimentCommand extends Command
     protected function analyzeRepliesForCompany(int $companyId, int $batchSize, bool $force): void
     {
         $query = TicketReply::where('company_id', $companyId);
-        
+
         if (!$force) {
             $query->whereNull('sentiment_analyzed_at');
         }
 
         $totalReplies = $query->count();
-        
+
         if ($totalReplies === 0) {
             $this->line("No replies to analyze for company {$companyId}");
             return;

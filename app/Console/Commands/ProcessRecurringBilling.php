@@ -10,13 +10,17 @@ use Throwable;
 
 /**
  * ProcessRecurringBilling Command
- * 
+ *
  * High-performance Artisan command for processing recurring billing at scale.
  * Optimized to handle 10,000+ invoices within 30 minutes with comprehensive
  * monitoring, error handling, and recovery mechanisms.
  */
 class ProcessRecurringBilling extends Command
 {
+    private const DEFAULT_TIMEOUT = 30;
+
+    private const DEFAULT_BATCH_SIZE = 100;
+
     /**
      * The name and signature of the console command.
      *
@@ -64,41 +68,41 @@ class ProcessRecurringBilling extends Command
     public function handle(): int
     {
         $this->startTime = microtime(true);
-        
+
         try {
             // Check for running instances unless forced
             if (!$this->option('force') && $this->isAlreadyRunning()) {
                 $this->error('Another instance of this command is already running. Use --force to override.');
                 return self::FAILURE;
             }
-            
+
             // Set process lock
             $this->setProcessLock();
-            
+
             $this->displayHeader();
-            
+
             // Build processing options
             $options = $this->buildProcessingOptions();
-            
+
             if ($this->option('dry-run')) {
                 return $this->performDryRun($options);
             }
-            
+
             // Execute bulk processing
             $results = $this->performanceService->processBulkRecurringBilling($options);
-            
+
             // Display results
             $this->displayResults($results);
-            
+
             // Log completion
             $this->logCompletion($results);
-            
+
             return $this->determineExitCode($results);
-            
+
         } catch (Throwable $e) {
             $this->handleCommandError($e);
             return self::FAILURE;
-            
+
         } finally {
             $this->releaseProcessLock();
         }
@@ -113,17 +117,17 @@ class ProcessRecurringBilling extends Command
         $this->info('🔄 VoIP Recurring Billing High-Performance Processor');
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->info('Started: ' . now()->format('Y-m-d H:i:s'));
-        
+
         if ($this->option('company')) {
             $this->info('Company Filter: ' . $this->option('company'));
         }
-        
+
         if ($this->option('date-from') || $this->option('date-to')) {
-            $this->info('Date Range: ' . 
-                ($this->option('date-from') ?? 'Any') . ' to ' . 
+            $this->info('Date Range: ' .
+                ($this->option('date-from') ?? 'Any') . ' to ' .
                 ($this->option('date-to') ?? 'Any'));
         }
-        
+
         $this->info('Batch Size: ' . $this->option('batch-size'));
         $this->info('Max Concurrent: ' . $this->option('max-concurrent'));
         $this->newLine();
@@ -138,19 +142,19 @@ class ProcessRecurringBilling extends Command
             'batch_size' => (int) $this->option('batch-size'),
             'max_concurrent' => (int) $this->option('max-concurrent'),
         ];
-        
+
         if ($this->option('company')) {
             $options['company_id'] = (int) $this->option('company');
         }
-        
+
         if ($this->option('date-from')) {
             $options['date_from'] = Carbon::parse($this->option('date-from'));
         }
-        
+
         if ($this->option('date-to')) {
             $options['date_to'] = Carbon::parse($this->option('date-to'));
         }
-        
+
         return $options;
     }
 
@@ -161,50 +165,50 @@ class ProcessRecurringBilling extends Command
     {
         $this->warn('🔍 DRY RUN MODE - No actual processing will occur');
         $this->newLine();
-        
+
         // Get records that would be processed
         $query = \App\Models\Recurring::where('status', 'active')
             ->where('auto_generate', true);
-            
+
         if (isset($options['company_id'])) {
             $query->where('company_id', $options['company_id']);
         }
-        
+
         if (isset($options['date_from'])) {
             $query->where('next_billing_date', '>=', $options['date_from']);
         }
-        
+
         if (isset($options['date_to'])) {
             $query->where('next_billing_date', '<=', $options['date_to']);
         } else {
             $query->where('next_billing_date', '<=', now());
         }
-        
+
         $count = $query->count();
         $totalBatches = ceil($count / $options['batch_size']);
         $estimatedTime = ($count / 333.33) * 60; // Assuming 333.33 records per minute
-        
+
         $this->info("📊 Processing Summary:");
         $this->info("   Records to process: {$count}");
         $this->info("   Estimated batches: {$totalBatches}");
         $this->info("   Estimated time: " . gmdate('H:i:s', (int) $estimatedTime));
         $this->newLine();
-        
+
         // Show sample records
         $sampleRecords = $query->with('client:id,name')
             ->limit(5)
             ->get(['id', 'client_id', 'next_billing_date', 'amount', 'billing_frequency']);
-            
+
         if ($sampleRecords->isNotEmpty()) {
             $this->info("📋 Sample Records:");
             foreach ($sampleRecords as $record) {
                 $this->info("   ID: {$record->id} | Client: {$record->client->name} | Amount: \${$record->amount} | Due: {$record->next_billing_date}");
             }
         }
-        
+
         $this->newLine();
         $this->info('✅ Dry run completed successfully');
-        
+
         return self::SUCCESS;
     }
 
@@ -217,19 +221,19 @@ class ProcessRecurringBilling extends Command
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->info('📈 Processing Results');
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
+
         $this->info("✅ Processed: {$results['processed']}");
         $this->info("❌ Failed: {$results['failed']}");
         $this->info("⏭️  Skipped: {$results['skipped']}");
         $this->info("📦 Batches: {$results['batches_processed']}");
         $this->info("⏱️  Duration: " . gmdate('H:i:s', (int) $results['processing_time']));
-        
+
         $recordsPerSecond = $results['processed'] / max($results['processing_time'], 1);
         $this->info("🚀 Rate: " . number_format($recordsPerSecond, 2) . " records/second");
-        
+
         $successRate = ($results['processed'] / max($results['processed'] + $results['failed'], 1)) * 100;
         $this->info("📊 Success Rate: " . number_format($successRate, 2) . "%");
-        
+
         // Show errors if any
         if (!empty($results['errors']) && $this->option('verbose')) {
             $this->newLine();
@@ -237,13 +241,13 @@ class ProcessRecurringBilling extends Command
             foreach (array_slice($results['errors'], 0, 10) as $error) {
                 $this->warn("   Record {$error['recurring_id']}: {$error['error']}");
             }
-            
+
             if (count($results['errors']) > 10) {
                 $remaining = count($results['errors']) - 10;
                 $this->warn("   ... and {$remaining} more errors");
             }
         }
-        
+
         $this->newLine();
     }
 
@@ -273,18 +277,18 @@ class ProcessRecurringBilling extends Command
     {
         // If more than 10% failed, consider it a partial failure
         $failureRate = $results['failed'] / max($results['processed'] + $results['failed'], 1);
-        
+
         if ($failureRate > 0.1) {
             $this->warn('⚠️  High failure rate detected (' . number_format($failureRate * 100, 1) . '%)');
             return self::FAILURE;
         }
-        
+
         if ($results['failed'] > 0) {
             $this->warn('⚠️  Some records failed to process');
         } else {
             $this->info('✅ All records processed successfully');
         }
-        
+
         return self::SUCCESS;
     }
 
@@ -294,12 +298,12 @@ class ProcessRecurringBilling extends Command
     protected function handleCommandError(Throwable $e): void
     {
         $this->error('❌ Critical Error: ' . $e->getMessage());
-        
+
         if ($this->option('verbose')) {
             $this->error('Stack Trace:');
             $this->error($e->getTraceAsString());
         }
-        
+
         Log::critical('Recurring billing command failed', [
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
@@ -313,20 +317,20 @@ class ProcessRecurringBilling extends Command
     protected function isAlreadyRunning(): bool
     {
         $lockFile = storage_path('app/locks/recurring-billing-process.lock');
-        
+
         if (!file_exists($lockFile)) {
             return false;
         }
-        
+
         $lockTime = filemtime($lockFile);
         $maxAge = config('recurring-billing.automation.max_processing_window', 4) * 3600;
-        
+
         // Consider stale if older than max processing window
         if (time() - $lockTime > $maxAge) {
             unlink($lockFile);
             return false;
         }
-        
+
         return true;
     }
 
@@ -339,7 +343,7 @@ class ProcessRecurringBilling extends Command
         if (!is_dir($lockDir)) {
             mkdir($lockDir, 0755, true);
         }
-        
+
         $lockFile = $lockDir . '/recurring-billing-process.lock';
         file_put_contents($lockFile, getmypid());
     }

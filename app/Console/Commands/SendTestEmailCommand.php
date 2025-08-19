@@ -15,7 +15,7 @@ class SendTestEmailCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'email:test-send 
+    protected $signature = 'email:test-send
                             {company_id : The ID of the company to send as}
                             {email : The email address to send to}
                             {--subject= : Custom email subject}
@@ -70,7 +70,7 @@ class SendTestEmailCommand extends Command
             // Configure mail for this company
             $this->info("🔧 Configuring mail settings...");
             $configured = $this->mailConfigService->configureMailForCompany($company);
-            
+
             if (!$configured) {
                 $this->error("❌ Failed to configure mail settings for company.");
                 return Command::FAILURE;
@@ -84,7 +84,7 @@ class SendTestEmailCommand extends Command
             // Test mail configuration
             $this->info("🔍 Testing mail configuration...");
             $testResult = $this->mailConfigService->testCurrentMailConfig();
-            
+
             if (!$testResult['success']) {
                 $this->error("❌ Mail configuration test failed:");
                 $this->line("   " . $testResult['message']);
@@ -122,7 +122,7 @@ class SendTestEmailCommand extends Command
      */
     protected function hasValidSmtpConfig($setting): bool
     {
-        return !empty($setting->smtp_host) 
+        return !empty($setting->smtp_host)
             && !empty($setting->smtp_port)
             && !empty($setting->smtp_username)
             && !empty($setting->smtp_password);
@@ -134,7 +134,7 @@ class SendTestEmailCommand extends Command
     protected function showMailConfiguration(Company $company): void
     {
         $setting = $company->setting;
-        
+
         $this->info("📋 Mail Configuration Details:");
         $this->table(
             ['Setting', 'Value'],

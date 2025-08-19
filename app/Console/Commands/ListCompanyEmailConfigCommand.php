@@ -7,12 +7,18 @@ use App\Models\Company;
 
 class ListCompanyEmailConfigCommand extends Command
 {
+
+    // Class constants to reduce duplication
+    private const CONFIG_SMTP = 'smtp';
+    private const CONFIG_IMAP = 'imap';
+    private const MSG_LIST_START = 'Listing company email configurations...';
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'email:list-companies 
+    protected $signature = 'email:list-companies
                             {--detailed : Show detailed email configuration}
                             {--only-configured : Only show companies with email configured}';
 
@@ -47,7 +53,7 @@ class ListCompanyEmailConfigCommand extends Command
         foreach ($companies as $company) {
             $setting = $company->setting;
             $hasConfig = $this->hasValidSmtpConfig($setting);
-            
+
             if ($hasConfig) {
                 $configuredCount++;
             }
@@ -97,7 +103,7 @@ class ListCompanyEmailConfigCommand extends Command
         // Summary
         $totalCompanies = $companies->count();
         $displayedCompanies = count($tableData);
-        
+
         $this->line(str_repeat('=', 60));
         $this->info("📈 Summary:");
         $this->line("   Total Companies: {$totalCompanies}");
@@ -118,8 +124,8 @@ class ListCompanyEmailConfigCommand extends Command
      */
     protected function hasValidSmtpConfig($setting): bool
     {
-        return $setting 
-            && !empty($setting->smtp_host) 
+        return $setting
+            && !empty($setting->smtp_host)
             && !empty($setting->smtp_port)
             && !empty($setting->smtp_username)
             && !empty($setting->smtp_password);
