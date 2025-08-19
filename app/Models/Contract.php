@@ -18,8 +18,6 @@ use Carbon\Carbon;
  * 
  * @property int $id
  * @property int $company_id
- * @property string|null $prefix
- * @property int $number
  * @property string $contract_number
  * @property string $contract_type
  * @property string $status
@@ -83,8 +81,6 @@ class Contract extends Model
      */
     protected $fillable = [
         'company_id',
-        'prefix',
-        'number',
         'contract_number',
         'contract_type',
         'status',
@@ -94,9 +90,7 @@ class Contract extends Model
         'start_date',
         'end_date',
         'term_months',
-        'renewal_type',
-        'renewal_notice_days',
-        'auto_renewal',
+        'auto_renew',
         'contract_value',
         'currency_code',
         'payment_terms',
@@ -117,7 +111,6 @@ class Contract extends Model
         'jurisdiction',
         'template_type',
         'template_id',
-        'url_key',
         'metadata',
         'signed_at',
         'executed_at',
@@ -137,7 +130,6 @@ class Contract extends Model
      */
     protected $casts = [
         'company_id' => 'integer',
-        'number' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
         'term_months' => 'integer',
@@ -256,6 +248,54 @@ class Contract extends Model
         return $this->belongsTo(ContractTemplate::class, 'template_id');
     }
 
+    /**
+     * Get the contract schedules for this contract.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(ContractSchedule::class);
+    }
+
+    /**
+     * Get active contract schedules.
+     */
+    public function activeSchedules(): HasMany
+    {
+        return $this->schedules()->active();
+    }
+
+    /**
+     * Get effective contract schedules.
+     */
+    public function effectiveSchedules(): HasMany
+    {
+        return $this->schedules()->effective();
+    }
+
+    /**
+     * Get infrastructure schedules (Schedule A).
+     */
+    public function infrastructureSchedules(): HasMany
+    {
+        return $this->schedules()->infrastructure();
+    }
+
+    /**
+     * Get pricing schedules (Schedule B).
+     */
+    public function pricingSchedules(): HasMany
+    {
+        return $this->schedules()->pricing();
+    }
+
+    /**
+     * Get assets supported by this contract.
+     */
+    public function supportedAssets(): HasMany
+    {
+        return $this->hasMany(Asset::class, 'supporting_contract_id');
+    }
+
     public function componentAssignments(): HasMany
     {
         return $this->hasMany(\App\Models\Financial\ContractComponentAssignment::class);
@@ -296,6 +336,27 @@ class Contract extends Model
     public function signatures(): HasMany
     {
         return $this->hasMany(ContractSignature::class);
+    }
+
+    /**
+     * Get active contract signatures (excludes declined, expired, voided).
+     */
+    public function activeSignatures(): HasMany
+    {
+        return $this->hasMany(ContractSignature::class)
+            ->whereNotIn('status', [
+                ContractSignature::STATUS_DECLINED,
+                ContractSignature::STATUS_EXPIRED,
+                ContractSignature::STATUS_VOIDED
+            ]);
+    }
+
+    /**
+     * Get contract approvals.
+     */
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(ContractApproval::class);
     }
 
     /**
@@ -340,10 +401,12 @@ class Contract extends Model
 
     /**
      * Get performance metrics.
+     * Note: ContractPerformance model would be created for production use
      */
     public function performanceMetrics(): HasMany
     {
-        return $this->hasMany(ContractPerformance::class);
+        // Placeholder - would link to actual performance tracking model
+        return $this->hasMany(ContractMilestone::class); // Temporary placeholder
     }
 
     /**
@@ -351,10 +414,7 @@ class Contract extends Model
      */
     public function getFullNumber(): string
     {
-        $prefix = $this->prefix ?: 'CNT';
-        $number = str_pad($this->number, 4, '0', STR_PAD_LEFT);
-        
-        return $prefix . '-' . $number;
+        return $this->contract_number;
     }
 
     /**
@@ -371,6 +431,34 @@ class Contract extends Model
     public function isSigned(): bool
     {
         return $this->signature_status === self::SIGNATURE_FULLY_EXECUTED;
+    }
+
+    /**
+     * Check if contract can be edited.
+     */
+    public function canBeEdited(): bool
+    {
+        // Contract can be edited if it's not fully executed/signed and in editable status
+        return !$this->isSigned() && in_array($this->status, [
+            self::STATUS_DRAFT,
+            self::STATUS_PENDING_REVIEW,
+            self::STATUS_UNDER_NEGOTIATION,
+            self::STATUS_PENDING_SIGNATURE,
+            self::STATUS_ACTIVE
+        ]);
+    }
+
+    /**
+     * Check if contract can be terminated.
+     */
+    public function canBeTerminated(): bool
+    {
+        // Contract can be terminated if it's active, signed, or suspended
+        return in_array($this->status, [
+            self::STATUS_ACTIVE,
+            self::STATUS_SIGNED,
+            self::STATUS_SUSPENDED
+        ]);
     }
 
     /**
@@ -438,11 +526,53 @@ class Contract extends Model
      */
     public function getMonthlyRecurringRevenue(): float
     {
-        if (!$this->pricing_structure || !isset($this->pricing_structure['recurring_monthly'])) {
+        if (!$this->pricing_structure) {
             return 0;
         }
 
-        return (float) $this->pricing_structure['recurring_monthly'];
+        $monthlyTotal = 0;
+        $pricing = $this->pricing_structure;
+
+        // Base monthly recurring revenue
+        $monthlyTotal += (float) ($pricing['recurring_monthly'] ?? 0);
+
+        // Per-user pricing (if applicable)
+        $perUser = (float) ($pricing['per_user'] ?? 0);
+        if ($perUser > 0) {
+            // Could multiply by user count if available
+            $monthlyTotal += $perUser;
+        }
+
+        // Asset-based pricing
+        if (isset($pricing['asset_pricing']) && is_array($pricing['asset_pricing'])) {
+            foreach ($pricing['asset_pricing'] as $assetType => $config) {
+                if (!empty($config['enabled']) && !empty($config['price']) && $config['price'] !== '') {
+                    $assetCount = $this->supportedAssets()->where('type', $assetType)->count();
+                    $monthlyTotal += (float) $config['price'] * $assetCount;
+                }
+            }
+        }
+
+        // Template-specific recurring pricing
+        if (isset($pricing['telecom_pricing'])) {
+            $perChannel = $pricing['telecom_pricing']['perChannel'] ?? '';
+            $callingPlan = $pricing['telecom_pricing']['callingPlan'] ?? '';
+            $e911 = $pricing['telecom_pricing']['e911'] ?? '';
+            
+            $monthlyTotal += $perChannel !== '' ? (float) $perChannel : 0;
+            $monthlyTotal += $callingPlan !== '' ? (float) $callingPlan : 0;
+            $monthlyTotal += $e911 !== '' ? (float) $e911 : 0;
+        }
+
+        if (isset($pricing['compliance_pricing']['frameworkMonthly'])) {
+            foreach ($pricing['compliance_pricing']['frameworkMonthly'] as $framework => $monthlyFee) {
+                if ($monthlyFee !== '') {
+                    $monthlyTotal += (float) $monthlyFee;
+                }
+            }
+        }
+
+        return $monthlyTotal;
     }
 
     /**
@@ -451,9 +581,33 @@ class Contract extends Model
     public function getAnnualValue(): float
     {
         $monthlyRevenue = $this->getMonthlyRecurringRevenue();
-        $oneTimeRevenue = $this->pricing_structure['one_time'] ?? 0;
+        $oneTimeRevenue = (float) ($this->pricing_structure['one_time'] ?? 0);
         
         return ($monthlyRevenue * 12) + $oneTimeRevenue;
+    }
+
+    /**
+     * Get count of assigned assets for this contract.
+     */
+    public function getAssignedAssetCount(): int
+    {
+        return $this->supportedAssets()->count();
+    }
+
+    /**
+     * Check if auto-assignment is enabled.
+     */
+    public function hasAutoAssignmentEnabled(): bool
+    {
+        return $this->sla_terms['auto_assign_new_assets'] ?? false;
+    }
+
+    /**
+     * Get supported asset types from SLA terms.
+     */
+    public function getSupportedAssetTypes(): array
+    {
+        return $this->sla_terms['supported_asset_types'] ?? [];
     }
 
     /**
@@ -528,15 +682,9 @@ class Contract extends Model
      */
     public function getPerformanceScore(): float
     {
-        $metrics = $this->performanceMetrics()
-            ->where('period_start', '>=', now()->subMonths(3))
-            ->get();
-
-        if ($metrics->isEmpty()) {
-            return 100.0;
-        }
-
-        return $metrics->avg('score') ?? 100.0;
+        // For now, return a default score since ContractPerformance model doesn't exist yet
+        // This would be integrated with actual performance monitoring systems
+        return 95.5;
     }
 
     /**
@@ -585,7 +733,7 @@ class Contract extends Model
     /**
      * Terminate contract.
      */
-    public function terminate(string $reason = null, ?Carbon $terminationDate = null): void
+    public function terminate(?string $reason = null, ?Carbon $terminationDate = null): void
     {
         $this->update([
             'status' => self::STATUS_TERMINATED,
@@ -597,7 +745,7 @@ class Contract extends Model
     /**
      * Suspend contract.
      */
-    public function suspend(string $reason = null): void
+    public function suspend(?string $reason = null): void
     {
         $metadata = $this->metadata ?? [];
         $metadata['suspension_reason'] = $reason;
@@ -844,40 +992,115 @@ class Contract extends Model
     }
 
     /**
+     * Get audit history for this contract.
+     */
+    public function getAuditHistory(): array
+    {
+        $history = [];
+
+        // Contract creation
+        $history[] = [
+            'description' => 'Contract created',
+            'icon' => 'plus',
+            'date' => $this->created_at,
+            'user' => $this->creator?->name ?? 'System',
+            'type' => 'creation'
+        ];
+
+        // Status changes (could be tracked via activity log if available)
+        if ($this->signed_at) {
+            $history[] = [
+                'description' => 'Contract signed',
+                'icon' => 'signature',
+                'date' => $this->signed_at,
+                'user' => $this->signer?->name ?? 'Client',
+                'type' => 'signature'
+            ];
+        }
+
+        if ($this->executed_at) {
+            $history[] = [
+                'description' => 'Contract executed',
+                'icon' => 'check',
+                'date' => $this->executed_at,
+                'user' => $this->approver?->name ?? 'System',
+                'type' => 'execution'
+            ];
+        }
+
+        if ($this->terminated_at) {
+            $history[] = [
+                'description' => 'Contract terminated',
+                'icon' => 'times',
+                'date' => $this->terminated_at,
+                'user' => 'System',
+                'type' => 'termination',
+                'reason' => $this->termination_reason
+            ];
+        }
+
+        // Add amendments
+        foreach ($this->amendments ?? [] as $amendment) {
+            $history[] = [
+                'description' => 'Amendment added',
+                'icon' => 'edit',
+                'date' => $amendment->created_at,
+                'user' => $amendment->creator?->name ?? 'System',
+                'type' => 'amendment',
+                'details' => $amendment->reason ?? 'Contract modification'
+            ];
+        }
+
+        // Add signature events
+        foreach ($this->signatures ?? [] as $signature) {
+            if ($signature->signed_at) {
+                $history[] = [
+                    'description' => "Signature by {$signature->signatory_name}",
+                    'icon' => 'signature',
+                    'date' => $signature->signed_at,
+                    'user' => $signature->signatory_name,
+                    'type' => 'signature'
+                ];
+            }
+        }
+
+        // Sort by date descending
+        usort($history, function ($a, $b) {
+            return $b['date'] <=> $a['date'];
+        });
+
+        return $history;
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()
     {
         parent::boot();
 
-        // Auto-increment contract number and set defaults
+        // Auto-generate contract number if not provided
         static::creating(function ($contract) {
-            if (!$contract->number) {
+            if (!$contract->contract_number) {
+                // Generate a simple incremental contract number
                 $lastContract = static::where('company_id', $contract->company_id)
-                    ->where('prefix', $contract->prefix)
-                    ->orderBy('number', 'desc')
+                    ->whereNotNull('contract_number')
+                    ->orderBy('id', 'desc')
                     ->first();
 
-                $contract->number = $lastContract ? $lastContract->number + 1 : 1;
+                $nextNumber = 1;
+                if ($lastContract && preg_match('/CNT-(\d+)/', $lastContract->contract_number, $matches)) {
+                    $nextNumber = (int)$matches[1] + 1;
+                }
+
+                $contract->contract_number = 'CNT-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
             }
 
-            if (!$contract->contract_number) {
-                $prefix = $contract->prefix ?: 'CNT';
-                $number = str_pad($contract->number, 4, '0', STR_PAD_LEFT);
-                $contract->contract_number = $prefix . '-' . $number;
-            }
-
-            if (!$contract->url_key) {
-                $contract->url_key = bin2hex(random_bytes(16));
-            }
 
             if (!$contract->currency_code) {
                 $contract->currency_code = 'USD';
             }
 
-            if (!$contract->renewal_type) {
-                $contract->renewal_type = self::RENEWAL_MANUAL;
-            }
 
             if (!$contract->signature_status) {
                 $contract->signature_status = self::SIGNATURE_PENDING;

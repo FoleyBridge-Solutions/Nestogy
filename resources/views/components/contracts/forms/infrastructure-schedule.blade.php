@@ -1,0 +1,228 @@
+<div class="space-y-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Infrastructure & Asset Coverage</h4>
+        
+        <!-- Supported Asset Types Configuration -->
+        <div class="mb-8">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Supported Asset Types</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <template x-for="assetType in availableAssetTypes" :key="assetType.value">
+                    <div class="relative">
+                        <label class="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                               :class="infrastructureSchedule.supportedAssetTypes.includes(assetType.value) ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''">
+                            <input type="checkbox" 
+                                   :value="assetType.value"
+                                   x-model="infrastructureSchedule.supportedAssetTypes"
+                                   class="sr-only">
+                            <div class="flex items-center space-x-3 w-full">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x-html="assetType.icon"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white" x-text="assetType.label"></div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="assetType.description"></div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <div class="w-4 h-4 rounded border-2 flex items-center justify-center"
+                                         :class="infrastructureSchedule.supportedAssetTypes.includes(assetType.value) ? 'bg-blue-600 border-blue-600' : 'border-gray-300 dark:border-gray-500'">
+                                        <svg x-show="infrastructureSchedule.supportedAssetTypes.includes(assetType.value)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Service Level Agreements -->
+        <div class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-4">Service Level Agreements</h5>
+            
+            <!-- Service Tier Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Service Tier</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <template x-for="tier in serviceTiers" :key="tier.value">
+                        <label class="flex flex-col p-4 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                               :class="infrastructureSchedule.sla.serviceTier === tier.value ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''">
+                            <input type="radio" 
+                                   :value="tier.value"
+                                   x-model="infrastructureSchedule.sla.serviceTier"
+                                   @change="updateSlaFromTier(tier)"
+                                   class="sr-only">
+                            <div class="text-center">
+                                <div class="text-lg font-bold" :class="tier.color + ' mb-2'" x-text="tier.label"></div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                    <div><span class="font-medium">Response:</span> <span x-text="tier.responseTime + ' hrs'"></span></div>
+                                    <div><span class="font-medium">Resolution:</span> <span x-text="tier.resolutionTime + ' hrs'"></span></div>
+                                    <div><span class="font-medium">Uptime:</span> <span x-text="tier.uptime + '%'"></span></div>
+                                    <div><span class="font-medium">Coverage:</span> <span x-text="tier.coverage"></span></div>
+                                </div>
+                            </div>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <!-- SLA Details (Read-only, based on selected tier) -->
+            <div x-show="infrastructureSchedule.sla.serviceTier" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h6 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    <span x-text="infrastructureSchedule.sla.serviceTier ? infrastructureSchedule.sla.serviceTier.charAt(0).toUpperCase() + infrastructureSchedule.sla.serviceTier.slice(1) : ''"></span> 
+                    Tier SLA Details
+                </h6>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center p-3 bg-white dark:bg-gray-800 rounded border">
+                        <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="infrastructureSchedule.sla.responseTimeHours + ' hrs'"></div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Response Time</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Maximum time to respond</div>
+                    </div>
+                    <div class="text-center p-3 bg-white dark:bg-gray-800 rounded border">
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400" x-text="infrastructureSchedule.sla.resolutionTimeHours + ' hrs'"></div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Resolution Time</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Target time to resolve</div>
+                    </div>
+                    <div class="text-center p-3 bg-white dark:bg-gray-800 rounded border">
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" x-text="infrastructureSchedule.sla.uptimePercentage + '%'"></div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Uptime Guarantee</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Guaranteed availability</div>
+                    </div>
+                </div>
+                
+                <!-- Additional Tier Benefits -->
+                <div class="mt-4">
+                    <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Included in this tier:</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
+                        <div x-show="infrastructureSchedule.sla.serviceTier === 'bronze'">
+                            <div>• Business hours support (8x5)</div>
+                            <div>• Remote assistance included</div>
+                            <div>• Email & phone support</div>
+                        </div>
+                        <div x-show="infrastructureSchedule.sla.serviceTier === 'silver'">
+                            <div>• Extended hours support (12x5)</div>
+                            <div>• Remote & limited on-site</div>
+                            <div>• Priority phone support</div>
+                            <div>• Quarterly reviews</div>
+                        </div>
+                        <div x-show="infrastructureSchedule.sla.serviceTier === 'gold'">
+                            <div>• 24x7 support coverage</div>
+                            <div>• On-site support included</div>
+                            <div>• Dedicated support contact</div>
+                            <div>• Monthly reviews & reporting</div>
+                        </div>
+                        <div x-show="infrastructureSchedule.sla.serviceTier === 'platinum'">
+                            <div>• 24x7 priority support</div>
+                            <div>• Guaranteed on-site response</div>
+                            <div>• Dedicated account manager</div>
+                            <div>• Proactive monitoring included</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coverage Rules -->
+        <div class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-4">Coverage Rules & Conditions</h5>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Business Hours Coverage</label>
+                        <select x-model="infrastructureSchedule.coverageRules.businessHours" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="8x5">8x5 (Business Hours)</option>
+                            <option value="12x5">12x5 (Extended Hours)</option>
+                            <option value="24x7">24x7 (Around the Clock)</option>
+                            <option value="custom">Custom Schedule</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Emergency Support</label>
+                        <select x-model="infrastructureSchedule.coverageRules.emergencySupport" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="included">Included</option>
+                            <option value="additional_fee">Additional Fee</option>
+                            <option value="not_available">Not Available</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="flex items-center space-x-3">
+                        <input type="checkbox" 
+                               x-model="infrastructureSchedule.coverageRules.autoAssignNewAssets"
+                               class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Automatically assign new client assets to this contract</span>
+                    </label>
+                </div>
+                
+                <div>
+                    <label class="flex items-center space-x-3">
+                        <input type="checkbox" 
+                               x-model="infrastructureSchedule.coverageRules.includeRemoteSupport"
+                               class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Include remote support and monitoring</span>
+                    </label>
+                </div>
+                
+                <div>
+                    <label class="flex items-center space-x-3">
+                        <input type="checkbox" 
+                               x-model="infrastructureSchedule.coverageRules.includeOnsiteSupport"
+                               class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Include on-site support when required</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Excluded Asset Types -->
+        <div>
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-4">Exclusions</h5>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Excluded Asset Types (Optional)</label>
+                    <textarea x-model="infrastructureSchedule.exclusions.assetTypes" 
+                              rows="2"
+                              placeholder="List any specific asset types or models that are excluded from support..."
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Exclusions (Optional)</label>
+                    <textarea x-model="infrastructureSchedule.exclusions.services" 
+                              rows="2"
+                              placeholder="List any services or scenarios not covered by this contract..."
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Summary -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+        <h5 class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Infrastructure Schedule Summary</h5>
+        <div class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <div x-show="infrastructureSchedule.supportedAssetTypes.length > 0">
+                <span class="font-medium">Asset Types:</span> 
+                <span x-text="infrastructureSchedule.supportedAssetTypes.length + ' selected'"></span>
+            </div>
+            <div x-show="infrastructureSchedule.sla.responseTimeHours">
+                <span class="font-medium">Response SLA:</span> 
+                <span x-text="infrastructureSchedule.sla.responseTimeHours + ' hours'"></span>
+            </div>
+            <div x-show="infrastructureSchedule.sla.uptimePercentage">
+                <span class="font-medium">Uptime Guarantee:</span> 
+                <span x-text="infrastructureSchedule.sla.uptimePercentage + '%'"></span>
+            </div>
+            <div x-show="infrastructureSchedule.coverageRules.businessHours">
+                <span class="font-medium">Coverage:</span> 
+                <span x-text="infrastructureSchedule.coverageRules.businessHours"></span>
+            </div>
+        </div>
+    </div>
+</div>

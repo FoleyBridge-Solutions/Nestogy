@@ -214,13 +214,14 @@ class SyncRmmAgents implements ShouldQueue
                 'serial' => $agentData['id'] ?? 'Unknown', // Use RMM agent ID as serial
                 'ip' => $agentData['local_ip'] ?? null,
                 'mac' => $agentData['mac_address'] ?? null,
-                'status' => $agentData['online'] ? 'active' : 'inactive',
+                'status' => 'Ready To Deploy', // Default to ready for deployment - lifecycle status is independent of connectivity
                 'description' => "Synced from {$this->integration->getRmmTypeLabel()}",
                 'notes' => json_encode([
                     'rmm_agent_id' => $agentData['id'],
                     'rmm_platform' => $platform,
                     'rmm_version' => $agentData['version'] ?? null,
                     'rmm_last_seen' => $agentData['last_seen'] ?? null,
+                    'rmm_online' => $agentData['online'] ?? false,  // Store connectivity status in notes
                     'rmm_public_ip' => $agentData['public_ip'] ?? null,
                     'rmm_cpu_info' => $agentData['cpu_info'] ?? null,
                     'rmm_total_ram' => $agentData['total_ram'] ?? null,
@@ -252,22 +253,31 @@ class SyncRmmAgents implements ShouldQueue
                 'verification' => 'Company scoping validated',
             ]);
         } else {
-            // Update existing asset
+            // Update existing asset - preserve existing status unless it's the old incorrect mapping
+            $currentStatus = $asset->status;
+            
+            // If the current status is the old incorrect active/inactive mapping, fix it
+            if (in_array($currentStatus, ['active', 'inactive'])) {
+                $currentStatus = 'Ready To Deploy'; // Reset to default - user can manage lifecycle separately
+            }
+            
             $asset->update([
                 'name' => $agentData['hostname'],
                 'type' => $this->determineAssetTypeFromRmm($agentData),
                 'model' => $agentData['operating_system'] ?? $asset->model,
                 'ip' => $agentData['local_ip'],
                 'mac' => $agentData['mac_address'],
-                'status' => $agentData['online'] ? 'active' : 'inactive',
+                'status' => $currentStatus, // Preserve actual lifecycle status, don't overwrite with connectivity
                 'notes' => json_encode(array_merge(
                     json_decode($asset->notes ?? '{}', true),
                     [
                         'rmm_last_seen' => $agentData['last_seen'],
+                        'rmm_online' => $agentData['online'] ?? false, // Store connectivity status in notes
                         'rmm_public_ip' => $agentData['public_ip'],
                         'rmm_version' => $agentData['version'],
                         'rmm_needs_reboot' => $agentData['needs_reboot'] ?? false,
                         'rmm_monitoring_type' => $agentData['monitoring_type'] ?? 'workstation',
+                        'sync_timestamp' => now()->toISOString(),
                     ]
                 )),
                 'updated_at' => now(),
@@ -316,8 +326,8 @@ class SyncRmmAgents implements ShouldQueue
             'company_id' => $this->integration->company_id,
         ]);
 
-        // Primary: Try to find client using RmmClientMapping
-        $client = RmmClientMapping::findClientByRmmId($this->integration->id, $clientName);
+        // Primary: Try to find client using RmmClientMapping by name
+        $client = RmmClientMapping::findClientByRmmName($this->integration->id, $clientName);
         if ($client) {
             // Validate the client belongs to the correct company
             if ($client->company_id !== $this->integration->company_id) {

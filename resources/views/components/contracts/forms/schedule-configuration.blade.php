@@ -1,0 +1,90 @@
+<div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Contract Schedules</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400" x-text="getScheduleDescription()">Configure contract-specific schedules and terms</p>
+    </div>
+
+    <!-- Template-Specific Schedule Indicator -->
+    <div x-show="selectedTemplate" class="mb-6">
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-blue-900 dark:text-blue-100" x-text="getScheduleTypeLabel()">
+                        Contract-specific schedules will be configured
+                    </div>
+                    <div class="text-xs text-blue-700 dark:text-blue-300" x-text="getScheduleTypeDetails()">
+                        Based on your selected template type
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Navigation Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <button @click="activeScheduleTab = 'schedule_a'" 
+                    :class="activeScheduleTab === 'schedule_a' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                    class="py-2 px-1 border-b-2 font-medium text-sm">
+                <span x-text="getScheduleALabel()">Schedule A</span>
+            </button>
+            <button @click="activeScheduleTab = 'pricing'" 
+                    :class="activeScheduleTab === 'pricing' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                    class="py-2 px-1 border-b-2 font-medium text-sm">
+                Schedule B - Pricing & Fees
+            </button>
+            <button @click="activeScheduleTab = 'additional'" 
+                    :class="activeScheduleTab === 'additional' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                    class="py-2 px-1 border-b-2 font-medium text-sm">
+                Schedule C - Additional Terms
+            </button>
+        </nav>
+    </div>
+
+    <!-- Schedule Content - Dynamic based on template type -->
+    <div x-show="activeScheduleTab === 'schedule_a'" x-transition>
+        <!-- MSP/Infrastructure Templates -->
+        <div x-show="getScheduleType() === 'infrastructure'">
+            <x-contracts.forms.infrastructure-schedule />
+        </div>
+        
+        <!-- VoIP/Telecom Templates -->
+        <div x-show="getScheduleType() === 'telecom'">
+            <x-contracts.forms.telecom-schedule />
+        </div>
+        
+        <!-- VAR/Hardware Templates -->
+        <div x-show="getScheduleType() === 'hardware'">
+            <x-contracts.forms.hardware-schedule />
+        </div>
+        
+        <!-- Compliance Templates -->
+        <div x-show="getScheduleType() === 'compliance'">
+            <x-contracts.forms.compliance-schedule />
+        </div>
+        
+        <!-- Fallback for unrecognized template types -->
+        <div x-show="!['infrastructure', 'telecom', 'hardware', 'compliance'].includes(getScheduleType())">
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No Schedule Available</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Please select a contract template to configure schedules.</p>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="activeScheduleTab === 'pricing'" x-transition>
+        <x-contracts.forms.pricing-schedule />
+    </div>
+
+    <div x-show="activeScheduleTab === 'additional'" x-transition>
+        <x-contracts.forms.additional-terms />
+    </div>
+</div>

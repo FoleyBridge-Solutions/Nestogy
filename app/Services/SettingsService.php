@@ -488,22 +488,37 @@ class SettingsService
             
             // Update company information
             $company = $setting->company;
-            $company->update([
+            $companyData = [
                 'name' => $data['company_name'],
                 'currency' => $data['company_currency'] ?? 'USD',
-            ]);
+            ];
+            
+            // Add company address and contact fields if they exist in the data
+            if (isset($data['business_address'])) {
+                $companyData['address'] = $data['business_address'];
+            }
+            if (isset($data['business_phone'])) {
+                $companyData['phone'] = $data['business_phone'];
+            }
+            if (isset($data['business_email'])) {
+                $companyData['email'] = $data['business_email'];
+            }
+            if (isset($data['website'])) {
+                $companyData['website'] = $data['website'];
+            }
+            if (isset($data['company_logo'])) {
+                $companyData['logo'] = $data['company_logo'];
+            }
+            
+            $company->update($companyData);
             
             $updateData = [
                 'company_logo' => $data['company_logo'] ?? null,
                 'company_colors' => $data['company_colors'] ?? null,
-                'company_address' => $data['company_address'] ?? null,
-                'company_city' => $data['company_city'] ?? null,
-                'company_state' => $data['company_state'] ?? null,
-                'company_zip' => $data['company_zip'] ?? null,
-                'company_country' => $data['company_country'] ?? 'US',
-                'company_phone' => $data['company_phone'] ?? null,
-                'company_website' => $data['company_website'] ?? null,
-                'company_tax_id' => $data['company_tax_id'] ?? null,
+                'company_address' => $data['business_address'] ?? null,  // Map business_address to company_address in settings
+                'company_phone' => $data['business_phone'] ?? null,
+                'company_website' => $data['website'] ?? null,
+                'company_tax_id' => $data['tax_id'] ?? null,
                 'business_hours' => $data['business_hours'] ?? null,
                 'company_holidays' => $data['company_holidays'] ?? null,
                 'company_language' => $data['company_language'] ?? 'en',
@@ -523,7 +538,13 @@ class SettingsService
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update general settings: ' . $e->getMessage());
+            Log::error('Failed to update general settings', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $data
+            ]);
             return false;
         }
     }
@@ -808,6 +829,11 @@ class SettingsService
             'company_logo' => $setting->company_logo,
             'company_colors' => $setting->company_colors,
             'company_address' => $setting->company_address,
+            'business_address' => $setting->company_address,  // Map for form compatibility
+            'business_phone' => $setting->company_phone,      // Map for form compatibility
+            'business_email' => $company->email,              // Use company email
+            'website' => $setting->company_website,           // Map for form compatibility
+            'tax_id' => $setting->company_tax_id,             // Map for form compatibility
             'company_city' => $setting->company_city,
             'company_state' => $setting->company_state,
             'company_zip' => $setting->company_zip,

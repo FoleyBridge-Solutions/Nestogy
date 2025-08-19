@@ -6,7 +6,6 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 /**
@@ -61,11 +60,10 @@ use Carbon\Carbon;
  * @property int|null $processed_by
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
  */
 class ContractSignature extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -289,7 +287,7 @@ class ContractSignature extends Model
     /**
      * Mark as viewed.
      */
-    public function markAsViewed(string $ipAddress = null, string $userAgent = null): void
+    public function markAsViewed(?string $ipAddress = null, ?string $userAgent = null): void
     {
         if ($this->status === self::STATUS_SENT) {
             $this->update([
@@ -357,7 +355,7 @@ class ContractSignature extends Model
     /**
      * Decline the signature.
      */
-    public function decline(string $reason = null): bool
+    public function decline(?string $reason = null): bool
     {
         if (!in_array($this->status, [self::STATUS_SENT, self::STATUS_VIEWED])) {
             return false;
@@ -380,7 +378,7 @@ class ContractSignature extends Model
     /**
      * Void the signature.
      */
-    public function void(string $reason = null): bool
+    public function void(?string $reason = null): bool
     {
         $this->update([
             'status' => self::STATUS_VOIDED,

@@ -46,7 +46,11 @@ class AssetController extends Controller
         
         $asset = $this->assetService->getAssetWithRelationships($asset);
 
-        return view('assets.show', compact('asset'));
+        // Generate QR code for asset
+        $qrCodeUrl = route('assets.show', $asset);
+        $qrCode = $this->generateQrCode($qrCodeUrl);
+
+        return view('assets.show', compact('asset', 'qrCode'));
     }
 
     public function edit(Asset $asset)
@@ -272,8 +276,12 @@ class AssetController extends Controller
     {
         $this->authorize('view', $asset);
         
+        // Generate QR code for asset label
+        $qrCodeUrl = route('assets.show', $asset);
+        $qrCode = $this->generateQrCode($qrCodeUrl);
+        
         // Generate printable label for asset
-        return view('assets.label', compact('asset'));
+        return view('assets.label', compact('asset', 'qrCode'));
     }
 
     public function archive(Asset $asset)
@@ -309,12 +317,93 @@ class AssetController extends Controller
         $this->authorize('viewAny', Asset::class);
         
         $filters = $request->only(['search', 'type', 'status', 'client_id', 'location_id']);
-        $assets = $this->assetService->getPaginatedAssets($filters, 1000); // Get all for export
+        $assets = $this->assetService->getPaginatedAssets($filters, 10000); // Get all for export
         
-        return response()->json([
-            'message' => 'Export functionality not implemented yet',
-            'count' => $assets->count()
+        // Log export activity
+        \Log::info('Assets export initiated', [
+            'user_id' => auth()->id(),
+            'company_id' => auth()->user()->company_id,
+            'filters' => $filters,
+            'asset_count' => $assets->count(),
         ]);
+        
+        // Define CSV headers
+        $headers = [
+            'ID',
+            'Name',
+            'Type',
+            'Make',
+            'Model',
+            'Serial Number',
+            'Asset Tag',
+            'Status',
+            'Client',
+            'Location',
+            'IP Address',
+            'MAC Address',
+            'Operating System',
+            'Purchase Date',
+            'Warranty Expiry',
+            'Install Date',
+            'Next Maintenance',
+            'Description',
+            'Notes',
+            'Created At',
+            'Updated At'
+        ];
+        
+        // Generate CSV content
+        $csvData = [];
+        $csvData[] = $headers;
+        
+        foreach ($assets as $asset) {
+            $csvData[] = [
+                $asset->id,
+                $asset->name ?: '',
+                $asset->type ?: '',
+                $asset->make ?: '',
+                $asset->model ?: '',
+                $asset->serial ?: '',
+                $asset->asset_tag ?: '',
+                $asset->status ?: '',
+                $asset->client ? $asset->client->name : '',
+                $asset->location ? $asset->location->name : '',
+                $asset->ip ?: '',
+                $asset->mac ?: '',
+                $asset->os ?: '',
+                $asset->purchase_date ? $asset->purchase_date->format('Y-m-d') : '',
+                $asset->warranty_expire ? $asset->warranty_expire->format('Y-m-d') : '',
+                $asset->install_date ? $asset->install_date->format('Y-m-d') : '',
+                $asset->next_maintenance_date ? $asset->next_maintenance_date->format('Y-m-d') : '',
+                $asset->description ?: '',
+                $asset->notes ? strip_tags($asset->notes) : '', // Strip HTML tags from notes
+                $asset->created_at->format('Y-m-d H:i:s'),
+                $asset->updated_at->format('Y-m-d H:i:s')
+            ];
+        }
+        
+        // Create CSV content
+        $filename = 'assets_export_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        
+        $callback = function() use ($csvData) {
+            $file = fopen('php://output', 'w');
+            
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            
+            fclose($file);
+        };
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+        
+        return response()->stream($callback, 200, $headers);
     }
 
     public function importForm()
@@ -349,7 +438,30 @@ class AssetController extends Controller
     {
         $this->authorize('viewAny', Asset::class);
         
-        return view('assets.checkinout');
+        // Get dashboard analytics
+        $analytics = $this->assetService->getAnalytics();
+        
+        // Get recent activity (last 10 check-in/out operations)
+        $recentActivity = $this->assetService->getRecentActivity(10);
+        
+        // Get assets by status for quick access
+        $availableAssets = $this->assetService->getAssetsByStatus('Ready To Deploy');
+        $checkedOutAssets = $this->assetService->getAssetsByStatus('Deployed');
+        
+        // Get filter options
+        $clients = $this->assetService->getClientsForFilter();
+        $locations = $this->assetService->getLocationsForFilter();
+        $contacts = $this->assetService->getContactsForFilter();
+        
+        return view('assets.checkinout', compact(
+            'analytics',
+            'recentActivity', 
+            'availableAssets',
+            'checkedOutAssets',
+            'clients',
+            'locations',
+            'contacts'
+        ));
     }
 
     public function bulk()
@@ -357,5 +469,108 @@ class AssetController extends Controller
         $this->authorize('viewAny', Asset::class);
         
         return view('assets.bulk');
+    }
+
+    public function bulkCheckinout(Request $request)
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        $request->validate([
+            'action' => 'required|in:check_in,check_out',
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'exists:assets,id',
+            'contact_id' => 'nullable|exists:contacts,id'
+        ]);
+        
+        $checkOut = $request->action === 'check_out';
+        $results = $this->assetService->bulkCheckInOut(
+            $request->asset_ids, 
+            $checkOut, 
+            $request->contact_id
+        );
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully processed {$results['success']} assets.",
+                'results' => $results
+            ]);
+        }
+        
+        $message = "Successfully processed {$results['success']} assets.";
+        if ($results['failed'] > 0) {
+            $message .= " {$results['failed']} failed.";
+        }
+        
+        return redirect()->route('assets.checkinout')
+            ->with('success', $message);
+    }
+
+    public function getAssetsByFilter(Request $request)
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        $filters = $request->only(['status', 'type', 'client_id', 'location_id']);
+        $assets = $this->assetService->getAssetsForBulkOperations($filters);
+        
+        return response()->json($assets->map(function ($asset) {
+            // Parse RMM data from notes to get connectivity status
+            $rmmData = null;
+            if ($asset->notes) {
+                try {
+                    $rmmData = json_decode($asset->notes, true);
+                } catch (\Exception $e) {
+                    $rmmData = null;
+                }
+            }
+            
+            return [
+                'id' => $asset->id,
+                'name' => $asset->name,
+                'type' => $asset->type,
+                'status' => $asset->status,
+                'status_color' => $asset->status_color,
+                'client' => $asset->client ? $asset->client->name : null,
+                'contact' => $asset->contact ? $asset->contact->name : null,
+                'location' => $asset->location ? $asset->location->name : null,
+                'serial' => $asset->serial,
+                'rmm_online' => $rmmData['rmm_online'] ?? null, // Include RMM connectivity status
+                'can_check_out' => $asset->status === 'Ready To Deploy' && $asset->type !== 'Server',
+                'can_check_in' => $asset->status === 'Deployed' && $asset->type !== 'Server'
+            ];
+        }));
+    }
+
+    public function getMetrics()
+    {
+        $this->authorize('viewAny', Asset::class);
+        
+        $metrics = $this->assetService->getCheckInOutMetrics();
+        
+        return response()->json($metrics);
+    }
+
+    /**
+     * Generate QR code for the given URL.
+     */
+    protected function generateQrCode(string $url): string
+    {
+        try {
+            $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+                new \BaconQrCode\Renderer\RendererStyle\RendererStyle(200),
+                new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+            );
+            
+            $writer = new \BaconQrCode\Writer($renderer);
+            $qrCode = $writer->writeString($url);
+            
+            return $qrCode;
+        } catch (\Exception $e) {
+            // Fallback if QR code generation fails
+            return '<div class="text-center p-4 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded">
+                        <i class="fas fa-qrcode fa-3x text-gray-400 dark:text-gray-500"></i>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">QR Code unavailable</p>
+                    </div>';
+        }
     }
 }

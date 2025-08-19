@@ -291,10 +291,10 @@ class TaxReportController extends Controller
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->selectRaw('
                 COUNT(*) as total_calculations,
-                SUM(total_amount) as total_tax_calculated,
+                SUM(total_tax_amount) as total_tax_calculated,
                 AVG(calculation_time_ms) as avg_calculation_time,
-                SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as successful_calculations,
-                SUM(CASE WHEN status = "error" THEN 1 ELSE 0 END) as failed_calculations
+                SUM(CASE WHEN status = \'completed\' THEN 1 ELSE 0 END) as successful_calculations,
+                SUM(CASE WHEN status = \'error\' THEN 1 ELSE 0 END) as failed_calculations
             ')
             ->first();
 
@@ -322,7 +322,7 @@ class TaxReportController extends Controller
                 tax_jurisdictions.name,
                 tax_jurisdictions.state,
                 COUNT(*) as calculation_count,
-                SUM(tax_calculations.total_amount) as total_tax_amount
+                SUM(tax_calculations.total_tax_amount) as total_tax_amount
             ')
             ->orderBy('total_tax_amount', 'desc')
             ->limit(10)
@@ -356,21 +356,21 @@ class TaxReportController extends Controller
     private function getTaxDataGrouped(int $companyId, array $dateRange, string $groupBy): array
     {
         $dateFormat = match($groupBy) {
-            'day' => '%Y-%m-%d',
-            'week' => '%Y-%u',
-            'month' => '%Y-%m',
-            default => '%Y-%m'
+            'day' => 'YYYY-MM-DD',
+            'week' => 'YYYY-WW',
+            'month' => 'YYYY-MM',
+            default => 'YYYY-MM'
         };
 
         return TaxCalculation::where('company_id', $companyId)
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'completed')
-            ->groupByRaw("DATE_FORMAT(created_at, '{$dateFormat}')")
+            ->groupByRaw("TO_CHAR(created_at, '{$dateFormat}')")
             ->selectRaw("
-                DATE_FORMAT(created_at, '{$dateFormat}') as period,
+                TO_CHAR(created_at, '{$dateFormat}') as period,
                 COUNT(*) as calculation_count,
-                SUM(total_amount) as total_tax,
-                AVG(total_amount) as avg_tax,
+                SUM(total_tax_amount) as total_tax,
+                AVG(total_tax_amount) as avg_tax,
                 SUM(base_amount) as total_base
             ")
             ->orderBy('period')
@@ -384,11 +384,11 @@ class TaxReportController extends Controller
         return TaxCalculation::where('company_id', $companyId)
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'completed')
-            ->groupBy('engine_used')
+            ->groupBy('engine_type')
             ->selectRaw('
-                engine_used as tax_type,
+                engine_type as tax_type,
                 COUNT(*) as calculation_count,
-                SUM(total_amount) as total_amount
+                SUM(total_tax_amount) as total_amount
             ')
             ->orderBy('total_amount', 'desc')
             ->get()
@@ -409,8 +409,8 @@ class TaxReportController extends Controller
             ->where('status', 'completed')
             ->selectRaw('
                 COUNT(*) as count,
-                SUM(total_amount) as total_tax,
-                AVG(total_amount) as avg_tax
+                SUM(total_tax_amount) as total_tax,
+                AVG(total_tax_amount) as avg_tax
             ')
             ->first();
 
@@ -420,8 +420,8 @@ class TaxReportController extends Controller
             ->where('status', 'completed')
             ->selectRaw('
                 COUNT(*) as count,
-                SUM(total_amount) as total_tax,
-                AVG(total_amount) as avg_tax
+                SUM(total_tax_amount) as total_tax,
+                AVG(total_tax_amount) as avg_tax
             ')
             ->first();
 

@@ -8,6 +8,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/client-portal.css',
                 'resources/js/app.js',
+                'resources/js/contract-wizard.js',
                 'resources/js/it-documentation-diagram.js',
                 'resources/js/components/settings.js',
             ],

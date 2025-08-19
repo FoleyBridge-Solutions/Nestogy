@@ -8,6 +8,7 @@ use App\Models\Quote;
 use App\Models\Client;
 use App\Models\ContractSignature;
 use App\Models\ContractMilestone;
+use App\Services\ContractClauseService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,13 +28,16 @@ class ContractGenerationService
     protected $pdfService;
     protected $signatureService;
     protected $templateEngine;
+    protected $clauseService;
 
     public function __construct(
         PdfService $pdfService = null,
-        DigitalSignatureService $signatureService = null
+        DigitalSignatureService $signatureService = null,
+        ContractClauseService $clauseService = null
     ) {
         $this->pdfService = $pdfService;
         $this->signatureService = $signatureService;
+        $this->clauseService = $clauseService ?: new ContractClauseService();
     }
 
     /**
@@ -178,10 +182,25 @@ class ContractGenerationService
         // Process template variables
         $processedContent = $this->processTemplateVariables($templateContent, $contract);
 
+        // Debug: Log content before PDF generation
+        Log::info('Content processed for PDF generation', [
+            'contract_id' => $contract->id,
+            'content_length' => strlen($processedContent),
+            'has_content' => !empty(trim($processedContent)),
+            'content_preview' => substr($processedContent, 0, 200) . '...'
+        ]);
+
+        if (empty(trim($processedContent))) {
+            throw new \Exception('Processed content is empty - cannot generate PDF');
+        }
+
         // Generate PDF
         $pdfPath = $this->generatePDF($processedContent, $contract, $options);
 
         // Store document path in contract
+        // Temporarily disabled due to JSON encoding issue with metadata field
+        // TODO: Fix metadata JSON encoding issue and re-enable this update
+        /*
         $contract->update([
             'metadata' => array_merge($contract->metadata ?? [], [
                 'document_path' => $pdfPath,
@@ -189,6 +208,7 @@ class ContractGenerationService
                 'generation_options' => $options
             ])
         ]);
+        */
 
         Log::info('Contract document generated', [
             'contract_id' => $contract->id,
@@ -644,12 +664,254 @@ class ContractGenerationService
     {
         $variables = $this->buildTemplateVariables($contract);
         
-        $processedContent = $templateContent;
-        foreach ($variables as $key => $value) {
-            $processedContent = str_replace("{{" . $key . "}}", $value, $processedContent);
+        // Check if template has clauses (new modular system)
+        if ($contract->template && $contract->template->clauses()->exists()) {
+            Log::info('Using clause-based contract generation', [
+                'contract_id' => $contract->id,
+                'template_id' => $contract->template->id
+            ]);
+            
+            // Use clause-based generation
+            $processedContent = $this->clauseService->generateContractFromClauses($contract->template, $variables);
+        } else {
+            Log::info('Using legacy template-based generation', [
+                'contract_id' => $contract->id,
+                'template_id' => $contract->template->id ?? null
+            ]);
+            
+            // Legacy template processing
+            $processedContent = $templateContent;
+            
+            // First, handle handlebars-style conditionals ({{#if variable}}...{{/if}})
+            $processedContent = $this->processConditionals($processedContent, $variables);
+            
+            // Then replace regular variables
+            foreach ($variables as $key => $value) {
+                // Convert boolean values to strings for template
+                if (is_bool($value)) {
+                    $value = $value ? 'true' : 'false';
+                }
+                $processedContent = str_replace("{{" . $key . "}}", $value, $processedContent);
+            }
         }
 
-        return $processedContent;
+        // Convert plain text to HTML format
+        return $this->convertPlainTextToHtml($processedContent);
+    }
+
+    /**
+     * Process handlebars-style conditionals in template content
+     */
+    protected function processConditionals(string $content, array $variables): string
+    {
+        // Process {{#if variable}}...{{/if}} blocks
+        $pattern = '/\{\{\#if\s+(\w+)\}\}(.*?)\{\{\/if\}\}/s';
+        
+        return preg_replace_callback($pattern, function ($matches) use ($variables) {
+            $variable = $matches[1];
+            $conditionalContent = $matches[2];
+            
+            // Check if the variable exists and is truthy
+            if (isset($variables[$variable]) && $variables[$variable]) {
+                return $conditionalContent;
+            }
+            
+            return ''; // Remove the block if condition is false
+        }, $content);
+    }
+
+    /**
+     * Convert plain text contract to properly formatted HTML
+     */
+    protected function convertPlainTextToHtml(string $content): string
+    {
+        // Start with basic HTML structure
+        $html = '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Document</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+        h3 {
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        .contract-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .parties-section {
+            margin-bottom: 30px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            page-break-inside: avoid;
+        }
+        .signature-block {
+            float: left;
+            width: 45%;
+            margin-right: 10%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 200px;
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .schedule {
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+        ol, ul {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>';
+
+        // Split content into lines and process
+        $lines = explode("\n", $content);
+        $inSchedule = false;
+        $inTable = false;
+        $tableHeaders = [];
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            
+            // Skip empty lines but add spacing
+            if (empty($line)) {
+                $html .= '<br>';
+                continue;
+            }
+            
+            // Main title (all caps, first significant line)
+            if (preg_match('/^[A-Z\s]{10,}$/', $line) && !$inSchedule) {
+                $html .= '<h1>' . htmlspecialchars($line) . '</h1>';
+            }
+            // Schedule headers (SCHEDULE A, B, C, etc.)
+            elseif (preg_match('/^SCHEDULE [A-Z]/', $line)) {
+                if ($inTable) {
+                    $html .= '</table>';
+                    $inTable = false;
+                }
+                $html .= '<div class="page-break schedule"><h2>' . htmlspecialchars($line) . '</h2>';
+                $inSchedule = true;
+            }
+            // Section headers (numbered or lettered sections)
+            elseif (preg_match('/^(\d+\.|\([a-z]\)|\([0-9]+\)|[A-Z]\.)\s+[A-Z]/', $line)) {
+                $html .= '<h3>' . htmlspecialchars($line) . '</h3>';
+            }
+            // Detect table headers (lines with multiple | separators)
+            elseif (substr_count($line, '|') >= 2 && !$inTable) {
+                $tableHeaders = array_map('trim', explode('|', $line));
+                $html .= '<table><thead><tr>';
+                foreach ($tableHeaders as $header) {
+                    if (!empty($header)) {
+                        $html .= '<th>' . htmlspecialchars($header) . '</th>';
+                    }
+                }
+                $html .= '</tr></thead><tbody>';
+                $inTable = true;
+            }
+            // Table rows
+            elseif (substr_count($line, '|') >= 2 && $inTable) {
+                $cells = array_map('trim', explode('|', $line));
+                $html .= '<tr>';
+                foreach ($cells as $cell) {
+                    if (!empty($cell)) {
+                        $html .= '<td>' . htmlspecialchars($cell) . '</td>';
+                    }
+                }
+                $html .= '</tr>';
+            }
+            // End of table (empty line or different content)
+            elseif ($inTable && (empty($line) || substr_count($line, '|') < 2)) {
+                $html .= '</tbody></table>';
+                $inTable = false;
+                if (!empty($line)) {
+                    $html .= '<p>' . htmlspecialchars($line) . '</p>';
+                }
+            }
+            // Signature lines
+            elseif (preg_match('/^(CLIENT|COMPANY|SERVICE PROVIDER):\s*_+/', $line)) {
+                $html .= '<div class="signature-section">';
+                $html .= '<div class="signature-block">';
+                $html .= '<p><strong>' . htmlspecialchars($line) . '</strong></p>';
+                $html .= '<div class="signature-line"></div>';
+                $html .= '<p>Date: _______________</p>';
+                $html .= '</div>';
+                $html .= '</div>';
+            }
+            // Regular paragraphs
+            else {
+                // Convert simple formatting
+                $line = htmlspecialchars($line);
+                $line = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $line);
+                $line = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $line);
+                
+                $html .= '<p>' . $line . '</p>';
+            }
+        }
+        
+        // Close any open table
+        if ($inTable) {
+            $html .= '</tbody></table>';
+        }
+        
+        $html .= '</body></html>';
+        
+        return $html;
     }
 
     /**
@@ -657,22 +919,90 @@ class ContractGenerationService
      */
     protected function buildTemplateVariables(Contract $contract): array
     {
-        $contract->load(['client', 'quote']);
+        $contract->load(['client', 'quote', 'template', 'company']);
+
+        // Get the service provider company (the company that owns the contract)
+        $serviceProviderCompany = $contract->company;
+
+        // Get contract schedules from either legacy fields or ContractSchedule models
+        $scheduleA = $contract->schedule_a ?? [];
+        $scheduleB = $contract->schedule_b ?? [];
+        $scheduleC = $contract->schedule_c ?? [];
+        
+        // Parse JSON fields safely for legacy contracts
+        if (is_string($scheduleA)) $scheduleA = json_decode($scheduleA, true) ?? [];
+        if (is_string($scheduleB)) $scheduleB = json_decode($scheduleB, true) ?? [];
+        if (is_string($scheduleC)) $scheduleC = json_decode($scheduleC, true) ?? [];
+        
+        // If no legacy schedule data, try to get from ContractSchedule models
+        if (empty($scheduleA) && empty($scheduleB) && empty($scheduleC) && $contract->schedules) {
+            $schedules = $contract->schedules;
+            foreach ($schedules as $schedule) {
+                $scheduleData = $schedule->variable_values ?? [];
+                
+                switch ($schedule->schedule_letter) {
+                    case 'A':
+                        $scheduleA = $scheduleData;
+                        break;
+                    case 'B':
+                        $scheduleB = $scheduleData;
+                        break;
+                    case 'C':
+                        $scheduleC = $scheduleData;
+                        break;
+                }
+            }
+        }
 
         return [
+            // Basic contract info
             'contract_number' => $contract->contract_number,
             'contract_title' => $contract->title,
-            'client_name' => $contract->client->name,
-            'client_address' => $this->formatAddress($contract->client),
-            'contract_value' => $contract->formatCurrency($contract->contract_value),
+            'contract_value' => $contract->formatCurrency($contract->contract_value ?? 0),
             'start_date' => $contract->start_date->format('F j, Y'),
             'end_date' => $contract->end_date ? $contract->end_date->format('F j, Y') : 'Ongoing',
-            'term_months' => $contract->term_months,
-            'payment_terms' => $contract->payment_terms ?? 'Net 30',
-            'governing_law' => $contract->governing_law ?? 'State of [STATE]',
-            'company_name' => config('app.company_name', 'Nestogy'),
-            'company_address' => config('app.company_address', ''),
+            'effective_date' => $contract->start_date->format('F j, Y'),
             'current_date' => now()->format('F j, Y'),
+            
+            // Terms and conditions
+            'initial_term' => $contract->term_months ? $contract->term_months . ' months' : '12 months',
+            'renewal_term' => '12 months', // Default renewal term
+            'termination_notice_days' => '30',
+            'term_months' => $contract->term_months ?? 12,
+            'payment_terms' => $contract->payment_terms ?? 'Net 30',
+            'billing_frequency' => $contract->billing_frequency ?? 'monthly',
+            
+            // Client information
+            'client_name' => $contract->client->name,
+            'client_address' => $this->formatCompanyAddress($contract->client),
+            'client_signatory_name' => $contract->client->primary_contact ?? 'Authorized Representative',
+            'client_signatory_title' => 'Authorized Representative',
+            
+            // Service provider information (from contract's company)
+            'service_provider_name' => $serviceProviderCompany->name,
+            'service_provider_short_name' => $this->getCompanyShortName($serviceProviderCompany->name),
+            'service_provider_address' => $this->formatCompanyAddress($serviceProviderCompany),
+            'service_provider_signatory_name' => auth()->user()->name ?? 'Authorized Representative',
+            'service_provider_signatory_title' => auth()->user()->title ?? 'Service Manager',
+            'service_provider_short_name_upper' => strtoupper($this->getCompanyShortName($serviceProviderCompany->name)),
+            
+            // Service configuration
+            'service_tier' => $scheduleA['service_tier'] ?? $scheduleA['sla']['serviceTier'] ?? 'Standard',
+            'business_hours' => $scheduleA['business_hours'] ?? 'Monday through Friday, 8:00 AM to 6:00 PM EST',
+            
+            // Service section enablement - determine from actual schedule data
+            'service_section_a' => $this->isServiceSectionEnabled($contract, 'A', $scheduleA),
+            'service_section_b' => $this->isServiceSectionEnabled($contract, 'B', $scheduleB),
+            'service_section_c' => $this->isServiceSectionEnabled($contract, 'C', $scheduleC),
+            
+            // Legal and governance
+            'governing_state' => $contract->governing_law ?? 'Texas',
+            'governing_law' => $contract->governing_law ? 'State of ' . $contract->governing_law : 'State of Texas',
+            'arbitration_location' => config('app.arbitration_location', 'Dallas, Texas'),
+            
+            // Formatted content (using company data)
+            'company_name' => $serviceProviderCompany->name,
+            'company_address' => $this->formatCompanyAddress($serviceProviderCompany),
             'voip_services' => $this->formatVoipServices($contract),
             'sla_terms' => $this->formatSLATerms($contract),
             'compliance_terms' => $this->formatComplianceTerms($contract)
@@ -688,10 +1018,14 @@ class ContractGenerationService
             return $this->pdfService->generateContractPDF($content, $contract, $options);
         }
 
-        // Fallback to DomPDF
+        // Fallback to DomPDF with improved options for HTML rendering
         $options = new Options();
-        $options->set('defaultFont', 'Helvetica');
+        $options->set('defaultFont', 'Times-Roman');
         $options->set('isRemoteEnabled', true);
+        $options->set('isPhpEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isFontSubsettingEnabled', true);
+        $options->set('defaultMediaType', 'print');
 
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($content);
@@ -701,7 +1035,21 @@ class ContractGenerationService
         $filename = "contract-{$contract->contract_number}-" . time() . ".pdf";
         $path = "contracts/{$contract->company_id}/{$filename}";
         
-        Storage::disk('local')->put($path, $dompdf->output());
+        // Generate PDF content
+        $pdfContent = $dompdf->output();
+        
+        // Debug: Check if PDF content was generated
+        if (empty($pdfContent)) {
+            throw new \Exception('PDF content is empty - generation failed');
+        }
+        
+        Log::info('PDF content generated', [
+            'content_size' => strlen($pdfContent),
+            'path' => $path
+        ]);
+        
+        // Save PDF to configured storage (S3)
+        Storage::put($path, $pdfContent);
 
         return $path;
     }
@@ -787,11 +1135,168 @@ class ContractGenerationService
         ";
     }
 
-    // Additional helper methods would be implemented here...
-    protected function formatAddress(Client $client): string { return ''; }
-    protected function formatVoipServices(Contract $contract): string { return ''; }
-    protected function formatSLATerms(Contract $contract): string { return ''; }
-    protected function formatComplianceTerms(Contract $contract): string { return ''; }
+    // Additional helper methods
+    protected function formatAddress(Client $client): string
+    {
+        $address = [];
+        if ($client->address) $address[] = $client->address;
+        if ($client->city) $address[] = $client->city;
+        if ($client->state) $address[] = $client->state;
+        if ($client->postal_code) $address[] = $client->postal_code;
+        
+        return implode(', ', $address) ?: 'Address on file';
+    }
+
+    protected function formatCompanyAddress($company): string
+    {
+        $address = [];
+        if ($company->address) $address[] = $company->address;
+        if ($company->city) $address[] = $company->city;
+        if ($company->state) $address[] = $company->state;
+        
+        // Handle different zip field names (Company uses 'zip', Client might use 'postal_code')
+        $zipCode = $company->zip ?? $company->postal_code ?? null;
+        if ($zipCode) $address[] = $zipCode;
+        
+        return implode(', ', $address) ?: 'Address on file';
+    }
+
+    protected function getCompanyShortName(string $companyName): string
+    {
+        // Extract short name from company name
+        // "FoleyBridge Solutions" -> "FoleyBridge"
+        $words = explode(' ', $companyName);
+        
+        // If multiple words, try to get a meaningful short name
+        if (count($words) > 1) {
+            // Remove common suffixes
+            $suffixes = ['Solutions', 'Inc', 'LLC', 'Corp', 'Corporation', 'Company', 'Ltd', 'Limited'];
+            $words = array_filter($words, function($word) use ($suffixes) {
+                return !in_array($word, $suffixes);
+            });
+        }
+        
+        // Return first word or combination of first words
+        return count($words) > 1 ? implode('', array_slice($words, 0, 2)) : $words[0];
+    }
+
+    /**
+     * Determine if a service section is enabled based on contract configuration
+     */
+    protected function isServiceSectionEnabled(Contract $contract, string $section, array $scheduleData): bool
+    {
+        // Check if explicitly enabled/disabled in schedule data
+        if (isset($scheduleData['enabled'])) {
+            return (bool) $scheduleData['enabled'];
+        }
+        
+        // Check for section-specific configuration that would indicate it's enabled
+        switch ($section) {
+            case 'A':
+                // Infrastructure/SLA section is enabled if there are supported asset types or SLA terms
+                return !empty($scheduleData['supported_asset_types']) 
+                    || !empty($scheduleData['sla']) 
+                    || !empty($contract->sla_terms);
+                    
+            case 'B':
+                // Pricing section is enabled if there's pricing structure
+                return !empty($scheduleData['billing_model']) 
+                    || !empty($scheduleData['basePricing']) 
+                    || !empty($contract->pricing_structure);
+                    
+            case 'C':
+                // Additional terms section is enabled if there are custom terms
+                return !empty($scheduleData['termination']) 
+                    || !empty($scheduleData['liability']) 
+                    || !empty($scheduleData['dataProtection']);
+        }
+        
+        // Check if contract has schedule records for this section
+        if ($contract->schedules) {
+            return $contract->schedules->where('schedule_letter', $section)->isNotEmpty();
+        }
+        
+        // Default to false (section disabled) if no configuration found
+        return false;
+    }
+    
+    protected function formatVoipServices(Contract $contract): string
+    {
+        if (!$contract->voip_specifications) {
+            return '';
+        }
+        
+        $services = is_string($contract->voip_specifications) 
+            ? json_decode($contract->voip_specifications, true) 
+            : $contract->voip_specifications;
+            
+        if (!$services || !isset($services['services'])) {
+            return '';
+        }
+        
+        $formatted = "<h3>VoIP Services Included:</h3>\n<ul>\n";
+        foreach ($services['services'] as $service) {
+            $formatted .= "<li>{$service['service_name']} (Quantity: {$service['quantity']})</li>\n";
+        }
+        $formatted .= "</ul>\n";
+        
+        return $formatted;
+    }
+    
+    protected function formatSLATerms(Contract $contract): string
+    {
+        if (!$contract->sla_terms) {
+            return '';
+        }
+        
+        $sla = is_string($contract->sla_terms) 
+            ? json_decode($contract->sla_terms, true) 
+            : $contract->sla_terms;
+            
+        if (!$sla) {
+            return '';
+        }
+        
+        $formatted = "<h3>Service Level Agreement:</h3>\n<ul>\n";
+        if (isset($sla['uptime_guarantee'])) {
+            $formatted .= "<li>Uptime Guarantee: {$sla['uptime_guarantee']}</li>\n";
+        }
+        if (isset($sla['response_time'])) {
+            $formatted .= "<li>Response Time: {$sla['response_time']}</li>\n";
+        }
+        if (isset($sla['resolution_time'])) {
+            $formatted .= "<li>Resolution Time: {$sla['resolution_time']}</li>\n";
+        }
+        $formatted .= "</ul>\n";
+        
+        return $formatted;
+    }
+    
+    protected function formatComplianceTerms(Contract $contract): string
+    {
+        if (!$contract->compliance_requirements) {
+            return '';
+        }
+        
+        $compliance = is_string($contract->compliance_requirements) 
+            ? json_decode($contract->compliance_requirements, true) 
+            : $contract->compliance_requirements;
+            
+        if (!$compliance) {
+            return '';
+        }
+        
+        $formatted = "<h3>Compliance Requirements:</h3>\n<ul>\n";
+        if (isset($compliance['regulatory']['fcc_compliance']) && $compliance['regulatory']['fcc_compliance']) {
+            $formatted .= "<li>FCC Compliance Required</li>\n";
+        }
+        if (isset($compliance['data_protection']['privacy_policy_required']) && $compliance['data_protection']['privacy_policy_required']) {
+            $formatted .= "<li>Privacy Policy Compliance</li>\n";
+        }
+        $formatted .= "</ul>\n";
+        
+        return $formatted;
+    }
     protected function requiresE911(Quote $quote): bool { return true; }
     protected function getUptimeSLA(Quote $quote): string { return '99.9%'; }
     protected function getResponseTimeSLA(Quote $quote): string { return '4 hours'; }

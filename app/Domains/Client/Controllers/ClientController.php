@@ -641,8 +641,8 @@ class ClientController extends BaseController
         if ($request->filled('q')) {
             $search = $request->get('q');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('company_name', 'like', "%{$search}%");
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('company_name', 'ilike', "%{$search}%");
             });
         }
 

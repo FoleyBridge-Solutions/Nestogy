@@ -111,6 +111,19 @@ class RmmClientMapping extends Model
     }
 
     /**
+     * Find Nestogy client by RMM client name.
+     */
+    public static function findClientByRmmName(int $integrationId, string $rmmClientName): ?Client
+    {
+        $mapping = static::where('integration_id', $integrationId)
+            ->where('rmm_client_name', $rmmClientName)
+            ->where('is_active', true)
+            ->first();
+
+        return $mapping?->client;
+    }
+
+    /**
      * Find RMM client ID by Nestogy client.
      */
     public static function findRmmIdByClient(int $integrationId, int $clientId): ?string

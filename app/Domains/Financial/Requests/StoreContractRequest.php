@@ -40,12 +40,12 @@ class StoreContractRequest extends FormRequest
             'contract_type' => [
                 'required',
                 'string',
-                Rule::in(array_keys(Contract::getAvailableTypes()))
+Rule::in(['one_time_service', 'recurring_service', 'maintenance', 'support', 'managed_services'])
             ],
             'status' => [
                 'sometimes',
                 'string',
-                Rule::in([
+Rule::in([
                     Contract::STATUS_DRAFT,
                     Contract::STATUS_PENDING_REVIEW,
                 ])
@@ -64,18 +64,12 @@ class StoreContractRequest extends FormRequest
             'end_date' => 'nullable|date|after:start_date',
             'term_months' => 'nullable|integer|min:1|max:120',
             'renewal_type' => [
-                'required',
+                'nullable',
                 'string',
-                Rule::in([
-                    Contract::RENEWAL_NONE,
-                    Contract::RENEWAL_MANUAL,
-                    Contract::RENEWAL_AUTOMATIC,
-                    Contract::RENEWAL_NEGOTIATED,
-                ])
+                Rule::in(['none', 'manual', 'automatic', 'negotiated'])
             ],
             'renewal_notice_days' => 'nullable|integer|min:1|max:365',
             'auto_renewal' => 'boolean',
-            'contract_value' => 'nullable|numeric|min:0|max:999999999.99',
             'currency_code' => 'required|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY',
             'payment_terms' => 'nullable|string|max:1000',
             'pricing_structure' => 'nullable|array',
@@ -114,6 +108,13 @@ class StoreContractRequest extends FormRequest
             'penalties.*.amount' => 'required_with:penalties|numeric|min:0',
             'penalties.*.description' => 'nullable|string|max:500',
             'metadata' => 'nullable|array',
+            
+            // Schedule Configuration Data
+            'variable_values' => 'nullable|json',
+            'billing_config' => 'nullable|json',
+            'infrastructure_schedule' => 'nullable|json',
+            'pricing_schedule' => 'nullable|json', 
+            'additional_terms' => 'nullable|json',
         ];
     }
 
@@ -131,7 +132,6 @@ class StoreContractRequest extends FormRequest
             'end_date.after' => 'The end date must be after the start date.',
             'term_months.max' => 'The term cannot exceed 120 months (10 years).',
             'renewal_notice_days.max' => 'The renewal notice period cannot exceed 365 days.',
-            'contract_value.max' => 'The contract value cannot exceed $999,999,999.99.',
             'currency_code.size' => 'The currency code must be exactly 3 characters.',
             'currency_code.in' => 'The currency code must be one of: USD, EUR, GBP, CAD, AUD, JPY.',
             'sla_terms.response_time_hours.max' => 'Response time cannot exceed 72 hours.',
@@ -148,22 +148,8 @@ class StoreContractRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            // Validate contract value based on billing model
-            $template = null;
-            if ($this->template_id) {
-                $template = \App\Models\Financial\ContractTemplate::find($this->template_id);
-            }
-            
-            // Require contract_value for fixed billing or no template
-            $requiresValue = !$template || $template->billing_model === 'fixed';
-            if ($requiresValue && !$this->contract_value) {
-                $validator->errors()->add('contract_value', 'Contract value is required for fixed price contracts.');
-            }
-            
-            // For programmable contracts, set default value if not provided
-            if (!$requiresValue && !$this->contract_value) {
-                $this->merge(['contract_value' => 0]);
-            }
+            // Set default contract_value to 0 - will be calculated after creation
+            $this->merge(['contract_value' => 0]);
             
             // Validate that end_date is required if term_months is not provided
             if (!$this->end_date && !$this->term_months) {
@@ -176,28 +162,208 @@ class StoreContractRequest extends FormRequest
                 $validator->errors()->add('renewal_notice_days', 'Renewal notice days is required when auto renewal is enabled.');
             }
 
-            // Validate pricing structure (only for fixed billing contracts)
-            if ($this->pricing_structure && $requiresValue && $this->contract_value > 0) {
-                $total = ($this->input('pricing_structure.recurring_monthly', 0) * 12) + 
-                        $this->input('pricing_structure.one_time', 0) +
-                        $this->input('pricing_structure.setup_fee', 0);
-                
-                if ($total > $this->contract_value) {
-                    $validator->errors()->add('pricing_structure', 'Total pricing structure cannot exceed contract value.');
+            // Template-specific validation
+            $this->validateTemplateSpecificRequirements($validator);
+        });
+    }
+
+    /**
+     * Apply template-specific validation rules
+     */
+    protected function validateTemplateSpecificRequirements($validator): void
+    {
+        $templateId = $this->input('template_id');
+        
+        if (!$templateId) {
+            return; // No template selected, use base validation only
+        }
+
+        try {
+            $template = \App\Models\ContractTemplate::where('company_id', $this->user()->company_id)
+                ->findOrFail($templateId);
+            
+            $templateType = $template->type ?? 'infrastructure';
+            
+            // Apply validation based on template type
+            switch ($templateType) {
+                case 'sip_trunking':
+                case 'unified_communications':
+                case 'international_calling':
+                    $this->validateTelecomTemplate($validator);
+                    break;
+                    
+                case 'hardware_procurement':
+                case 'equipment_leasing':
+                case 'installation_services':
+                    $this->validateHardwareTemplate($validator);
+                    break;
+                    
+                case 'hipaa_compliance':
+                case 'sox_compliance':
+                case 'pci_compliance':
+                    $this->validateComplianceTemplate($validator);
+                    break;
+                    
+                default:
+                    $this->validateInfrastructureTemplate($validator);
+                    break;
+            }
+            
+        } catch (\Exception $e) {
+            // Template not found or invalid, skip template-specific validation
+        }
+    }
+
+    /**
+     * Validate telecom template requirements
+     */
+    protected function validateTelecomTemplate($validator): void
+    {
+        $pricingSchedule = $this->getParsedPricingSchedule();
+        
+        // Telecom templates should have telecom pricing
+        if (empty($pricingSchedule['telecomPricing'])) {
+            $validator->errors()->add('pricing_schedule', 'Telecom pricing configuration is required for telecommunications contracts.');
+        }
+        
+        // Validate telecom-specific SLA terms
+        $slaTerms = $this->getParsedSlaTerms();
+        if (!empty($slaTerms)) {
+            // Voice quality requirements
+            if (empty($slaTerms['voice_quality_target'])) {
+                $validator->errors()->add('sla_terms', 'Voice quality targets are required for telecom services.');
+            }
+            
+            // Network availability requirements
+            if (empty($slaTerms['uptimePercentage']) || (float)$slaTerms['uptimePercentage'] < 99.0) {
+                $validator->errors()->add('sla_terms', 'Telecom services require minimum 99.0% uptime commitment.');
+            }
+        }
+    }
+
+    /**
+     * Validate hardware template requirements
+     */
+    protected function validateHardwareTemplate($validator): void
+    {
+        $pricingSchedule = $this->getParsedPricingSchedule();
+        
+        // Hardware templates should have hardware pricing
+        if (empty($pricingSchedule['hardwarePricing'])) {
+            $validator->errors()->add('pricing_schedule', 'Hardware pricing configuration is required for hardware contracts.');
+        }
+        
+        // Validate installation and project management rates
+        if (!empty($pricingSchedule['hardwarePricing'])) {
+            $hardwarePricing = $pricingSchedule['hardwarePricing'];
+            
+            if (empty($hardwarePricing['installationRate'])) {
+                $validator->errors()->add('pricing_schedule', 'Installation rate is required for hardware services.');
+            }
+            
+            if (empty($hardwarePricing['projectManagementRate'])) {
+                $validator->errors()->add('pricing_schedule', 'Project management rate is required for hardware installations.');
+            }
+        }
+    }
+
+    /**
+     * Validate compliance template requirements
+     */
+    protected function validateComplianceTemplate($validator): void
+    {
+        $pricingSchedule = $this->getParsedPricingSchedule();
+        
+        // Compliance templates should have compliance pricing
+        if (empty($pricingSchedule['compliancePricing'])) {
+            $validator->errors()->add('pricing_schedule', 'Compliance framework pricing is required for compliance contracts.');
+        }
+        
+        // Validate that at least one compliance framework is selected
+        if (!empty($pricingSchedule['compliancePricing']['frameworkMonthly'])) {
+            $hasActiveFramework = false;
+            foreach ($pricingSchedule['compliancePricing']['frameworkMonthly'] as $framework => $fee) {
+                if (!empty($fee) && (float)$fee > 0) {
+                    $hasActiveFramework = true;
+                    break;
                 }
             }
-
-            // Validate VoIP specifications for VoIP contract types
-            $voipTypes = [
-                Contract::TYPE_SERVICE_AGREEMENT,
-                Contract::TYPE_SLA_CONTRACT,
-                Contract::TYPE_INTERNATIONAL_SERVICE,
-            ];
-
-            if (in_array($this->contract_type, $voipTypes) && !$this->voip_specifications) {
-                $validator->errors()->add('voip_specifications', 'VoIP specifications are required for this contract type.');
+            
+            if (!$hasActiveFramework) {
+                $validator->errors()->add('pricing_schedule', 'At least one compliance framework must be configured with pricing.');
             }
-        });
+        }
+    }
+
+    /**
+     * Validate infrastructure template requirements
+     */
+    protected function validateInfrastructureTemplate($validator): void
+    {
+        $slaTerms = $this->getParsedSlaTerms();
+        $infrastructureSchedule = $this->getParsedInfrastructureSchedule();
+        
+        // Check for supported asset types in multiple locations
+        $hasAssetTypes = !empty($slaTerms['supported_asset_types']) || 
+                        !empty($slaTerms['supportedAssetTypes']) ||
+                        !empty($infrastructureSchedule['supportedAssetTypes']) ||
+                        !empty($infrastructureSchedule['supported_asset_types']);
+        
+        if (!$hasAssetTypes) {
+            $validator->errors()->add('infrastructure_schedule', 'Supported asset types must be specified for infrastructure contracts.');
+        }
+        
+        // Check for response time requirements in multiple locations
+        $hasResponseTimes = !empty($slaTerms['response_time_hours']) || 
+                           !empty($slaTerms['responseTimeHours']) ||
+                           (!empty($infrastructureSchedule['sla']) && !empty($infrastructureSchedule['sla']['responseTimeHours'])) ||
+                           (!empty($slaTerms['slaCommitments']) && !empty($slaTerms['slaCommitments']['responseTime']));
+        
+        if (!$hasResponseTimes) {
+            $validator->errors()->add('infrastructure_schedule', 'Response time commitments are required for infrastructure services.');
+        }
+    }
+
+    /**
+     * Get parsed pricing schedule from JSON
+     */
+    protected function getParsedPricingSchedule(): array
+    {
+        $pricingSchedule = $this->input('pricing_schedule');
+        
+        if (is_string($pricingSchedule)) {
+            return json_decode($pricingSchedule, true) ?? [];
+        }
+        
+        return is_array($pricingSchedule) ? $pricingSchedule : [];
+    }
+
+    /**
+     * Get parsed SLA terms from JSON
+     */
+    protected function getParsedSlaTerms(): array
+    {
+        $slaTerms = $this->input('sla_terms');
+        
+        if (is_string($slaTerms)) {
+            return json_decode($slaTerms, true) ?? [];
+        }
+        
+        return is_array($slaTerms) ? $slaTerms : [];
+    }
+
+    /**
+     * Get parsed infrastructure schedule from JSON
+     */
+    protected function getParsedInfrastructureSchedule(): array
+    {
+        $infrastructureSchedule = $this->input('infrastructure_schedule');
+        
+        if (is_string($infrastructureSchedule)) {
+            return json_decode($infrastructureSchedule, true) ?? [];
+        }
+        
+        return is_array($infrastructureSchedule) ? $infrastructureSchedule : [];
     }
 
     /**
@@ -210,17 +376,249 @@ class StoreContractRequest extends FormRequest
         // Calculate end_date if term_months provided
         if (!empty($validated['term_months']) && empty($validated['end_date'])) {
             $validated['end_date'] = now()->parse($validated['start_date'])
-                ->addMonths($validated['term_months'])
+                ->addMonths((int) $validated['term_months'])
                 ->format('Y-m-d');
         }
+
+        // Process JSON schedule data
+        if (!empty($validated['variable_values'])) {
+            $validated['variable_values'] = json_decode($validated['variable_values'], true);
+        }
+        if (!empty($validated['billing_config'])) {
+            $validated['billing_config'] = json_decode($validated['billing_config'], true);
+        }
+        if (!empty($validated['infrastructure_schedule'])) {
+            $validated['infrastructure_schedule'] = json_decode($validated['infrastructure_schedule'], true);
+        }
+        if (!empty($validated['pricing_schedule'])) {
+            $validated['pricing_schedule'] = json_decode($validated['pricing_schedule'], true);
+        }
+        if (!empty($validated['additional_terms'])) {
+            $validated['additional_terms'] = json_decode($validated['additional_terms'], true);
+        }
+
+        // Calculate contract_value from pricing_schedule
+        $validated['contract_value'] = $this->calculateContractValue($validated);
 
         // Set defaults
         $validated['status'] = $validated['status'] ?? Contract::STATUS_DRAFT;
         $validated['signature_status'] = $validated['signature_status'] ?? Contract::SIGNATURE_PENDING;
         $validated['currency_code'] = $validated['currency_code'] ?? 'USD';
-        $validated['renewal_type'] = $validated['renewal_type'] ?? Contract::RENEWAL_MANUAL;
+        $validated['renewal_type'] = $validated['renewal_type'] ?? 'manual';
         $validated['auto_renewal'] = $validated['auto_renewal'] ?? false;
 
         return $validated;
+    }
+
+    /**
+     * Calculate contract value from pricing schedule with edge case handling
+     */
+    protected function calculateContractValue(array $data): float
+    {
+        try {
+            $totalValue = 0;
+            $pricingSchedule = $data['pricing_schedule'] ?? [];
+            $warnings = [];
+            
+            // Handle empty pricing schedule
+            if (empty($pricingSchedule)) {
+                \Log::warning('Contract pricing schedule is empty', [
+                    'contract_data' => array_keys($data)
+                ]);
+                return 0;
+            }
+
+            // Base pricing with validation
+            if (isset($pricingSchedule['basePricing'])) {
+                $basePricing = $pricingSchedule['basePricing'];
+                
+                $monthlyBase = $this->safeFloatConversion($basePricing['monthlyBase'] ?? 0);
+                $setupFee = $this->safeFloatConversion($basePricing['setupFee'] ?? 0);
+                
+                // Validate reasonable ranges
+                if ($monthlyBase > 100000) {
+                    $warnings[] = "Monthly base fee seems high: $" . number_format($monthlyBase, 2);
+                }
+                if ($setupFee > 50000) {
+                    $warnings[] = "Setup fee seems high: $" . number_format($setupFee, 2);
+                }
+                
+                $totalValue += $monthlyBase + $setupFee;
+            }
+
+            // Per-asset pricing with conflict detection
+            if (isset($pricingSchedule['assetTypePricing'])) {
+                $assetPricingTotal = 0;
+                $configuredTypes = [];
+                
+                foreach ($pricingSchedule['assetTypePricing'] as $assetType => $config) {
+                    if (!empty($config['enabled']) && isset($config['price'])) {
+                        $price = $this->safeFloatConversion($config['price']);
+                        
+                        // Validate asset pricing
+                        if ($price < 0) {
+                            $warnings[] = "Negative pricing for {$assetType}: $" . number_format($price, 2);
+                            continue;
+                        }
+                        
+                        if ($price > 10000) {
+                            $warnings[] = "High per-asset pricing for {$assetType}: $" . number_format($price, 2);
+                        }
+                        
+                        $assetPricingTotal += $price;
+                        $configuredTypes[] = $assetType;
+                    }
+                }
+                
+                // Check for pricing conflicts
+                if (count($configuredTypes) > 10) {
+                    $warnings[] = "Large number of asset types configured (" . count($configuredTypes) . ")";
+                }
+                
+                $totalValue += $assetPricingTotal;
+            }
+
+            // Template-specific pricing with type validation
+            if (isset($pricingSchedule['telecomPricing'])) {
+                $telecomTotal = 0;
+                $telecomPricing = $pricingSchedule['telecomPricing'];
+                
+                foreach ($telecomPricing as $key => $price) {
+                    $safePrice = $this->safeFloatConversion($price);
+                    
+                    if ($safePrice < 0) {
+                        $warnings[] = "Negative telecom pricing for {$key}: $" . number_format($safePrice, 2);
+                        continue;
+                    }
+                    
+                    $telecomTotal += $safePrice;
+                }
+                
+                $totalValue += $telecomTotal;
+            }
+
+            if (isset($pricingSchedule['hardwarePricing'])) {
+                $hardwarePricing = $pricingSchedule['hardwarePricing'];
+                $installationRate = $this->safeFloatConversion($hardwarePricing['installationRate'] ?? 0);
+                $projectRate = $this->safeFloatConversion($hardwarePricing['projectManagementRate'] ?? 0);
+                
+                // Validate hardware rates
+                if ($installationRate > 500) {
+                    $warnings[] = "High installation rate: $" . number_format($installationRate, 2);
+                }
+                if ($projectRate > 300) {
+                    $warnings[] = "High project management rate: $" . number_format($projectRate, 2);
+                }
+                
+                $totalValue += $installationRate + $projectRate;
+            }
+
+            if (isset($pricingSchedule['compliancePricing'])) {
+                $complianceTotal = 0;
+                
+                foreach ($pricingSchedule['compliancePricing'] as $key => $price) {
+                    if (is_array($price)) {
+                        foreach ($price as $subKey => $subPrice) {
+                            $safePr = $this->safeFloatConversion($subPrice);
+                            if ($safePr > 0) {
+                                $complianceTotal += $safePr;
+                            }
+                        }
+                    } else {
+                        $safePrice = $this->safeFloatConversion($price);
+                        if ($safePrice > 0) {
+                            $complianceTotal += $safePrice;
+                        }
+                    }
+                }
+                
+                $totalValue += $complianceTotal;
+            }
+
+            // Per-user pricing with user count estimation
+            if (isset($pricingSchedule['perUnitPricing']['perUser'])) {
+                $perUserRate = $this->safeFloatConversion($pricingSchedule['perUnitPricing']['perUser']);
+                
+                if ($perUserRate > 0) {
+                    // For initial calculation, assume 1 user (will be updated after contract creation)
+                    $totalValue += $perUserRate;
+                    
+                    if ($perUserRate > 500) {
+                        $warnings[] = "High per-user rate: $" . number_format($perUserRate, 2);
+                    }
+                }
+            }
+
+            // Final validation
+            if ($totalValue < 0) {
+                \Log::error('Calculated negative contract value', [
+                    'calculated_value' => $totalValue,
+                    'pricing_schedule' => $pricingSchedule
+                ]);
+                $totalValue = 0;
+            }
+
+            if ($totalValue > 1000000) {
+                $warnings[] = "Very high total contract value: $" . number_format($totalValue, 2);
+            }
+
+            // Log warnings if any
+            if (!empty($warnings)) {
+                \Log::warning('Contract pricing calculation warnings', [
+                    'warnings' => $warnings,
+                    'total_value' => $totalValue
+                ]);
+            }
+
+            return round($totalValue, 2);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error calculating contract value', [
+                'error' => $e->getMessage(),
+                'pricing_data' => $pricingSchedule ?? null
+            ]);
+            
+            // Return 0 on calculation error to prevent contract creation failure
+            return 0;
+        }
+    }
+
+    /**
+     * Safely convert value to float, handling various input types
+     */
+    protected function safeFloatConversion($value): float
+    {
+        // Handle null, empty string, or false
+        if ($value === null || $value === '' || $value === false) {
+            return 0;
+        }
+
+        // Handle arrays (shouldn't happen but be defensive)
+        if (is_array($value)) {
+            return 0;
+        }
+
+        // Handle string numbers with currency symbols or commas
+        if (is_string($value)) {
+            // Remove currency symbols and commas
+            $cleaned = preg_replace('/[^0-9.-]/', '', $value);
+            
+            // Handle empty string after cleaning
+            if ($cleaned === '' || $cleaned === '-') {
+                return 0;
+            }
+            
+            $value = $cleaned;
+        }
+
+        // Convert to float
+        $floatValue = (float) $value;
+
+        // Handle infinite or NaN values
+        if (!is_finite($floatValue)) {
+            return 0;
+        }
+
+        return $floatValue;
     }
 }

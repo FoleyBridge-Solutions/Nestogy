@@ -14,6 +14,7 @@ use App\Http\ViewComposers\ClientViewComposer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class AppServiceProvider extends ServiceProvider
@@ -95,6 +96,9 @@ class AppServiceProvider extends ServiceProvider
         // Register view composers
         $this->registerViewComposers();
         
+        // Register event listeners
+        $this->registerEventListeners();
+        
         // Configure Bouncer
         $this->configureBouncer();
     }
@@ -156,6 +160,24 @@ class AppServiceProvider extends ServiceProvider
         }
     }
     
+    /**
+     * Register event listeners
+     */
+    protected function registerEventListeners(): void
+    {
+        // Asset support evaluation when assets are created
+        Event::listen(
+            \App\Events\AssetCreated::class,
+            \App\Listeners\EvaluateAssetSupportStatus::class
+        );
+
+        // Re-evaluate assets when contract schedules are activated
+        Event::listen(
+            \App\Events\ContractScheduleActivated::class,
+            \App\Listeners\ReevaluateAssetsOnScheduleChange::class
+        );
+    }
+
     /**
      * Configure Bouncer for multi-tenancy
      */

@@ -1,0 +1,556 @@
+{{-- Compliance Schedule - For compliance and regulatory contract templates --}}
+<div class="space-y-8">
+    <!-- Schedule Header -->
+    <div class="border-b border-gray-200 dark:border-gray-600 pb-6">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Schedule A - Compliance Framework & Requirements
+        </h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+            Configure regulatory compliance requirements, audit schedules, training programs, and monitoring protocols.
+        </p>
+    </div>
+
+    <!-- Regulatory Framework -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+        <h4 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Regulatory Frameworks
+        </h4>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Primary Frameworks -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Primary Compliance Frameworks
+                </label>
+                <div class="space-y-3">
+                    <template x-for="framework in complianceFrameworks" :key="framework.value">
+                        <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" :value="framework.value" 
+                                           x-model="complianceSchedule.selectedFrameworks" 
+                                           class="text-blue-600 focus:ring-blue-500">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="framework.label"></div>
+                                        <div class="text-xs text-gray-500" x-text="framework.description"></div>
+                                    </div>
+                                </div>
+                                <div class="text-blue-600" x-html="framework.icon"></div>
+                            </label>
+                            <!-- Framework-specific details -->
+                            <div x-show="complianceSchedule.selectedFrameworks.includes(framework.value)" 
+                                 x-transition class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                <div class="grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <span class="text-gray-600 dark:text-gray-400">Scope:</span>
+                                        <span x-text="framework.scope" class="text-gray-900 dark:text-gray-100"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600 dark:text-gray-400">Audit Frequency:</span>
+                                        <span x-text="framework.auditFrequency" class="text-gray-900 dark:text-gray-100"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Compliance Scope -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Compliance Scope
+                </label>
+                <select x-model="complianceSchedule.scope" 
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 mb-4">
+                    <option value="">Select compliance scope...</option>
+                    <option value="full_organization">Full Organization</option>
+                    <option value="specific_systems">Specific Systems</option>
+                    <option value="data_handling">Data Handling Only</option>
+                    <option value="network_security">Network Security</option>
+                    <option value="application_security">Application Security</option>
+                </select>
+
+                <!-- Risk Assessment Level -->
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Risk Assessment Level
+                </label>
+                <select x-model="complianceSchedule.riskLevel" 
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 mb-4">
+                    <option value="low">Low Risk</option>
+                    <option value="medium">Medium Risk</option>
+                    <option value="high">High Risk</option>
+                    <option value="critical">Critical Risk</option>
+                </select>
+
+                <!-- Industry Sector -->
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Industry Sector
+                </label>
+                <select x-model="complianceSchedule.industrySector" 
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select industry...</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="financial">Financial Services</option>
+                    <option value="government">Government</option>
+                    <option value="education">Education</option>
+                    <option value="retail">Retail</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="technology">Technology</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit & Assessment Schedule -->
+    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+        <h4 class="text-lg font-semibold text-green-900 dark:text-green-100 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+            Audit & Assessment Schedule
+        </h4>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Audit Types -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Audit Types
+                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.audits.internal" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Internal Audits</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.audits.external" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">External Audits</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.audits.penetrationTesting" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Penetration Testing</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.audits.vulnerabilityScanning" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vulnerability Scanning</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.audits.riskAssessment" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Risk Assessments</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Frequency -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Audit Frequency
+                </label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Comprehensive Audits</label>
+                        <select x-model="complianceSchedule.frequency.comprehensive" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500">
+                            <option value="annually">Annually</option>
+                            <option value="biannually">Bi-annually</option>
+                            <option value="quarterly">Quarterly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Interim Reviews</label>
+                        <select x-model="complianceSchedule.frequency.interim" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="biannually">Bi-annually</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Vulnerability Scans</label>
+                        <select x-model="complianceSchedule.frequency.vulnerability" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deliverables -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Audit Deliverables
+                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.deliverables.executiveSummary" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Executive Summary</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.deliverables.detailedFindings" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Detailed Findings</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.deliverables.remediationPlan" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Remediation Plan</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.deliverables.complianceMatrix" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Compliance Matrix</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.deliverables.dashboardReporting" 
+                               class="text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Dashboard Reporting</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training & Awareness -->
+    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+        <h4 class="text-lg font-semibold text-purple-900 dark:text-purple-100 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            Training & Awareness Programs
+        </h4>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Training Programs -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Required Training Programs
+                </label>
+                <div class="space-y-3">
+                    <template x-for="program in trainingPrograms" :key="program.value">
+                        <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" :value="program.value" 
+                                           x-model="complianceSchedule.training.selectedPrograms" 
+                                           class="text-purple-600 focus:ring-purple-500">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="program.label"></div>
+                                        <div class="text-xs text-gray-500" x-text="program.description"></div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-purple-600" x-text="program.frequency"></div>
+                            </label>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Training Configuration -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Training Configuration
+                </label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Delivery Method</label>
+                        <select x-model="complianceSchedule.training.deliveryMethod" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500">
+                            <option value="online">Online/Virtual</option>
+                            <option value="in_person">In-Person</option>
+                            <option value="hybrid">Hybrid</option>
+                            <option value="self_paced">Self-Paced</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Training Frequency</label>
+                        <select x-model="complianceSchedule.training.frequency" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500">
+                            <option value="annually">Annually</option>
+                            <option value="biannually">Bi-annually</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Completion Tracking</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.training.tracking.attendance" 
+                                       class="text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Attendance Tracking</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.training.tracking.assessments" 
+                                       class="text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Knowledge Assessments</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.training.tracking.certifications" 
+                                       class="text-purple-600 focus:ring-purple-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Completion Certificates</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minimum Pass Score (%)</label>
+                        <input type="number" x-model="complianceSchedule.training.minimumScore" 
+                               min="0" max="100" step="5"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monitoring & Reporting -->
+    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
+        <h4 class="text-lg font-semibold text-orange-900 dark:text-orange-100 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Continuous Monitoring & Reporting
+        </h4>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Monitoring Tools -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Monitoring Tools & Systems
+                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.monitoring.siem" 
+                               class="text-orange-600 focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">SIEM Integration</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.monitoring.logManagement" 
+                               class="text-orange-600 focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Log Management</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.monitoring.fileIntegrity" 
+                               class="text-orange-600 focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">File Integrity Monitoring</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.monitoring.accessMonitoring" 
+                               class="text-orange-600 focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Access Monitoring</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.monitoring.changeManagement" 
+                               class="text-orange-600 focus:ring-orange-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Change Management</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Alerting & Notifications -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Alerting & Notifications
+                </label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Alert Severity Levels</label>
+                        <div class="space-y-1">
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.alerting.critical" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-red-600">Critical (Immediate)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.alerting.high" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-orange-600">High (1 Hour)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.alerting.medium" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-yellow-600">Medium (4 Hours)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.alerting.low" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-green-600">Low (24 Hours)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Notification Methods</label>
+                        <div class="space-y-1">
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.notifications.email" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Email Alerts</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.notifications.sms" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">SMS Alerts</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="complianceSchedule.notifications.dashboard" 
+                                       class="text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Dashboard Alerts</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reporting Schedule -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Reporting Schedule
+                </label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Executive Reports</label>
+                        <select x-model="complianceSchedule.reporting.executiveFrequency" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annually">Annually</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Technical Reports</label>
+                        <select x-model="complianceSchedule.reporting.technicalFrequency" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Compliance Dashboard</label>
+                        <select x-model="complianceSchedule.reporting.dashboardUpdates" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500">
+                            <option value="real_time">Real-time</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response & Remediation -->
+    <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 border border-red-200 dark:border-red-800">
+        <h4 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            Incident Response & Remediation
+        </h4>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Response Times -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Response Time Requirements
+                </label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Critical Incidents</label>
+                        <select x-model="complianceSchedule.response.criticalTime" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500">
+                            <option value="15_minutes">15 Minutes</option>
+                            <option value="30_minutes">30 Minutes</option>
+                            <option value="1_hour">1 Hour</option>
+                            <option value="2_hours">2 Hours</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">High Priority</label>
+                        <select x-model="complianceSchedule.response.highTime" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500">
+                            <option value="1_hour">1 Hour</option>
+                            <option value="2_hours">2 Hours</option>
+                            <option value="4_hours">4 Hours</option>
+                            <option value="8_hours">8 Hours</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Standard Priority</label>
+                        <select x-model="complianceSchedule.response.standardTime" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500">
+                            <option value="4_hours">4 Hours</option>
+                            <option value="8_hours">8 Hours</option>
+                            <option value="24_hours">24 Hours</option>
+                            <option value="48_hours">48 Hours</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remediation Process -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Remediation Process
+                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.remediation.immediateContainment" 
+                               class="text-red-600 focus:ring-red-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Immediate Containment</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.remediation.rootCauseAnalysis" 
+                               class="text-red-600 focus:ring-red-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Root Cause Analysis</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.remediation.correctiveActions" 
+                               class="text-red-600 focus:ring-red-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Corrective Actions</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.remediation.preventiveActions" 
+                               class="text-red-600 focus:ring-red-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Preventive Actions</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.remediation.verification" 
+                               class="text-red-600 focus:ring-red-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Effectiveness Verification</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" x-model="complianceSchedule.remediation.documentation" 
+                               class="text-red-600 focus:ring-red-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Complete Documentation</span>
+                    </label>
+                </div>
+
+                <!-- SLA Penalties -->
+                <div class="mt-4">
+                    <label class="block text-xs text-gray-600 dark:text-gray-400 mb-2">SLA Penalties for Non-Compliance</label>
+                    <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-2">Service Credit Percentage:</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>1-4 hours late: <input type="number" x-model="complianceSchedule.penalties.tier1" class="w-12 text-xs border rounded px-1" step="0.1">%</div>
+                            <div>4-8 hours late: <input type="number" x-model="complianceSchedule.penalties.tier2" class="w-12 text-xs border rounded px-1" step="0.1">%</div>
+                            <div>8-24 hours late: <input type="number" x-model="complianceSchedule.penalties.tier3" class="w-12 text-xs border rounded px-1" step="0.1">%</div>
+                            <div>24+ hours late: <input type="number" x-model="complianceSchedule.penalties.tier4" class="w-12 text-xs border rounded px-1" step="0.1">%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

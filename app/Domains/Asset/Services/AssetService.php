@@ -168,10 +168,11 @@ class AssetService
      */
     public function getAssetsByStatus(string $status): Collection
     {
-        return Asset::where('company_id', Auth::user()->company_id)
+        $query = Asset::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
-            ->where('status', $status)
-            ->with(['client', 'location'])
+            ->where('status', $status);
+        
+        return $query->with(['client', 'location'])
             ->orderBy('name')
             ->get();
     }
@@ -264,13 +265,16 @@ class AssetService
         return [
             'total_assets' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
+                ->where('type', '!=', 'Server') // Only count assignable assets
                 ->count(),
             'deployed_assets' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
+                ->where('type', '!=', 'Server')
                 ->where('status', 'Deployed')
                 ->count(),
             'available_assets' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
+                ->where('type', '!=', 'Server')
                 ->where('status', 'Ready To Deploy')
                 ->count(),
             'assets_by_type' => Asset::where('company_id', $companyId)
@@ -325,6 +329,129 @@ class AssetService
             'documents',
             'files'
         ]);
+    }
+
+    /**
+     * Get recent asset activity for dashboard.
+     */
+    public function getRecentActivity(int $limit = 10)
+    {
+        return Asset::where('company_id', Auth::user()->company_id)
+            ->whereNull('archived_at')
+            ->whereNotNull('updated_at')
+            ->with(['client', 'contact'])
+            ->orderBy('updated_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(function ($asset) {
+                return [
+                    'id' => $asset->id,
+                    'name' => $asset->name,
+                    'type' => $asset->type,
+                    'status' => $asset->status,
+                    'client' => $asset->client ? $asset->client->name : null,
+                    'contact' => $asset->contact ? $asset->contact->name : null,
+                    'updated_at' => $asset->updated_at,
+                    'action' => $this->determineLastAction($asset),
+                ];
+            });
+    }
+
+    /**
+     * Get assets ready for bulk operations.
+     */
+    public function getAssetsForBulkOperations(array $filters = []): Collection
+    {
+        $query = Asset::where('company_id', Auth::user()->company_id)
+            ->whereNull('archived_at')
+            ->where('type', '!=', 'Server'); // Exclude servers from check-in/out operations
+
+        // Apply filters
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (!empty($filters['client_id'])) {
+            $query->where('client_id', $filters['client_id']);
+        }
+
+        if (!empty($filters['location_id'])) {
+            $query->where('location_id', $filters['location_id']);
+        }
+
+        return $query->with(['client', 'contact', 'location'])
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Bulk check-in/out assets.
+     */
+    public function bulkCheckInOut(array $assetIds, bool $checkOut, ?int $contactId = null): array
+    {
+        $results = [
+            'success' => 0,
+            'failed' => 0,
+            'errors' => []
+        ];
+
+        foreach ($assetIds as $assetId) {
+            try {
+                $asset = Asset::where('company_id', Auth::user()->company_id)
+                    ->whereNull('archived_at')
+                    ->findOrFail($assetId);
+
+                $this->checkInOut($asset, $checkOut, $contactId);
+                $results['success']++;
+            } catch (\Exception $e) {
+                $results['failed']++;
+                $results['errors'][] = "Asset ID {$assetId}: " . $e->getMessage();
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get dashboard metrics for check-in/out management.
+     */
+    public function getCheckInOutMetrics(): array
+    {
+        $analytics = $this->getAnalytics();
+        
+        return [
+            'available_count' => $analytics['available_assets'],
+            'checked_out_count' => $analytics['deployed_assets'], 
+            'total_count' => $analytics['total_assets'],
+            'utilization_rate' => $analytics['total_assets'] > 0 
+                ? round(($analytics['deployed_assets'] / $analytics['total_assets']) * 100, 1)
+                : 0,
+            'assets_by_type' => $analytics['assets_by_type'],
+            'recent_activity_count' => Asset::where('company_id', Auth::user()->company_id)
+                ->whereNull('archived_at')
+                ->where('updated_at', '>=', now()->subDays(7))
+                ->count(),
+        ];
+    }
+
+    /**
+     * Determine the last action performed on an asset.
+     */
+    private function determineLastAction(Asset $asset): string
+    {
+        if ($asset->status === 'Deployed' && $asset->contact_id) {
+            return 'checked_out';
+        } elseif ($asset->status === 'Ready To Deploy' && !$asset->contact_id) {
+            return 'checked_in';
+        } elseif ($asset->wasRecentlyCreated) {
+            return 'created';
+        } else {
+            return 'updated';
+        }
     }
 
     /**

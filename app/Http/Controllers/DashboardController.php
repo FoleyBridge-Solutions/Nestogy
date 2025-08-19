@@ -154,8 +154,8 @@ class DashboardController extends Controller
             
             'monthly_revenue' => Invoice::where('company_id', $companyId)
                 ->where('status', 'Paid')
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
+                ->whereRaw('EXTRACT(MONTH FROM created_at) = ?', [now()->month])
+                ->whereRaw('EXTRACT(YEAR FROM created_at) = ?', [now()->year])
                 ->sum('amount'),
             
             'pending_invoices_amount' => Invoice::where('company_id', $companyId)

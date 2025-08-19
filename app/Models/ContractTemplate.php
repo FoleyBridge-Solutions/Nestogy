@@ -6,6 +6,7 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
@@ -175,6 +176,58 @@ class ContractTemplate extends Model
     const TYPE_DATA_PROCESSING = 'data_processing';
     const TYPE_PROFESSIONAL_SERVICES = 'professional_services';
     const TYPE_SUPPORT_CONTRACT = 'support_contract';
+    
+    // MSP Specific Templates
+    const TYPE_MANAGED_SERVICES = 'managed_services';
+    const TYPE_CYBERSECURITY_SERVICES = 'cybersecurity_services';
+    const TYPE_BACKUP_DR = 'backup_dr';
+    const TYPE_CLOUD_MIGRATION = 'cloud_migration';
+    const TYPE_M365_MANAGEMENT = 'm365_management';
+    const TYPE_BREAK_FIX = 'break_fix';
+    const TYPE_ENTERPRISE_MANAGED = 'enterprise_managed';
+    
+    // VoIP Carrier Templates
+    const TYPE_HOSTED_PBX = 'hosted_pbx';
+    const TYPE_SIP_TRUNKING = 'sip_trunking';
+    const TYPE_UNIFIED_COMMUNICATIONS = 'unified_communications';
+    const TYPE_INTERNATIONAL_CALLING = 'international_calling';
+    const TYPE_CONTACT_CENTER = 'contact_center';
+    const TYPE_E911_SERVICES = 'e911_services';
+    const TYPE_NUMBER_PORTING = 'number_porting';
+    
+    // IT VAR Templates
+    const TYPE_HARDWARE_PROCUREMENT = 'hardware_procurement';
+    const TYPE_SOFTWARE_LICENSING = 'software_licensing';
+    const TYPE_VENDOR_PARTNER = 'vendor_partner';
+    const TYPE_SOLUTION_INTEGRATION = 'solution_integration';
+    
+    // Cross-Industry Templates
+    const TYPE_BUSINESS_ASSOCIATE = 'business_associate';
+    const TYPE_CONSUMPTION_BASED = 'consumption_based';
+    const TYPE_MDR_SERVICES = 'mdr_services';
+    
+    /**
+     * Template categories
+     */
+    const CATEGORY_MSP = 'msp';
+    const CATEGORY_VOIP = 'voip';
+    const CATEGORY_VAR = 'var';
+    const CATEGORY_COMPLIANCE = 'compliance';
+    const CATEGORY_GENERAL = 'general';
+    
+    /**
+     * Billing model enumeration
+     */
+    const BILLING_FIXED = 'fixed';
+    const BILLING_PER_ASSET = 'per_asset';
+    const BILLING_PER_USER = 'per_user';
+    const BILLING_PER_EXTENSION = 'per_extension';
+    const BILLING_HOURLY = 'hourly';
+    const BILLING_TIERED = 'tiered';
+    const BILLING_HYBRID = 'hybrid';
+    const BILLING_CONSUMPTION = 'consumption';
+    const BILLING_PROJECT = 'project';
+    const BILLING_CONCURRENT_CALLS = 'concurrent_calls';
 
     /**
      * Get the parent template.
@@ -198,6 +251,17 @@ class ContractTemplate extends Model
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class, 'template_id');
+    }
+
+    /**
+     * Get the clauses associated with this template.
+     */
+    public function clauses(): BelongsToMany
+    {
+        return $this->belongsToMany(ContractClause::class, 'contract_template_clauses', 'template_id', 'clause_id')
+                    ->withPivot(['sort_order', 'is_required', 'conditions', 'variable_overrides', 'metadata'])
+                    ->withTimestamps()
+                    ->orderByPivot('sort_order');
     }
 
     /**
@@ -339,17 +403,147 @@ class ContractTemplate extends Model
     }
 
     /**
-     * Process template content with variables.
+     * Process template content with variables and advanced features.
      */
     public function processContent(array $variables): string
     {
         $content = $this->template_content;
         
-        foreach ($variables as $key => $value) {
-            $content = str_replace("{{" . $key . "}}", $value, $content);
-        }
-
+        // Step 1: Process conditional blocks
+        $content = $this->processConditionalBlocks($content, $variables);
+        
+        // Step 2: Process simple variable replacements with formatting
+        $content = $this->processSimpleVariables($content, $variables);
+        
+        // Step 3: Clean up any remaining template syntax
+        $content = $this->cleanupTemplateSyntax($content);
+        
         return $content;
+    }
+
+    /**
+     * Process conditional blocks like {{#if variable}}...{{/if}}
+     */
+    private function processConditionalBlocks(string $content, array $variables): string
+    {
+        // Pattern to match {{#if variable}}...{{/if}} blocks
+        $pattern = '/\{\{#if\s+([^}]+)\}\}(.*?)\{\{\/if\}\}/s';
+        
+        return preg_replace_callback($pattern, function ($matches) use ($variables) {
+            $variable = trim($matches[1]);
+            $blockContent = $matches[2];
+            
+            // Check if the variable exists and is truthy
+            $shouldInclude = isset($variables[$variable]) && $this->isTruthy($variables[$variable]);
+            
+            return $shouldInclude ? $blockContent : '';
+        }, $content);
+    }
+
+    /**
+     * Process simple variable replacements with optional formatting
+     */
+    private function processSimpleVariables(string $content, array $variables): string
+    {
+        // Pattern to match {{variable}} or {{variable|formatter}}
+        $pattern = '/\{\{([^}|]+)(\|([^}]+))?\}\}/';
+        
+        return preg_replace_callback($pattern, function ($matches) use ($variables) {
+            $variable = trim($matches[1]);
+            $formatter = isset($matches[3]) ? trim($matches[3]) : null;
+            
+            if (!isset($variables[$variable])) {
+                return $matches[0]; // Return original if variable not found
+            }
+            
+            $value = $variables[$variable];
+            
+            // Apply formatting if specified
+            if ($formatter) {
+                $value = $this->applyFormatter($value, $formatter);
+            }
+            
+            return $value;
+        }, $content);
+    }
+
+    /**
+     * Apply formatting to a variable value
+     */
+    private function applyFormatter($value, string $formatter): string
+    {
+        switch (strtolower($formatter)) {
+            case 'upper':
+                return strtoupper($value);
+            case 'lower':
+                return strtolower($value);
+            case 'title':
+                return ucwords($value);
+            case 'currency':
+                return '$' . number_format((float) $value, 2);
+            case 'date':
+                if ($value instanceof \DateTime) {
+                    return $value->format('F j, Y');
+                }
+                if (is_string($value)) {
+                    try {
+                        $date = new \DateTime($value);
+                        return $date->format('F j, Y');
+                    } catch (\Exception $e) {
+                        return $value;
+                    }
+                }
+                return $value;
+            case 'short_date':
+                if ($value instanceof \DateTime) {
+                    return $value->format('m/d/Y');
+                }
+                if (is_string($value)) {
+                    try {
+                        $date = new \DateTime($value);
+                        return $date->format('m/d/Y');
+                    } catch (\Exception $e) {
+                        return $value;
+                    }
+                }
+                return $value;
+            default:
+                return $value;
+        }
+    }
+
+    /**
+     * Check if a value is truthy for conditional logic
+     */
+    private function isTruthy($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_string($value)) {
+            return !empty($value) && strtolower($value) !== 'false' && strtolower($value) !== 'no';
+        }
+        if (is_numeric($value)) {
+            return $value != 0;
+        }
+        if (is_array($value)) {
+            return !empty($value);
+        }
+        return !empty($value);
+    }
+
+    /**
+     * Clean up any remaining template syntax
+     */
+    private function cleanupTemplateSyntax(string $content): string
+    {
+        // Remove any remaining unprocessed template tags
+        $content = preg_replace('/\{\{[^}]*\}\}/', '', $content);
+        
+        // Clean up extra whitespace that might be left from removed blocks
+        $content = preg_replace('/\n\s*\n\s*\n/', "\n\n", $content);
+        
+        return trim($content);
     }
 
     /**
@@ -360,7 +554,24 @@ class ContractTemplate extends Model
         $pattern = '/\{\{([^}]+)\}\}/';
         preg_match_all($pattern, $this->template_content, $matches);
         
-        return array_unique($matches[1] ?? []);
+        $variables = [];
+        foreach ($matches[1] ?? [] as $match) {
+            $variable = trim($match);
+            
+            // Skip conditional directives like #if, /if
+            if (strpos($variable, '#if') === 0 || strpos($variable, '/if') === 0) {
+                continue;
+            }
+            
+            // Extract base variable name from formatted variables like "variable|formatter"
+            if (strpos($variable, '|') !== false) {
+                $variable = trim(explode('|', $variable)[0]);
+            }
+            
+            $variables[] = $variable;
+        }
+        
+        return array_unique($variables);
     }
 
     /**
@@ -458,18 +669,7 @@ class ContractTemplate extends Model
         return [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:contract_templates,slug',
-            'template_type' => 'required|in:' . implode(',', [
-                self::TYPE_SERVICE_AGREEMENT,
-                self::TYPE_EQUIPMENT_LEASE,
-                self::TYPE_INSTALLATION_CONTRACT,
-                self::TYPE_MAINTENANCE_AGREEMENT,
-                self::TYPE_SLA_CONTRACT,
-                self::TYPE_INTERNATIONAL_SERVICE,
-                self::TYPE_MASTER_SERVICE,
-                self::TYPE_DATA_PROCESSING,
-                self::TYPE_PROFESSIONAL_SERVICES,
-                self::TYPE_SUPPORT_CONTRACT,
-            ]),
+            'template_type' => 'required|in:' . implode(',', array_keys(self::getAvailableTypes())),
             'template_content' => 'required|string',
             'status' => 'required|in:' . implode(',', [
                 self::STATUS_DRAFT,
@@ -489,6 +689,7 @@ class ContractTemplate extends Model
     public static function getAvailableTypes(): array
     {
         return [
+            // General Templates
             self::TYPE_SERVICE_AGREEMENT => 'VoIP Service Agreement',
             self::TYPE_EQUIPMENT_LEASE => 'Equipment Lease Agreement',
             self::TYPE_INSTALLATION_CONTRACT => 'Installation Services Contract',
@@ -499,7 +700,77 @@ class ContractTemplate extends Model
             self::TYPE_DATA_PROCESSING => 'Data Processing Agreement',
             self::TYPE_PROFESSIONAL_SERVICES => 'Professional Services Agreement',
             self::TYPE_SUPPORT_CONTRACT => 'Support Contract',
+            
+            // MSP Templates
+            self::TYPE_MANAGED_SERVICES => 'Comprehensive Managed Services',
+            self::TYPE_CYBERSECURITY_SERVICES => 'Cybersecurity Services',
+            self::TYPE_BACKUP_DR => 'Backup and Disaster Recovery',
+            self::TYPE_CLOUD_MIGRATION => 'Cloud Migration Services',
+            self::TYPE_M365_MANAGEMENT => 'Microsoft 365 Management',
+            self::TYPE_BREAK_FIX => 'Break-Fix Services',
+            self::TYPE_ENTERPRISE_MANAGED => 'Enterprise Managed Services',
+            
+            // VoIP Templates
+            self::TYPE_HOSTED_PBX => 'Hosted PBX Services',
+            self::TYPE_SIP_TRUNKING => 'SIP Trunking Services',
+            self::TYPE_UNIFIED_COMMUNICATIONS => 'Unified Communications',
+            self::TYPE_INTERNATIONAL_CALLING => 'International Calling Services',
+            self::TYPE_CONTACT_CENTER => 'Contact Center Solutions',
+            self::TYPE_E911_SERVICES => 'E911 Emergency Services',
+            self::TYPE_NUMBER_PORTING => 'Number Porting Services',
+            
+            // IT VAR Templates
+            self::TYPE_HARDWARE_PROCUREMENT => 'Hardware Procurement & Installation',
+            self::TYPE_SOFTWARE_LICENSING => 'Software Licensing Agreement',
+            self::TYPE_VENDOR_PARTNER => 'Vendor Partner Agreement',
+            self::TYPE_SOLUTION_INTEGRATION => 'Solution Integration Services',
+            
+            // Cross-Industry Templates
+            self::TYPE_BUSINESS_ASSOCIATE => 'Business Associate Agreement (HIPAA)',
+            self::TYPE_CONSUMPTION_BASED => 'Consumption-Based Services',
+            self::TYPE_MDR_SERVICES => 'Managed Detection & Response',
         ];
+    }
+
+    /**
+     * Get available template categories.
+     */
+    public static function getAvailableCategories(): array
+    {
+        return [
+            self::CATEGORY_MSP => 'Managed Service Provider',
+            self::CATEGORY_VOIP => 'VoIP Carrier',
+            self::CATEGORY_VAR => 'IT Value-Added Reseller',
+            self::CATEGORY_COMPLIANCE => 'Compliance & Legal',
+            self::CATEGORY_GENERAL => 'General Purpose',
+        ];
+    }
+
+    /**
+     * Get available billing models.
+     */
+    public static function getAvailableBillingModels(): array
+    {
+        return [
+            self::BILLING_FIXED => 'Fixed Price',
+            self::BILLING_PER_ASSET => 'Per Asset/Device',
+            self::BILLING_PER_USER => 'Per User/Seat',
+            self::BILLING_PER_EXTENSION => 'Per Extension',
+            self::BILLING_HOURLY => 'Hourly Rate',
+            self::BILLING_TIERED => 'Tiered Pricing',
+            self::BILLING_HYBRID => 'Hybrid Model',
+            self::BILLING_CONSUMPTION => 'Consumption-Based',
+            self::BILLING_PROJECT => 'Project-Based',
+            self::BILLING_CONCURRENT_CALLS => 'Concurrent Calls',
+        ];
+    }
+
+    /**
+     * Get templates by category.
+     */
+    public function scopeByCategory($query, string $category)
+    {
+        return $query->where('category', $category);
     }
 
     /**

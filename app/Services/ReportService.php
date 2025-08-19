@@ -194,7 +194,7 @@ class ReportService
         $monthlyRevenue = Invoice::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->whereIn('status', ['paid', 'partial'])
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month')
+            ->selectRaw('TO_CHAR(created_at, \'YYYY-MM\') as month')
             ->selectRaw('SUM(total) as revenue')
             ->selectRaw('COUNT(*) as invoice_count')
             ->groupBy('month')

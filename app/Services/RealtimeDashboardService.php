@@ -345,7 +345,7 @@ class RealtimeDashboardService
                 ->orderBy('date')
                 ->get();
         } else {
-            $data = $query->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount) as total')
+            $data = $query->selectRaw('TO_CHAR(created_at, \'YYYY-MM\') as month, SUM(amount) as total')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();
@@ -482,7 +482,7 @@ class RealtimeDashboardService
         $historicalRevenue = Payment::where('company_id', $this->companyId)
             ->where('created_at', '>=', now()->subMonths(6))
             ->where('status', 'completed')
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount) as total')
+            ->selectRaw('TO_CHAR(created_at, \'YYYY-MM\') as month, SUM(amount) as total')
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total')

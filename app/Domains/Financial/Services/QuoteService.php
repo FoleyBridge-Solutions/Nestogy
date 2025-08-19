@@ -761,8 +761,8 @@ class QuoteService
         $month = date('m');
         
         $lastQuote = Quote::where('company_id', auth()->user()->company_id)
-                         ->whereYear('created_at', $year)
-                         ->whereMonth('created_at', $month)
+                         ->whereRaw('EXTRACT(YEAR FROM created_at) = ?', [$year])
+                         ->whereRaw('EXTRACT(MONTH FROM created_at) = ?', [$month])
                          ->orderBy('id', 'desc')
                          ->first();
 
@@ -1065,7 +1065,7 @@ class QuoteService
             // Get monthly trends with a separate optimized query
             $monthlyStats = DB::table('quotes')
                 ->selectRaw('
-                    DATE_FORMAT(created_at, "%Y-%m") as month,
+                    TO_CHAR(created_at, \'YYYY-MM\') as month,
                     COUNT(*) as count,
                     SUM(amount) as total_value
                 ')

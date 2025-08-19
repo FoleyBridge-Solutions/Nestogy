@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
 use App\Models\ContractSignature;
@@ -221,6 +222,9 @@ class ContractController extends Controller
             'amendments' => function ($query) {
                 $query->orderBy('created_at', 'desc');
             },
+            'approvals' => function ($query) {
+                $query->orderBy('requested_at', 'desc');
+            },
             'invoices' => function ($query) {
                 $query->orderBy('date', 'desc');
             }
@@ -232,8 +236,8 @@ class ContractController extends Controller
         // Get upcoming milestones
         $upcomingMilestones = $contract->contractMilestones()
             ->where('status', '!=', ContractMilestone::STATUS_COMPLETED)
-            ->where('planned_completion_date', '>=', now())
-            ->orderBy('planned_completion_date')
+            ->where('due_date', '>=', now())
+            ->orderBy('due_date')
             ->limit(5)
             ->get();
 
@@ -615,7 +619,24 @@ class ContractController extends Controller
                 'user_id' => Auth::id()
             ]);
 
-            return response()->download(storage_path('app/' . $pdfPath));
+            // Get PDF content from S3 and return as download
+            $pdfContent = Storage::get($pdfPath);
+            $filename = basename($pdfPath);
+            
+            Log::info('PDF download requested', [
+                'path' => $pdfPath,
+                'content_size' => strlen($pdfContent),
+                'filename' => $filename
+            ]);
+            
+            if (empty($pdfContent)) {
+                throw new \Exception('PDF file is empty or could not be retrieved from storage');
+            }
+            
+            return response($pdfContent)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Content-Length', strlen($pdfContent));
 
         } catch (\Exception $e) {
             Log::error('Contract PDF generation failed', [

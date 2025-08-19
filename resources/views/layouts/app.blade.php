@@ -168,7 +168,7 @@
 
                 <!-- Dynamic Page Content -->
                 <main class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
-                    <div class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8 flash-messages-container mx-auto px-4 mx-auto px-4">
+                    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 flash-messages-container">
                         <!-- Modern Flash Messages -->
                         <div class="flash-messages mb-6">
                             @if (session('success'))

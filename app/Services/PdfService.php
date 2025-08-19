@@ -5,6 +5,7 @@ namespace App\Services;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 use Spatie\LaravelPdf\Facades\Pdf as SpatiePdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PdfService
@@ -149,6 +150,87 @@ class PdfService
     {
         $options['template'] = 'asset_report';
         return $this->generate('pdf.asset-report', $assetData, $options);
+    }
+
+    /**
+     * Generate contract PDF from HTML content
+     */
+    public function generateContractPDF(string $content, $contract, array $options = []): string
+    {
+        $template = $options['template'] ?? 'contract';
+
+        // Get template configuration or use defaults
+        $templateConfig = $this->config['templates'][$template] ?? [
+            'paper' => 'a4',
+            'orientation' => 'portrait',
+            'margins' => [
+                'top' => 20,
+                'right' => 20,
+                'bottom' => 20,
+                'left' => 20
+            ]
+        ];
+        
+        // Merge options with template config
+        $pdfOptions = array_merge($templateConfig, $options);
+
+        return $this->generateContractWithDomPdf($content, $contract, $pdfOptions);
+    }
+
+    /**
+     * Generate contract PDF using DomPDF from HTML content
+     */
+    protected function generateContractWithDomPdf(string $content, $contract, array $options): string
+    {
+        $pdf = DomPDF::loadHTML($content);
+
+        // Set paper size and orientation
+        $paper = $options['paper'] ?? 'A4';
+        $orientation = $options['orientation'] ?? 'portrait';
+        $pdf->setPaper($paper, $orientation);
+
+        // Set DomPDF options for better HTML rendering
+        $pdf->setOptions([
+            'defaultFont' => 'Times-Roman',
+            'isRemoteEnabled' => true,
+            'isPhpEnabled' => false,
+            'isHtml5ParserEnabled' => true,
+            'isFontSubsettingEnabled' => true,
+            'defaultMediaType' => 'print',
+            'defaultPaperSize' => $paper,
+            'defaultPaperOrientation' => $orientation,
+        ]);
+
+        // Apply custom options if provided
+        if (isset($options['options'])) {
+            foreach ($options['options'] as $key => $value) {
+                $pdf->setOption($key, $value);
+            }
+        }
+
+        // Generate filename and path (matching ContractGenerationService fallback behavior)
+        $filename = "contract-{$contract->contract_number}-" . time() . ".pdf";
+        $path = "contracts/{$contract->company_id}/{$filename}";
+        
+        // Generate PDF content
+        $pdfContent = $pdf->output();
+        
+        // Debug: Check if PDF content was generated
+        if (empty($pdfContent)) {
+            throw new \Exception('PDF content is empty - generation failed');
+        }
+        
+        Log::info('PDF content generated with formatting', [
+            'content_size' => strlen($pdfContent),
+            'path' => $path,
+            'has_html' => strpos($content, '<html>') !== false,
+            'has_styles' => strpos($content, '<style>') !== false
+        ]);
+        
+        // Save PDF to default storage (S3) - directories created automatically
+        Storage::put($path, $pdfContent);
+        
+        return $path;
     }
 
     /**

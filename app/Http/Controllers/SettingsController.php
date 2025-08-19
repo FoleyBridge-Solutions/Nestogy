@@ -21,6 +21,7 @@ use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -98,13 +99,26 @@ class SettingsController extends Controller
         $company = Auth::user()->company;
         $setting = $this->getOrCreateSettings($company);
         
+        // Debug logging
+        Log::info('Updating general settings', [
+            'company_id' => $company->id,
+            'setting_id' => $setting->id,
+            'request_data' => $request->validated()
+        ]);
+        
         $success = $this->settingsService->updateGeneralSettings($setting, $request->validated());
         
         if ($success) {
+            Log::info('General settings updated successfully', [
+                'company_id' => $company->id
+            ]);
             return redirect()->route('settings.general')
                 ->with('success', 'General settings updated successfully.');
         }
         
+        Log::warning('Failed to update general settings', [
+            'company_id' => $company->id
+        ]);
         return redirect()->route('settings.general')
             ->with('error', 'Failed to update general settings.');
     }

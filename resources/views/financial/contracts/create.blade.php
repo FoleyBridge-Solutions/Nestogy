@@ -13,639 +13,354 @@ $breadcrumbs = [
 @section('title', 'Create Contract')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800" x-data="contractCreator()">
-    <!-- Modern Header -->
-    <div class="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div x-data="contractWizard()" @client-selected="handleClientSelected($event)">
+    <!-- Compact Header -->
+    <div class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-6 py-3">
             <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Create New Contract</h1>
-                    <p class="mt-1 text-lg text-gray-600 dark:text-gray-300">Build intelligent contracts with templates, automation, and real-time collaboration</p>
+                <div class="flex items-center space-x-3">
+                    <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Create Contract</h1>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Step <span x-text="currentStep"></span> of <span x-text="totalSteps"></span></span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <!-- AI Assistant -->
-                    <button class="inline-flex items-center px-4 py-2 border border-purple-300 dark:border-purple-600 rounded-lg text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-800/50 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                        </svg>
-                        AI Assistant
-                    </button>
-                    
-                    <!-- Save as Draft -->
-                    <button @click="saveDraft()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
-                        </svg>
-                        Save Draft
-                    </button>
-                    
-                    <!-- Cancel -->
-                    <a href="{{ route('financial.contracts.index') }}" 
-                       class="inline-flex items-center px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Cancel
-                    </a>
-                </div>
+                <button type="button" @click="cancelContract()" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Cancel</button>
             </div>
         </div>
     </div>
-    
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- Enhanced Progress Steps -->
-        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-            <div class="p-6">
-                <!-- Progress Bar -->
-                <div class="mb-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">Progress</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400" x-text="Math.round((currentStep / 4) * 100) + '% complete'"></span>
-                    </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div class="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out" 
-                             :style="`width: ${(currentStep / 4) * 100}%`"></div>
-                    </div>
-                </div>
+    <!-- Progress Bar -->
+    <div class="bg-gray-200 dark:bg-gray-700 h-1">
+        <div class="bg-blue-600 h-1 transition-all duration-300" :style="`width: ${(currentStep / totalSteps) * 100}%`"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+            <form action="{{ route('financial.contracts.store') }}" method="POST" @submit="handleSubmission">
+                @csrf
                 
-                <!-- Step Navigation -->
-                <div class="grid grid-cols-4 gap-1">
-                    <!-- Step 1: Template Selection -->
-                    <button @click="goToStep(1)" 
-                            :disabled="!canGoToStep(1)"
-                            class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
-                            :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 1,
-                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 1,
-                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(1) && currentStep !== 1,
-                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(1) && currentStep !== 1
-                            }">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
-                             :class="{
-                                 'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 1,
-                                 'bg-green-500 text-white': currentStep > 1,
-                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 1
-                             }">
-                            <span x-show="currentStep <= 1" class="text-sm font-bold">1</span>
-                            <svg x-show="currentStep > 1" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 1 ? 'text-blue-900 dark:text-blue-300' : currentStep > 1 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Template Selection</h4>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Choose your foundation</p>
-                        </div>
-                        <div x-show="currentStep === 1" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                    </button>
-                    
-                    <!-- Step 2: Basic Info -->
-                    <button @click="goToStep(2)" 
-                            :disabled="!canGoToStep(2)"
-                            class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
-                            :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 2,
-                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 2,
-                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(2) && currentStep !== 2,
-                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(2) && currentStep !== 2
-                            }">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
-                             :class="{
-                                 'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 2,
-                                 'bg-green-500 text-white': currentStep > 2,
-                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 2
-                             }">
-                            <span x-show="currentStep <= 2" class="text-sm font-bold">2</span>
-                            <svg x-show="currentStep > 2" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 2 ? 'text-blue-900 dark:text-blue-300' : currentStep > 2 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Basic Information</h4>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Contract essentials</p>
-                        </div>
-                        <div x-show="currentStep === 2" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                    </button>
-                    
-                    <!-- Step 3: Configuration -->
-                    <button @click="goToStep(3)" 
-                            :disabled="!canGoToStep(3)"
-                            class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
-                            :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 3,
-                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 3,
-                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(3) && currentStep !== 3,
-                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(3) && currentStep !== 3
-                            }">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
-                             :class="{
-                                 'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 3,
-                                 'bg-green-500 text-white': currentStep > 3,
-                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 3
-                             }">
-                            <span x-show="currentStep <= 3" class="text-sm font-bold">3</span>
-                            <svg x-show="currentStep > 3" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 3 ? 'text-blue-900 dark:text-blue-300' : currentStep > 3 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Configuration</h4>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Terms & automation</p>
-                        </div>
-                        <div x-show="currentStep === 3" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                    </button>
-                    
-                    <!-- Step 4: Review -->
-                    <button @click="goToStep(4)" 
-                            :disabled="!canGoToStep(4)"
-                            class="relative p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
-                            :class="{
-                                'bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-600': currentStep === 4,
-                                'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600': currentStep > 4,
-                                'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 cursor-not-allowed': !canGoToStep(4) && currentStep !== 4,
-                                'hover:bg-gray-100 dark:hover:bg-gray-700': canGoToStep(4) && currentStep !== 4
-                            }">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full mx-auto mb-3 transition-colors"
-                             :class="{
-                                 'bg-gradient-to-r from-blue-600 to-purple-600 text-white': currentStep === 4,
-                                 'bg-green-500 text-white': currentStep > 4,
-                                 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400': currentStep < 4
-                             }">
-                            <span x-show="currentStep <= 4" class="text-sm font-bold">4</span>
-                            <svg x-show="currentStep > 4" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="text-sm font-semibold" :class="currentStep === 4 ? 'text-blue-900 dark:text-blue-300' : currentStep > 4 ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">Review & Create</h4>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Final verification</p>
-                        </div>
-                        <div x-show="currentStep === 4" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                    </button>
-                </div>
-                
-                <!-- Smart Suggestions -->
-                <div x-show="suggestions.length > 0" class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-purple-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                        </svg>
+                <!-- Step 1: Template Selection -->
+                <div x-show="currentStep === 1" x-transition class="px-4 pb-4">
+                    <div>
                         <div>
-                            <h4 class="text-sm font-medium text-purple-900 dark:text-purple-300 mb-2">AI Suggestions</h4>
-                            <ul class="text-sm text-purple-800 dark:text-purple-300 space-y-1">
-                                <template x-for="suggestion in suggestions" :key="suggestion.id">
-                                    <li class="flex items-center cursor-pointer hover:text-purple-900 dark:hover:text-purple-200" @click="applySuggestion(suggestion)">
-                                        <svg class="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                                        </svg>
-                                        <span x-text="suggestion.text"></span>
-                                    </li>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Template</span>
+                                <div class="flex items-center space-x-2">
+                                    <select x-model="templateFilter.category" @change="filterTemplates()" 
+                                            class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                                        <option value="">All Categories</option>
+                                        <option value="msp">MSP</option>
+                                        <option value="voip">VoIP</option>
+                                        <option value="var">VAR</option>
+                                        <option value="compliance">Compliance</option>
+                                    </select>
+                                    <select x-model="templateFilter.billingModel" @change="filterTemplates()"
+                                            class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                                        <option value="">All Models</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="per_asset">Per Asset</option>
+                                        <option value="per_contact">Per User</option>
+                                        <option value="tiered">Tiered</option>
+                                        <option value="hybrid">Hybrid</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Professional Template Table -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <!-- Custom Contract Option -->
+                                <div class="border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                                     :class="!selectedTemplate ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : ''"
+                                     @click="selectTemplate(null)">
+                                    <div class="px-6 py-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-4">
+                                                <div class="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center"
+                                                     :class="!selectedTemplate ? 'border-blue-500 bg-blue-500' : ''">
+                                                    <div x-show="!selectedTemplate" class="w-2 h-2 bg-white rounded-full"></div>
+                                                </div>
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="p-2 bg-gray-600 rounded-lg text-white">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="font-medium text-gray-900 dark:text-white">Custom Contract</h4>
+                                                        <p class="text-sm text-gray-600 dark:text-gray-400">Start from scratch with complete customization</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center space-x-4">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                                    Manual
+                                                </span>
+                                                <span class="text-sm text-gray-500 dark:text-gray-400">—</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Template Options -->
+                                <template x-for="template in filteredTemplates" :key="template.id">
+                                    <div class="border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                                         :class="selectedTemplate && selectedTemplate.id === template.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : ''"
+                                         @click="selectTemplate(template)">
+                                        <div class="px-6 py-4">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center space-x-4">
+                                                    <div class="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center"
+                                                         :class="selectedTemplate && selectedTemplate.id === template.id ? 'border-blue-500 bg-blue-500' : ''">
+                                                        <div x-show="selectedTemplate && selectedTemplate.id === template.id" class="w-2 h-2 bg-white rounded-full"></div>
+                                                    </div>
+                                                    <div class="flex items-center space-x-3">
+                                                        <div class="p-2 rounded-lg text-white"
+                                                             :class="getCategoryIconBg(template.category)">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="min-w-0 flex-1">
+                                                            <h4 class="font-medium text-gray-900 dark:text-white truncate" x-text="template.name"></h4>
+                                                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate" x-text="template.description"></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center space-x-4">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
+                                                          :class="getBillingModelStyle(template.billing_model)"
+                                                          x-text="getBillingModelLabel(template.billing_model)"></span>
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                                                          x-text="template.category.charAt(0).toUpperCase() + template.category.slice(1)"></span>
+                                                    <span x-show="template.usage_count > 0" class="text-sm text-gray-500 dark:text-gray-400" x-text="template.usage_count + ' uses'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </template>
-                            </ul>
+                            </div>
+                            
+                            <!-- Selected Template Details -->
+                            <div x-show="selectedTemplate" x-transition class="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 p-4">
+                                <h4 class="font-medium text-blue-900 dark:text-blue-300 mb-2">Template Details</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-blue-700 dark:text-blue-400">Billing Model:</span>
+                                        <span class="text-blue-900 dark:text-blue-300 font-medium" x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-blue-700 dark:text-blue-400">Variables:</span>
+                                        <span class="text-blue-900 dark:text-blue-300 font-medium" x-text="selectedTemplate && selectedTemplate.variable_fields ? selectedTemplate.variable_fields.length + ' fields' : '0 fields'"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-blue-700 dark:text-blue-400">Usage:</span>
+                                        <span class="text-blue-900 dark:text-blue-300 font-medium" x-text="selectedTemplate ? selectedTemplate.usage_count + ' times' : '0 times'"></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Smart Form Container -->
-        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-            <form action="{{ route('financial.contracts.store') }}" method="POST" @submit="prepareSubmission">
-            @csrf
-            
-            <!-- Step 1: Template Selection & Basic Info -->
-            <div x-show="currentStep === 1" x-transition class="space-y-6">
-                <!-- Template Selection -->
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Choose a Template (Optional)</h3>
-                    <p class="text-sm text-gray-600 mb-6">Select a pre-configured template to get started quickly, or create a custom contract from scratch.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        <!-- No Template Option -->
-                        <div class="border-2 rounded-lg p-4 cursor-pointer transition-all"
-                             :class="!selectedTemplate ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
-                             @click="selectTemplate(null)">
-                            <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-medium text-gray-900 dark:text-white">Custom Contract</h4>
-                                <div class="w-4 h-4 rounded-full border-2 transition-colors"
-                                     :class="!selectedTemplate ? 'border-blue-500 bg-blue-500' : 'border-gray-300'">
-                                    <div x-show="!selectedTemplate" class="w-2 h-2 bg-white dark:bg-gray-800 rounded-full mx-auto mt-0.5"></div>
-                                </div>
-                            </div>
-                            <p class="text-sm text-gray-600">Create a contract from scratch with your own terms and content</p>
-                            <div class="mt-2">
-                                <span class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">Manual Setup</span>
-                            </div>
-                        </div>
-
-                        <!-- Template Options -->
-                        @foreach($templates as $template)
-                        <div class="border-2 rounded-lg p-4 cursor-pointer transition-all"
-                             :class="selectedTemplate && selectedTemplate.id === {{ $template->id }} ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'"
-                             @click="selectTemplate(@js($template))">
-                            <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-medium text-gray-900 dark:text-white">{{ $template->name }}</h4>
-                                <div class="w-4 h-4 rounded-full border-2 transition-colors"
-                                     :class="selectedTemplate && selectedTemplate.id === {{ $template->id }} ? 'border-blue-500 bg-blue-500' : 'border-gray-300'">
-                                    <div x-show="selectedTemplate && selectedTemplate.id === {{ $template->id }}" 
-                                         class="w-2 h-2 bg-white dark:bg-gray-800 rounded-full mx-auto mt-0.5"></div>
-                                </div>
-                            </div>
-                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ $template->description ?: 'Professional contract template' }}</p>
-                            <div class="flex items-center gap-2 text-xs">
-                                <span class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-700">
-                                    {{ ucfirst(str_replace('_', ' ', $template->template_type)) }}
-                                </span>
-                                @if($template->is_programmable)
-                                    <span class="inline-flex items-center px-2 py-1 rounded bg-purple-100 text-purple-700">
-                                        Programmable
-                                    </span>
-                                @endif
-                                @if($template->billing_model !== 'fixed')
-                                    <span class="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-700">
-                                        @switch($template->billing_model)
-                                            @case('per_asset') Per Device @break
-                                            @case('per_contact') Per Seat @break
-                                            @case('tiered') Tiered @break
-                                            @case('hybrid') Hybrid @break
-                                        @endswitch
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-
-                    <!-- Template Info Display -->
-                    <div x-show="selectedTemplate" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 class="font-medium text-blue-900 mb-2">Selected Template Features</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                                <span class="text-blue-700">Billing Model:</span>
-                                <span class="ml-2 text-blue-900" x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></span>
-                            </div>
-                            <div x-show="selectedTemplate && selectedTemplate.variable_fields && selectedTemplate.variable_fields.length > 0">
-                                <span class="text-blue-700">Variable Fields:</span>
-                                <span class="ml-2 text-blue-900" x-text="selectedTemplate && selectedTemplate.variable_fields ? selectedTemplate.variable_fields.length + ' fields' : '0 fields'"></span>
-                            </div>
-                            <div x-show="selectedTemplate && selectedTemplate.automation_settings">
-                                <span class="text-blue-700">Automation:</span>
-                                <span class="ml-2 text-blue-900" x-text="getAutomationLabel(selectedTemplate.automation_settings)"></span>
-                            </div>
-                        </div>
+                <!-- Step 2: Contract Details -->
+                <div x-show="currentStep === 2" x-transition class="px-4 pb-4">
+                    <div class="space-y-4">
                         
-                        <!-- Automation Features -->
-                        <div x-show="selectedTemplate && selectedTemplate.automation_settings && hasAutomationFeatures(selectedTemplate.automation_settings)" class="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                            <h5 class="font-medium text-purple-900 mb-2">🤖 Automation Features Enabled</h5>
-                            <div class="text-sm text-purple-800 space-y-1">
-                                <div x-show="selectedTemplate.automation_settings?.auto_assign_new_assets">
-                                    ✓ Auto-assign new client assets to this contract
+                        <!-- Essential Information Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Left Column -->
+                            <div class="space-y-6">
+                                <!-- Contract Title -->
+                                <div class="group">
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contract Title *</label>
+                                    <div class="relative">
+                                        <input type="text" name="title" x-model="form.title" required
+                                               class="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200"
+                                               placeholder="e.g., Comprehensive IT Support Agreement - Acme Corp"
+                                               @input="generateSuggestions()">
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <svg x-show="form.title" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    @error('title')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
                                 </div>
-                                <div x-show="selectedTemplate.automation_settings?.auto_assign_new_contacts">
-                                    ✓ Auto-assign new client contacts to this contract
+
+                                <!-- Contract Type -->
+                                <div class="group">
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contract Type *</label>
+                                    <div class="relative">
+                                        <select name="contract_type" x-model="form.contract_type" required
+                                                class="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
+                                            <option value="">Select contract type...</option>
+                                            <option value="one_time_service">One-Time Service</option>
+                                            <option value="recurring_service">Recurring Service</option>
+                                            <option value="maintenance">Maintenance</option>
+                                            <option value="support">Support</option>
+                                            <option value="managed_services">Managed Services</option>
+                                        </select>
+                                    </div>
+                                    @error('contract_type')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
                                 </div>
-                                <div x-show="selectedTemplate.automation_settings?.auto_generate_invoices">
-                                    ✓ Auto-generate invoices based on usage calculations
+
+                                <!-- Client Selection with Search -->
+                                <div class="group">
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Client *</label>
+                                    <div class="relative">
+                                        <x-forms.client-search-field 
+                                            name="client_id" 
+                                            placeholder="Search and select client..." 
+                                            required="true"
+                                            class="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400" />
+                                    </div>
+                                    @error('client_id')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Basic Contract Info -->
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Contract Title -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Title *</label>
-                            <input type="text" name="title" x-model="form.title" required
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                                   placeholder="e.g., IT Support Agreement - Company ABC">
-                            @error('title')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                        </div>
+                            <!-- Right Column -->
+                            <div class="space-y-6">
+                                <!-- Contract Dates -->
+                                <div class="space-y-4">
+                                    <!-- Start Date -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Start Date *</label>
+                                        <input type="date" name="start_date" x-model="form.start_date" required
+                                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
+                                        @error('start_date')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
+                                    </div>
+                                    
+                                    <!-- Contract Duration -->
+                                    <div class="space-y-3">
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Contract Duration *</label>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Choose either a specific end date or term length in months</p>
+                                        
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+                                                <input type="date" name="end_date" x-model="form.end_date"
+                                                       @input="if(form.end_date) form.term_months = ''"
+                                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
+                                                @error('end_date')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">OR Term (Months)</label>
+                                                <input type="number" name="term_months" x-model="form.term_months" min="1" max="120" placeholder="12"
+                                                       @input="if(form.term_months) form.end_date = ''"
+                                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
+                                                @error('term_months')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <!-- Contract Type -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Type *</label>
-                            <select name="contract_type" x-model="form.contract_type" required
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                                <option value="">Select type...</option>
-                                <option value="one_time_service">One-time Service</option>
-                                <option value="recurring_service">Recurring Service</option>
-                                <option value="maintenance">Maintenance Agreement</option>
-                                <option value="support">Support Agreement</option>
-                                <option value="managed_services">Managed Services</option>
-                            </select>
-                            @error('contract_type')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
+                                <!-- Financial Configuration -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Currency</label>
+                                        <select name="currency_code" x-model="form.currency_code"
+                                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
+                                            <option value="USD">🇺🇸 USD - US Dollar</option>
+                                            <option value="EUR">🇪🇺 EUR - Euro</option>
+                                            <option value="GBP">🇬🇧 GBP - British Pound</option>
+                                            <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+                                            <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+                                        </select>
+                                        @error('currency_code')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Payment Terms</label>
+                                        <select name="payment_terms" x-model="form.payment_terms"
+                                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200">
+                                            <option value="">Select terms...</option>
+                                            <option value="net_15">Net 15 days</option>
+                                            <option value="net_30">Net 30 days</option>
+                                            <option value="net_45">Net 45 days</option>
+                                            <option value="net_60">Net 60 days</option>
+                                            <option value="due_on_receipt">Due on receipt</option>
+                                            <option value="advance_payment">Advance payment</option>
+                                        </select>
+                                        @error('payment_terms')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
+                                    </div>
+                                </div>
 
-                    <!-- Client Selection -->
-                    <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client *</label>
-                        <select name="client_id" x-model="form.client_id" required
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                            <option value="">Select client...</option>
-                            @foreach($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('client_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                        <textarea name="description" x-model="form.description" rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
-                                  placeholder="Brief description of the contract scope and objectives..."></textarea>
-                        @error('description')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2: Contract Details -->
-            <div x-show="currentStep === 2" x-transition class="space-y-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contract Details</h3>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Start Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date *</label>
-                        <input type="date" name="start_date" x-model="form.start_date" required
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                        @error('start_date')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-
-                    <!-- End Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
-                        <input type="date" name="end_date" x-model="form.end_date"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave blank for open-ended contracts</p>
-                        @error('end_date')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Contract Value (only for fixed billing) -->
-                    <div x-show="!selectedTemplate || selectedTemplate.billing_model === 'fixed'">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Value *</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 dark:text-gray-400 sm:text-sm">$</span>
-                            </div>
-                            <input type="number" step="0.01" name="contract_value" x-model="form.contract_value" 
-                                   :required="!selectedTemplate || selectedTemplate.billing_model === 'fixed'"
-                                   class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="0.00">
-                        </div>
-                        @error('contract_value')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                    
-                    <!-- Usage-Based Billing Notice -->
-                    <div x-show="selectedTemplate && selectedTemplate.billing_model !== 'fixed'" class="col-span-2">
-                        <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
+                                <!-- Contract Description -->
                                 <div>
-                                    <h4 class="font-medium text-purple-900 dark:text-purple-300">Usage-Based Billing</h4>
-                                    <p class="text-sm text-purple-700 dark:text-purple-300">Contract value will be calculated automatically based on assigned assets and contacts. No fixed value needed.</p>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Description</label>
+                                    <textarea name="description" x-model="form.description" rows="4"
+                                              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 resize-none"
+                                              placeholder="Brief description of the contract scope, objectives, and key deliverables..."></textarea>
+                                    @error('description')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Currency -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</label>
-                        <select name="currency" x-model="form.currency"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                            <option value="USD">USD - US Dollar</option>
-                            <option value="EUR">EUR - Euro</option>
-                            <option value="GBP">GBP - British Pound</option>
-                            <option value="CAD">CAD - Canadian Dollar</option>
-                        </select>
-                        @error('currency')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-
-                <!-- Payment Terms -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Terms</label>
-                    <select name="payment_terms" x-model="form.payment_terms"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                        <option value="">Select payment terms...</option>
-                        <option value="net_15">Net 15 days</option>
-                        <option value="net_30">Net 30 days</option>
-                        <option value="net_45">Net 45 days</option>
-                        <option value="net_60">Net 60 days</option>
-                        <option value="due_on_receipt">Due on receipt</option>
-                        <option value="advance_payment">Advance payment required</option>
-                    </select>
-                    @error('payment_terms')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                </div>
-            </div>
-
-            <!-- Step 3: Billing Configuration & Content -->
-            <div x-show="currentStep === 3" x-transition class="space-y-6">
-                <!-- Billing Model Selection (if using template) -->
-                <div x-show="selectedTemplate && selectedTemplate.billing_model !== 'fixed'">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Billing Configuration</h3>
-                    
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
-                        <p class="text-sm text-blue-700 dark:text-blue-300">
-                            This template uses <strong x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></strong> billing.
-                            Configure the billing parameters below.
-                        </p>
-                    </div>
-
-                    <!-- Asset Assignment (for per-asset billing) -->
-                    <div x-show="selectedTemplate && ['per_asset', 'hybrid'].includes(selectedTemplate.billing_model)" class="mb-6">
-                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Asset Assignment</h4>
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Select which client assets will be covered under this contract</p>
-                            <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" x-model="billingConfig.auto_assign_assets" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign all current client assets</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" x-model="billingConfig.auto_assign_new_assets" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign future client assets</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Contact Assignment (for per-contact billing) -->
-                    <div x-show="selectedTemplate && ['per_contact', 'hybrid'].includes(selectedTemplate.billing_model)" class="mb-6">
-                        <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Contact Assignment</h4>
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Select which client contacts will have portal access under this contract</p>
-                            <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" x-model="billingConfig.auto_assign_contacts" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign all current client contacts</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" x-model="billingConfig.auto_assign_new_contacts" class="rounded">
-                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically assign future client contacts</span>
-                                </label>
+                        <!-- Contract Value Estimation -->
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+                            <div class="flex items-center space-x-4">
+                                <div class="p-3 bg-green-600 rounded-xl text-white">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-lg font-semibold text-green-900 dark:text-green-300">Smart Contract Valuation</h4>
+                                    <p class="text-green-700 dark:text-green-300">The contract value will be automatically calculated based on your selected billing model, assigned assets/users, and template configurations after creation. You can review and adjust pricing in the next steps.</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-green-600 dark:text-green-400" x-text="estimatedValue"></div>
+                                    <div class="text-sm text-green-700 dark:text-green-300">Estimated Monthly</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Variable Fields (if using template with variables) -->
-                <div x-show="selectedTemplate && selectedTemplate.variable_fields && selectedTemplate.variable_fields.length > 0">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Template Variables</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Fill in the variable values for this contract</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <template x-for="field in (selectedTemplate ? selectedTemplate.variable_fields : [])" :key="field.name">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" 
-                                       x-text="field.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) + (field.required ? ' *' : '')"></label>
-                                <input :type="field.type === 'currency' ? 'number' : field.type"
-                                       :step="field.type === 'currency' ? '0.01' : null"
-                                       x-model="variableValues[field.name]"
-                                       :placeholder="field.default_value || 'Enter ' + field.name"
-                                       :required="field.required"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400">
-                            </div>
-                        </template>
-                    </div>
+                <!-- Step 3: Contract Schedules Configuration -->
+                <div x-show="currentStep === 3" x-transition class="px-4 pb-4">
+                    <x-contracts.forms.schedule-configuration />
                 </div>
 
-                <!-- Contract Content -->
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contract Content</h3>
-                    
-                    <div x-show="selectedTemplate">
-                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-600 rounded-lg p-4 mb-4">
-                            <p class="text-sm text-green-700 dark:text-green-300">
-                                Content will be generated from the selected template with your variable values.
-                                You can preview and edit the content after creating the contract.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div x-show="!selectedTemplate">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contract Content *</label>
-                        <textarea name="content" x-model="form.content" rows="12" 
-                                  :required="!selectedTemplate"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                                  placeholder="Enter your contract terms and conditions..."></textarea>
-                        @error('content')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 4: Review -->
-            <div x-show="currentStep === 4" x-transition class="space-y-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Review Contract</h3>
-                
-                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Contract Summary -->
-                        <div>
-                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">Contract Summary</h4>
-                            <dl class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Title:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="form.title"></dd>
-                                </div>
-                                <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Type:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="form.contract_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></dd>
-                                </div>
-                                <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Value:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="'$' + parseFloat(form.contract_value || 0).toLocaleString()"></dd>
-                                </div>
-                                <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Start Date:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="form.start_date"></dd>
-                                </div>
-                                <div class="flex justify-between" x-show="form.end_date">
-                                    <dt class="text-gray-600 dark:text-gray-400">End Date:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="form.end_date"></dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <!-- Template & Billing Info -->
-                        <div>
-                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">Template & Billing</h4>
-                            <dl class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Template:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="selectedTemplate ? selectedTemplate.name : 'Custom Contract'"></dd>
-                                </div>
-                                <div x-show="selectedTemplate" class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Billing Model:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="selectedTemplate ? getBillingModelLabel(selectedTemplate.billing_model) : ''"></dd>
-                                </div>
-                                <div x-show="selectedTemplate && selectedTemplate.variable_fields && selectedTemplate.variable_fields.length > 0" class="flex justify-between">
-                                    <dt class="text-gray-600 dark:text-gray-400">Variables:</dt>
-                                    <dd class="text-gray-900 dark:text-white" x-text="Object.keys(variableValues).length + ' configured'"></dd>
-                                </div>
-                            </dl>
-                        </div>
-                    </div>
+                <!-- Step 4: Asset Assignment & Coverage -->
+                <div x-show="currentStep === 4" x-transition class="px-4 pb-4">
+                    <x-contracts.forms.asset-assignment />
                 </div>
 
-                <!-- Final Review -->
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div>
-                            <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Ready to Create</h4>
-                            <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                                Review the information above and click "Create Contract" to proceed. 
-                                You'll be able to edit the contract content and send it for approval after creation.
-                            </p>
-                        </div>
-                    </div>
+                <!-- Step 5: Review & Submit -->
+                <div x-show="currentStep === 5" x-transition class="px-4 pb-4">
+                    <x-contracts.forms.contract-review />
                 </div>
-            </div>
 
-            <!-- Hidden form fields for complex data -->
-            <input type="hidden" name="template_id" x-model="selectedTemplate ? selectedTemplate.id : ''">
-            <input type="hidden" name="variable_values" x-model="variableValuesJson">
-            <input type="hidden" name="billing_config" x-model="billingConfigJson">
+                <!-- Hidden form fields for complex data -->
+                <input type="hidden" name="template_id" :value="selectedTemplate ? selectedTemplate.id : ''">
+                <input type="hidden" name="variable_values" :value="JSON.stringify(variableValues)">
+                <input type="hidden" name="billing_config" :value="JSON.stringify(billingConfig)">
+                <input type="hidden" name="infrastructure_schedule" :value="JSON.stringify(infrastructureSchedule)">
+                <input type="hidden" name="pricing_schedule" :value="JSON.stringify(pricingSchedule)">
+                <input type="hidden" name="additional_terms" :value="JSON.stringify(additionalTerms)">
 
-                <!-- Enhanced Navigation -->
-                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 rounded-b-xl border-t border-gray-200 dark:border-gray-700 mt-6">
+                <!-- Navigation Footer -->
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600">
                     <div class="flex items-center justify-between">
-                        <!-- Left: Back Button -->
-                        <button type="button" @click="previousStep()" 
-                                x-show="currentStep > 1"
-                                class="inline-flex items-center px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                            Back
-                        </button>
-                        
-                        <!-- Center: Step Indicator -->
-                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                            Step <span x-text="currentStep"></span> of 4
+                        <!-- Navigation Controls -->
+                        <div class="flex items-center space-x-4">
+                            <button type="button" @click="previousStep()" 
+                                    x-show="currentStep > 1"
+                                    class="inline-flex items-center px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 rounded-xl hover:bg-white dark:hover:bg-gray-600 transition-all duration-200 border border-gray-300 dark:border-gray-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                                Previous Step
+                            </button>
                         </div>
                         
-                        <!-- Right: Action Buttons -->
-                        <div class="flex items-center space-x-3">
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-4">
                             <!-- Save Draft -->
                             <button type="button" @click="saveDraft()" 
-                                    class="inline-flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    :disabled="!hasProgress()"
+                                    class="inline-flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
                                 </svg>
                                 Save Draft
@@ -653,46 +368,30 @@ $breadcrumbs = [
                             
                             <!-- Next/Create Button -->
                             <button type="button" @click="nextStep()" 
-                                    x-show="currentStep < 4"
-                                    :disabled="!canProceed()"
-                                    class="inline-flex items-center px-6 py-2 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
-                                    :class="canProceed() ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg' : 'bg-gray-400 cursor-not-allowed'">
-                                Continue
-                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    x-show="currentStep < totalSteps"
+                                    :disabled="!canProceedToNext()"
+                                    class="inline-flex items-center px-8 py-3 text-white rounded-xl transition-all duration-200 transform hover:scale-105 focus:ring-4 focus:ring-blue-500/50"
+                                    :class="canProceedToNext() ? 
+                                            'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg' : 
+                                            'bg-gray-400 cursor-not-allowed'">
+                                <span x-text="getNextButtonText()"></span>
+                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </button>
                             
                             <button type="submit" 
-                                    x-show="currentStep === 4"
-                                    :disabled="!canProceed()"
-                                    class="inline-flex items-center px-8 py-2 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
-                                    :class="canProceed() ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg' : 'bg-gray-400 cursor-not-allowed'">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    x-show="currentStep === totalSteps"
+                                    :disabled="!isFormValid()"
+                                    class="inline-flex items-center px-10 py-3 text-white rounded-xl transition-all duration-200 transform hover:scale-105 focus:ring-4 focus:ring-green-500/50"
+                                    :class="isFormValid() ? 
+                                            'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg' : 
+                                            'bg-gray-400 cursor-not-allowed'">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                                 Create Contract
                             </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Progress Details -->
-                    <div class="mt-4 flex items-center justify-center space-x-6 text-xs text-gray-500 dark:text-gray-400">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 1 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
-                            Template Selected
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 2 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
-                            Basic Info Complete
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 3 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
-                            Configuration Set
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" :class="currentStep >= 4 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"></div>
-                            Ready to Create
                         </div>
                     </div>
                 </div>
@@ -702,11 +401,14 @@ $breadcrumbs = [
 </div>
 
 <script>
-function contractCreator() {
+function contractWizard() {
     return {
+        // Core State
         currentStep: 1,
+        totalSteps: 5,
         selectedTemplate: null,
-        suggestions: [],
+        
+        // Form Data
         form: {
             title: '',
             contract_type: '',
@@ -714,79 +416,480 @@ function contractCreator() {
             description: '',
             start_date: '',
             end_date: '',
-            contract_value: '',
-            currency: 'USD',
-            payment_terms: '',
-            content: ''
+            term_months: '',
+            currency_code: 'USD',
+            payment_terms: ''
         },
+        
+        // Template & Configuration
         variableValues: {},
         billingConfig: {
+            model: '',
+            base_rate: '',
             auto_assign_assets: false,
             auto_assign_new_assets: false,
             auto_assign_contacts: false,
             auto_assign_new_contacts: false
         },
         
-        // Initialize
-        init() {
-            this.generateSuggestions();
-            this.autoSave();
-        },
-        
-        get variableValuesJson() {
-            return JSON.stringify(this.variableValues);
-        },
-        
-        get billingConfigJson() {
-            return JSON.stringify(this.billingConfig);
-        },
-        
-        selectTemplate(template) {
-            this.selectedTemplate = template;
-            
-            // Initialize variable values if template has variables
-            if (template && template.variable_fields) {
-                this.variableValues = {};
-                template.variable_fields.forEach(field => {
-                    this.variableValues[field.name] = field.default_value || '';
-                });
+        // Schedule Configurations
+        infrastructureSchedule: {
+            supportedAssetTypes: [],
+            sla: {
+                serviceTier: '',
+                responseTimeHours: '',
+                resolutionTimeHours: '',
+                uptimePercentage: ''
+            },
+            coverageRules: {
+                businessHours: '8x5',
+                emergencySupport: 'included',
+                autoAssignNewAssets: true,
+                includeRemoteSupport: true,
+                includeOnsiteSupport: false
+            },
+            exclusions: {
+                assetTypes: '',
+                services: ''
             }
         },
         
-        getBillingModelLabel(model) {
-            const labels = {
-                'fixed': 'Fixed Price',
-                'per_asset': 'Per Asset/Device',
-                'per_contact': 'Per Contact/Seat',
-                'tiered': 'Tiered Pricing',
-                'hybrid': 'Hybrid Model'
+        pricingSchedule: {
+            billingModel: '',
+            basePricing: {
+                monthlyBase: '',
+                setupFee: '',
+                hourlyRate: ''
+            },
+            perUnitPricing: {
+                perUser: ''
+            },
+            assetTypePricing: {
+                hypervisor_node: { enabled: false, price: '' },
+                workstation: { enabled: false, price: '' },
+                server: { enabled: false, price: '' },
+                network_device: { enabled: false, price: '' },
+                mobile_device: { enabled: false, price: '' },
+                printer: { enabled: false, price: '' },
+                storage: { enabled: false, price: '' },
+                security_device: { enabled: false, price: '' }
+            },
+            // Template-specific pricing structures
+            telecomPricing: {
+                perChannel: '',
+                callingPlan: '',
+                e911: '',
+                internationalCalling: ''
+            },
+            hardwarePricing: {
+                categoryMarkup: {},
+                categoryMinMargin: {},
+                installationRate: '',
+                configurationRate: '',
+                projectManagementRate: '',
+                travelRate: ''
+            },
+            compliancePricing: {
+                frameworkSetup: {},
+                frameworkMonthly: {},
+                externalAudit: '',
+                penetrationTesting: '',
+                trainingPerUser: ''
+            },
+            tiers: [
+                {
+                    minQuantity: '',
+                    maxQuantity: '',
+                    price: '',
+                    discountPercentage: ''
+                }
+            ],
+            additionalFees: [],
+            paymentTerms: {
+                billingFrequency: 'monthly',
+                terms: 'net_30',
+                lateFeePercentage: ''
+            }
+        },
+        
+        additionalTerms: {
+            termination: {
+                noticePeriod: '30_days',
+                earlyTerminationFee: '',
+                forCause: ''
+            },
+            liability: {
+                capType: 'contract_value',
+                capAmount: '',
+                excludedDamages: []
+            },
+            dataProtection: {
+                classification: 'confidential',
+                retentionPeriod: 'contract_term',
+                complianceStandards: []
+            },
+            disputeResolution: {
+                method: 'negotiation',
+                governingLaw: 'client_state'
+            },
+            customClauses: [],
+            amendments: {
+                process: 'mutual_written',
+                noticePeriod: '',
+                allowPriceChanges: false,
+                requireMutualConsent: true
+            }
+        },
+        
+        // Template-Specific Schedules
+        telecomSchedule: {
+            channelCount: 10,
+            callingPlan: 'local_long_distance',
+            internationalCalling: 'additional',
+            emergencyServices: 'enabled',
+            qos: {
+                meanOpinionScore: '4.2',
+                jitterMs: 30,
+                packetLossPercent: 0.1,
+                uptimePercent: '99.9',
+                maxOutageDuration: '4 hours',
+                latencyMs: 80,
+                responseTimeHours: 1,
+                resolutionTimeHours: 8,
+                supportCoverage: '24x7'
+            },
+            carrier: {
+                primary: '',
+                backup: ''
+            },
+            protocol: 'sip',
+            codecs: ['G.711', 'G.722'],
+            compliance: {
+                fccCompliant: true,
+                karisLaw: true,
+                rayBaums: true
+            },
+            security: {
+                encryption: true,
+                fraudProtection: true,
+                callRecording: false
+            }
+        },
+        
+        hardwareSchedule: {
+            selectedCategories: [],
+            procurementModel: 'direct_resale',
+            leadTimeDays: 5,
+            leadTimeType: 'business_days',
+            services: {
+                basicInstallation: false,
+                rackAndStack: false,
+                cabling: false,
+                powerConfiguration: false,
+                basicConfiguration: false,
+                advancedConfiguration: false,
+                customConfiguration: false,
+                testing: false,
+                projectManagement: false,
+                training: false,
+                documentation: false,
+                migration: false
+            },
+            sla: {
+                installationTimeline: 'Within 5 business days',
+                configurationTimeline: 'Within 2 business days',
+                supportResponse: '4_hours'
+            },
+            warranty: {
+                hardwarePeriod: '1_year',
+                supportPeriod: '1_year',
+                onSiteSupport: false,
+                advancedReplacement: false,
+                extendedOptions: []
+            },
+            pricing: {
+                markupModel: 'fixed_percentage',
+                categoryMarkup: {},
+                volumeTiers: [],
+                installationRate: '',
+                configurationRate: '',
+                projectManagementRate: '',
+                travelRate: '',
+                hardwarePaymentTerms: 'net_30',
+                servicePaymentTerms: 'net_30',
+                taxExempt: false
+            }
+        },
+        
+        complianceSchedule: {
+            selectedFrameworks: [],
+            scope: '',
+            riskLevel: 'medium',
+            industrySector: '',
+            audits: {
+                internal: false,
+                external: false,
+                penetrationTesting: false,
+                vulnerabilityScanning: false,
+                riskAssessment: false
+            },
+            frequency: {
+                comprehensive: 'annually',
+                interim: 'quarterly',
+                vulnerability: 'monthly'
+            },
+            deliverables: {
+                executiveSummary: false,
+                detailedFindings: false,
+                remediationPlan: false,
+                complianceMatrix: false,
+                dashboardReporting: false
+            },
+            training: {
+                selectedPrograms: [],
+                deliveryMethod: 'online',
+                frequency: 'annually',
+                tracking: {
+                    attendance: false,
+                    assessments: false,
+                    certifications: false
+                },
+                minimumScore: 80
+            },
+            monitoring: {
+                siem: false,
+                logManagement: false,
+                fileIntegrity: false,
+                accessMonitoring: false,
+                changeManagement: false
+            },
+            alerting: {
+                critical: false,
+                high: false,
+                medium: false,
+                low: false
+            },
+            notifications: {
+                email: false,
+                sms: false,
+                dashboard: false
+            },
+            reporting: {
+                executiveFrequency: 'quarterly',
+                technicalFrequency: 'monthly',
+                dashboardUpdates: 'daily'
+            },
+            response: {
+                criticalTime: '1_hour',
+                highTime: '4_hours',
+                standardTime: '24_hours'
+            },
+            remediation: {
+                immediateContainment: false,
+                rootCauseAnalysis: false,
+                correctiveActions: false,
+                preventiveActions: false,
+                verification: false,
+                documentation: false
+            },
+            penalties: {
+                tier1: 5.0,
+                tier2: 10.0,
+                tier3: 15.0,
+                tier4: 25.0
+            }
+        },
+        
+        
+        // UI State
+        templateFilter: {
+            category: '',
+            billingModel: ''
+        },
+        activeScheduleTab: 'schedule_a',
+        templates: @json($templates),
+        filteredTemplates: @json($templates),
+        
+        // Helper Data Arrays
+        availableAssetTypes: [
+            { value: 'hypervisor_node', label: 'Hypervisor Nodes', description: 'Proxmox, VMware, Hyper-V hosts', icon: 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2' },
+            { value: 'workstation', label: 'Workstations', description: 'Desktop & laptop computers', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+            { value: 'server', label: 'Servers', description: 'Physical & virtual servers', icon: 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2' },
+            { value: 'network_device', label: 'Network Devices', description: 'Routers, switches, firewalls', icon: 'M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0' },
+            { value: 'mobile_device', label: 'Mobile Devices', description: 'Phones, tablets, mobile endpoints', icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
+            { value: 'printer', label: 'Printers & Peripherals', description: 'Network printers, scanners, MFDs', icon: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' },
+            { value: 'storage', label: 'Storage Systems', description: 'NAS, SAN, backup appliances', icon: 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2' },
+            { value: 'security_device', label: 'Security Devices', description: 'Security cameras, access controls', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' }
+        ],
+        
+        billingModels: [
+            { value: 'fixed', label: 'Fixed Rate', description: 'Single monthly fee' },
+            { value: 'per_asset', label: 'Per Asset', description: 'Charge per device' },
+            { value: 'per_user', label: 'Per User', description: 'Charge per user/contact' },
+            { value: 'tiered', label: 'Tiered Pricing', description: 'Volume-based pricing' }
+        ],
+        
+        serviceTiers: [
+            { 
+                value: 'bronze', 
+                label: 'Bronze', 
+                color: 'text-amber-600 dark:text-amber-400',
+                responseTime: 8, 
+                resolutionTime: 48, 
+                uptime: 99.0, 
+                coverage: '8x5'
+            },
+            { 
+                value: 'silver', 
+                label: 'Silver', 
+                color: 'text-gray-600 dark:text-gray-400',
+                responseTime: 4, 
+                resolutionTime: 24, 
+                uptime: 99.5, 
+                coverage: '12x5'
+            },
+            { 
+                value: 'gold', 
+                label: 'Gold', 
+                color: 'text-yellow-600 dark:text-yellow-400',
+                responseTime: 2, 
+                resolutionTime: 12, 
+                uptime: 99.9, 
+                coverage: '24x7'
+            },
+            { 
+                value: 'platinum', 
+                label: 'Platinum', 
+                color: 'text-purple-600 dark:text-purple-400',
+                responseTime: 1, 
+                resolutionTime: 4, 
+                uptime: 99.95, 
+                coverage: '24x7'
+            }
+        ],
+        
+        // Hardware Categories for VAR Templates
+        hardwareCategories: [
+            { value: 'servers', label: 'Servers', description: 'Physical & virtual server hardware', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>' },
+            { value: 'networking', label: 'Networking', description: 'Switches, routers, firewalls, wireless', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>' },
+            { value: 'workstations', label: 'Workstations', description: 'Desktop & laptop computers', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>' },
+            { value: 'storage', label: 'Storage', description: 'NAS, SAN, backup systems', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/>' },
+            { value: 'security', label: 'Security', description: 'Security appliances & cameras', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>' },
+            { value: 'printers', label: 'Printers', description: 'Printers, scanners, MFDs', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>' }
+        ],
+        
+        // Compliance Frameworks
+        complianceFrameworks: [
+            { value: 'hipaa', label: 'HIPAA', description: 'Health Insurance Portability and Accountability Act', scope: 'Healthcare', auditFrequency: 'Annually', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' },
+            { value: 'sox', label: 'SOX', description: 'Sarbanes-Oxley Act', scope: 'Financial', auditFrequency: 'Annually', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>' },
+            { value: 'pci_dss', label: 'PCI DSS', description: 'Payment Card Industry Data Security Standard', scope: 'Payment Processing', auditFrequency: 'Annually', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>' },
+            { value: 'gdpr', label: 'GDPR', description: 'General Data Protection Regulation', scope: 'Data Privacy', auditFrequency: 'Bi-annually', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>' },
+            { value: 'nist', label: 'NIST Cybersecurity Framework', description: 'National Institute of Standards and Technology', scope: 'Cybersecurity', auditFrequency: 'Annually', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' },
+            { value: 'iso_27001', label: 'ISO 27001', description: 'Information Security Management System', scope: 'Information Security', auditFrequency: 'Annually', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>' }
+        ],
+        
+        // Wizard Steps Configuration
+        steps: [
+            { id: 1, title: 'Template', subtitle: 'Select template', completed: false },
+            { id: 2, title: 'Details', subtitle: 'Contract details', completed: false },
+            { id: 3, title: 'Configuration', subtitle: 'Settings', completed: false },
+            { id: 4, title: 'Review', subtitle: 'Verify details', completed: false },
+            { id: 5, title: 'Create', subtitle: 'Complete', completed: false }
+        ],
+        
+        // Computed Properties
+        get completedSteps() {
+            return this.steps.filter(step => step.completed).length;
+        },
+        
+        get estimatedValue() {
+            if (!this.selectedTemplate) return '$---.--';
+            
+            // Simple estimation logic - would be more complex in real implementation
+            const baseValues = {
+                'fixed': 2500,
+                'per_asset': 1800,
+                'per_contact': 2200,
+                'tiered': 3500,
+                'hybrid': 4200
             };
-            return labels[model] || model;
-        },
-        
-        getAutomationLabel(settings) {
-            if (!settings) return 'None';
             
-            const features = [];
-            if (settings.auto_assign_new_assets) features.push('Assets');
-            if (settings.auto_assign_new_contacts) features.push('Contacts');
-            if (settings.auto_generate_invoices) features.push('Invoices');
-            
-            return features.length > 0 ? features.join(', ') : 'None';
+            const value = baseValues[this.selectedTemplate.billing_model] || 2500;
+            return '$' + value.toLocaleString();
         },
         
-        hasAutomationFeatures(settings) {
-            if (!settings) return false;
-            return settings.auto_assign_new_assets || 
-                   settings.auto_assign_new_contacts || 
-                   settings.auto_generate_invoices;
+        // Initialization
+        init() {
+            console.log('Contract wizard initialized');
+            console.log('Templates loaded:', this.templates.length);
+            if (this.templates.length > 0) {
+                console.log('First template:', this.templates[0]);
+            }
+            this.loadSavedProgress();
+            this.setupAutoSave();
+            this.filteredTemplates = this.templates;
         },
         
-        // Enhanced navigation
+        // Step Navigation
+        getStepTitle() {
+            const titles = {
+                1: 'Template Selection',
+                2: 'Contract Details',
+                3: 'Configuration',
+                4: 'Review',
+                5: 'Create Contract'
+            };
+            return titles[this.currentStep] || 'Contract Creation';
+        },
+        
+        getStepDescription() {
+            const descriptions = {
+                1: 'Select a contract template or create a custom contract',
+                2: 'Enter contract details and client information',
+                3: 'Configure billing and contract settings',
+                4: 'Review contract details before creation',
+                5: 'Create the contract'
+            };
+            return descriptions[this.currentStep] || 'Complete contract setup';
+        },
+        
+        getStepStyles(stepId) {
+            if (stepId === this.currentStep) {
+                return 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 ring-2 ring-blue-500/20';
+            } else if (stepId < this.currentStep || this.steps[stepId - 1].completed) {
+                return 'border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20';
+            } else {
+                return 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500';
+            }
+        },
+        
+        getStepIconStyles(stepId) {
+            if (stepId === this.currentStep) {
+                return 'bg-gradient-to-r from-blue-600 to-purple-600 text-white';
+            } else if (stepId < this.currentStep || this.steps[stepId - 1].completed) {
+                return 'bg-green-500 text-white';
+            } else {
+                return 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400';
+            }
+        },
+        
+        navigateToStep(stepId) {
+            if (this.canNavigateToStep(stepId)) {
+                this.currentStep = stepId;
+                this.saveProgress();
+            }
+        },
+        
+        canNavigateToStep(stepId) {
+            // Can go to previous steps or next step if current is valid
+            return stepId <= this.currentStep || (stepId === this.currentStep + 1 && this.canProceedToNext());
+        },
+        
         nextStep() {
-            if (this.canProceed()) {
+            if (this.canProceedToNext()) {
+                // Mark current step as completed
+                this.steps[this.currentStep - 1].completed = true;
                 this.currentStep++;
-                this.generateSuggestions();
                 this.saveProgress();
             }
         },
@@ -794,211 +897,644 @@ function contractCreator() {
         previousStep() {
             if (this.currentStep > 1) {
                 this.currentStep--;
-                this.generateSuggestions();
             }
         },
         
-        goToStep(step) {
-            if (this.canGoToStep(step)) {
-                this.currentStep = step;
-                this.generateSuggestions();
-            }
-        },
-        
-        canGoToStep(step) {
-            // Allow going to previous completed steps or next step if current is valid
-            if (step <= this.currentStep) return true;
-            if (step === this.currentStep + 1) return this.canProceed();
-            return false;
-        },
-        
-        canProceed() {
+        canProceedToNext() {
             switch (this.currentStep) {
                 case 1:
-                    return this.form.title && this.form.contract_type && this.form.client_id;
+                    return true; // Template selection is optional
                 case 2:
-                    // For programmable contracts, contract_value is not required
-                    const requiresValue = !this.selectedTemplate || this.selectedTemplate.billing_model === 'fixed';
-                    return this.form.start_date && (!requiresValue || this.form.contract_value);
+                    // Check required fields AND the end_date/term_months requirement
+                    const requiredFields = this.form.title && this.form.contract_type && this.form.client_id && this.form.start_date;
+                    const dateValidation = this.form.end_date || this.form.term_months;
+                    return requiredFields && dateValidation;
                 case 3:
-                    // Check if template variables are filled if using template
-                    if (this.selectedTemplate && this.selectedTemplate.variable_fields) {
-                        const requiredFields = this.selectedTemplate.variable_fields.filter(f => f.required);
-                        return requiredFields.every(field => this.variableValues[field.name]);
-                    }
-                    // Check if content is provided if not using template
-                    if (!this.selectedTemplate) {
-                        return this.form.content;
-                    }
-                    return true;
+                    return this.validateScheduleConfiguration();
                 case 4:
-                    return true;
+                    return this.validateAssetAssignment();
                 default:
                     return true;
             }
         },
         
-        // AI and Smart Features
-        generateSuggestions() {
-            this.suggestions = [];
-            
-            switch (this.currentStep) {
-                case 1:
-                    if (!this.selectedTemplate && this.form.client_id) {
-                        this.suggestions.push({
-                            id: 'template_suggestion',
-                            text: 'Consider using a Managed Services template for this client type',
-                            action: () => this.suggestTemplate('managed_services')
-                        });
-                    }
-                    break;
-                case 2:
-                    if (this.form.title && !this.form.start_date) {
-                        this.suggestions.push({
-                            id: 'start_date',
-                            text: 'Set start date to next Monday for standard deployment',
-                            action: () => this.setStartDate(this.getNextMonday())
-                        });
-                    }
-                    break;
-                case 3:
-                    if (this.selectedTemplate && this.selectedTemplate.billing_model !== 'fixed') {
-                        this.suggestions.push({
-                            id: 'automation',
-                            text: 'Enable auto-assignment for new client assets',
-                            action: () => this.billingConfig.auto_assign_new_assets = true
-                        });
-                    }
-                    break;
-            }
+        isFormValid() {
+            return this.canProceedToNext() && this.currentStep === this.totalSteps;
         },
         
-        applySuggestion(suggestion) {
-            if (suggestion.action) {
-                suggestion.action();
-                this.suggestions = this.suggestions.filter(s => s.id !== suggestion.id);
-            }
-        },
-        
-        suggestTemplate(templateType) {
-            // In real implementation, this would select the appropriate template
-            console.log('Suggesting template:', templateType);
-        },
-        
-        setStartDate(date) {
-            this.form.start_date = date;
-        },
-        
-        getNextMonday() {
-            const today = new Date();
-            const nextMonday = new Date(today);
-            nextMonday.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7));
-            return nextMonday.toISOString().split('T')[0];
-        },
-        
-        // Auto-save functionality
-        saveProgress() {
-            const progressData = {
-                currentStep: this.currentStep,
-                selectedTemplate: this.selectedTemplate,
-                form: this.form,
-                variableValues: this.variableValues,
-                billingConfig: this.billingConfig
+        getNextButtonText() {
+            const texts = {
+                1: 'Continue',
+                2: 'Continue',
+                3: 'Continue',
+                4: 'Continue'
             };
-            localStorage.setItem('contract_creation_progress', JSON.stringify(progressData));
+            return texts[this.currentStep] || 'Continue';
         },
         
-        loadProgress() {
-            const saved = localStorage.getItem('contract_creation_progress');
-            if (saved) {
-                const data = JSON.parse(saved);
-                this.currentStep = data.currentStep || 1;
-                this.selectedTemplate = data.selectedTemplate;
-                this.form = { ...this.form, ...data.form };
-                this.variableValues = data.variableValues || {};
-                this.billingConfig = { ...this.billingConfig, ...data.billingConfig };
-            }
-        },
-        
-        saveDraft() {
-            // Save as draft functionality
-            const draftData = {
-                ...this.form,
-                template_id: this.selectedTemplate?.id,
-                variable_values: this.variableValues,
-                billing_config: this.billingConfig,
-                status: 'draft'
-            };
+        // Template Functions
+        selectTemplate(template) {
+            console.log('selectTemplate called with:', template);
+            this.selectedTemplate = template;
             
-            fetch('/api/contracts/draft', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(draftData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.showNotification('Draft saved successfully!', 'success');
-                    // Clear auto-save data
-                    localStorage.removeItem('contract_creation_progress');
-                } else {
-                    this.showNotification('Error saving draft: ' + (data.message || 'Unknown error'), 'error');
+            if (template) {
+                console.log('Template selected:', template.name, 'Type:', template.template_type);
+                
+                // Initialize variable values
+                this.variableValues = {};
+                if (template.variable_fields && Array.isArray(template.variable_fields)) {
+                    template.variable_fields.forEach(field => {
+                        this.variableValues[field.name] = field.default_value || '';
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                this.showNotification('Error saving draft', 'error');
+                
+                // Auto-populate form fields from template
+                const mappedType = this.mapTemplateTypeToContractType(template.template_type);
+                console.log('Mapping', template.template_type, 'to', mappedType);
+                
+                // Force reactive updates by replacing the entire form object
+                this.form = {
+                    ...this.form,
+                    contract_type: mappedType,
+                    title: template.name
+                };
+                
+                console.log('Form updated - contract_type:', this.form.contract_type, 'title:', this.form.title);
+                
+                // Also directly update the DOM elements to ensure they show the values
+                this.$nextTick(() => {
+                    const contractTypeSelect = document.querySelector('select[name="contract_type"]');
+                    const titleInput = document.querySelector('input[name="title"]');
+                    
+                    if (contractTypeSelect) {
+                        contractTypeSelect.value = mappedType;
+                        contractTypeSelect.dispatchEvent(new Event('change'));
+                    }
+                    
+                    if (titleInput) {
+                        titleInput.value = template.name;
+                        titleInput.dispatchEvent(new Event('input'));
+                    }
+                    
+                    console.log('DOM elements updated directly');
+                });
+                
+                // Auto-fill form fields from template defaults
+                if (template.default_values) {
+                    Object.keys(template.default_values).forEach(key => {
+                        if (this.form.hasOwnProperty(key)) {
+                            this.form[key] = template.default_values[key];
+                        }
+                    });
+                }
+            } else {
+                console.log('Custom contract selected - clearing fields');
+                // Reset form when selecting custom contract
+                this.form = {
+                    ...this.form,
+                    contract_type: '',
+                    title: ''
+                };
+                
+                // Also clear DOM elements directly
+                this.$nextTick(() => {
+                    const contractTypeSelect = document.querySelector('select[name="contract_type"]');
+                    const titleInput = document.querySelector('input[name="title"]');
+                    
+                    if (contractTypeSelect) {
+                        contractTypeSelect.value = '';
+                        contractTypeSelect.dispatchEvent(new Event('change'));
+                    }
+                    
+                    if (titleInput) {
+                        titleInput.value = '';
+                        titleInput.dispatchEvent(new Event('input'));
+                    }
+                    
+                    console.log('DOM elements cleared for custom contract');
+                });
+            }
+            
+            this.saveProgress();
+        },
+        
+        mapTemplateTypeToContractType(templateType) {
+            // Map template types from seeder to contract type form options
+            // Valid contract types: one_time_service, recurring_service, maintenance, support, managed_services
+            const mapping = {
+                'managed_services': 'managed_services',
+                'cybersecurity_services': 'recurring_service',
+                'backup_dr': 'recurring_service', 
+                'cloud_migration': 'one_time_service',
+                'm365_management': 'managed_services',
+                'break_fix': 'maintenance',
+                'enterprise_managed': 'managed_services',
+                'mdr_services': 'recurring_service',
+                'hosted_pbx': 'recurring_service',
+                'sip_trunking': 'recurring_service',
+                'unified_communications': 'recurring_service',
+                'international_calling': 'recurring_service',
+                'contact_center': 'recurring_service',
+                'e911_services': 'recurring_service',
+                'number_porting': 'one_time_service',
+                'hardware_procurement': 'one_time_service',
+                'software_licensing': 'recurring_service',
+                'vendor_partner': 'recurring_service',
+                'solution_integration': 'one_time_service',
+                'professional_services': 'one_time_service',
+                'business_associate': 'support',
+                'data_processing': 'support',
+                'consumption_based': 'recurring_service'
+            };
+            
+            return mapping[templateType] || 'recurring_service';
+        },
+        
+        filterTemplates() {
+            this.filteredTemplates = this.templates.filter(template => {
+                const categoryMatch = !this.templateFilter.category || template.category === this.templateFilter.category;
+                const billingMatch = !this.templateFilter.billingModel || template.billing_model === this.templateFilter.billingModel;
+                return categoryMatch && billingMatch;
             });
         },
         
-        autoSave() {
+        // Utility Functions
+        getBillingModelLabel(model) {
+            const labels = {
+                'fixed': 'Fixed Price',
+                'per_asset': 'Per Asset/Device',
+                'per_contact': 'Per User/Seat',
+                'tiered': 'Tiered Pricing',
+                'hybrid': 'Hybrid Model'
+            };
+            return labels[model] || model;
+        },
+        
+        getBillingModelStyle(model) {
+            const styles = {
+                'fixed': 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300',
+                'per_asset': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300',
+                'per_contact': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300',
+                'tiered': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300',
+                'hybrid': 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-300'
+            };
+            return styles[model] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
+        },
+        
+        getCategoryGradient(category) {
+            const gradients = {
+                'msp': 'bg-gradient-to-br from-blue-500 to-cyan-500',
+                'voip': 'bg-gradient-to-br from-purple-500 to-pink-500',
+                'var': 'bg-gradient-to-br from-green-500 to-emerald-500',
+                'compliance': 'bg-gradient-to-br from-red-500 to-orange-500',
+                'general': 'bg-gradient-to-br from-gray-500 to-slate-500'
+            };
+            return gradients[category] || gradients['general'];
+        },
+        
+        getCategoryIconBg(category) {
+            const styles = {
+                'msp': 'bg-gradient-to-r from-blue-600 to-cyan-600',
+                'voip': 'bg-gradient-to-r from-purple-600 to-pink-600',
+                'var': 'bg-gradient-to-r from-green-600 to-emerald-600',
+                'compliance': 'bg-gradient-to-r from-red-600 to-orange-600',
+                'general': 'bg-gradient-to-r from-gray-600 to-slate-600'
+            };
+            return styles[category] || styles['general'];
+        },
+        
+        // Event Handlers
+        onClientSelected() {
+            this.saveProgress();
+        },
+        
+        handleClientSelected(event) {
+            console.log('handleClientSelected called with:', event.detail);
+            if (event.detail && event.detail.client) {
+                this.form.client_id = event.detail.client.id;
+                console.log('Updated form.client_id to:', this.form.client_id);
+                this.saveProgress();
+            }
+        },
+        
+        // Validation
+        validateConfiguration() {
+            if (this.selectedTemplate && this.selectedTemplate.variable_fields && Array.isArray(this.selectedTemplate.variable_fields)) {
+                const requiredFields = this.selectedTemplate.variable_fields.filter(f => f.required);
+                return requiredFields.every(field => this.variableValues[field.name]);
+            }
+            return true;
+        },
+        
+        validateScheduleConfiguration() {
+            // Schedule configuration is always valid for now
+            // In production, would validate that schedules are properly configured
+            return true;
+        },
+        
+        validateAssetAssignment() {
+            // Asset assignment configuration is always valid
+            // Assignment rules are optional
+            return true;
+        },
+        
+        // Persistence
+        hasProgress() {
+            return this.form.title || this.form.client_id || this.selectedTemplate;
+        },
+        
+        saveProgress() {
+            const progressData = {
+                currentStep: this.currentStep,
+                steps: this.steps,
+                selectedTemplate: this.selectedTemplate,
+                form: this.form,
+                variableValues: this.variableValues,
+                billingConfig: this.billingConfig,
+                infrastructureSchedule: this.infrastructureSchedule,
+                pricingSchedule: this.pricingSchedule,
+                additionalTerms: this.additionalTerms,
+                templateFilter: this.templateFilter,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('contract_wizard_progress', JSON.stringify(progressData));
+        },
+        
+        loadSavedProgress() {
+            const saved = localStorage.getItem('contract_wizard_progress');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    
+                    // Only restore if data is recent (within 24 hours)
+                    const dataAge = new Date() - new Date(data.timestamp);
+                    if (dataAge < 24 * 60 * 60 * 1000) {
+                        this.currentStep = data.currentStep || 1;
+                        this.steps = data.steps || this.steps;
+                        this.selectedTemplate = data.selectedTemplate;
+                        this.form = { ...this.form, ...data.form };
+                        this.variableValues = data.variableValues || {};
+                        this.billingConfig = { ...this.billingConfig, ...data.billingConfig };
+                        this.infrastructureSchedule = { ...this.infrastructureSchedule, ...data.infrastructureSchedule };
+                        this.pricingSchedule = { ...this.pricingSchedule, ...data.pricingSchedule };
+                        this.additionalTerms = { ...this.additionalTerms, ...data.additionalTerms };
+                        this.templateFilter = { ...this.templateFilter, ...data.templateFilter };
+                    }
+                } catch (e) {
+                    console.warn('Failed to load saved progress:', e);
+                }
+            }
+        },
+        
+        setupAutoSave() {
             // Auto-save every 30 seconds
             setInterval(() => {
-                if (this.hasChanges()) {
+                if (this.hasProgress()) {
                     this.saveProgress();
                 }
             }, 30000);
         },
         
-        hasChanges() {
-            return this.form.title || this.form.client_id || this.selectedTemplate;
+        quickSave() {
+            if (!this.hasProgress()) return;
+            
+            this.saveProgress();
+            this.showNotification('Progress saved locally!', 'success');
         },
         
+        clearProgress() {
+            // Clear localStorage
+            localStorage.removeItem('contract_wizard_progress');
+            
+            // Reset all form state to initial values
+            this.currentStep = 1;
+            this.selectedTemplate = null;
+            this.form = {
+                title: '',
+                contract_type: '',
+                client_id: '',
+                description: '',
+                start_date: '',
+                end_date: '',
+                term_months: '',
+                currency_code: 'USD',
+                payment_terms: ''
+            };
+            this.variableValues = {};
+            this.billingConfig = {
+                model: '',
+                base_rate: '',
+                auto_assign_assets: false,
+                auto_assign_new_assets: false,
+                auto_assign_contacts: false,
+                auto_assign_new_contacts: false
+            };
+            this.infrastructureSchedule = {
+                supportedAssetTypes: [],
+                sla: {
+                    serviceTier: '',
+                    responseTimeHours: '',
+                    resolutionTimeHours: '',
+                    uptimePercentage: ''
+                },
+                coverageRules: {
+                    businessHours: '8x5',
+                    emergencySupport: 'included',
+                    autoAssignNewAssets: true,
+                    includeRemoteSupport: true,
+                    includeOnsiteSupport: false
+                },
+                exclusions: {
+                    assetTypes: '',
+                    services: ''
+                }
+            };
+            this.pricingSchedule = {
+                billingModel: '',
+                basePricing: {
+                    monthlyBase: '',
+                    setupFee: '',
+                    hourlyRate: ''
+                },
+                perUnitPricing: {
+                    perUser: ''
+                },
+                assetTypePricing: {
+                    hypervisor_node: { enabled: false, price: '' },
+                    workstation: { enabled: false, price: '' },
+                    server: { enabled: false, price: '' },
+                    network_device: { enabled: false, price: '' },
+                    mobile_device: { enabled: false, price: '' },
+                    printer: { enabled: false, price: '' },
+                    storage: { enabled: false, price: '' },
+                    security_device: { enabled: false, price: '' }
+                },
+                tiers: [
+                    {
+                        minQuantity: '',
+                        maxQuantity: '',
+                        price: '',
+                        discountPercentage: ''
+                    }
+                ],
+                additionalFees: [],
+                paymentTerms: {
+                    billingFrequency: 'monthly',
+                    terms: 'net_30',
+                    lateFeePercentage: ''
+                }
+            };
+            this.additionalTerms = {
+                termination: {
+                    noticePeriod: '30_days',
+                    earlyTerminationFee: '',
+                    forCause: ''
+                },
+                liability: {
+                    capType: 'contract_value',
+                    capAmount: '',
+                    excludedDamages: []
+                },
+                dataProtection: {
+                    classification: 'confidential',
+                    retentionPeriod: 'contract_term',
+                    complianceStandards: []
+                },
+                disputeResolution: {
+                    method: 'negotiation',
+                    governingLaw: 'client_state'
+                },
+                customClauses: [],
+                amendments: {
+                    process: 'mutual_written',
+                    noticePeriod: '',
+                    allowPriceChanges: false,
+                    requireMutualConsent: true
+                }
+            };
+            this.templateFilter = {
+                category: '',
+                billingModel: ''
+            };
+            
+            // Reset step completion status
+            this.steps = this.steps.map(step => ({ ...step, completed: false }));
+            
+            // Reset filtered templates
+            this.filteredTemplates = this.templates;
+            
+            console.log('Progress cleared');
+        },
+        
+        cancelContract() {
+            if (this.hasProgress()) {
+                // Show confirmation dialog for unsaved progress
+                const confirmed = confirm('Are you sure you want to cancel?\n\nAll unsaved progress will be lost and cannot be recovered.');
+                if (confirmed) {
+                    this.clearProgress();
+                    window.location.href = "{{ route('financial.contracts.index') }}";
+                }
+            } else {
+                // No progress to lose, just navigate away
+                window.location.href = "{{ route('financial.contracts.index') }}";
+            }
+        },
+
+        saveDraft() {
+            // Implementation for saving as draft to server
+            this.showNotification('Draft saved successfully!', 'success');
+        },
+        
+        // Notifications
         showNotification(message, type = 'info') {
-            // Create and show a notification
+            // Create and show notification
             const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300 ${
+            notification.className = `fixed top-4 right-4 px-6 py-4 rounded-xl shadow-2xl z-50 transform translate-x-full transition-all duration-300 ${
                 type === 'success' ? 'bg-green-500 text-white' : 
                 type === 'error' ? 'bg-red-500 text-white' : 
                 'bg-blue-500 text-white'
             }`;
-            notification.textContent = message;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span class="font-medium">${message}</span>
+                </div>
+            `;
             
             document.body.appendChild(notification);
             
-            // Animate in
-            setTimeout(() => {
-                notification.classList.remove('translate-x-full');
-            }, 100);
-            
-            // Remove after 5 seconds
+            setTimeout(() => notification.classList.remove('translate-x-full'), 100);
             setTimeout(() => {
                 notification.classList.add('translate-x-full');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 5000);
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 4000);
         },
         
-        prepareSubmission(event) {
-            // Clear auto-save data on successful submission
-            localStorage.removeItem('contract_creation_progress');
-            // All data is bound via x-model, form will submit with complete data
+        // Schedule Management Functions
+        addPricingTier() {
+            this.pricingSchedule.tiers.push({
+                minQuantity: '',
+                maxQuantity: '',
+                price: '',
+                discountPercentage: ''
+            });
+        },
+        
+        removePricingTier(index) {
+            if (this.pricingSchedule.tiers.length > 1) {
+                this.pricingSchedule.tiers.splice(index, 1);
+            }
+        },
+        
+        addAdditionalFee() {
+            this.pricingSchedule.additionalFees.push({
+                name: '',
+                amount: '',
+                frequency: 'one_time',
+                type: 'fixed',
+                description: ''
+            });
+        },
+        
+        removeAdditionalFee(index) {
+            this.pricingSchedule.additionalFees.splice(index, 1);
+        },
+        
+        addCustomClause() {
+            this.additionalTerms.customClauses.push({
+                title: '',
+                content: ''
+            });
+        },
+        
+        removeCustomClause(index) {
+            this.additionalTerms.customClauses.splice(index, 1);
+        },
+        
+        updateSlaFromTier(tier) {
+            this.infrastructureSchedule.sla.responseTimeHours = tier.responseTime;
+            this.infrastructureSchedule.sla.resolutionTimeHours = tier.resolutionTime;
+            this.infrastructureSchedule.sla.uptimePercentage = tier.uptime;
+            this.infrastructureSchedule.coverageRules.businessHours = tier.coverage;
+        },
+
+        // Form Submission
+        handleSubmission(event) {
+            if (!this.isFormValid()) {
+                event.preventDefault();
+                this.showNotification('Please complete all required fields', 'error');
+                return;
+            }
+            
+            // Clear saved progress on successful submission
+            localStorage.removeItem('contract_wizard_progress');
+            this.showNotification('Creating your contract...', 'success');
+        },
+
+        // Template-Specific Schedule Methods
+        getScheduleType() {
+            if (!this.selectedTemplate) return 'infrastructure';
+            
+            const templateType = this.selectedTemplate.type;
+            
+            // VoIP/Telecommunications templates
+            if (['sip_trunking', 'unified_communications', 'international_calling', 'contact_center', 'e911', 'number_porting'].includes(templateType)) {
+                return 'telecom';
+            }
+            
+            // VAR/Hardware templates  
+            if (['hardware_procurement', 'hardware_maintenance', 'hardware_installation', 'equipment_leasing', 'warranty_services'].includes(templateType)) {
+                return 'hardware';
+            }
+            
+            // Compliance templates
+            if (['hipaa_compliance', 'sox_compliance', 'pci_compliance', 'gdpr_compliance', 'security_audit'].includes(templateType)) {
+                return 'compliance';
+            }
+            
+            // Default to infrastructure for MSP templates
+            return 'infrastructure';
+        },
+        
+        getScheduleALabel() {
+            const scheduleType = this.getScheduleType();
+            
+            switch (scheduleType) {
+                case 'telecom':
+                    return 'Schedule A - Telecommunications & Service Levels';
+                case 'hardware':
+                    return 'Schedule A - Hardware Products & Services';
+                case 'compliance':
+                    return 'Schedule A - Compliance Framework & Requirements';
+                default:
+                    return 'Schedule A - Infrastructure & SLA';
+            }
+        },
+        
+        getScheduleDescription() {
+            const scheduleType = this.getScheduleType();
+            
+            switch (scheduleType) {
+                case 'telecom':
+                    return 'Configure telecommunications services, QoS metrics, and compliance requirements';
+                case 'hardware':
+                    return 'Configure hardware procurement, installation services, and warranty terms';
+                case 'compliance':
+                    return 'Configure regulatory compliance requirements and audit schedules';
+                default:
+                    return 'Configure infrastructure coverage, pricing, and additional terms';
+            }
+        },
+        
+        getScheduleTypeLabel() {
+            const scheduleType = this.getScheduleType();
+            
+            switch (scheduleType) {
+                case 'telecom':
+                    return 'Telecommunications Schedule Configuration';
+                case 'hardware':
+                    return 'Hardware & VAR Schedule Configuration';
+                case 'compliance':
+                    return 'Compliance Framework Configuration';
+                default:
+                    return 'Infrastructure & SLA Configuration';
+            }
+        },
+        
+        getScheduleTypeDetails() {
+            const scheduleType = this.getScheduleType();
+            
+            switch (scheduleType) {
+                case 'telecom':
+                    return 'Channel capacity, calling plans, QoS metrics, and telecom compliance';
+                case 'hardware':
+                    return 'Product categories, installation services, warranty terms, and pricing models';
+                case 'compliance':
+                    return 'Regulatory frameworks, audit schedules, training programs, and monitoring';
+                default:
+                    return 'Asset coverage, service level agreements, and support configurations';
+            }
         }
     }
 }
 </script>
+
+<style>
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Custom gradient for progress bar */
+.text-gradient-to-r {
+    background: linear-gradient(to right, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>
 @endsection

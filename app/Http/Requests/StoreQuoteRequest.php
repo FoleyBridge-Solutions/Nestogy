@@ -307,18 +307,38 @@ class StoreQuoteRequest extends FormRequest
      */
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
-        // Debug: Log validation failure
+        // Debug: Log validation failure with more detail
         \Log::error('StoreQuoteRequest validation failed', [
             'errors' => $validator->errors()->toArray(),
             'data' => $this->all(),
-            'user_id' => \Auth::id()
+            'user_id' => \Auth::id(),
+            'status' => $this->input('status'),
+            'client_id' => $this->input('client_id'),
+            'category_id' => $this->input('category_id'),
         ]);
 
-        // For JSON requests, ensure we return proper JSON response
+        // For JSON requests, ensure we return proper JSON response with detailed errors
         if ($this->expectsJson()) {
+            $errors = $validator->errors()->toArray();
+            $detailedErrors = [];
+            
+            foreach ($errors as $field => $messages) {
+                $detailedErrors[$field] = [
+                    'messages' => $messages,
+                    'value' => $this->input($field),
+                    'type' => gettype($this->input($field))
+                ];
+            }
+            
             $response = response()->json([
-                'message' => 'The given data was invalid.',
-                'errors' => $validator->errors()
+                'message' => 'Validation failed. Please check the highlighted fields and try again.',
+                'errors' => $errors,
+                'detailed_errors' => $detailedErrors,
+                'debug_info' => [
+                    'status' => $this->input('status'),
+                    'client_id' => $this->input('client_id'),
+                    'category_id' => $this->input('category_id'),
+                ]
             ], 422);
 
             throw new \Illuminate\Validation\ValidationException($validator, $response);

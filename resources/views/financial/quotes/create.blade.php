@@ -1347,7 +1347,34 @@ function quoteBuilder() {
         
         async submitQuote() {
             if (!this.isValid()) {
-                alert('Please fix validation errors before submitting');
+                let errorMessages = [];
+                
+                // Clear previous errors
+                this.errors = {};
+                
+                // Set field-specific errors and collect messages
+                if (!this.quote.client_id) {
+                    this.errors.client_id = 'Please select a client';
+                    errorMessages.push('• Please select a client');
+                }
+                if (!this.quote.category_id) {
+                    this.errors.category_id = 'Please select a category';
+                    errorMessages.push('• Please select a category');
+                }
+                if (this.items.length === 0) {
+                    errorMessages.push('• Please add at least one item');
+                }
+                if (this.items.some(item => !item.name)) {
+                    errorMessages.push('• All items must have a name');
+                }
+                if (this.items.some(item => item.quantity <= 0)) {
+                    errorMessages.push('• All items must have a quantity greater than 0');
+                }
+                if (this.items.some(item => item.price < 0)) {
+                    errorMessages.push('• All items must have a price of 0 or greater');
+                }
+                
+                alert('Please fix the following issues before submitting:\n\n' + errorMessages.join('\n'));
                 return;
             }
             
@@ -1456,18 +1483,28 @@ function quoteBuilder() {
                         // Validation errors
                         try {
                             const result = JSON.parse(xhr.responseText);
-                            console.error('Validation errors:', result.errors);
+                            console.error('Validation errors:', result);
                             this.errors = result.errors || {};
                             
-                            let errorMsg = 'Validation failed:\n';
+                            let errorMsg = 'The quote could not be saved due to the following issues:\n\n';
                             if (result.errors) {
                                 Object.keys(result.errors).forEach(field => {
-                                    errorMsg += `• ${field}: ${result.errors[field][0]}\n`;
+                                    const fieldName = field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    errorMsg += `• ${fieldName}: ${result.errors[field][0]}\n`;
                                 });
+                            } else {
+                                errorMsg += 'Please check all required fields and try again.';
                             }
+                            
+                            // Show detailed error info if available
+                            if (result.debug_info) {
+                                console.log('Debug info:', result.debug_info);
+                            }
+                            
                             alert(errorMsg);
                         } catch (e) {
-                            alert('Validation failed. Please check your input and try again.');
+                            console.error('Error parsing validation response:', e);
+                            alert('Validation failed. Please ensure all required fields are filled and try again.');
                         }
                     } else {
                         console.error('Server error:', xhr.status, xhr.statusText, xhr.responseText);
