@@ -36,7 +36,7 @@ Alpine.data('modal', (initialOpen = false) => ({
         this.open = false;
     },
     
-    open() {
+    show() {
         this.open = true;
     }
 }));

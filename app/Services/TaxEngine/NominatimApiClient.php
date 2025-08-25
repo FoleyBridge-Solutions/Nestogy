@@ -386,7 +386,7 @@ class NominatimApiClient extends BaseApiClient
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_GEOCODING,
             $parameters,
-            function () use ($parameters) {
+            function () use ($parameters, $placeType, $countryCode) {
                 // Enforce rate limit by sleeping if needed
                 $this->enforceRateLimit();
                 

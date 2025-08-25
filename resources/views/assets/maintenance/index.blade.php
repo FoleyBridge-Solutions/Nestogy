@@ -26,8 +26,8 @@
                     <form method="GET" action="{{ route('assets.maintenance.index') }}" id="filterForm">
                         <div class="flex flex-wrap -mx-4 g-3">
                             <div class="md:w-1/4 px-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <select name="status" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="document.getElementById('filterForm').submit()">
+                                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select id="status" name="status" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="document.getElementById('filterForm').submit()">
                                     <option value="">All Statuses</option>
                                     <option value="scheduled" {{ request('status') === 'scheduled' ? 'selected' : '' }}>Scheduled</option>
                                     <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>

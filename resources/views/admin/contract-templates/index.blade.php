@@ -447,7 +447,9 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js" 
+        integrity="sha512-XdRsNSqN3eU4jdOEL7Rg3SHQ5GIhGcXcRWDVlKuwJxmLc3nJgjUqPCAIKqNYqRGfaEBglmyfmQ0r3VHXVR7dNg==" 
+        crossorigin="anonymous"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Rich Text Editor

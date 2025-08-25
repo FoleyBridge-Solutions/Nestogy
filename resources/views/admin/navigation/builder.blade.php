@@ -773,7 +773,9 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" 
+        integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDNKVvNiMU63mg9JuM8w==" 
+        crossorigin="anonymous"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const navigationTree = document.getElementById('navigation-tree');

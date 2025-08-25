@@ -258,7 +258,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
         
-        compareVersions(leftVersionId, rightVersionId) {
+        startVersionComparison(leftVersionId, rightVersionId) {
             const leftVersion = this.versions.find(v => v.id === leftVersionId);
             const rightVersion = this.versions.find(v => v.id === rightVersionId);
             

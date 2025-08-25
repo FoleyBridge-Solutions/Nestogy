@@ -531,8 +531,18 @@ class VoIPTaxService
     public function clearCache(?string $pattern = null): void
     {
         if ($pattern) {
-            // Clear specific pattern (requires Redis or similar)
-            Cache::flush(); // Fallback to full flush
+            // Clear specific pattern if cache driver supports it
+            if (config('cache.default') === 'redis') {
+                $prefix = config('cache.prefix', '');
+                $fullPattern = $prefix . $pattern;
+                $keys = Cache::getRedis()->keys($fullPattern);
+                if (!empty($keys)) {
+                    Cache::getRedis()->del($keys);
+                }
+            } else {
+                // Fallback to full flush for other cache drivers
+                Cache::flush();
+            }
         } else {
             Cache::flush();
         }

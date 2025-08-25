@@ -588,20 +588,6 @@ export default function productSelectorAdvanced() {
             }
         },
         
-        // Check if item is selected
-        isSelected(itemId, type) {
-            return this.selectedItems.some(item => 
-                (type === 'product' && item.product_id == itemId) ||
-                (type === 'service' && item.service_id == itemId) ||
-                (type === 'bundle' && item.bundle_id == itemId)
-            );
-        },
-        
-        // Show product details
-        showProductDetails(product) {
-            this.selectedProduct = product;
-            this.showProductModal = true;
-        },
         
         // Format billing cycle
         formatBillingCycle(cycle) {
@@ -946,10 +932,6 @@ export default function productSelectorAdvanced() {
             return this.services || [];
         },
         
-        get totalPages() {
-            return Math.ceil(this.totalItems / this.perPage);
-        },
-        
         get visiblePages() {
             const current = this.currentPage;
             const total = this.totalPages;
@@ -966,12 +948,6 @@ export default function productSelectorAdvanced() {
             return pages;
         },
         
-        get hasFiltersApplied() {
-            return this.filters.category || 
-                   this.filters.billingModel || 
-                   this.filters.priceRange.min > 0 || 
-                   this.filters.priceRange.max < 10000;
-        }
     };
     
     // Auto-initialize when component is created
