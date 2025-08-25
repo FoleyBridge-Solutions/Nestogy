@@ -77,7 +77,7 @@ class RmmEnhancedSetup extends Command
             $this->line("\n=== Testing {$integration->name} (ID: {$integration->id}) ===");
 
             try {
-                $rmmService = $this->rmmFactory->create($integration);
+                $rmmService = $this->rmmFactory->make($integration);
 
                 // Test basic connection
                 $this->info('Testing basic connection...');

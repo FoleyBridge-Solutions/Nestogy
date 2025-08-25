@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ContractTemplate;
-use App\Models\ContractClause;
-use App\Services\ContractClauseService;
+use App\Domains\Contract\Models\ContractTemplate;
+use App\Domains\Contract\Models\ContractClause;
+use App\Domains\Contract\Services\ContractClauseService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

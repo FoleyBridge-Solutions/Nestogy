@@ -525,9 +525,38 @@ class TacticalRmmDataMapper
     /**
      * Map graphics/video card information.
      */
-    protected function mapGraphicsInfo(array $graphics): array
+    protected function mapGraphicsInfo($graphics): array
     {
+        // Handle case where graphics data comes as a string instead of array
+        if (is_string($graphics)) {
+            return [[
+                'name' => $graphics,
+                'driver_version' => null,
+                'driver_date' => null,
+                'memory_mb' => null,
+                'resolution' => null,
+                'refresh_rate' => null,
+            ]];
+        }
+
+        // Handle empty or non-array cases
+        if (!is_array($graphics) || empty($graphics)) {
+            return [];
+        }
+
         return array_map(function ($gpu) {
+            // Handle case where individual GPU data might also be a string
+            if (is_string($gpu)) {
+                return [
+                    'name' => $gpu,
+                    'driver_version' => null,
+                    'driver_date' => null,
+                    'memory_mb' => null,
+                    'resolution' => null,
+                    'refresh_rate' => null,
+                ];
+            }
+
             return [
                 'name' => $gpu['name'] ?? 'Unknown',
                 'driver_version' => $gpu['driver_version'] ?? null,

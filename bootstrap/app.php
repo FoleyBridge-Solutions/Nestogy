@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super-admin' => \App\Http\Middleware\RequireSuperAdmin::class,
             'bouncer-scope' => \App\Http\Middleware\SetBouncerScope::class,
             'configure-mail' => \App\Http\Middleware\ConfigureCompanyMail::class,
+            'subsidiary.access' => \App\Http\Middleware\SubsidiaryAccessMiddleware::class,
         ]);
 
         // Add middleware to web group

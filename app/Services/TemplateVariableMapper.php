@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Contract;
-use App\Models\ContractTemplate;
-use App\Models\ContractSchedule;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractTemplate;
+use App\Domains\Contract\Models\ContractSchedule;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -136,10 +136,27 @@ class TemplateVariableMapper
     /**
      * Generate template-specific variables from contract and schedule data
      */
-    public function generateVariables(Contract $contract): array
+    public function generateVariables(Contract $contract, ?array $sectionMapping = null): array
     {
-        $baseVariables = $this->generateBaseVariables($contract);
-        $templateCategory = $this->getTemplateCategory($contract->template);
+        Log::info('🔧 TemplateVariableMapper: Starting variable generation', [
+            'contract_id' => $contract->id,
+            'template_id' => $contract->template_id,
+            'has_metadata' => !empty($contract->metadata),
+            'metadata_count' => $contract->metadata ? count($contract->metadata) : 0
+        ]);
+        
+        $baseVariables = $this->generateBaseVariables($contract, $sectionMapping);
+        Log::info('📊 Base variables generated', [
+            'count' => count($baseVariables),
+            'keys' => array_keys($baseVariables)
+        ]);
+        
+        $templateCategory = $this->getTemplateCategory($contract->template, $contract->contract_type);
+        Log::info('📋 Template category determined', [
+            'category' => $templateCategory,
+            'template_type' => $contract->template?->template_type,
+            'contract_type' => $contract->contract_type
+        ]);
         
         // Generate category-specific variables
         $categoryVariables = match ($templateCategory) {
@@ -150,26 +167,60 @@ class TemplateVariableMapper
             'general' => $this->generateGeneralVariables($contract),
             default => []
         };
+        
+        Log::info('🏢 Category-specific variables generated', [
+            'category' => $templateCategory,
+            'count' => count($categoryVariables),
+            'keys' => array_keys($categoryVariables)
+        ]);
 
-        return array_merge($baseVariables, $categoryVariables);
+        // Merge in contract-specific variables from metadata
+        $contractVariables = $this->extractContractMetadataVariables($contract);
+        Log::info('📝 Contract metadata variables extracted', [
+            'count' => count($contractVariables),
+            'wizard_variables' => array_intersect_key($contractVariables, array_flip([
+                'billing_model', 'service_tier', 'payment_terms', 'response_time_hours',
+                'voip_enabled', 'hardware_support', 'price_per_user'
+            ]))
+        ]);
+        
+        $finalVariables = array_merge($baseVariables, $categoryVariables, $contractVariables);
+        
+        Log::info('✅ Final variable set assembled', [
+            'total_count' => count($finalVariables),
+            'base_count' => count($baseVariables),
+            'category_count' => count($categoryVariables),
+            'metadata_count' => count($contractVariables),
+            'final_wizard_vars' => array_intersect_key($finalVariables, array_flip([
+                'billing_model', 'service_tier', 'payment_terms', 'response_time_hours',
+                'voip_enabled', 'hardware_support', 'price_per_user', 'setup_fee'
+            ]))
+        ]);
+        
+        return $finalVariables;
     }
 
     /**
      * Get template category for a contract template
      */
-    public function getTemplateCategory(?ContractTemplate $template): string
+    public function getTemplateCategory(?ContractTemplate $template, ?string $contractType = null): string
     {
-        if (!$template) {
-            return 'general';
+        if ($template) {
+            return self::TEMPLATE_CATEGORIES[$template->template_type] ?? 'general';
+        }
+        
+        // If no template but we have a contract type, use that to determine category
+        if ($contractType) {
+            return self::TEMPLATE_CATEGORIES[$contractType] ?? 'general';
         }
 
-        return self::TEMPLATE_CATEGORIES[$template->template_type] ?? 'general';
+        return 'general';
     }
 
     /**
      * Generate base variables common to all contracts
      */
-    protected function generateBaseVariables(Contract $contract): array
+    protected function generateBaseVariables(Contract $contract, ?array $sectionMapping = null): array
     {
         $variables = [
             // Contract basics
@@ -181,13 +232,45 @@ class TemplateVariableMapper
             
             // Client information
             'client_name' => $contract->client->name ?? '',
+            'client_short_name' => $contract->client->short_name ?? $contract->client->name ?? '',
             'client_address' => $contract->client->address ?? '',
             
-            // Service provider information (from company)
-            'service_provider_name' => auth()->user()->company->name ?? '',
-            'service_provider_short_name' => auth()->user()->company->short_name ?? '',
-            'service_provider_address' => auth()->user()->company->address ?? '',
+            // Service provider information (from contract's company)
+            'service_provider_name' => $contract->company->name ?? '',
+            'service_provider_short_name' => $contract->company->short_name ?? $contract->company->name ?? '',
+            'service_provider_address' => $contract->company->address ?? '',
+            
+            // Legal and contract terms
+            'governing_state' => $contract->governing_law ?? $contract->client->state ?? 'Texas',
+            'initial_term' => $this->formatTerm($contract->term_months ?? 12),
+            'renewal_term' => $this->formatTerm($contract->term_months ?? 12),
+            'termination_notice_days' => $contract->custom_clauses['termination']['noticePeriod'] ?? '30 days',
+            'arbitration_location' => $contract->client->city . ', ' . ($contract->client->state ?? 'Texas'),
+            
+            // Signature block variables
+            'client_signatory_name' => $contract->client->primary_contact_name ?? $contract->client->name ?? '',
+            'client_signatory_title' => $contract->client->primary_contact_title ?? 'Authorized Representative',
+            'service_provider_signatory_name' => $contract->company->owner_name ?? $contract->company->name ?? '',
+            'service_provider_signatory_title' => $contract->company->owner_title ?? 'Authorized Representative',
+            'signature_date' => now()->format('F j, Y'),
+            'client_signature_date' => '',
+            'service_provider_signature_date' => '',
+            
         ];
+
+        // Add dynamic section references if section mapping is provided
+        if ($sectionMapping) {
+            $variables = array_merge($variables, $this->generateSectionReferenceVariables($sectionMapping));
+        } else {
+            // Fallback to static references if no section mapping available
+            $variables = array_merge($variables, [
+                'definitions_section_ref' => 'Section 1 (Definitions)',
+                'services_section_ref' => 'Section 2 (Scope of Support Services)',
+                'sla_section_ref' => 'Section 3 (Service Level Agreements)',
+                'obligations_section_ref' => 'Section 4 (Client Obligations and Responsibilities)',
+                'financial_section_ref' => 'Section 5 (Fees and Payment Terms)',
+            ]);
+        }
 
         // Add template-specific base variables
         if ($contract->template) {
@@ -206,21 +289,27 @@ class TemplateVariableMapper
         $variables = [];
         $schedules = $contract->schedules;
         
-        // Infrastructure schedule variables
-        $infraSchedule = $schedules->where('schedule_type', 'infrastructure')->first();
+        // Set default boolean variables to false to prevent undefined variable issues in conditionals
+        $variables['has_workstation_support'] = false;
+        $variables['has_server_support'] = false;
+        $variables['has_network_support'] = false;
+        $variables['includes_remote_support'] = false;
+        $variables['includes_onsite_support'] = false;
+        $variables['auto_assign_assets'] = false;
+        
+        // Infrastructure schedule variables (schedule_type = 'A')
+        $infraSchedule = $schedules->where('schedule_type', 'A')->first();
         if ($infraSchedule) {
-            $infraData = $infraSchedule->schedule_data;
-            
-            // Supported asset types
-            $supportedAssets = $infraData['supportedAssetTypes'] ?? [];
+            // Get data from ContractSchedule columns, not schedule_data
+            $supportedAssets = $infraSchedule->supported_asset_types ?? [];
             $variables['supported_asset_types'] = $this->formatAssetTypesList($supportedAssets);
             $variables['supported_asset_count'] = count($supportedAssets);
             $variables['has_workstation_support'] = in_array('workstation', $supportedAssets);
             $variables['has_server_support'] = in_array('server', $supportedAssets);
             $variables['has_network_support'] = in_array('network_device', $supportedAssets);
             
-            // SLA configuration
-            $sla = $infraData['sla'] ?? [];
+            // SLA configuration from sla_terms column
+            $sla = $infraSchedule->sla_terms ?? [];
             $serviceTier = $sla['serviceTier'] ?? 'bronze';
             $tierConfig = self::SERVICE_TIERS[$serviceTier] ?? self::SERVICE_TIERS['bronze'];
             
@@ -231,22 +320,24 @@ class TemplateVariableMapper
             $variables['business_hours'] = $tierConfig['coverage'];
             $variables['tier_benefits'] = implode(', ', $tierConfig['benefits']);
             
-            // Coverage rules
-            $coverage = $infraData['coverageRules'] ?? [];
+            // Coverage rules from coverage_rules column
+            $coverage = $infraSchedule->coverage_rules ?? [];
             $variables['includes_remote_support'] = $coverage['includeRemoteSupport'] ?? true;
             $variables['includes_onsite_support'] = $coverage['includeOnsiteSupport'] ?? false;
             $variables['auto_assign_assets'] = $coverage['autoAssignNewAssets'] ?? false;
             
-            // Exclusions
-            $exclusions = $infraData['exclusions'] ?? [];
+            // Exclusions from coverage_rules or variable_values
+            $variableValues = $infraSchedule->variable_values ?? [];
+            $exclusions = $variableValues['exclusions'] ?? [];
             $variables['excluded_asset_types'] = $exclusions['assetTypes'] ?? '';
             $variables['excluded_services'] = $exclusions['services'] ?? '';
         }
 
-        // Pricing schedule variables
-        $pricingSchedule = $schedules->where('schedule_type', 'pricing')->first();
+        // Pricing schedule variables (schedule_type = 'B')
+        $pricingSchedule = $schedules->where('schedule_type', 'B')->first();
         if ($pricingSchedule) {
-            $pricingData = $pricingSchedule->schedule_data;
+            // Get data from pricing_structure column
+            $pricingData = $pricingSchedule->pricing_structure ?? [];
             
             $variables['billing_model'] = $pricingData['billingModel'] ?? 'per_asset';
             $variables['monthly_base_rate'] = $pricingData['basePricing']['monthlyBase'] ?? '';
@@ -269,6 +360,14 @@ class TemplateVariableMapper
     {
         $variables = [];
         $schedules = $contract->schedules;
+        
+        // Set default boolean variables to false for VoIP conditionals
+        $variables['fcc_compliant'] = false;
+        $variables['karis_law'] = false;
+        $variables['ray_baums'] = false;
+        $variables['encryption_enabled'] = false;
+        $variables['fraud_protection'] = false;
+        $variables['call_recording'] = false;
         
         $telecomSchedule = $schedules->where('schedule_type', 'telecom')->first();
         if ($telecomSchedule) {
@@ -322,6 +421,15 @@ class TemplateVariableMapper
         $variables = [];
         $schedules = $contract->schedules;
         
+        // Set default boolean variables to false for VAR conditionals
+        $variables['includes_installation'] = false;
+        $variables['includes_rack_stack'] = false;
+        $variables['includes_cabling'] = false;
+        $variables['includes_configuration'] = false;
+        $variables['includes_project_management'] = false;
+        $variables['onsite_warranty_support'] = false;
+        $variables['advanced_replacement'] = false;
+        
         $hardwareSchedule = $schedules->where('schedule_type', 'hardware')->first();
         if ($hardwareSchedule) {
             $hardwareData = $hardwareSchedule->schedule_data;
@@ -372,6 +480,12 @@ class TemplateVariableMapper
     {
         $variables = [];
         $schedules = $contract->schedules;
+        
+        // Set default boolean variables to false for compliance conditionals
+        $variables['includes_internal_audits'] = false;
+        $variables['includes_external_audits'] = false;
+        $variables['includes_penetration_testing'] = false;
+        $variables['includes_vulnerability_scanning'] = false;
         
         $complianceSchedule = $schedules->where('schedule_type', 'compliance')->first();
         if ($complianceSchedule) {
@@ -469,5 +583,261 @@ class TemplateVariableMapper
             'printer' => in_array('printer', $assetTypes),
             default => false
         };
+    }
+
+    /**
+     * Format term months into readable format
+     */
+    protected function formatTerm(int $months): string
+    {
+        if ($months === 12) {
+            return 'one (1) year';
+        } elseif ($months === 24) {
+            return 'two (2) years';
+        } elseif ($months === 36) {
+            return 'three (3) years';
+        } elseif ($months % 12 === 0) {
+            $years = $months / 12;
+            return "$years ($years) years";
+        } elseif ($months === 1) {
+            return 'one (1) month';
+        } else {
+            return "$months ($months) months";
+        }
+    }
+
+    /**
+     * Generate dynamic section reference variables from section mapping.
+     */
+    protected function generateSectionReferenceVariables(array $sectionMapping): array
+    {
+        $variables = [];
+        
+        // Generate standard section reference variables
+        foreach ($sectionMapping as $category => $data) {
+            $variableName = $category . '_section_ref';
+            $variables[$variableName] = $data['reference'];
+        }
+        
+        // Add common alternative names for easier template usage
+        $commonMappings = [
+            'definitions_section_ref' => $sectionMapping['definitions']['reference'] ?? 'DEFINITIONS SECTION NOT PRESENT',
+            'services_section_ref' => $sectionMapping['services']['reference'] ?? 'SERVICES SECTION NOT PRESENT',
+            'sla_section_ref' => $sectionMapping['sla']['reference'] ?? 'SLA SECTION NOT PRESENT',
+            'obligations_section_ref' => $sectionMapping['obligations']['reference'] ?? 'OBLIGATIONS SECTION NOT PRESENT',
+            'financial_section_ref' => $sectionMapping['financial']['reference'] ?? 'FINANCIAL SECTION NOT PRESENT',
+            'exclusions_section_ref' => $sectionMapping['exclusions']['reference'] ?? 'EXCLUSIONS SECTION NOT PRESENT',
+            'warranties_section_ref' => $sectionMapping['warranties']['reference'] ?? 'WARRANTIES SECTION NOT PRESENT',
+            'confidentiality_section_ref' => $sectionMapping['confidentiality']['reference'] ?? 'CONFIDENTIALITY SECTION NOT PRESENT',
+            'legal_section_ref' => $sectionMapping['legal']['reference'] ?? 'LEGAL SECTION NOT PRESENT',
+            'admin_section_ref' => $sectionMapping['admin']['reference'] ?? 'ADMIN SECTION NOT PRESENT',
+        ];
+        
+        return array_merge($variables, $commonMappings);
+    }
+
+    /**
+     * Extract variables from contract metadata for wizard-created contracts
+     */
+    protected function extractContractMetadataVariables(Contract $contract): array
+    {
+        $variables = [];
+        $metadata = $contract->metadata ?? [];
+        
+        // PRIORITY 1: Extract variables from variable_values in metadata (primary wizard data)
+        $variableValues = $metadata['variable_values'] ?? [];
+        if (!empty($variableValues)) {
+            $variables = array_merge($variables, $variableValues);
+        }
+        
+        // PRIORITY 2: Extract from standard contract form fields
+        $this->extractFromContractFields($contract, $variables);
+        
+        // PRIORITY 3: Extract from SLA terms if present (form field data)
+        $this->extractFromSlaTerms($contract, $variables);
+        
+        // PRIORITY 4: Extract from pricing structure if present (form field data)
+        $this->extractFromPricingStructure($contract, $variables);
+        
+        // PRIORITY 5: Extract from VoIP specifications (telecom contracts)
+        $this->extractFromVoipSpecifications($contract, $variables);
+        
+        // PRIORITY 6: Extract from compliance requirements (compliance contracts)
+        $this->extractFromComplianceRequirements($contract, $variables);
+        
+        // PRIORITY 7: Extract billing configuration from metadata
+        $this->extractFromBillingConfig($metadata, $variables);
+        
+        // PRIORITY 8: If contract has stored variables column, merge those too (lowest priority)
+        if (!empty($contract->variables) && is_array($contract->variables)) {
+            // Merge with existing data taking precedence over stored variables
+            $contractVariables = $contract->variables;
+            $variables = array_merge($contractVariables, $variables);
+        }
+        
+        return $variables;
+    }
+    
+    /**
+     * Extract variables from core contract fields
+     */
+    protected function extractFromContractFields(Contract $contract, array &$variables): void
+    {
+        if (!empty($contract->title)) {
+            $variables['contract_title'] = $contract->title;
+        }
+        if (!empty($contract->contract_type)) {
+            $variables['contract_type'] = $contract->contract_type;
+        }
+        if (!empty($contract->description)) {
+            $variables['contract_description'] = $contract->description;
+        }
+        if (!empty($contract->currency_code)) {
+            $variables['currency_code'] = $contract->currency_code;
+        }
+        if (!empty($contract->payment_terms)) {
+            $variables['payment_terms'] = $contract->payment_terms;
+        }
+        if (!empty($contract->governing_law)) {
+            $variables['governing_law'] = $contract->governing_law;
+        }
+        if (!empty($contract->jurisdiction)) {
+            $variables['jurisdiction'] = $contract->jurisdiction;
+        }
+    }
+    
+    /**
+     * Extract variables from SLA terms
+     */
+    protected function extractFromSlaTerms(Contract $contract, array &$variables): void
+    {
+        if (empty($contract->sla_terms)) return;
+        
+        $slaTerms = $contract->sla_terms;
+        
+        if (!empty($slaTerms['response_time_hours'])) {
+            $variables['response_time_hours'] = (string)$slaTerms['response_time_hours'];
+        }
+        if (!empty($slaTerms['resolution_time_hours'])) {
+            $variables['resolution_time_hours'] = (string)$slaTerms['resolution_time_hours'];
+        }
+        if (!empty($slaTerms['uptime_percentage'])) {
+            $variables['uptime_percentage'] = (string)$slaTerms['uptime_percentage'];
+        }
+        if (!empty($slaTerms['service_tier'])) {
+            $variables['service_tier'] = $slaTerms['service_tier'];
+        }
+        if (!empty($slaTerms['business_hours'])) {
+            $variables['business_hours'] = $slaTerms['business_hours'];
+        }
+    }
+    
+    /**
+     * Extract variables from pricing structure
+     */
+    protected function extractFromPricingStructure(Contract $contract, array &$variables): void
+    {
+        if (empty($contract->pricing_structure)) return;
+        
+        $pricingStructure = $contract->pricing_structure;
+        
+        if (!empty($pricingStructure['recurring_monthly'])) {
+            $variables['monthly_base_rate'] = '$' . number_format((float)$pricingStructure['recurring_monthly'], 2);
+        }
+        if (!empty($pricingStructure['setup_fee'])) {
+            $variables['setup_fee'] = '$' . number_format((float)$pricingStructure['setup_fee'], 2);
+        }
+        if (!empty($pricingStructure['one_time'])) {
+            $variables['hourly_rate'] = '$' . number_format((float)$pricingStructure['one_time'], 2);
+        }
+        if (!empty($pricingStructure['billing_model'])) {
+            $variables['billing_model'] = $pricingStructure['billing_model'];
+        }
+        if (!empty($pricingStructure['billing_frequency'])) {
+            $variables['billing_frequency'] = $pricingStructure['billing_frequency'];
+        }
+    }
+    
+    /**
+     * Extract variables from VoIP specifications (telecom contracts)
+     */
+    protected function extractFromVoipSpecifications(Contract $contract, array &$variables): void
+    {
+        if (empty($contract->voip_specifications)) return;
+        
+        $voipSpecs = $contract->voip_specifications;
+        
+        if (!empty($voipSpecs['services'])) {
+            $variables['voip_services'] = is_array($voipSpecs['services']) 
+                ? implode(', ', $voipSpecs['services']) 
+                : $voipSpecs['services'];
+        }
+        if (!empty($voipSpecs['equipment'])) {
+            $variables['voip_equipment'] = is_array($voipSpecs['equipment']) 
+                ? implode(', ', $voipSpecs['equipment']) 
+                : $voipSpecs['equipment'];
+        }
+        if (!empty($voipSpecs['phone_numbers'])) {
+            $variables['phone_numbers'] = (string)$voipSpecs['phone_numbers'];
+        }
+        if (!empty($voipSpecs['channel_count'])) {
+            $variables['channel_count'] = (string)$voipSpecs['channel_count'];
+        }
+        if (!empty($voipSpecs['calling_plan'])) {
+            $variables['calling_plan'] = $voipSpecs['calling_plan'];
+        }
+        if (!empty($voipSpecs['international_calling'])) {
+            $variables['international_calling'] = $voipSpecs['international_calling'];
+        }
+    }
+    
+    /**
+     * Extract variables from compliance requirements (compliance contracts)
+     */
+    protected function extractFromComplianceRequirements(Contract $contract, array &$variables): void
+    {
+        if (empty($contract->compliance_requirements)) return;
+        
+        $compliance = $contract->compliance_requirements;
+        
+        if (!empty($compliance['frameworks'])) {
+            $variables['compliance_frameworks'] = is_array($compliance['frameworks']) 
+                ? implode(', ', $compliance['frameworks']) 
+                : $compliance['frameworks'];
+        }
+        if (!empty($compliance['scope'])) {
+            $variables['compliance_scope'] = $compliance['scope'];
+        }
+        if (!empty($compliance['risk_level'])) {
+            $variables['risk_level'] = $compliance['risk_level'];
+        }
+        if (!empty($compliance['audit_frequency'])) {
+            $variables['audit_frequency'] = $compliance['audit_frequency'];
+        }
+        if (!empty($compliance['industry_sector'])) {
+            $variables['industry_sector'] = $compliance['industry_sector'];
+        }
+    }
+    
+    /**
+     * Extract variables from billing configuration in metadata
+     */
+    protected function extractFromBillingConfig(array $metadata, array &$variables): void
+    {
+        $billingConfig = $metadata['billing_config'] ?? [];
+        if (empty($billingConfig)) return;
+        
+        if (!empty($billingConfig['model']) && empty($variables['billing_model'])) {
+            $variables['billing_model'] = $billingConfig['model'];
+        }
+        if (!empty($billingConfig['base_rate']) && empty($variables['monthly_base_rate'])) {
+            $variables['monthly_base_rate'] = '$' . number_format((float)$billingConfig['base_rate'], 2);
+        }
+        
+        // Auto-assignment settings
+        $variables['auto_assign_assets'] = $billingConfig['auto_assign_assets'] ?? false;
+        $variables['auto_assign_new_assets'] = $billingConfig['auto_assign_new_assets'] ?? false;
+        $variables['auto_assign_contacts'] = $billingConfig['auto_assign_contacts'] ?? false;
+        $variables['auto_assign_new_contacts'] = $billingConfig['auto_assign_new_contacts'] ?? false;
     }
 }

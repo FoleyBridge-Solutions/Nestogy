@@ -16,7 +16,7 @@ use App\Http\Requests\StoreRecurringRequest;
 use App\Http\Requests\UpdateRecurringRequest;
 use App\Http\Requests\ProcessUsageDataRequest;
 use App\Http\Requests\GenerateRecurringInvoicesRequest;
-use App\Services\RecurringBillingService;
+use App\Domains\Financial\Services\RecurringBillingService;
 use App\Services\VoIPUsageService;
 use App\Services\VoIPTaxService;
 use App\Services\EmailService;

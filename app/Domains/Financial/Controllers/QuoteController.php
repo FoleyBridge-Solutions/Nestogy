@@ -27,8 +27,8 @@ use App\Http\Resources\ApiResponse;
 use App\Services\EmailService;
 use App\Services\PdfService;
 use App\Services\QuoteInvoiceConversionService;
-use App\Services\ContractGenerationService;
-use App\Models\Contract;
+use App\Domains\Contract\Services\ContractGenerationService;
+use App\Domains\Contract\Models\Contract;
 
 /**
  * QuoteController
@@ -195,10 +195,11 @@ class QuoteController extends Controller
             $quote = $this->quoteService->createQuote($request->validated());
 
             if ($request->wantsJson()) {
-                return ApiResponse::created(
-                    new QuoteResource($quote),
-                    'Quote created successfully'
-                );
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote created successfully',
+                    'data' => new QuoteResource($quote),
+                ], 201);
             }
 
             return redirect()
@@ -211,15 +212,32 @@ class QuoteController extends Controller
                 'data' => $request->all(),
                 'user_id' => Auth::id()
             ]);
-            return QuoteExceptionHandler::handle($e, $request);
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors' => []
+                ], 422);
+            }
+            
+            return back()->withInput()->withErrors(['error' => $e->getMessage()]);
         } catch (\Exception $e) {
             Log::error('Quote creation failed (Exception)', [
                 'error' => $e->getMessage(),
                 'data' => $request->all(),
                 'user_id' => Auth::id()
             ]);
-            $exception = QuoteExceptionHandler::normalize($e);
-            return QuoteExceptionHandler::handle($exception, $request);
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create quote: ' . $e->getMessage(),
+                    'errors' => []
+                ], 422);
+            }
+            
+            return back()->withInput()->withErrors(['error' => 'Failed to create quote: ' . $e->getMessage()]);
         }
     }
 
@@ -721,7 +739,7 @@ class QuoteController extends Controller
             ];
 
             // Use the RecurringBillingService to create the recurring record
-            $recurringService = app(\App\Services\RecurringBillingService::class);
+            $recurringService = app(\App\Domains\Financial\Services\RecurringBillingService::class);
             $recurring = $recurringService->createFromQuote($quote, $recurringData);
 
             // Update quote status to indicate conversion
@@ -1216,7 +1234,7 @@ class QuoteController extends Controller
 
         // Get available contract templates
         $user = Auth::user();
-        $contractTemplates = \App\Models\ContractTemplate::where('company_id', $user->company_id)
+        $contractTemplates = \App\Domains\Contract\Models\ContractTemplate::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->orderBy('name')
             ->get();

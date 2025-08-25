@@ -140,7 +140,7 @@ class ClaudePTYService
                 'TERM' => 'xterm-256color',
                 'XDG_CONFIG_HOME' => base_path(),
                 'USER' => 'www-data',
-                'CLAUDE_CODE_OAUTH_TOKEN' => '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'
+                'CLAUDE_CODE_OAUTH_TOKEN' => config('services.claude.oauth_token')
             ]);
             
             // Note: Symfony Process doesn't have setUser() method

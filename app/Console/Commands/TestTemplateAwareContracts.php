@@ -6,8 +6,8 @@ use Illuminate\Console\Command;
 use App\Services\TemplateVariableMapper;
 use App\Services\TemplateContentGenerator;
 use App\Services\DefinitionRegistry;
-use App\Models\ContractTemplate;
-use App\Models\Contract;
+use App\Domains\Contract\Models\ContractTemplate;
+use App\Domains\Contract\Models\Contract;
 use App\Models\Client;
 
 /**
@@ -49,12 +49,14 @@ class TestTemplateAwareContracts extends Command
 
         // Test specific template type if provided
         if ($templateType = $this->option('template-type')) {
-            return $this->testSpecificTemplateType($templateType);
+            $this->testSpecificTemplateType($templateType);
+            return;
         }
 
         // Test specific category if provided
         if ($category = $this->option('category')) {
-            return $this->testTemplateCategory($category);
+            $this->testTemplateCategory($category);
+            return;
         }
 
         // Test all template categories

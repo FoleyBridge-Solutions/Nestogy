@@ -14,7 +14,7 @@ $breadcrumbs = [
 @section('title', 'Edit Contract: ' . $contract->title)
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-6" x-data="contractEditor(@json($contract))">
+<div class="max-w-7xl mx-auto space-y-6" x-data="contractEditor(@json($contract, JSON_HEX_APOS | JSON_HEX_QUOT))">
     <!-- Header with Status Warning -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
@@ -46,7 +46,7 @@ $breadcrumbs = [
                     </div>
                 </div>
             </div>
-        @elseif($contract->billing_calculations()->count() > 0)
+        @elseif($contract->billingCalculations()->count() > 0)
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div class="flex items-start">
                     <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +55,7 @@ $breadcrumbs = [
                     <div>
                         <h3 class="text-sm font-medium text-yellow-800">Billing History Warning</h3>
                         <p class="text-sm text-yellow-700 mt-1">
-                            This contract has <strong>{{ $contract->billing_calculations()->count() }} billing calculation(s)</strong>. 
+                            This contract has <strong>{{ $contract->billingCalculations()->count() }} billing calculation(s)</strong>. 
                             Changes to billing models may affect historical billing data and future calculations.
                         </p>
                         <div class="mt-2">
@@ -223,7 +223,7 @@ $breadcrumbs = [
                 <div x-show="activeTab === 'billing'" class="space-y-6">
                     <h3 class="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">Billing Model Configuration</h3>
                     
-                    @if($contract->billing_calculations()->count() > 0)
+                    @if($contract->billingCalculations()->count() > 0)
                         <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
                             <p class="text-sm text-amber-700">
                                 <strong>Warning:</strong> This contract has active billing calculations. 
@@ -456,10 +456,13 @@ $breadcrumbs = [
 
 <script>
 function contractEditor(contract) {
+    // Ensure contract is properly initialized
+    contract = contract || {};
+    
     return {
         activeTab: 'basic',
         contract: contract,
-        acknowledgeBillingImpact: contract.billing_calculations_count === 0,
+        acknowledgeBillingImpact: {{ $contract->billingCalculations()->count() === 0 ? 'true' : 'false' }},
         form: {
             title: contract.title || '',
             contract_type: contract.contract_type || '',

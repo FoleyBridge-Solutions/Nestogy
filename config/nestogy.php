@@ -170,6 +170,63 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Time Tracking Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Default time tracking and billing settings. These serve as system-wide
+    | defaults that can be overridden at company, client, or contract levels.
+    |
+    */
+    'time_tracking' => [
+        // Default hourly rates (fallback when no company rates are set)
+        'default_rates' => [
+            'standard' => env('NESTOGY_DEFAULT_STANDARD_RATE', 150.00),
+            'after_hours' => env('NESTOGY_DEFAULT_AFTER_HOURS_RATE', 225.00),
+            'emergency' => env('NESTOGY_DEFAULT_EMERGENCY_RATE', 300.00),
+            'weekend' => env('NESTOGY_DEFAULT_WEEKEND_RATE', 200.00),
+            'holiday' => env('NESTOGY_DEFAULT_HOLIDAY_RATE', 250.00),
+        ],
+
+        // Default rate multipliers
+        'default_multipliers' => [
+            'after_hours' => env('NESTOGY_DEFAULT_AFTER_HOURS_MULTIPLIER', 1.5),
+            'emergency' => env('NESTOGY_DEFAULT_EMERGENCY_MULTIPLIER', 2.0),
+            'weekend' => env('NESTOGY_DEFAULT_WEEKEND_MULTIPLIER', 1.5),
+            'holiday' => env('NESTOGY_DEFAULT_HOLIDAY_MULTIPLIER', 2.0),
+        ],
+
+        // Default billing settings
+        'default_rate_calculation_method' => env('NESTOGY_DEFAULT_RATE_METHOD', 'fixed_rates'),
+        'default_minimum_billing_increment' => env('NESTOGY_DEFAULT_MIN_BILLING', 0.25), // 15 minutes
+        'default_time_rounding_method' => env('NESTOGY_DEFAULT_ROUNDING', 'nearest'),
+
+        // Business hours configuration (for determining after-hours rates)
+        'business_hours' => [
+            'start' => env('NESTOGY_BUSINESS_HOURS_START', '08:00'),
+            'end' => env('NESTOGY_BUSINESS_HOURS_END', '18:00'),
+            'timezone' => env('NESTOGY_BUSINESS_HOURS_TIMEZONE', 'America/New_York'),
+        ],
+
+        // Non-billable ticket types
+        'non_billable_ticket_types' => [
+            'warranty',
+            'internal', 
+            'training',
+            'maintenance',
+        ],
+
+        // Auto-detection settings
+        'auto_detect_emergency' => env('NESTOGY_AUTO_DETECT_EMERGENCY', true),
+        'emergency_keywords' => ['urgent', 'critical', 'down', 'outage', 'emergency'],
+        
+        // Time entry approval settings
+        'require_approval' => env('NESTOGY_REQUIRE_TIME_APPROVAL', false),
+        'approval_threshold_hours' => env('NESTOGY_APPROVAL_THRESHOLD', 8.0),
+        'auto_approve_under_threshold' => env('NESTOGY_AUTO_APPROVE_SMALL', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode
     |--------------------------------------------------------------------------
     |

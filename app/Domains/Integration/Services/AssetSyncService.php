@@ -60,7 +60,7 @@ class AssetSyncService
     public function syncAssetsFromIntegration(RmmIntegration $integration): array
     {
         try {
-            $rmmService = $this->rmmFactory->create($integration);
+            $rmmService = $this->rmmFactory->make($integration);
             $agentsResponse = $rmmService->getAgents();
 
             if (!$agentsResponse['success']) {
@@ -180,7 +180,7 @@ class AssetSyncService
         foreach ($mappings as $mapping) {
             try {
                 $integration = $mapping->integration;
-                $rmmService = $this->rmmFactory->create($integration);
+                $rmmService = $this->rmmFactory->make($integration);
                 
                 $result = $this->updateRmmDevice($rmmService, $mapping, $asset);
                 $results[$integration->name] = $result;

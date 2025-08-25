@@ -3,8 +3,8 @@
 namespace App\Domains\Asset\Services;
 
 use App\Models\Asset;
-use App\Models\Contract;
-use App\Models\ContractSchedule;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractSchedule;
 use App\Models\Client;
 use App\Events\AssetCreated;
 use Illuminate\Support\Facades\DB;

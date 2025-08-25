@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -149,6 +150,24 @@ class User extends Authenticatable implements MustVerifyEmail
     public function managedProjects(): HasMany
     {
         return $this->hasMany(Project::class, 'manager_id');
+    }
+
+    /**
+     * Get project memberships for this user.
+     */
+    public function projectMembers(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Project\Models\ProjectMember::class, 'user_id');
+    }
+
+    /**
+     * Get projects where this user is a team member.
+     */
+    public function memberOfProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Domains\Project\Models\Project::class, 'project_members', 'user_id', 'project_id')
+                    ->withPivot(['role', 'hourly_rate', 'can_edit', 'can_manage_tasks', 'joined_at', 'is_active'])
+                    ->withTimestamps();
     }
 
     /**

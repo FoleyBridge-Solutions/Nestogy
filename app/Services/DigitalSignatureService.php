@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Contract;
-use App\Models\ContractSignature;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractSignature;
+use App\Domains\Contract\Services\ContractGenerationService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;

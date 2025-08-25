@@ -193,9 +193,9 @@ $breadcrumbs = [
                     
                     <!-- Source Content Tab -->
                     <div x-show="activeTab === 'source'">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Template Source</h3>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <pre class="text-sm font-mono whitespace-pre-wrap text-gray-800">{{ $template->template_content }}</pre>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Template Clauses</h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-blue-700">This template uses the modern clause-based system. Content is assembled from individual clauses that can be managed and reused across templates.</p>
                         </div>
                         
                         @if($template->getVariableFields())
@@ -566,19 +566,38 @@ function templateViewer(template) {
         },
         
         updatePreview() {
-            let content = this.template.template_content;
-            
-            // Replace variables with values
-            Object.keys(this.variableValues).forEach(key => {
-                const value = this.variableValues[key] || `{{${key}}}`;
-                const regex = new RegExp(`{{${key}}}`, 'g');
-                content = content.replace(regex, value);
+            // Use the API to get the clause-based preview
+            fetch(`/settings/templates/${this.template.id}/preview-with-clauses`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let content = data.preview;
+                    
+                    // Replace variables with values
+                    Object.keys(this.variableValues).forEach(key => {
+                        const value = this.variableValues[key] || `{{${key}}}`;
+                        const regex = new RegExp(`{{${key}}}`, 'g');
+                        content = content.replace(regex, value);
+                    });
+                    
+                    // Convert line breaks to HTML
+                    content = content.replace(/\n/g, '<br>');
+                    
+                    this.previewContent = content;
+                } else {
+                    this.previewContent = '<p class="text-red-500">Failed to load template preview</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading template preview:', error);
+                this.previewContent = '<p class="text-red-500">Error loading template preview</p>';
             });
-            
-            // Convert line breaks to HTML
-            content = content.replace(/\n/g, '<br>');
-            
-            this.previewContent = content;
         },
         
         calculateEstimate() {

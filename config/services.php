@@ -56,4 +56,8 @@ return [
         'timeout' => env('IPGEOLOCATION_TIMEOUT', 5),
     ],
 
+    'claude' => [
+        'oauth_token' => env('CLAUDE_CODE_OAUTH_TOKEN'),
+    ],
+
 ];

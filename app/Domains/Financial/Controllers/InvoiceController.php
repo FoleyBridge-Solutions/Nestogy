@@ -17,13 +17,13 @@ use App\Models\Ticket;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Requests\StorePaymentRequest;
-use App\Services\InvoiceService;
-use App\Services\PaymentService;
+use App\Domains\Financial\Services\InvoiceService;
+use App\Domains\Financial\Services\PaymentService;
 use App\Services\EmailService;
 use App\Services\PdfService;
 use App\Services\QuoteInvoiceConversionService;
-use App\Services\ContractGenerationService;
-use App\Models\Contract;
+use App\Domains\Contract\Services\ContractGenerationService;
+use App\Domains\Contract\Models\Contract;
 
 class InvoiceController extends Controller
 {
@@ -863,7 +863,7 @@ class InvoiceController extends Controller
 
         // Get available contract templates
         $user = Auth::user();
-        $contractTemplates = \App\Models\ContractTemplate::where('company_id', $user->company_id)
+        $contractTemplates = \App\Domains\Contract\Models\ContractTemplate::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
@@ -1067,7 +1067,7 @@ class InvoiceController extends Controller
         }
 
         try {
-            $milestone = \App\Models\ContractMilestone::find($invoice->contract_milestone_id);
+            $milestone = \App\Domains\Contract\Models\ContractMilestone::find($invoice->contract_milestone_id);
             if ($milestone && $milestone->status !== 'completed') {
                 $milestone->update([
                     'status' => 'completed',

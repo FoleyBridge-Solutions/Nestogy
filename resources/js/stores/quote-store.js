@@ -633,9 +633,20 @@ document.addEventListener('alpine:init', () => {
 
                 const payload = {
                     ...this.document,
-                    items: this.selectedItems,
-                    pricing: this.pricing,
-                    billing_config: this.billingConfig,
+                    items: this.selectedItems.map(item => ({
+                        id: item.id?.toString().startsWith('temp_') ? null : item.id,
+                        product_id: item.product_id,
+                        service_id: item.service_id,
+                        bundle_id: item.bundle_id,
+                        name: item.name,
+                        description: item.description,
+                        quantity: item.quantity,
+                        price: item.unit_price, // Backend expects 'price' not 'unit_price'
+                        discount: item.discount || 0,
+                        tax_rate: item.tax_rate || 0,
+                        order: item.order,
+                        category_id: item.category_id
+                    })),
                     ...options
                 };
 

@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Asset;
-use App\Models\Contract;
-use App\Models\ContractSchedule;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractSchedule;
 use App\Models\Client;
 use App\Domains\Asset\Services\AssetSupportService;
 

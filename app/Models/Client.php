@@ -38,6 +38,20 @@ class Client extends Model
         'type',
         'accessed_at',
         'sla_id',
+        // Custom rate fields
+        'custom_standard_rate',
+        'custom_after_hours_rate',
+        'custom_emergency_rate',
+        'custom_weekend_rate',
+        'custom_holiday_rate',
+        'custom_after_hours_multiplier',
+        'custom_emergency_multiplier',
+        'custom_weekend_multiplier',
+        'custom_holiday_multiplier',
+        'custom_rate_calculation_method',
+        'custom_minimum_billing_increment',
+        'custom_time_rounding_method',
+        'use_custom_rates',
         // Subscription fields
         'company_link_id',
         'stripe_customer_id',
@@ -60,6 +74,18 @@ class Client extends Model
         'lead' => 'boolean',
         'accessed_at' => 'datetime',
         'sla_id' => 'integer',
+        // Custom rate field casts
+        'custom_standard_rate' => 'decimal:2',
+        'custom_after_hours_rate' => 'decimal:2',
+        'custom_emergency_rate' => 'decimal:2',
+        'custom_weekend_rate' => 'decimal:2',
+        'custom_holiday_rate' => 'decimal:2',
+        'custom_after_hours_multiplier' => 'decimal:2',
+        'custom_emergency_multiplier' => 'decimal:2',
+        'custom_weekend_multiplier' => 'decimal:2',
+        'custom_holiday_multiplier' => 'decimal:2',
+        'custom_minimum_billing_increment' => 'decimal:2',
+        'use_custom_rates' => 'boolean',
         // Subscription field casts
         'company_link_id' => 'integer',
         'subscription_plan_id' => 'integer',
@@ -229,6 +255,16 @@ class Client extends Model
     }
 
     /**
+     * Get the client's active contract.
+     */
+    public function activeContract()
+    {
+        return $this->hasOne(Contract::class)
+                    ->where('status', Contract::STATUS_ACTIVE)
+                    ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get the client's recurring invoices.
      */
     public function recurringInvoices()
@@ -359,6 +395,88 @@ class Client extends Model
     public function sla()
     {
         return $this->belongsTo(\App\Domains\Ticket\Models\SLA::class, 'sla_id');
+    }
+
+    /**
+     * Get hourly rate for a specific rate type.
+     * Returns client-specific rate if available, otherwise falls back to company rates.
+     */
+    public function getHourlyRate(string $rateType): float
+    {
+        // Use custom rates if client has them configured
+        if ($this->use_custom_rates) {
+            if ($this->custom_rate_calculation_method === 'fixed_rates') {
+                return $this->getCustomFixedRate($rateType);
+            }
+            
+            // Use custom multiplier method
+            $baseRate = $this->custom_standard_rate ?? $this->hourly_rate ?? $this->company->getHourlyRate('standard');
+            $multiplier = $this->getCustomMultiplier($rateType);
+            
+            return round($baseRate * $multiplier, 2);
+        }
+        
+        // Fall back to company rates
+        return $this->company->getHourlyRate($rateType);
+    }
+    
+    /**
+     * Get custom fixed rate for rate type.
+     */
+    protected function getCustomFixedRate(string $rateType): float
+    {
+        $rates = [
+            'standard' => $this->custom_standard_rate ?? $this->hourly_rate,
+            'after_hours' => $this->custom_after_hours_rate,
+            'emergency' => $this->custom_emergency_rate,
+            'weekend' => $this->custom_weekend_rate,
+            'holiday' => $this->custom_holiday_rate,
+        ];
+        
+        // Return custom rate if set, otherwise fall back to company rate
+        return $rates[$rateType] ?? $this->company->getHourlyRate($rateType);
+    }
+    
+    /**
+     * Get custom multiplier for rate type.
+     */
+    protected function getCustomMultiplier(string $rateType): float
+    {
+        $multipliers = [
+            'standard' => 1.0,
+            'after_hours' => $this->custom_after_hours_multiplier,
+            'emergency' => $this->custom_emergency_multiplier,
+            'weekend' => $this->custom_weekend_multiplier,
+            'holiday' => $this->custom_holiday_multiplier,
+        ];
+        
+        // Return custom multiplier if set, otherwise fall back to company multiplier
+        return $multipliers[$rateType] ?? $this->company->getMultiplier($rateType);
+    }
+    
+    /**
+     * Round time according to client settings or company defaults.
+     */
+    public function roundTime(float $hours): float
+    {
+        if ($this->use_custom_rates && $this->custom_minimum_billing_increment) {
+            $increment = $this->custom_minimum_billing_increment;
+            $method = $this->custom_time_rounding_method ?? 'nearest';
+            
+            switch ($method) {
+                case 'up':
+                    return ceil($hours / $increment) * $increment;
+                case 'down':
+                    return floor($hours / $increment) * $increment;
+                case 'nearest':
+                    return round($hours / $increment) * $increment;
+                default:
+                    return $hours;
+            }
+        }
+        
+        // Fall back to company settings
+        return $this->company->roundTime($hours);
     }
 
     /**

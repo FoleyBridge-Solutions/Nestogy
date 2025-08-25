@@ -1675,4 +1675,665 @@ class SettingsController extends Controller
     {
         return view('settings.partials.tabs.payments', compact('company', 'settings'))->render();
     }
+    
+    /**
+     * Display contract clauses management page
+     */
+    public function contractClauses(Request $request)
+    {
+        $company = Auth::user()->company;
+        
+        $query = \App\Domains\Contract\Models\ContractClause::where('company_id', $company->id)
+            ->with(['creator', 'updater']);
+        
+        // Apply filters
+        if ($request->has('category') && $request->category != 'all') {
+            $query->where('category', $request->category);
+        }
+        
+        if ($request->has('status') && $request->status != 'all') {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->has('clause_type') && $request->clause_type != 'all') {
+            $query->where('clause_type', $request->clause_type);
+        }
+        
+        if ($request->has('is_system')) {
+            $query->where('is_system', $request->boolean('is_system'));
+        }
+        
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%")
+                  ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+        
+        $clauses = $query->orderBy('category')
+                        ->orderBy('sort_order')
+                        ->orderBy('name')
+                        ->paginate(20);
+        
+        $categories = \App\Domains\Contract\Models\ContractClause::getAvailableCategories();
+        $clauseTypes = \App\Domains\Contract\Models\ContractClause::getAvailableTypes();
+        
+        // Get available definitions for UI
+        $definitionRegistryService = app(\App\Services\DefinitionRegistryService::class);
+        $availableDefinitions = $definitionRegistryService->getDefinitionsByCategory();
+        
+        // Get statistics
+        $stats = [
+            'total' => \App\Domains\Contract\Models\ContractClause::where('company_id', $company->id)->count(),
+            'active' => \App\Domains\Contract\Models\ContractClause::where('company_id', $company->id)->where('status', 'active')->count(),
+            'system' => \App\Domains\Contract\Models\ContractClause::where('company_id', $company->id)->where('is_system', true)->count(),
+            'user_created' => \App\Domains\Contract\Models\ContractClause::where('company_id', $company->id)->where('is_system', false)->count(),
+        ];
+        
+        return view('settings.contract-clauses', compact('clauses', 'categories', 'clauseTypes', 'stats', 'company', 'availableDefinitions'));
+    }
+    
+    /**
+     * Store a new contract clause
+     */
+    public function storeContractClause(Request $request)
+    {
+        $company = Auth::user()->company;
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|in:' . implode(',', array_keys(\App\Domains\Contract\Models\ContractClause::getAvailableCategories())),
+            'clause_type' => 'required|string|in:' . implode(',', array_keys(\App\Domains\Contract\Models\ContractClause::getAvailableTypes())),
+            'content' => 'required|string',
+            'description' => 'nullable|string|max:1000',
+            'sort_order' => 'nullable|integer|min:0|max:999',
+            'status' => 'required|string|in:active,inactive,archived',
+            'is_required' => 'boolean',
+            'applicable_contract_types' => 'nullable|array',
+            'variables' => 'nullable|array',
+            'conditions' => 'nullable|array',
+            'metadata' => 'nullable|array',
+            'required_definitions' => 'nullable|array',
+            'required_definitions.*' => 'string',
+        ]);
+        
+        // Handle required definitions in metadata
+        if (isset($validated['required_definitions'])) {
+            $metadata = $validated['metadata'] ?? [];
+            $metadata['required_definitions'] = array_values(array_filter($validated['required_definitions']));
+            $validated['metadata'] = $metadata;
+            unset($validated['required_definitions']); // Remove from top level since it's in metadata
+        }
+        
+        $validated['company_id'] = $company->id;
+        $validated['created_by'] = Auth::id();
+        $validated['version'] = '1.0';
+        $validated['is_system'] = false; // User-created clauses are never system clauses
+        
+        $clause = \App\Domains\Contract\Models\ContractClause::create($validated);
+        
+        return redirect()->route('settings.contract-clauses')
+            ->with('success', "Contract clause '{$clause->name}' created successfully.");
+    }
+    
+    /**
+     * Update an existing contract clause
+     */
+    public function updateContractClause(Request $request, \App\Domains\Contract\Models\ContractClause $clause)
+    {
+        // Check if user can edit this clause
+        if ($clause->is_system && !Auth::user()->hasRole('super-admin')) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', 'System clauses cannot be modified.');
+        }
+        
+        // Ensure clause belongs to user's company
+        if ($clause->company_id !== Auth::user()->company_id) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', 'Clause not found.');
+        }
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|in:' . implode(',', array_keys(\App\Domains\Contract\Models\ContractClause::getAvailableCategories())),
+            'clause_type' => 'required|string|in:' . implode(',', array_keys(\App\Domains\Contract\Models\ContractClause::getAvailableTypes())),
+            'content' => 'required|string',
+            'description' => 'nullable|string|max:1000',
+            'sort_order' => 'nullable|integer|min:0|max:999',
+            'status' => 'required|string|in:active,inactive,archived',
+            'is_required' => 'boolean',
+            'applicable_contract_types' => 'nullable|array',
+            'variables' => 'nullable|array',
+            'conditions' => 'nullable|array',
+            'metadata' => 'nullable|array',
+        ]);
+        
+        $validated['updated_by'] = Auth::id();
+        
+        $clause->update($validated);
+        
+        return redirect()->route('settings.contract-clauses')
+            ->with('success', "Contract clause '{$clause->name}' updated successfully.");
+    }
+    
+    /**
+     * Delete a contract clause
+     */
+    public function destroyContractClause(\App\Domains\Contract\Models\ContractClause $clause)
+    {
+        // Check if user can delete this clause
+        if ($clause->is_system && !Auth::user()->hasRole('super-admin')) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', 'System clauses cannot be deleted.');
+        }
+        
+        // Ensure clause belongs to user's company
+        if ($clause->company_id !== Auth::user()->company_id) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', 'Clause not found.');
+        }
+        
+        $clauseName = $clause->name;
+        
+        // Check if clause is used in any templates
+        $templatesCount = $clause->templates()->count();
+        if ($templatesCount > 0) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', "Cannot delete clause '{$clauseName}' as it's used in {$templatesCount} contract template(s).");
+        }
+        
+        $clause->delete();
+        
+        return redirect()->route('settings.contract-clauses')
+            ->with('success', "Contract clause '{$clauseName}' deleted successfully.");
+    }
+    
+    /**
+     * Duplicate a contract clause
+     */
+    public function duplicateContractClause(\App\Domains\Contract\Models\ContractClause $clause)
+    {
+        // Ensure clause belongs to user's company
+        if ($clause->company_id !== Auth::user()->company_id) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', 'Clause not found.');
+        }
+        
+        $duplicated = $clause->replicate();
+        $duplicated->name = $clause->name . ' (Copy)';
+        $duplicated->slug = null; // Will be auto-generated
+        $duplicated->is_system = false; // Duplicated clauses are never system clauses
+        $duplicated->created_by = Auth::id();
+        $duplicated->updated_by = null;
+        $duplicated->version = '1.0';
+        $duplicated->save();
+        
+        return redirect()->route('settings.contract-clauses')
+            ->with('success', "Contract clause duplicated as '{$duplicated->name}'.");
+    }
+    
+    /**
+     * Handle bulk actions on contract clauses
+     */
+    public function bulkActionContractClauses(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|string|in:activate,deactivate,archive,delete',
+            'clause_ids' => 'required|array|min:1',
+            'clause_ids.*' => 'integer|exists:contract_clauses,id',
+        ]);
+        
+        $company = Auth::user()->company;
+        $clauses = \App\Domains\Contract\Models\ContractClause::where('company_id', $company->id)
+            ->whereIn('id', $validated['clause_ids']);
+        
+        // Filter out system clauses if not super admin
+        if (!Auth::user()->hasRole('super-admin')) {
+            $clauses = $clauses->where('is_system', false);
+        }
+        
+        $clausesList = $clauses->get();
+        $count = $clausesList->count();
+        
+        if ($count === 0) {
+            return redirect()->route('settings.contract-clauses')
+                ->with('error', 'No clauses were updated. System clauses cannot be modified.');
+        }
+        
+        switch ($validated['action']) {
+            case 'activate':
+                $clauses->update(['status' => 'active']);
+                $message = "{$count} clause(s) activated successfully.";
+                break;
+            case 'deactivate':
+                $clauses->update(['status' => 'inactive']);
+                $message = "{$count} clause(s) deactivated successfully.";
+                break;
+            case 'archive':
+                $clauses->update(['status' => 'archived']);
+                $message = "{$count} clause(s) archived successfully.";
+                break;
+            case 'delete':
+                // Check for template dependencies
+                $inUse = $clausesList->filter(function($clause) {
+                    return $clause->templates()->count() > 0;
+                })->count();
+                
+                if ($inUse > 0) {
+                    return redirect()->route('settings.contract-clauses')
+                        ->with('error', "{$inUse} clause(s) could not be deleted as they are used in contract templates.");
+                }
+                
+                $clauses->delete();
+                $message = "{$count} clause(s) deleted successfully.";
+                break;
+        }
+        
+        return redirect()->route('settings.contract-clauses')->with('success', $message);
+    }
+    
+    /**
+     * Update contract clause content via AJAX
+     */
+    public function updateContractClauseContent(Request $request, \App\Domains\Contract\Models\ContractClause $clause)
+    {
+        // Check if user can edit this clause
+        if ($clause->is_system && !Auth::user()->hasRole('super-admin')) {
+            return response()->json(['error' => 'System clauses cannot be modified.'], 403);
+        }
+        
+        // Ensure clause belongs to user's company
+        if ($clause->company_id !== Auth::user()->company_id) {
+            return response()->json(['error' => 'Clause not found.'], 404);
+        }
+        
+        $validated = $request->validate([
+            'content' => 'required|string|min:1|max:50000',
+        ]);
+        
+        $clause->update([
+            'content' => $validated['content'],
+            'updated_by' => Auth::id(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Clause content updated successfully.',
+            'clause' => [
+                'id' => $clause->id,
+                'content' => $clause->content,
+                'updated_at' => $clause->updated_at->diffForHumans(),
+                'updater' => $clause->updater ? $clause->updater->name : null,
+            ]
+        ]);
+    }
+
+    /**
+     * Display contract templates for clause management.
+     */
+    public function contractTemplates(Request $request)
+    {
+        $company = Auth::user()->company;
+        
+        // Get templates with clause counts
+        $templates = \App\Domains\Contract\Models\ContractTemplate::where('company_id', $company->id)
+            ->withCount('clauses')
+            ->orderBy('name')
+            ->paginate(20);
+
+        return view('settings.contract-templates', compact('templates'));
+    }
+
+    /**
+     * Display template clause management.
+     */
+    public function templateClauses(Request $request, \App\Domains\Contract\Models\ContractTemplate $template)
+    {
+        $company = Auth::user()->company;
+        
+        // Security check: ensure template belongs to user's company
+        if ($template->company_id !== $company->id) {
+            abort(404);
+        }
+
+        // Get template clauses with pivot data
+        $templateClauses = $template->clauses()
+            ->withPivot(['sort_order', 'is_required', 'conditions', 'variable_overrides', 'metadata'])
+            ->orderByPivot('sort_order')
+            ->get();
+
+        // Get available clauses not yet attached to this template
+        $availableClauses = \App\Domains\Contract\Models\ContractClause::where('contract_clauses.company_id', $company->id)
+            ->whereNotIn('contract_clauses.id', $templateClauses->pluck('contract_clauses.id'))
+            ->orderBy('contract_clauses.category')
+            ->orderBy('contract_clauses.name')
+            ->get();
+
+        // Get clause categories for filtering
+        $categories = \App\Domains\Contract\Models\ContractClause::getAvailableCategories();
+
+        return view('settings.template-clauses', compact(
+            'template',
+            'templateClauses', 
+            'availableClauses',
+            'categories'
+        ));
+    }
+
+    /**
+     * Attach clauses to template.
+     */
+    public function attachTemplateClauses(Request $request, \App\Domains\Contract\Models\ContractTemplate $template)
+    {
+        $company = Auth::user()->company;
+        
+        if ($template->company_id !== $company->id) {
+            return response()->json(['error' => 'Template not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'clause_ids' => 'required|array|min:1',
+            'clause_ids.*' => 'required|integer|exists:contract_clauses,id',
+            'is_required' => 'nullable|array',
+            'is_required.*' => 'boolean',
+        ]);
+
+        $attachData = [];
+        $maxSortOrder = $template->clauses()->max('sort_order') ?? 0;
+
+        foreach ($validated['clause_ids'] as $index => $clauseId) {
+            // Verify clause belongs to company
+            $clause = \App\Domains\Contract\Models\ContractClause::where('id', $clauseId)
+                ->where('company_id', $company->id)
+                ->first();
+            
+            if (!$clause) {
+                continue;
+            }
+
+            $attachData[$clauseId] = [
+                'sort_order' => $maxSortOrder + $index + 1,
+                'is_required' => $validated['is_required'][$clauseId] ?? false,
+                'conditions' => null,
+                'variable_overrides' => null,
+                'metadata' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        $template->clauses()->attach($attachData);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => count($attachData) . ' clause(s) added to template.',
+            ]);
+        }
+
+        return redirect()->route('settings.template-clauses', $template)
+            ->with('success', count($attachData) . ' clause(s) added to template.');
+    }
+
+    /**
+     * Detach clause from template.
+     */
+    public function detachTemplateClause(\App\Domains\Contract\Models\ContractTemplate $template, \App\Domains\Contract\Models\ContractClause $clause)
+    {
+        $company = Auth::user()->company;
+        
+        if ($template->company_id !== $company->id || $clause->company_id !== $company->id) {
+            return response()->json(['error' => 'Not found.'], 404);
+        }
+
+        $template->clauses()->detach($clause->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clause removed from template.',
+        ]);
+    }
+
+    /**
+     * Reorder template clauses.
+     */
+    public function reorderTemplateClauses(Request $request, \App\Domains\Contract\Models\ContractTemplate $template)
+    {
+        $company = Auth::user()->company;
+        
+        if ($template->company_id !== $company->id) {
+            return response()->json(['error' => 'Template not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'clause_ids' => 'required|array|min:1',
+            'clause_ids.*' => 'required|integer',
+        ]);
+
+        foreach ($validated['clause_ids'] as $index => $clauseId) {
+            $template->clauses()->updateExistingPivot($clauseId, [
+                'sort_order' => $index + 1,
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clause order updated.',
+        ]);
+    }
+
+    /**
+     * Update template clause settings.
+     */
+    public function updateTemplateClause(Request $request, \App\Domains\Contract\Models\ContractTemplate $template, \App\Domains\Contract\Models\ContractClause $clause)
+    {
+        $company = Auth::user()->company;
+        
+        if ($template->company_id !== $company->id || $clause->company_id !== $company->id) {
+            return response()->json(['error' => 'Not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'is_required' => 'required|boolean',
+            'conditions' => 'nullable|string|max:1000',
+            'variable_overrides' => 'nullable|json',
+        ]);
+
+        $updateData = [
+            'is_required' => $validated['is_required'],
+            'conditions' => $validated['conditions'],
+            'updated_at' => now(),
+        ];
+
+        if (isset($validated['variable_overrides'])) {
+            $updateData['variable_overrides'] = json_decode($validated['variable_overrides'], true);
+        }
+
+        $template->clauses()->updateExistingPivot($clause->id, $updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clause settings updated.',
+        ]);
+    }
+
+    /**
+     * Bulk attach clauses to template.
+     */
+    public function bulkAttachTemplateClauses(Request $request, \App\Domains\Contract\Models\ContractTemplate $template)
+    {
+        $company = Auth::user()->company;
+        
+        if ($template->company_id !== $company->id) {
+            return response()->json(['error' => 'Template not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'clause_ids' => 'required|array|min:1',
+            'clause_ids.*' => 'required|integer|exists:contract_clauses,id',
+            'bulk_settings' => 'nullable|array',
+            'bulk_settings.is_required' => 'nullable|boolean',
+        ]);
+
+        // Validate definition dependencies before attaching
+        $clausesToAttach = \App\Domains\Contract\Models\ContractClause::whereIn('id', $validated['clause_ids'])
+            ->where('company_id', $company->id)
+            ->get();
+        
+        if ($clausesToAttach->count() !== count($validated['clause_ids'])) {
+            return response()->json(['error' => 'Some clauses could not be found.'], 400);
+        }
+        
+        // Check for missing definitions
+        $definitionRegistry = app(\App\Services\DefinitionRegistryService::class);
+        $allRequiredDefinitions = [];
+        $definitionWarnings = [];
+        
+        foreach ($clausesToAttach as $clause) {
+            $clauseDefinitions = $clause->getRequiredDefinitions();
+            $allRequiredDefinitions = array_merge($allRequiredDefinitions, $clauseDefinitions);
+            
+            // Check if any required definitions are missing from registry
+            $missing = $definitionRegistry->validateDefinitions($clauseDefinitions);
+            if (!empty($missing)) {
+                $definitionWarnings[] = "Clause '{$clause->name}' requires undefined definitions: " . implode(', ', $missing);
+            }
+        }
+
+        $attachData = [];
+        $maxSortOrder = $template->clauses()->max('sort_order') ?? 0;
+        $bulkIsRequired = $validated['bulk_settings']['is_required'] ?? false;
+
+        foreach ($validated['clause_ids'] as $index => $clauseId) {
+            // Verify clause belongs to company
+            $clause = \App\Domains\Contract\Models\ContractClause::where('id', $clauseId)
+                ->where('company_id', $company->id)
+                ->first();
+            
+            if (!$clause) {
+                continue;
+            }
+
+            $attachData[$clauseId] = [
+                'sort_order' => $maxSortOrder + $index + 1,
+                'is_required' => $bulkIsRequired,
+                'conditions' => null,
+                'variable_overrides' => null,
+                'metadata' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        $template->clauses()->attach($attachData);
+        
+        // Prepare response with warnings if any
+        $response = [
+            'success' => true,
+            'message' => count($attachData) . ' clause(s) added to template.',
+            'definition_count' => count(array_unique($allRequiredDefinitions)),
+            'required_definitions' => array_unique($allRequiredDefinitions),
+        ];
+        
+        if (!empty($definitionWarnings)) {
+            $response['warnings'] = $definitionWarnings;
+        }
+
+        return response()->json($response);
+    }
+
+    /**
+     * Generate template preview with clauses.
+     */
+    public function previewTemplateWithClauses(Request $request, \App\Domains\Contract\Models\ContractTemplate $template)
+    {
+        $company = Auth::user()->company;
+        
+        if ($template->company_id !== $company->id) {
+            return response()->json(['error' => 'Template not found.'], 404);
+        }
+
+        // Get template clauses in order
+        $clauses = $template->clauses()
+            ->withPivot(['sort_order', 'is_required', 'conditions'])
+            ->orderByPivot('sort_order')
+            ->get();
+
+        // Get definition registry service
+        $definitionRegistry = app(\App\Services\DefinitionRegistryService::class);
+        
+        // Analyze required definitions from all clauses
+        $requiredDefinitions = [];
+        foreach ($clauses as $clause) {
+            $clauseDefinitions = $clause->getRequiredDefinitions();
+            $requiredDefinitions = array_merge($requiredDefinitions, $clauseDefinitions);
+        }
+        $requiredDefinitions = array_unique($requiredDefinitions);
+
+        // Generate template header with sample variables
+        $sampleVariables = [
+            'service_provider_short_name' => 'MSP Company',
+            'business_hours' => '8:00 AM to 6:00 PM, Monday through Friday',
+            'service_tier' => 'Professional',
+            'supported_asset_types' => 'servers, workstations, network equipment, and software applications',
+            'client_name' => 'Client Company LLC',
+            'service_provider_name' => 'MSP Technology Services Inc.',
+            'contract_title' => $template->name,
+            'current_date' => now()->format('F j, Y'),
+        ];
+        
+        // Build preview content with proper clause ordering
+        $previewContent = $template->template_content;
+        
+        // Separate clauses by category to determine proper ordering
+        $headerClauses = [];
+        $definitionsClause = '';
+        $otherClauses = [];
+        
+        foreach ($clauses as $clause) {
+            $required = $clause->pivot->is_required ? ' (Required)' : '';
+            $clauseSection = "\n\n" . $clause->name . $required . "\n";
+            $clauseSection .= str_repeat('-', strlen($clause->name . $required)) . "\n";
+            $clauseSection .= $clause->content . "\n";
+            
+            if ($clause->category === 'header') {
+                $headerClauses[] = $clauseSection;
+            } elseif ($clause->category === 'definitions') {
+                // Skip existing definitions clauses - we'll generate dynamically
+                continue;
+            } else {
+                $otherClauses[] = $clauseSection;
+            }
+        }
+        
+        // Generate dynamic definitions section
+        $dynamicDefinitionsSection = '';
+        if (!empty($requiredDefinitions)) {
+            $definitionsContent = $definitionRegistry->generateDefinitionsSection($requiredDefinitions, $sampleVariables);
+            $dynamicDefinitionsSection = "\n\nDEFINITIONS (Dynamic)\n" . str_repeat('-', 21) . "\n" . $definitionsContent . "\n";
+        }
+        
+        // Combine clauses in proper order: Header → Definitions → Everything else
+        $allClauseContent = implode('', $headerClauses) . $dynamicDefinitionsSection . implode('', $otherClauses);
+        
+        // If template has clause placeholder, replace it; otherwise append
+        if (strpos($previewContent, '{{clauses}}') !== false) {
+            $previewContent = str_replace('{{clauses}}', $allClauseContent, $previewContent);
+        } else {
+            $previewContent .= "\n\n" . "CONTRACT CLAUSES" . "\n" . str_repeat('=', 16) . "\n" . $allClauseContent;
+        }
+
+        return response()->json([
+            'success' => true,
+            'preview' => $previewContent,
+            'clause_count' => $clauses->count(),
+            'required_clauses' => $clauses->where('pivot.is_required', true)->count(),
+            'definition_count' => count($requiredDefinitions),
+            'required_definitions' => $requiredDefinitions,
+        ]);
+    }
 }

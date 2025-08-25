@@ -441,7 +441,7 @@ class NavigationController extends Controller
             
             // Search contracts
             if ($domain === 'all' || $domain === 'financial') {
-                $contracts = \App\Models\Contract::where('company_id', auth()->user()->company_id)
+                $contracts = \App\Domains\Contract\Models\Contract::where('company_id', auth()->user()->company_id)
                     ->where(function($q) use ($query) {
                         $q->where('contract_number', 'like', "%{$query}%")
                           ->orWhere('title', 'like', "%{$query}%")

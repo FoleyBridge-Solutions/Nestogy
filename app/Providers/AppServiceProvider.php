@@ -9,6 +9,7 @@ use App\Services\VoIPTaxService;
 use App\Services\VoIPUsageService;
 use App\Services\VoIPTieredPricingService;
 use App\Services\ClaudePTYService;
+use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Http\ViewComposers\NavigationComposer;
 use App\Http\ViewComposers\ClientViewComposer;
 use Illuminate\Support\Facades\Log;
@@ -73,6 +74,9 @@ class AppServiceProvider extends ServiceProvider
             }
             return $service;
         });
+
+        // Contract Configuration Registry is now created with company context when needed
+        // No singleton registration as it requires company-specific initialization
     }
 
     /**

@@ -120,10 +120,10 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::patch('{client}/notes', [App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('notes.update');
         
         // Client Relationships
-        Route::get('{client}/contacts', [App\Http\Controllers\ContactController::class, 'index'])->name('contacts.index');
-        Route::post('{client}/contacts', [App\Http\Controllers\ContactController::class, 'store'])->name('contacts.store');
-        Route::put('{client}/contacts/{contact}', [App\Http\Controllers\ContactController::class, 'update'])->name('contacts.update');
-        Route::delete('{client}/contacts/{contact}', [App\Http\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
+        Route::get('{client}/contacts', [App\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');
+        Route::post('{client}/contacts', [App\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
+        Route::put('{client}/contacts/{contact}', [App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
+        Route::delete('{client}/contacts/{contact}', [App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
         
         Route::get('{client}/locations', [App\Domains\Client\Controllers\LocationController::class, 'index'])->name('locations.index');
         Route::post('{client}/locations', [App\Domains\Client\Controllers\LocationController::class, 'store'])->name('locations.store');
@@ -132,7 +132,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         
         Route::get('{client}/tickets', [App\Domains\Ticket\Controllers\TicketController::class, 'index'])->name('tickets.index');
         Route::get('{client}/invoices', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
-        Route::get('{client}/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
+        Route::get('{client}/assets', [App\Domains\Asset\Controllers\AssetController::class, 'index'])->name('assets.index');
         
         // Quick Access
         Route::get('active', [App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('active');
@@ -194,24 +194,24 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     // Asset Management API
     Route::prefix('assets')->name('api.assets.')->group(function () {
         // Standard CRUD
-        Route::get('/', [App\Http\Controllers\AssetController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\AssetController::class, 'store'])->name('store');
-        Route::get('{asset}', [App\Http\Controllers\AssetController::class, 'show'])->name('show');
-        Route::put('{asset}', [App\Http\Controllers\AssetController::class, 'update'])->name('update');
-        Route::delete('{asset}', [App\Http\Controllers\AssetController::class, 'destroy'])->name('destroy');
+        Route::get('/', [App\Domains\Asset\Controllers\AssetController::class, 'index'])->name('index');
+        Route::post('/', [App\Domains\Asset\Controllers\AssetController::class, 'store'])->name('store');
+        Route::get('{asset}', [App\Domains\Asset\Controllers\AssetController::class, 'show'])->name('show');
+        Route::put('{asset}', [App\Domains\Asset\Controllers\AssetController::class, 'update'])->name('update');
+        Route::delete('{asset}', [App\Domains\Asset\Controllers\AssetController::class, 'destroy'])->name('destroy');
         
         // Asset Actions
-        Route::patch('{asset}/archive', [App\Http\Controllers\AssetController::class, 'archive'])->name('archive');
-        Route::patch('{asset}/notes', [App\Http\Controllers\AssetController::class, 'updateNotes'])->name('notes.update');
+        Route::patch('{asset}/archive', [App\Domains\Asset\Controllers\AssetController::class, 'archive'])->name('archive');
+        Route::patch('{asset}/notes', [App\Domains\Asset\Controllers\AssetController::class, 'updateNotes'])->name('notes.update');
         
         // Bulk Operations
-        Route::patch('bulk/location', [App\Http\Controllers\AssetController::class, 'bulkAssignLocation'])->name('bulk.location');
-        Route::patch('bulk/contact', [App\Http\Controllers\AssetController::class, 'bulkAssignContact'])->name('bulk.contact');
-        Route::patch('bulk/status', [App\Http\Controllers\AssetController::class, 'bulkUpdateStatus'])->name('bulk.status');
+        Route::patch('bulk/location', [App\Domains\Asset\Controllers\AssetController::class, 'bulkAssignLocation'])->name('bulk.location');
+        Route::patch('bulk/contact', [App\Domains\Asset\Controllers\AssetController::class, 'bulkAssignContact'])->name('bulk.contact');
+        Route::patch('bulk/status', [App\Domains\Asset\Controllers\AssetController::class, 'bulkUpdateStatus'])->name('bulk.status');
         
         // Asset Data
-        Route::get('types', [App\Http\Controllers\AssetController::class, 'getAssetTypes'])->name('types');
-        Route::get('warranties/expiring', [App\Http\Controllers\AssetController::class, 'getExpiringWarranties'])->name('warranties.expiring');
+        Route::get('types', [App\Domains\Asset\Controllers\AssetController::class, 'getAssetTypes'])->name('types');
+        Route::get('warranties/expiring', [App\Domains\Asset\Controllers\AssetController::class, 'getExpiringWarranties'])->name('warranties.expiring');
         Route::get('search', [App\Http\Controllers\SearchController::class, 'assets'])->name('search');
     });
 

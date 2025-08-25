@@ -10,7 +10,7 @@ use App\Models\InvoiceItem;
 use App\Models\Client;
 use App\Models\Payment;
 use App\Models\User;
-use App\Services\VoipTaxService;
+use App\Services\VoIPTaxReversalService;
 use App\Services\RefundManagementService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -34,11 +34,11 @@ use Exception;
  */
 class CreditNoteProcessingService
 {
-    protected ?VoipTaxService $voipTaxService;
+    protected ?VoIPTaxReversalService $voipTaxService;
     protected RefundManagementService $refundService;
 
     public function __construct(
-        ?VoipTaxService $voipTaxService = null,
+        ?VoIPTaxReversalService $voipTaxService = null,
         RefundManagementService $refundService
     ) {
         $this->voipTaxService = $voipTaxService;

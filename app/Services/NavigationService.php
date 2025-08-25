@@ -1507,9 +1507,9 @@ class NavigationService
             return [
                 'invoices' => \App\Models\Invoice::where('company_id', $companyId)->count(),
                 'quotes' => \App\Models\Quote::where('company_id', $companyId)->count(),
-                'contracts' => \App\Models\Contract::where('company_id', $companyId)->count(),
-                'active-contracts' => \App\Models\Contract::where('company_id', $companyId)->where('status', 'active')->count(),
-                'expiring-contracts' => \App\Models\Contract::where('company_id', $companyId)->expiringSoon(30)->count(),
+                'contracts' => \App\Domains\Contract\Models\Contract::where('company_id', $companyId)->count(),
+                'active-contracts' => \App\Domains\Contract\Models\Contract::where('company_id', $companyId)->where('status', 'active')->count(),
+                'expiring-contracts' => \App\Domains\Contract\Models\Contract::where('company_id', $companyId)->expiringSoon(30)->count(),
                 'payments' => \App\Models\Payment::where('company_id', $companyId)->count(),
                 'expenses' => \App\Models\Expense::where('company_id', $companyId)->count(),
                 'pending-payments' => \App\Models\Payment::where('company_id', $companyId)->where('status', 'pending')->count(),
@@ -1829,7 +1829,7 @@ class NavigationService
                     ->where('client_id', $clientId)->count(),
                 'quotes' => \App\Models\Quote::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
-                'contracts' => \App\Models\Contract::where('company_id', $companyId)
+                'contracts' => \App\Domains\Contract\Models\Contract::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),
                 'invoices' => \App\Models\Invoice::where('company_id', $companyId)
                     ->where('client_id', $clientId)->count(),

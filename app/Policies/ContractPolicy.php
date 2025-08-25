@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Contract;
+use App\Domains\Contract\Models\Contract;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 

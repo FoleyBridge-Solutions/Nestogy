@@ -398,6 +398,22 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.loadSavedProgress();
             this.setupAutoSave();
+            this.setupFormWatchers();
+            // Generate initial variables
+            this.generateVariableValues();
+        },
+        
+        // Setup real-time form watchers
+        setupFormWatchers() {
+            // Watch for changes in key form fields and regenerate variables
+            this.$watch('form', () => this.generateVariableValues(), { deep: true });
+            this.$watch('infrastructureSchedule', () => this.generateVariableValues(), { deep: true });
+            this.$watch('pricingSchedule', () => this.generateVariableValues(), { deep: true });
+            this.$watch('additionalTerms', () => this.generateVariableValues(), { deep: true });
+            this.$watch('billingConfig', () => this.generateVariableValues(), { deep: true });
+            this.$watch('telecomSchedule', () => this.generateVariableValues(), { deep: true });
+            this.$watch('hardwareSchedule', () => this.generateVariableValues(), { deep: true });
+            this.$watch('complianceSchedule', () => this.generateVariableValues(), { deep: true });
         },
 
         // Computed Properties
@@ -466,6 +482,325 @@ document.addEventListener('alpine:init', () => {
             this.infrastructureSchedule.sla.resolutionTimeHours = tier.resolutionTime;
             this.infrastructureSchedule.sla.uptimePercentage = tier.uptime;
             this.infrastructureSchedule.coverageRules.businessHours = tier.coverage;
+            
+            // Auto-update variables when SLA changes
+            this.generateVariableValues();
+        },
+        
+        // Generate complete variable values from all form data
+        generateVariableValues() {
+            const variables = {};
+            
+            // Core Form Fields
+            if (this.form.title) variables.contract_title = this.form.title;
+            if (this.form.contract_type) variables.contract_type = this.form.contract_type;
+            if (this.form.description) variables.contract_description = this.form.description;
+            if (this.form.currency_code) variables.currency_code = this.form.currency_code;
+            if (this.form.payment_terms) variables.payment_terms = this.form.payment_terms;
+            
+            // Infrastructure Schedule Variables
+            if (this.infrastructureSchedule.sla.serviceTier) {
+                variables.service_tier = this.infrastructureSchedule.sla.serviceTier;
+            }
+            if (this.infrastructureSchedule.sla.responseTimeHours) {
+                variables.response_time_hours = this.infrastructureSchedule.sla.responseTimeHours.toString();
+            }
+            if (this.infrastructureSchedule.sla.resolutionTimeHours) {
+                variables.resolution_time_hours = this.infrastructureSchedule.sla.resolutionTimeHours.toString();
+            }
+            if (this.infrastructureSchedule.sla.uptimePercentage) {
+                variables.uptime_percentage = this.infrastructureSchedule.sla.uptimePercentage.toString();
+            }
+            
+            // Coverage Rules
+            if (this.infrastructureSchedule.coverageRules.businessHours) {
+                variables.business_hours = this.formatBusinessHours(this.infrastructureSchedule.coverageRules.businessHours);
+            }
+            variables.emergency_support_included = this.infrastructureSchedule.coverageRules.emergencySupport === 'included';
+            variables.includes_remote_support = this.infrastructureSchedule.coverageRules.includeRemoteSupport;
+            variables.includes_onsite_support = this.infrastructureSchedule.coverageRules.includeOnsiteSupport;
+            variables.auto_assign_new_assets = this.infrastructureSchedule.coverageRules.autoAssignNewAssets;
+            
+            // Asset Types
+            if (this.infrastructureSchedule.supportedAssetTypes.length > 0) {
+                variables.supported_asset_types = this.infrastructureSchedule.supportedAssetTypes.join(', ');
+                
+                // Individual asset type flags
+                this.infrastructureSchedule.supportedAssetTypes.forEach(assetType => {
+                    variables[`has_${assetType}_support`] = true;
+                });
+            }
+            
+            // Exclusions
+            if (this.infrastructureSchedule.exclusions.assetTypes) {
+                variables.excluded_asset_types = this.infrastructureSchedule.exclusions.assetTypes;
+            }
+            if (this.infrastructureSchedule.exclusions.services) {
+                variables.excluded_services = this.infrastructureSchedule.exclusions.services;
+            }
+            
+            // Pricing Schedule Variables
+            if (this.pricingSchedule.billingModel) {
+                variables.billing_model = this.pricingSchedule.billingModel;
+            }
+            
+            // Base Pricing
+            if (this.pricingSchedule.basePricing.monthlyBase) {
+                variables.monthly_base_rate = this.formatCurrency(this.pricingSchedule.basePricing.monthlyBase);
+            }
+            if (this.pricingSchedule.basePricing.setupFee) {
+                variables.setup_fee = this.formatCurrency(this.pricingSchedule.basePricing.setupFee);
+            }
+            if (this.pricingSchedule.basePricing.hourlyRate) {
+                variables.hourly_rate = this.formatCurrency(this.pricingSchedule.basePricing.hourlyRate);
+            }
+            
+            // Per-Unit Pricing
+            if (this.pricingSchedule.perUnitPricing.perUser) {
+                variables.per_user_rate = this.formatCurrency(this.pricingSchedule.perUnitPricing.perUser);
+            }
+            
+            // Asset Type Pricing
+            Object.keys(this.pricingSchedule.assetTypePricing).forEach(assetType => {
+                const pricing = this.pricingSchedule.assetTypePricing[assetType];
+                if (pricing.enabled && pricing.price) {
+                    variables[`${assetType}_monthly_rate`] = this.formatCurrency(pricing.price);
+                    variables[`${assetType}_billing_enabled`] = true;
+                }
+            });
+            
+            // Payment Terms
+            if (this.pricingSchedule.paymentTerms.billingFrequency) {
+                variables.billing_frequency = this.pricingSchedule.paymentTerms.billingFrequency;
+            }
+            if (this.pricingSchedule.paymentTerms.terms) {
+                variables.payment_terms = this.pricingSchedule.paymentTerms.terms;
+            }
+            if (this.pricingSchedule.paymentTerms.lateFeePercentage) {
+                variables.late_fee_percentage = this.pricingSchedule.paymentTerms.lateFeePercentage.toString();
+            }
+            
+            // Tiered Pricing
+            if (this.pricingSchedule.tiers.length > 0) {
+                variables.has_tiered_pricing = true;
+                variables.pricing_tiers = this.pricingSchedule.tiers.filter(tier => 
+                    tier.minQuantity && tier.price
+                );
+            }
+            
+            // Additional Terms Variables
+            if (this.additionalTerms.termination.noticePeriod) {
+                variables.termination_notice_days = this.formatNoticePeriod(this.additionalTerms.termination.noticePeriod);
+            }
+            if (this.additionalTerms.termination.earlyTerminationFee) {
+                variables.early_termination_fee = this.formatCurrency(this.additionalTerms.termination.earlyTerminationFee);
+            }
+            
+            // Liability Terms
+            if (this.additionalTerms.liability.capAmount) {
+                variables.liability_cap_amount = this.formatCurrency(this.additionalTerms.liability.capAmount);
+            }
+            variables.liability_cap_type = this.additionalTerms.liability.capType;
+            
+            // Data Protection
+            variables.data_classification = this.additionalTerms.dataProtection.classification;
+            variables.data_retention_period = this.additionalTerms.dataProtection.retentionPeriod;
+            if (this.additionalTerms.dataProtection.complianceStandards.length > 0) {
+                variables.compliance_standards = this.additionalTerms.dataProtection.complianceStandards.join(', ');
+            }
+            
+            // Dispute Resolution
+            variables.dispute_resolution_method = this.additionalTerms.disputeResolution.method;
+            variables.governing_law = this.additionalTerms.disputeResolution.governingLaw;
+            
+            // Telecom Schedule Variables (if applicable)
+            if (this.getScheduleType() === 'telecom') {
+                if (this.telecomSchedule.channelCount) {
+                    variables.channel_count = this.telecomSchedule.channelCount.toString();
+                }
+                variables.calling_plan = this.telecomSchedule.callingPlan;
+                variables.international_calling = this.telecomSchedule.internationalCalling;
+                variables.emergency_services = this.telecomSchedule.emergencyServices;
+                
+                // QoS Variables
+                if (this.telecomSchedule.qos.meanOpinionScore) {
+                    variables.voice_quality_mos = this.telecomSchedule.qos.meanOpinionScore;
+                }
+                if (this.telecomSchedule.qos.jitterMs) {
+                    variables.jitter_ms = this.telecomSchedule.qos.jitterMs.toString();
+                }
+                if (this.telecomSchedule.qos.packetLossPercent) {
+                    variables.packet_loss_percent = this.telecomSchedule.qos.packetLossPercent.toString();
+                }
+            }
+            
+            // Hardware Schedule Variables (if applicable)
+            if (this.getScheduleType() === 'hardware') {
+                if (this.hardwareSchedule.selectedCategories.length > 0) {
+                    variables.hardware_categories = this.hardwareSchedule.selectedCategories.join(', ');
+                }
+                variables.procurement_model = this.hardwareSchedule.procurementModel;
+                variables.lead_time_days = this.hardwareSchedule.leadTimeDays.toString();
+                
+                // Installation Services
+                Object.keys(this.hardwareSchedule.services).forEach(service => {
+                    if (this.hardwareSchedule.services[service]) {
+                        variables[`${service}_included`] = true;
+                    }
+                });
+                
+                // Hardware Pricing
+                if (this.hardwareSchedule.pricing.installationRate) {
+                    variables.installation_rate = this.formatCurrency(this.hardwareSchedule.pricing.installationRate);
+                }
+                if (this.hardwareSchedule.pricing.configurationRate) {
+                    variables.configuration_rate = this.formatCurrency(this.hardwareSchedule.pricing.configurationRate);
+                }
+            }
+            
+            // Compliance Schedule Variables (if applicable)
+            if (this.getScheduleType() === 'compliance') {
+                if (this.complianceSchedule.selectedFrameworks.length > 0) {
+                    variables.compliance_frameworks = this.complianceSchedule.selectedFrameworks.join(', ');
+                }
+                variables.compliance_scope = this.complianceSchedule.scope;
+                variables.risk_level = this.complianceSchedule.riskLevel;
+                variables.industry_sector = this.complianceSchedule.industrySector;
+                
+                // Audit Frequencies
+                variables.comprehensive_audit_frequency = this.complianceSchedule.frequency.comprehensive;
+                variables.interim_audit_frequency = this.complianceSchedule.frequency.interim;
+                variables.vulnerability_scan_frequency = this.complianceSchedule.frequency.vulnerability;
+            }
+            
+            // Billing Configuration
+            if (this.billingConfig.model) {
+                variables.billing_model = this.billingConfig.model;
+            }
+            if (this.billingConfig.base_rate) {
+                variables.monthly_base_rate = this.formatCurrency(this.billingConfig.base_rate);
+            }
+            variables.auto_assign_assets = this.billingConfig.auto_assign_assets;
+            variables.auto_assign_new_assets = this.billingConfig.auto_assign_new_assets;
+            variables.auto_assign_contacts = this.billingConfig.auto_assign_contacts;
+            variables.auto_assign_new_contacts = this.billingConfig.auto_assign_new_contacts;
+            
+            // Generate Service Tier Benefits
+            variables.tier_benefits = this.generateTierBenefits();
+            
+            // Update the variableValues object
+            this.variableValues = variables;
+            
+            return variables;
+        },
+        
+        // Helper Methods for Variable Generation
+        formatCurrency(amount) {
+            if (!amount) return '';
+            const num = parseFloat(amount.toString().replace(/[^0-9.-]/g, ''));
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        
+        formatBusinessHours(hours) {
+            const hoursMap = {
+                '8x5': '8 AM - 5 PM (Monday-Friday)',
+                '12x5': '8 AM - 8 PM (Monday-Friday)', 
+                '24x7': '24 hours (Monday-Sunday)',
+                '24x5': '24 hours (Monday-Friday)'
+            };
+            return hoursMap[hours] || hours;
+        },
+        
+        formatNoticePeriod(period) {
+            const periodMap = {
+                '30_days': '30 days',
+                '60_days': '60 days',
+                '90_days': '90 days',
+                '6_months': '6 months',
+                '1_year': '1 year'
+            };
+            return periodMap[period] || period.replace('_', ' ');
+        },
+        
+        generateTierBenefits() {
+            const tier = this.infrastructureSchedule.sla.serviceTier || 'silver';
+            const selectedTier = this.serviceTiers.find(t => t.value === tier);
+            
+            if (!selectedTier) {
+                return '- Standard monitoring and support\n- Business hours coverage\n- Email and phone support';
+            }
+            
+            const benefits = [];
+            
+            // Coverage-based benefits
+            if (selectedTier.coverage === '24x7') {
+                benefits.push('- 24/7 monitoring and alerting');
+                benefits.push('- Round-the-clock support coverage');
+            } else if (selectedTier.coverage === '12x5') {
+                benefits.push('- Extended hours monitoring (12x5)');
+                benefits.push('- Business hours support coverage');
+            } else {
+                benefits.push('- Business hours monitoring (8x5)');
+                benefits.push('- Standard support coverage');
+            }
+            
+            // Response time benefits
+            if (selectedTier.responseTime <= 2) {
+                benefits.push('- Priority response within ' + selectedTier.responseTime + ' hours');
+                benefits.push('- Dedicated support contact');
+            } else if (selectedTier.responseTime <= 4) {
+                benefits.push('- Rapid response within ' + selectedTier.responseTime + ' hours');
+                benefits.push('- Priority phone support');
+            } else {
+                benefits.push('- Standard response within ' + selectedTier.responseTime + ' hours');
+                benefits.push('- Email and phone support');
+            }
+            
+            // Uptime benefits
+            if (selectedTier.uptime >= 99.9) {
+                benefits.push('- Premium uptime guarantee (' + selectedTier.uptime + '%)');
+                benefits.push('- Proactive monitoring and maintenance');
+            } else if (selectedTier.uptime >= 99.5) {
+                benefits.push('- Standard uptime guarantee (' + selectedTier.uptime + '%)');
+                benefits.push('- Regular monitoring and maintenance');
+            }
+            
+            // Additional benefits based on options
+            if (this.infrastructureSchedule.coverageRules.includeOnsiteSupport) {
+                benefits.push('- On-site support included');
+            } else if (this.infrastructureSchedule.coverageRules.includeRemoteSupport) {
+                benefits.push('- Remote support and troubleshooting');
+            }
+            
+            if (this.infrastructureSchedule.coverageRules.emergencySupport === 'included') {
+                benefits.push('- Emergency after-hours support');
+            }
+            
+            // Add reporting based on tier
+            if (tier === 'platinum' || tier === 'gold') {
+                benefits.push('- Weekly performance reports');
+                benefits.push('- Monthly business reviews');
+            } else if (tier === 'silver') {
+                benefits.push('- Monthly performance reports');
+                benefits.push('- Quarterly business reviews');
+            } else {
+                benefits.push('- Quarterly performance reports');
+                benefits.push('- Annual business reviews');
+            }
+            
+            return benefits.join('\n');
+        },
+
+        // Title Suggestion Generator
+        generateSuggestions() {
+            // Generate title suggestions based on selected template and client
+            if (!this.form.client_id || !this.selectedTemplate) {
+                return;
+            }
+            
+            // This function can be expanded to provide intelligent title suggestions
+            // For now, it's a placeholder to prevent console errors
+            console.log('Generating title suggestions for:', this.selectedTemplate.name);
         },
 
         // Form Validation
@@ -491,7 +826,50 @@ document.addEventListener('alpine:init', () => {
         },
 
         validateScheduleConfiguration() {
-            return true; // Schedule configuration is always valid for now
+            // Basic infrastructure schedule validation
+            if (this.infrastructureSchedule.supportedAssetTypes.length === 0) {
+                this.showNotification('Please select at least one supported asset type', 'error');
+                return false;
+            }
+
+            if (!this.infrastructureSchedule.sla.serviceTier) {
+                this.showNotification('Please select a service tier', 'error');
+                return false;
+            }
+
+            // Validate pricing schedule if present
+            if (this.pricingSchedule.billingModel === 'tiered' && this.pricingSchedule.tiers.length === 0) {
+                this.showNotification('Please configure at least one pricing tier', 'error');
+                return false;
+            }
+
+            // Template-specific validation
+            if (this.selectedTemplate) {
+                const templateType = this.selectedTemplate.template_type || this.selectedTemplate.type;
+                
+                if (templateType === 'telecom' || templateType === 'voip') {
+                    if (!this.telecomSchedule.channelCount || this.telecomSchedule.channelCount < 1) {
+                        this.showNotification('Please specify the number of channels for telecom services', 'error');
+                        return false;
+                    }
+                }
+                
+                if (templateType === 'hardware' || templateType === 'var') {
+                    if (this.hardwareSchedule.selectedCategories.length === 0) {
+                        this.showNotification('Please select at least one hardware category', 'error');
+                        return false;
+                    }
+                }
+                
+                if (templateType === 'compliance') {
+                    if (this.complianceSchedule.selectedFrameworks.length === 0) {
+                        this.showNotification('Please select at least one compliance framework', 'error');
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         },
         
         validateAssetAssignment() {
@@ -529,6 +907,9 @@ document.addEventListener('alpine:init', () => {
                 infrastructureSchedule: this.infrastructureSchedule,
                 pricingSchedule: this.pricingSchedule,
                 additionalTerms: this.additionalTerms,
+                telecomSchedule: this.telecomSchedule,
+                hardwareSchedule: this.hardwareSchedule,
+                complianceSchedule: this.complianceSchedule,
                 templateFilter: this.templateFilter,
                 timestamp: new Date().toISOString()
             };
@@ -553,6 +934,9 @@ document.addEventListener('alpine:init', () => {
                         this.infrastructureSchedule = { ...this.infrastructureSchedule, ...data.infrastructureSchedule };
                         this.pricingSchedule = { ...this.pricingSchedule, ...data.pricingSchedule };
                         this.additionalTerms = { ...this.additionalTerms, ...data.additionalTerms };
+                        this.telecomSchedule = { ...this.telecomSchedule, ...data.telecomSchedule };
+                        this.hardwareSchedule = { ...this.hardwareSchedule, ...data.hardwareSchedule };
+                        this.complianceSchedule = { ...this.complianceSchedule, ...data.complianceSchedule };
                         this.templateFilter = { ...this.templateFilter, ...data.templateFilter };
                     }
                 } catch (e) {
@@ -572,11 +956,54 @@ document.addEventListener('alpine:init', () => {
 
         // Form Submission
         handleSubmission(event) {
+            console.log('🚀 Contract wizard form submission started');
+            console.log('Form data:', {
+                title: this.form.title,
+                client_id: this.form.client_id,
+                contract_type: this.form.contract_type,
+                template: this.selectedTemplate?.name,
+                currentStep: this.currentStep
+            });
+            
+            // Log schedule data being submitted
+            console.log('📋 Schedule data being submitted:', {
+                infrastructureSchedule: {
+                    supportedAssetTypes: this.infrastructureSchedule.supportedAssetTypes,
+                    serviceTier: this.infrastructureSchedule.sla.serviceTier
+                },
+                pricingSchedule: {
+                    billingModel: this.pricingSchedule.billingModel,
+                    tiers: this.pricingSchedule.tiers.length
+                },
+                telecomSchedule: {
+                    channelCount: this.telecomSchedule.channelCount,
+                    callingPlan: this.telecomSchedule.callingPlan
+                },
+                hardwareSchedule: {
+                    selectedCategories: this.hardwareSchedule.selectedCategories.length,
+                    procurementModel: this.hardwareSchedule.procurementModel
+                },
+                complianceSchedule: {
+                    selectedFrameworks: this.complianceSchedule.selectedFrameworks.length,
+                    riskLevel: this.complianceSchedule.riskLevel
+                }
+            });
+            
             if (!this.isFormValid()) {
                 event.preventDefault();
+                console.error('❌ Form validation failed');
                 this.showNotification('Please complete all required fields', 'error');
                 return;
             }
+            
+            // Additional schedule validation
+            if (!this.validateScheduleConfiguration()) {
+                event.preventDefault();
+                console.error('❌ Schedule validation failed');
+                return;
+            }
+            
+            console.log('✅ Form validation passed, submitting contract...');
             
             // Clear saved progress on successful submission
             localStorage.removeItem('contract_wizard_progress');

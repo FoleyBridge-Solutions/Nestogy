@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Services;
 
-use App\Services\ContractGenerationService;
-use App\Models\Contract;
-use App\Models\ContractTemplate;
+use App\Domains\Contract\Services\ContractGenerationService;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractTemplate;
 use App\Models\Client;
 use App\Models\User;
 use App\Models\Company;

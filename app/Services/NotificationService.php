@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Invoice;
-use App\Models\Contract;
+use App\Domains\Contract\Models\Contract;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Financial\Models\Payment;
 use Carbon\Carbon;

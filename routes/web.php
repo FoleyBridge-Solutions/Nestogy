@@ -95,6 +95,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/dashboard/preset/apply', [\App\Http\Controllers\DashboardController::class, 'applyPreset'])->name('dashboard.preset.apply');
 });
 
+// Company switching route
+Route::post('/switch-company', [\App\Http\Middleware\SubsidiaryAccessMiddleware::class, 'handleCompanySwitch'])
+    ->middleware(['auth', 'verified'])
+    ->name('company.switch');
+
+// Subsidiary Management Routes
+Route::middleware(['auth', 'verified', 'subsidiary.access'])->group(function () {
+    Route::prefix('subsidiaries')->name('subsidiaries.')->group(function () {
+        // Main subsidiary management
+        Route::get('/', [\App\Http\Controllers\SubsidiaryManagementController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\SubsidiaryManagementController::class, 'store'])->name('store');
+        Route::get('/{subsidiary}', [\App\Http\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
+        Route::get('/{subsidiary}/edit', [\App\Http\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
+        Route::put('/{subsidiary}', [\App\Http\Controllers\SubsidiaryManagementController::class, 'update'])->name('update');
+        Route::delete('/{subsidiary}', [\App\Http\Controllers\SubsidiaryManagementController::class, 'destroy'])->name('destroy');
+        
+        // Hierarchy visualization
+        Route::get('/hierarchy/tree', [\App\Http\Controllers\SubsidiaryManagementController::class, 'hierarchyTree'])->name('hierarchy.tree');
+        
+        // Permission management
+        Route::get('/{subsidiary}/permissions', [\App\Http\Controllers\SubsidiaryManagementController::class, 'permissions'])->name('permissions');
+        Route::post('/permissions/grant', [\App\Http\Controllers\SubsidiaryManagementController::class, 'grantPermission'])->name('grant-permission');
+        Route::delete('/permissions/{permission}/revoke', [\App\Http\Controllers\SubsidiaryManagementController::class, 'revokePermission'])->name('revoke-permission');
+        
+        // User management
+        Route::get('/{subsidiary}/users', [\App\Http\Controllers\SubsidiaryManagementController::class, 'users'])->name('users');
+        Route::post('/users/grant-access', [\App\Http\Controllers\SubsidiaryManagementController::class, 'grantUserAccess'])->name('grant-user-access');
+        Route::delete('/users/{crossCompanyUser}/revoke', [\App\Http\Controllers\SubsidiaryManagementController::class, 'revokeUserAccess'])->name('revoke-user-access');
+    });
+});
+
 // Core application routes
 Route::middleware(['auth', 'verified'])->group(function () {
     // Client routes
@@ -378,6 +410,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Ticketing & Service Desk Settings
         Route::get('/ticketing-service-desk', [\App\Http\Controllers\SettingsController::class, 'ticketingServiceDesk'])->name('ticketing-service-desk');
         Route::put('/ticketing-service-desk', [\App\Http\Controllers\SettingsController::class, 'updateTicketingServiceDesk'])->name('ticketing-service-desk.update');
+        
+        // Contract Clauses Management
+        Route::get('/contract-clauses', [\App\Http\Controllers\SettingsController::class, 'contractClauses'])->name('contract-clauses');
+        Route::post('/contract-clauses', [\App\Http\Controllers\SettingsController::class, 'storeContractClause'])->name('contract-clauses.store');
+        Route::put('/contract-clauses/{clause}', [\App\Http\Controllers\SettingsController::class, 'updateContractClause'])->name('contract-clauses.update');
+        Route::delete('/contract-clauses/{clause}', [\App\Http\Controllers\SettingsController::class, 'destroyContractClause'])->name('contract-clauses.destroy');
+        Route::post('/contract-clauses/{clause}/duplicate', [\App\Http\Controllers\SettingsController::class, 'duplicateContractClause'])->name('contract-clauses.duplicate');
+        Route::post('/contract-clauses/{clause}/update-content', [\App\Http\Controllers\SettingsController::class, 'updateContractClauseContent'])->name('contract-clauses.update-content');
+        Route::post('/contract-clauses/bulk-action', [\App\Http\Controllers\SettingsController::class, 'bulkActionContractClauses'])->name('contract-clauses.bulk-action');
+        
+        // Template Clause Management
+        Route::get('/contract-templates', [\App\Http\Controllers\SettingsController::class, 'contractTemplates'])->name('contract-templates');
+        Route::get('/template-clauses/{template}', [\App\Http\Controllers\SettingsController::class, 'templateClauses'])->name('template-clauses');
+        Route::post('/template-clauses/{template}/attach', [\App\Http\Controllers\SettingsController::class, 'attachTemplateClauses'])->name('template-clauses.attach');
+        Route::delete('/template-clauses/{template}/{clause}', [\App\Http\Controllers\SettingsController::class, 'detachTemplateClause'])->name('template-clauses.detach');
+        Route::post('/template-clauses/{template}/reorder', [\App\Http\Controllers\SettingsController::class, 'reorderTemplateClauses'])->name('template-clauses.reorder');
+        Route::put('/template-clauses/{template}/{clause}', [\App\Http\Controllers\SettingsController::class, 'updateTemplateClause'])->name('template-clauses.update');
+        Route::post('/template-clauses/{template}/bulk-attach', [\App\Http\Controllers\SettingsController::class, 'bulkAttachTemplateClauses'])->name('template-clauses.bulk-attach');
+        Route::get('/template-clauses/{template}/preview', [\App\Http\Controllers\SettingsController::class, 'previewTemplateWithClauses'])->name('template-clauses.preview');
         
         // SLA Management Routes
         Route::resource('slas', \App\Domains\Ticket\Controllers\SLAController::class)->only(['store', 'show', 'edit', 'update', 'destroy']);
@@ -674,23 +725,7 @@ Route::middleware(['auth', 'verified'])->prefix('financial')->name('financial.')
         Route::get('timeline', [InvoiceController::class, 'timeline'])->name('timeline');
     });
 
-    // Contract routes
-    Route::resource('contracts', ContractController::class);
-
-    // Dynamic Contract Builder
-    Route::prefix('contracts')->name('contracts.')->group(function () {
-        Route::get('/builder/create', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'index'])->name('builder.index');
-        Route::post('/builder/store', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'store'])->name('builder.store');
-        Route::get('/builder/component/{component}', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'getComponent'])->name('builder.component');
-        Route::post('/builder/calculate-pricing', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'calculatePricing'])->name('builder.calculate');
-        Route::get('/builder/template/{template}', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'loadTemplate'])->name('builder.template');
-        Route::post('/builder/preview', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'preview'])->name('builder.preview');
-        Route::post('/builder/draft', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'saveDraft'])->name('builder.draft.save');
-        Route::get('/builder/draft', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'loadDraft'])->name('builder.draft.load');
-        Route::delete('/builder/draft', [\App\Domains\Financial\Controllers\ContractBuilderController::class, 'clearDraft'])->name('builder.draft.clear');
-    });
-    
-    // Contract Templates routes
+    // Contract Templates routes (must come before resource routes to avoid conflicts)
     Route::prefix('contracts')->name('contracts.')->group(function () {
         Route::prefix('templates')->name('templates.')->group(function () {
             Route::get('/', [ContractController::class, 'templatesIndex'])->name('index');
@@ -702,6 +737,22 @@ Route::middleware(['auth', 'verified'])->prefix('financial')->name('financial.')
             Route::delete('/{template}', [ContractController::class, 'templatesDestroy'])->name('destroy');
         });
     });
+
+    // Dynamic Contract Builder
+    Route::prefix('contracts')->name('contracts.')->group(function () {
+        Route::get('/builder/create', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'index'])->name('builder.index');
+        Route::post('/builder/store', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'store'])->name('builder.store');
+        Route::get('/builder/component/{component}', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'getComponent'])->name('builder.component');
+        Route::post('/builder/calculate-pricing', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'calculatePricing'])->name('builder.calculate');
+        Route::get('/builder/template/{template}', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'loadTemplate'])->name('builder.template');
+        Route::post('/builder/preview', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'preview'])->name('builder.preview');
+        Route::post('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'saveDraft'])->name('builder.draft.save');
+        Route::get('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'loadDraft'])->name('builder.draft.load');
+        Route::delete('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'clearDraft'])->name('builder.draft.clear');
+    });
+
+    // Contract routes (resource route comes after specific routes to avoid conflicts)
+    Route::resource('contracts', ContractController::class);
     
     // Additional contract routes
     Route::get('contracts-dashboard', [ContractController::class, 'dashboard'])->name('contracts.dashboard');

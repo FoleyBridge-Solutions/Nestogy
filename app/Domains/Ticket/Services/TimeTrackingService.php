@@ -7,7 +7,8 @@ use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Models\User;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\Contract;
+use App\Domains\Contract\Models\Contract;
+use App\Services\RateConfigurationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +23,13 @@ use Illuminate\Support\Facades\Log;
 class TimeTrackingService
 {
     /**
-     * Billing rate tiers
+     * Billing rate tiers (use constants from RateConfigurationService)
      */
-    const RATE_STANDARD = 'standard';
-    const RATE_AFTER_HOURS = 'after_hours';
-    const RATE_EMERGENCY = 'emergency';
-    const RATE_WEEKEND = 'weekend';
-    const RATE_HOLIDAY = 'holiday';
+    const RATE_STANDARD = RateConfigurationService::RATE_STANDARD;
+    const RATE_AFTER_HOURS = RateConfigurationService::RATE_AFTER_HOURS;
+    const RATE_EMERGENCY = RateConfigurationService::RATE_EMERGENCY;
+    const RATE_WEEKEND = RateConfigurationService::RATE_WEEKEND;
+    const RATE_HOLIDAY = RateConfigurationService::RATE_HOLIDAY;
 
     /**
      * Time entry statuses
@@ -40,15 +41,17 @@ class TimeTrackingService
     const STATUS_REJECTED = 'rejected';
 
     /**
-     * Default billing rates (can be overridden by contract)
+     * Rate configuration service
      */
-    protected array $defaultRates = [
-        self::RATE_STANDARD => 150.00,
-        self::RATE_AFTER_HOURS => 225.00,
-        self::RATE_EMERGENCY => 300.00,
-        self::RATE_WEEKEND => 200.00,
-        self::RATE_HOLIDAY => 250.00,
-    ];
+    protected RateConfigurationService $rateService;
+
+    /**
+     * Constructor
+     */
+    public function __construct(RateConfigurationService $rateService)
+    {
+        $this->rateService = $rateService;
+    }
 
     /**
      * Start time tracking for a ticket
@@ -493,36 +496,11 @@ class TimeTrackingService
             return $options['billable'];
         }
 
-        // Check contract terms
-        if ($ticket->client && $ticket->client->activeContract) {
-            $contract = $ticket->client->activeContract;
-            
-            // Check if support is included in contract
-            if ($contract->pricing_structure && 
-                isset($contract->pricing_structure['included_hours'])) {
-                
-                $includedHours = $contract->pricing_structure['included_hours'];
-                $usedHours = $this->getContractHoursUsed($contract, now()->startOfMonth(), now()->endOfMonth());
-                
-                if ($usedHours < $includedHours) {
-                    return false; // Within included hours, not billable
-                }
-            }
-        }
-
-        // Check ticket type
-        $nonBillableTypes = config('nestogy.time_tracking.non_billable_ticket_types', [
-            'warranty',
-            'internal',
-            'training',
-        ]);
-
-        if (in_array($ticket->type, $nonBillableTypes)) {
-            return false;
-        }
-
-        // Default to billable
-        return true;
+        // Use rate service for billability determination
+        $startTime = $options['start_time'] ?? now();
+        $endTime = $options['end_time'] ?? now();
+        
+        return $this->rateService->isTimeBillable($ticket, $startTime, $endTime);
     }
 
     /**
@@ -531,25 +509,9 @@ class TimeTrackingService
      * @param Carbon $time
      * @return string
      */
-    protected function determineRateType(Carbon $time): string
+    protected function determineRateType(Carbon $time, bool $isEmergency = false): string
     {
-        // Check if holiday
-        if ($this->isHoliday($time)) {
-            return self::RATE_HOLIDAY;
-        }
-
-        // Check if weekend
-        if ($time->isWeekend()) {
-            return self::RATE_WEEKEND;
-        }
-
-        // Check if after hours (before 8am or after 6pm)
-        $hour = $time->hour;
-        if ($hour < 8 || $hour >= 18) {
-            return self::RATE_AFTER_HOURS;
-        }
-
-        return self::RATE_STANDARD;
+        return $this->rateService->determineRateType($time, $isEmergency);
     }
 
     /**
@@ -561,25 +523,7 @@ class TimeTrackingService
      */
     protected function getHourlyRate(Ticket $ticket, string $rateType): float
     {
-        // Check contract rates first
-        if ($ticket->client && $ticket->client->activeContract) {
-            $contract = $ticket->client->activeContract;
-            
-            if ($contract->pricing_structure && 
-                isset($contract->pricing_structure['hourly_rates'][$rateType])) {
-                return $contract->pricing_structure['hourly_rates'][$rateType];
-            }
-        }
-
-        // Use client's base rate with multipliers
-        if ($ticket->client && $ticket->client->hourly_rate) {
-            $baseRate = $ticket->client->hourly_rate;
-            $multiplier = $this->getRateMultiplier($rateType);
-            return round($baseRate * $multiplier, 2);
-        }
-
-        // Fallback to default rates
-        return $this->defaultRates[$rateType] ?? $this->defaultRates[self::RATE_STANDARD];
+        return $this->rateService->getTicketHourlyRate($ticket, $rateType);
     }
 
     /**
@@ -1187,18 +1131,6 @@ class TimeTrackingService
      * @param string $rateType
      * @return float
      */
-    protected function getRateMultiplier(string $rateType): float
-    {
-        $multipliers = [
-            self::RATE_STANDARD => 1.0,
-            self::RATE_AFTER_HOURS => 1.5,  // 50% premium for after hours
-            self::RATE_EMERGENCY => 2.0,    // 100% premium for emergency
-            self::RATE_WEEKEND => 1.5,      // 50% premium for weekends
-            self::RATE_HOLIDAY => 2.0,      // 100% premium for holidays
-        ];
-        
-        return $multipliers[$rateType] ?? 1.0;
-    }
 
     /**
      * Get human-readable rate description

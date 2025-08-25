@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Contract;
-use App\Models\ContractAuditLog;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractAuditLog;
 use App\Models\ComplianceRequirement;
 use App\Models\ComplianceCheck;
 use Illuminate\Support\Facades\Auth;

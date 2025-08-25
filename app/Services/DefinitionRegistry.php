@@ -16,7 +16,7 @@ class DefinitionRegistry
     protected array $definitions = [
         'agreement' => [
             'term' => 'Agreement',
-            'definition' => 'This Recurring Support Services Agreement, inclusive of all schedules and exhibits attached hereto and incorporated herein by reference, specifically Schedule A and Schedule B, as may be amended from time to time in accordance with Section 12.',
+            'definition' => 'This Recurring Support Services Agreement, inclusive of all schedules and exhibits attached hereto and incorporated herein by reference, specifically Schedule A and Schedule B, as may be amended from time to time in accordance with {{admin_section_ref}}.',
             'required_by' => ['general', 'scope_of_services', 'legal'],
             'depends_on_variables' => [],
             'always_include' => true, // Core terms that should always be included
@@ -32,7 +32,7 @@ class DefinitionRegistry
         
         'confidential_information' => [
             'term' => 'Confidential Information',
-            'definition' => 'Shall have the meaning set forth in Section 9.a.',
+            'definition' => 'Shall have the meaning set forth in {{confidentiality_section_ref}}.a.',
             'required_by' => ['confidentiality'],
             'depends_on_variables' => [],
             'always_include' => false,
@@ -48,7 +48,7 @@ class DefinitionRegistry
         
         'force_majeure_event' => [
             'term' => 'Force Majeure Event',
-            'definition' => 'Shall have the meaning set forth in Section 15.',
+            'definition' => 'Shall have the meaning set forth in {{legal_section_ref}}.',
             'required_by' => ['legal'],
             'depends_on_variables' => [],
             'always_include' => false,
@@ -96,7 +96,7 @@ class DefinitionRegistry
         
         'support_services' => [
             'term' => 'Support Services',
-            'definition' => 'Shall mean the recurring information technology support services to be furnished by {{service_provider_short_name}} to the Client, as delineated in Section 2 hereof and further specified in Schedule A, corresponding to the Supported Infrastructure and Service Tier selected by the Client.',
+            'definition' => 'Shall mean the recurring information technology support services to be furnished by {{service_provider_short_name}} to the Client, as delineated in {{services_section_ref}} hereof and further specified in Schedule A, corresponding to the Supported Infrastructure and Service Tier selected by the Client.',
             'required_by' => ['scope_of_services'],
             'depends_on_variables' => ['service_provider_short_name'],
             'always_include' => false,
@@ -218,7 +218,7 @@ class DefinitionRegistry
         // General definitions
         'contract_term' => [
             'term' => 'Term',
-            'definition' => 'Shall mean the duration of this Agreement as defined in Section 5.a, including the Initial Term and any Renewal Terms.',
+            'definition' => 'Shall mean the duration of this Agreement as defined in {{financial_section_ref}}.a, including the Initial Term and any Renewal Terms.',
             'required_by' => ['legal', 'termination'],
             'depends_on_variables' => [],
             'always_include' => true,

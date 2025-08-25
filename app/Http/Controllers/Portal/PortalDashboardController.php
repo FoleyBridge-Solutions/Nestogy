@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Domains\Financial\Models\Invoice;
-use App\Domains\Financial\Models\Contract;
+use App\Domains\Contract\Models\Contract;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Project\Models\Project;

@@ -2,7 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\ContractTemplate;
+use App\Domains\Contract\Models\ContractTemplate;
+use App\Domains\Contract\Models\ContractClause;
 use Illuminate\Database\Seeder;
 
 class ContractTemplateSeeder extends Seeder
@@ -12,8 +13,12 @@ class ContractTemplateSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear existing templates for fresh seeding
+        // Clear existing templates and clauses for fresh seeding
         ContractTemplate::truncate();
+        ContractClause::truncate();
+
+        // Create contract clauses first
+        $this->createStandardClauses();
 
         // Create MSP Templates (8)
         $this->createMSPTemplates();
@@ -27,7 +32,7 @@ class ContractTemplateSeeder extends Seeder
         // Create Cross-Industry Compliance Templates (5)
         $this->createComplianceTemplates();
 
-        $this->command->info('Created 25 comprehensive contract templates');
+        $this->command->info('Created 25 comprehensive contract templates and standard clauses');
     }
 
     /**
@@ -38,10 +43,10 @@ class ContractTemplateSeeder extends Seeder
         $templates = [
             [
                 'name' => 'Recurring Support Services Agreement',
-                'template_type' => ContractTemplate::TYPE_MANAGED_SERVICES,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'managed_services',
+                'category' => 'msp',
                 'description' => 'Comprehensive recurring support services agreement with infrastructure, virtual machines, and end-user support sections',
-                'template_content' => $this->getRecurringSupportTemplate(),
+                'content' => $this->getRecurringSupportTemplate(),
                 'billing_model' => 'per_asset',
                 'default_pricing_structure' => [
                     'rates' => ['server' => 150, 'workstation' => 45, 'network_device' => 75],
@@ -88,10 +93,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Comprehensive Managed Services Agreement',
-                'template_type' => ContractTemplate::TYPE_MANAGED_SERVICES,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'managed_services',
+                'category' => 'msp',
                 'description' => 'Full-service MSP contract covering infrastructure monitoring, maintenance, and support',
-                'template_content' => $this->getManagedServicesTemplate(),
+                'content' => $this->getManagedServicesTemplate(),
                 'billing_model' => 'per_asset',
                 'default_pricing_structure' => [
                     'rates' => ['server' => 150, 'workstation' => 45, 'network_device' => 75],
@@ -146,10 +151,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Cybersecurity Services Agreement',
-                'template_type' => ContractTemplate::TYPE_CYBERSECURITY_SERVICES,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'cybersecurity_services',
+                'category' => 'msp',
                 'description' => 'Specialized cybersecurity services including monitoring, threat detection, and incident response',
-                'template_content' => $this->getCybersecurityTemplate(),
+                'content' => $this->getCybersecurityTemplate(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['basic_user' => 25, 'admin_user' => 45, 'executive_user' => 65],
@@ -177,10 +182,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Backup and Disaster Recovery Services',
-                'template_type' => ContractTemplate::TYPE_BACKUP_DR,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'backup_dr',
+                'category' => 'msp',
                 'description' => 'Comprehensive backup, disaster recovery, and business continuity services',
-                'template_content' => $this->getBackupDRTemplate(),
+                'content' => $this->getBackupDRTemplate(),
                 'billing_model' => 'tiered',
                 'default_pricing_structure' => [
                     'tiers' => [
@@ -221,10 +226,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Cloud Migration Services Contract',
-                'template_type' => ContractTemplate::TYPE_CLOUD_MIGRATION,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'cloud_migration',
+                'category' => 'msp',
                 'description' => 'Project-based cloud migration and ongoing cloud management services',
-                'template_content' => $this->getCloudMigrationTemplate(),
+                'content' => $this->getCloudMigrationTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'phases' => [
@@ -276,10 +281,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Microsoft 365 Management Services',
-                'template_type' => ContractTemplate::TYPE_M365_MANAGEMENT,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'm365_management',
+                'category' => 'msp',
                 'description' => 'Specialized Microsoft 365 administration, security, and optimization services',
-                'template_content' => $this->getM365Template(),
+                'content' => $this->getM365Template(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['basic_user' => 15, 'business_premium' => 25, 'e5_user' => 35],
@@ -313,10 +318,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Break-Fix Services Agreement',
-                'template_type' => ContractTemplate::TYPE_BREAK_FIX,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'break_fix',
+                'category' => 'msp',
                 'description' => 'Hourly break-fix services for clients not requiring full managed services',
-                'template_content' => $this->getBreakFixTemplate(),
+                'content' => $this->getBreakFixTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'rates' => [
@@ -366,10 +371,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Enterprise Managed Services Agreement',
-                'template_type' => ContractTemplate::TYPE_ENTERPRISE_MANAGED,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'enterprise_managed',
+                'category' => 'msp',
                 'description' => 'Enterprise-grade managed services with dedicated resources and custom SLAs',
-                'template_content' => $this->getEnterpriseTemplate(),
+                'content' => $this->getEnterpriseTemplate(),
                 'billing_model' => 'hybrid',
                 'default_pricing_structure' => [
                     'dedicated_engineer' => 12000,
@@ -411,10 +416,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Managed Detection & Response Services',
-                'template_type' => ContractTemplate::TYPE_MDR_SERVICES,
-                'category' => ContractTemplate::CATEGORY_MSP,
+                'contract_type' => 'mdr_services',
+                'category' => 'msp',
                 'description' => 'Advanced threat detection, monitoring, and incident response services',
-                'template_content' => $this->getMDRTemplate(),
+                'content' => $this->getMDRTemplate(),
                 'billing_model' => 'per_asset',
                 'default_pricing_structure' => [
                     'rates' => ['endpoint' => 12, 'server' => 25, 'network_device' => 18],
@@ -468,10 +473,10 @@ class ContractTemplateSeeder extends Seeder
         $templates = [
             [
                 'name' => 'Hosted PBX Services Agreement',
-                'template_type' => ContractTemplate::TYPE_HOSTED_PBX,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'hosted_pbx',
+                'category' => 'voip',
                 'description' => 'Complete hosted PBX solution with extensions, features, and support',
-                'template_content' => $this->getHostedPBXTemplate(),
+                'content' => $this->getHostedPBXTemplate(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['basic_extension' => 25, 'premium_extension' => 35, 'executive_extension' => 45],
@@ -487,10 +492,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'SIP Trunking Services Agreement',
-                'template_type' => ContractTemplate::TYPE_SIP_TRUNKING,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'sip_trunking',
+                'category' => 'voip',
                 'description' => 'SIP trunking services for connecting existing PBX systems',
-                'template_content' => $this->getSIPTrunkingTemplate(),
+                'content' => $this->getSIPTrunkingTemplate(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['per_channel' => 15, 'unlimited_local' => 25, 'international_addon' => 10],
@@ -520,10 +525,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Unified Communications Platform',
-                'template_type' => ContractTemplate::TYPE_UNIFIED_COMMUNICATIONS,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'unified_communications',
+                'category' => 'voip',
                 'description' => 'Complete UC solution with voice, video, messaging, and collaboration',
-                'template_content' => $this->getUCTemplate(),
+                'content' => $this->getUCTemplate(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['essentials' => 15, 'standard' => 25, 'premium' => 40],
@@ -539,10 +544,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'International Calling Services',
-                'template_type' => ContractTemplate::TYPE_INTERNATIONAL_CALLING,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'international_calling',
+                'category' => 'voip',
                 'description' => 'International calling plans and wholesale voice services',
-                'template_content' => $this->getInternationalTemplate(),
+                'content' => $this->getInternationalTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'rates' => ['tier1_countries' => 0.02, 'tier2_countries' => 0.05, 'tier3_countries' => 0.15],
@@ -558,10 +563,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Contact Center Solutions Agreement',
-                'template_type' => ContractTemplate::TYPE_CONTACT_CENTER,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'contact_center',
+                'category' => 'voip',
                 'description' => 'Cloud-based contact center with ACD, IVR, and reporting capabilities',
-                'template_content' => $this->getContactCenterTemplate(),
+                'content' => $this->getContactCenterTemplate(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['agent_seat' => 65, 'supervisor_seat' => 85, 'admin_seat' => 45],
@@ -577,10 +582,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'E911 Emergency Services Agreement',
-                'template_type' => ContractTemplate::TYPE_E911_SERVICES,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'e911_services',
+                'category' => 'voip',
                 'description' => 'Enhanced 911 emergency calling services for VoIP systems',
-                'template_content' => $this->getE911Template(),
+                'content' => $this->getE911Template(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'rates' => ['e911_service' => 2.50, 'dispatchable_location' => 1.00],
@@ -596,10 +601,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Number Porting Services Agreement',
-                'template_type' => ContractTemplate::TYPE_NUMBER_PORTING,
-                'category' => ContractTemplate::CATEGORY_VOIP,
+                'contract_type' => 'number_porting',
+                'category' => 'voip',
                 'description' => 'Telephone number porting and management services',
-                'template_content' => $this->getPortingTemplate(),
+                'content' => $this->getPortingTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'rates' => ['local_number_port' => 15, 'toll_free_port' => 25, 'complex_port' => 50],
@@ -628,10 +633,10 @@ class ContractTemplateSeeder extends Seeder
         $templates = [
             [
                 'name' => 'Hardware Procurement & Installation',
-                'template_type' => ContractTemplate::TYPE_HARDWARE_PROCUREMENT,
-                'category' => ContractTemplate::CATEGORY_VAR,
+                'contract_type' => 'hardware_procurement',
+                'category' => 'var',
                 'description' => 'Hardware procurement, delivery, installation, and configuration services',
-                'template_content' => $this->getHardwareTemplate(),
+                'content' => $this->getHardwareTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'markup_percentage' => 15,
@@ -708,10 +713,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Software Licensing Agreement',
-                'template_type' => ContractTemplate::TYPE_SOFTWARE_LICENSING,
-                'category' => ContractTemplate::CATEGORY_VAR,
+                'contract_type' => 'software_licensing',
+                'category' => 'var',
                 'description' => 'Software licensing, deployment, and ongoing license management',
-                'template_content' => $this->getSoftwareTemplate(),
+                'content' => $this->getSoftwareTemplate(),
                 'billing_model' => 'per_contact',
                 'default_pricing_structure' => [
                     'markup_percentage' => 12,
@@ -728,10 +733,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Vendor Partner Agreement',
-                'template_type' => ContractTemplate::TYPE_VENDOR_PARTNER,
-                'category' => ContractTemplate::CATEGORY_VAR,
+                'contract_type' => 'vendor_partner',
+                'category' => 'var',
                 'description' => 'Partnership agreement for reselling vendor products and services',
-                'template_content' => $this->getVendorPartnerTemplate(),
+                'content' => $this->getVendorPartnerTemplate(),
                 'billing_model' => 'tiered',
                 'default_pricing_structure' => [
                     'commission_structure' => [
@@ -751,10 +756,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'Solution Integration Services',
-                'template_type' => ContractTemplate::TYPE_SOLUTION_INTEGRATION,
-                'category' => ContractTemplate::CATEGORY_VAR,
+                'contract_type' => 'solution_integration',
+                'category' => 'var',
                 'description' => 'Custom solution integration and systems implementation services',
-                'template_content' => $this->getSolutionTemplate(),
+                'content' => $this->getSolutionTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'phases' => [
@@ -774,10 +779,10 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'IT Procurement Consulting Agreement',
-                'template_type' => ContractTemplate::TYPE_PROFESSIONAL_SERVICES,
-                'category' => ContractTemplate::CATEGORY_VAR,
+                'contract_type' => 'professional_services',
+                'category' => 'var',
                 'description' => 'Strategic IT procurement consulting and vendor management services',
-                'template_content' => $this->getProcurementTemplate(),
+                'content' => $this->getProcurementTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'rates' => [
@@ -809,10 +814,10 @@ class ContractTemplateSeeder extends Seeder
         $templates = [
             [
                 'name' => 'Business Associate Agreement (HIPAA)',
-                'template_type' => ContractTemplate::TYPE_BUSINESS_ASSOCIATE,
-                'category' => ContractTemplate::CATEGORY_COMPLIANCE,
+                'contract_type' => 'business_associate',
+                'category' => 'compliance',
                 'description' => 'HIPAA-compliant Business Associate Agreement for healthcare clients',
-                'template_content' => $this->getHIPAATemplate(),
+                'content' => $this->getHIPAATemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'rates' => ['monthly_compliance_fee' => 2500, 'setup_fee' => 5000, 'audit_support_hourly' => 250],
@@ -864,38 +869,38 @@ class ContractTemplateSeeder extends Seeder
             ],
             [
                 'name' => 'SOX Compliance Services Agreement',
-                'template_type' => ContractTemplate::TYPE_PROFESSIONAL_SERVICES,
-                'category' => ContractTemplate::CATEGORY_COMPLIANCE,
+                'contract_type' => 'professional_services',
+                'category' => 'compliance',
                 'description' => 'Sarbanes-Oxley compliance assessment, implementation, and ongoing monitoring',
-                'template_content' => $this->getSOXTemplate(),
+                'content' => $this->getSOXTemplate(),
             ],
             [
                 'name' => 'PCI DSS Compliance Agreement',
-                'template_type' => ContractTemplate::TYPE_PROFESSIONAL_SERVICES,
-                'category' => ContractTemplate::CATEGORY_COMPLIANCE,
+                'contract_type' => 'professional_services',
+                'category' => 'compliance',
                 'description' => 'PCI DSS compliance assessment and ongoing security services',
-                'template_content' => $this->getPCITemplate(),
+                'content' => $this->getPCITemplate(),
             ],
             [
                 'name' => 'GDPR Data Processing Agreement',
-                'template_type' => ContractTemplate::TYPE_DATA_PROCESSING,
-                'category' => ContractTemplate::CATEGORY_COMPLIANCE,
+                'contract_type' => 'data_processing',
+                'category' => 'compliance',
                 'description' => 'GDPR-compliant data processing agreement for EU data handling',
-                'template_content' => $this->getGDPRTemplate(),
+                'content' => $this->getGDPRTemplate(),
             ],
             [
                 'name' => 'Security Audit Services Agreement',
-                'template_type' => ContractTemplate::TYPE_PROFESSIONAL_SERVICES,
-                'category' => ContractTemplate::CATEGORY_COMPLIANCE,
+                'contract_type' => 'professional_services',
+                'category' => 'compliance',
                 'description' => 'Comprehensive security audit services including penetration testing, vulnerability assessment, and compliance validation',
-                'template_content' => $this->getSecurityAuditTemplate(),
+                'content' => $this->getSecurityAuditTemplate(),
             ],
             [
                 'name' => 'Consumption-Based Services Agreement',
-                'template_type' => ContractTemplate::TYPE_CONSUMPTION_BASED,
-                'category' => ContractTemplate::CATEGORY_GENERAL,
+                'contract_type' => 'consumption_based',
+                'category' => 'general',
                 'description' => 'Flexible consumption-based pricing for cloud and managed services',
-                'template_content' => $this->getConsumptionTemplate(),
+                'content' => $this->getConsumptionTemplate(),
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'usage_tiers' => [
@@ -921,7 +926,7 @@ class ContractTemplateSeeder extends Seeder
     {
         $defaults = [
             'company_id' => 1, // System default templates
-            'status' => ContractTemplate::STATUS_ACTIVE,
+            'status' => 'active',
             'version' => '1.0',
             'is_default' => true,
             'requires_approval' => false,
@@ -1458,13 +1463,13 @@ NOW, THEREFORE, in consideration of the mutual covenants, terms, and conditions 
 DEFINITIONS:
 As used in this Agreement, the following terms shall have the meanings ascribed to them below:
 Agreement: This Managed Detection & Response Services Agreement, inclusive of all schedules and exhibits attached hereto.
-Confidential Information: Shall have the meaning set forth in Section 9.
+Confidential Information: Shall have the meaning set forth in {{confidentiality_section_ref}}.
 Covered Assets: The specific endpoints, servers, and network devices designated for MDR coverage under this Agreement, totaling {{endpoint_count}} endpoints, {{server_count}} servers, and {{network_device_count}} network devices.
-Force Majeure Event: Shall have the meaning set forth in Section 15.
+Force Majeure Event: Shall have the meaning set forth in {{legal_section_ref}}.
 Incident: Any security event that poses a threat to the confidentiality, integrity, or availability of Client's information systems.
-MDR Services: The managed detection and response services to be furnished by Service Provider as delineated in Section 2.
+MDR Services: The managed detection and response services to be furnished by Service Provider as delineated in {{services_section_ref}}.
 Security Operations Center (SOC): Service Provider's dedicated facility for monitoring, detecting, analyzing, and responding to cybersecurity incidents.
-Term: The duration of this Agreement as defined in Section 5.
+Term: The duration of this Agreement as defined in {{financial_section_ref}}.
 
 SCOPE OF MDR SERVICES:
 Service Provider shall provide the following managed detection and response services:
@@ -1620,11 +1625,11 @@ Agreement: This Hosted PBX Services Agreement, inclusive of all schedules and se
 Business Hours: {{business_hours}}, excluding Provider-recognized holidays.
 DID Numbers: Direct Inward Dial telephone numbers assigned to Customer.
 Extensions: Individual user endpoints connected to the hosted PBX system.
-Force Majeure Event: Events beyond Provider's reasonable control as defined in Section 15.
-Hosted PBX Services: The cloud-based Private Branch Exchange services provided by Provider as described in Section 2.
+Force Majeure Event: Events beyond Provider's reasonable control as defined in {{legal_section_ref}}.
+Hosted PBX Services: The cloud-based Private Branch Exchange services provided by Provider as described in {{services_section_ref}}.
 Network: Provider's telecommunications network and infrastructure.
-Service Level Agreement (SLA): The performance standards set forth in Section 3.
-Term: The duration of this Agreement as defined in Section 5.
+Service Level Agreement (SLA): The performance standards set forth in {{sla_section_ref}}.
+Term: The duration of this Agreement as defined in {{financial_section_ref}}.
 
 HOSTED PBX SERVICES:
 Provider shall provide Customer with the following hosted PBX services:
@@ -3010,7 +3015,7 @@ NOW, THEREFORE, in consideration of the mutual covenants and agreements containe
 
 1. APPOINTMENT AND AUTHORIZATION
 
-a) Vendor hereby appoints Partner as a non-exclusive authorized reseller of Vendor's products and services within the territory defined in Section 3
+a) Vendor hereby appoints Partner as a non-exclusive authorized reseller of Vendor's products and services within the territory defined in {{territory_section_ref}}
 b) Partner accepts such appointment and agrees to actively promote and sell Vendor's products
 c) Partnership Tier Level: {{partner_tier}}
 d) Product Categories Authorized: {{product_categories}}
@@ -4528,19 +4533,19 @@ NOW, THEREFORE, in consideration of the mutual covenants, terms, and conditions 
 
 DEFINITIONS:
 As used in this Agreement, the following terms shall have the meanings ascribed to them below:
-Agreement: This Recurring Support Services Agreement, inclusive of all schedules and exhibits attached hereto and incorporated herein by reference, specifically Schedule A and Schedule B, as may be amended from time to time in accordance with Section 12.
+Agreement: This Recurring Support Services Agreement, inclusive of all schedules and exhibits attached hereto and incorporated herein by reference, specifically Schedule A and Schedule B, as may be amended from time to time in accordance with {{admin_section_ref}}.
 Business Hours: Shall mean {{business_hours}}, excluding {{service_provider_short_name}} recognized holidays as specified in Schedule A.
-Confidential Information: Shall have the meaning set forth in Section 9.a.
+Confidential Information: Shall have the meaning set forth in {{confidentiality_section_ref}}.a.
 Emergency Support: Shall mean support necessitated by critical issues that materially and adversely impact the Client's core business operations, the specific conditions and response protocols for which shall be further defined in Schedule A based on the selected Service Tier.
-Force Majeure Event: Shall have the meaning set forth in Section 15.
+Force Majeure Event: Shall have the meaning set forth in {{legal_section_ref}}.
 Response Time: Shall mean the target timeframe within which {{service_provider_short_name}} shall acknowledge receipt of a properly submitted Support Request, as specified for the applicable Service Tier in Schedule A.
 Resolution Time: Shall mean the target timeframe within which {{service_provider_short_name}} shall endeavor to resolve a properly submitted Support Request, such timeframe potentially varying based on the issue's severity, complexity, and the applicable Service Tier, as specified in Schedule A. Resolution Times are targets and not guaranteed fix times.
 Service Levels: Shall mean the standards, performance metrics, Response Times, and Resolution Times governing {{service_provider_short_name}}'s provision of the Support Services, as detailed for the selected Service Tier in Schedule A.
 Service Tier: Shall mean the specific level of service (e.g., {{service_tier}}) selected by the Client for the Supported Infrastructure, as designated in Schedule A, which dictates the applicable Service Levels and fees (Schedule B).
 Support Request: Shall mean a request for technical assistance pertaining to the Supported Infrastructure, submitted by an authorized Client representative to {{service_provider_short_name}} in compliance with the procedures stipulated in Schedule A.
-Support Services: Shall mean the recurring information technology support services to be furnished by {{service_provider_short_name}} to the Client, as delineated in Section 2 hereof and further specified in Schedule A, corresponding to the Supported Infrastructure and Service Tier selected by the Client.
+Support Services: Shall mean the recurring information technology support services to be furnished by {{service_provider_short_name}} to the Client, as delineated in {{services_section_ref}} hereof and further specified in Schedule A, corresponding to the Supported Infrastructure and Service Tier selected by the Client.
 Supported Infrastructure: Shall mean the specific information technology hardware, software, and systems components designated for coverage under this Agreement, encompassing {{supported_asset_types}} as enumerated with specificity in Schedule A.
-Term: Shall mean the duration of this Agreement as defined in Section 5.a, including the Initial Term and any Renewal Terms.
+Term: Shall mean the duration of this Agreement as defined in {{financial_section_ref}}.a, including the Initial Term and any Renewal Terms.
 
 SCOPE OF SUPPORT SERVICES:
 {{service_provider_short_name}} shall provide the Support Services to the Client for the Supported Infrastructure selected by the Client and detailed in Schedule A.
@@ -4590,7 +4595,7 @@ All payments shall be made in United States Dollars via ACH or Wire Transfer. Cr
 
 Late Payment and Suspension: Timely payment is a material obligation of the Client. Should payment not be received by {{service_provider_short_name}} by the due date (the first day of the service period), {{service_provider_short_name}} shall be entitled, at its sole discretion and without prejudice to any other rights or remedies, to immediately suspend performance of the Support Services without further notice until such time as payment is received in full. Any amount not paid when due shall accrue interest at a rate of 1.5% per month, or the maximum rate permitted by applicable law, whichever is lower, commencing fifteen (15) days after the payment due date, until paid in full.
 
-{{service_provider_short_name}} reserves the right to review and adjust the fees set forth in Schedule B effective upon the annual anniversary of the Effective Date. Fees may also be adjusted upon mutual written agreement following material changes to the Supported Infrastructure per Section 2.1.
+{{service_provider_short_name}} reserves the right to review and adjust the fees set forth in Schedule B effective upon the annual anniversary of the Effective Date. Fees may also be adjusted upon mutual written agreement following material changes to the Supported Infrastructure per {{services_section_ref}}.1.
 
 Any services requested by Client that fall outside the defined scope of Support Services (\"Out-of-Scope Services\") may be provided by {{service_provider_short_name}} subject to a separate written agreement (e.g., Statement of Work) at {{service_provider_short_name}}'s then-current standard rates.
 
@@ -4603,11 +4608,11 @@ Upon expiration of the Initial Term, this Agreement shall automatically renew fo
 
 Either Party may terminate this Agreement for cause upon thirty (30) days' prior written notice to the other Party of a material breach of any provision of this Agreement, provided such breach remains uncured at the expiration of said notice period.
 
-Notwithstanding Section 5.c, {{service_provider_short_name}} may terminate this Agreement effective immediately upon written notice should Client fail to pay any amount when due. (This termination right is in addition to the right of suspension under Section 4.d).
+Notwithstanding {{financial_section_ref}}.c, {{service_provider_short_name}} may terminate this Agreement effective immediately upon written notice should Client fail to pay any amount when due. (This termination right is in addition to the right of suspension under {{obligations_section_ref}}.d).
 
 Either Party may terminate this Agreement effective immediately upon written notice if the other Party becomes insolvent, makes a general assignment for the benefit of creditors, files a voluntary petition of bankruptcy, suffers or permits the appointment of a receiver for its business or assets, or becomes subject to any proceeding under any bankruptcy or insolvency law.
 
-Upon termination or expiration hereof for any reason, Client shall immediately pay all outstanding fees accrued up to the effective date of termination. {{service_provider_short_name}} shall reasonably cooperate in transition activities, potentially subject to agreed transition fees. Sections 8, 9, 10, and other provisions which by their nature should survive, shall survive termination or expiration.
+Upon termination or expiration hereof for any reason, Client shall immediately pay all outstanding fees accrued up to the effective date of termination. {{service_provider_short_name}} shall reasonably cooperate in transition activities, potentially subject to agreed transition fees. {{legal_section_ref}}, {{confidentiality_section_ref}}, {{admin_section_ref}}, and other provisions which by their nature should survive, shall survive termination or expiration.
 
 EXCLUSIONS FROM SUPPORT SERVICES:
 {{service_provider_short_name}}'s obligations to provide Support Services hereunder expressly exclude, unless otherwise explicitly agreed in writing or detailed in Schedule A:
@@ -4637,7 +4642,7 @@ Personally Owned Devices / BYOD: Support Services are strictly limited to the Cl
 WARRANTIES AND DISCLAIMERS:
 {{service_provider_short_name}} warrants that the Support Services shall be performed in a professional and workmanlike manner, consistent with generally accepted industry standards.
 
-Disclaimer of Other Warranties: EXCEPT FOR THE EXPRESS WARRANTY SET FORTH IN SECTION 7.a ABOVE, {{service_provider_short_name|upper}} MAKES NO OTHER WARRANTIES WHATSOEVER WITH RESPECT TO THE SUPPORT SERVICES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, AND SPECIFICALLY DISCLAIMS ALL IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT, AND ANY WARRANTIES ARISING FROM COURSE OF DEALING, COURSE OF PERFORMANCE, OR USAGE OF TRADE. {{service_provider_short_name|upper}} DOES NOT WARRANT THAT THE SUPPORT SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR WILL MEET ALL OF CLIENT'S REQUIREMENTS OR RESOLVE ALL ISSUES.
+Disclaimer of Other Warranties: EXCEPT FOR THE EXPRESS WARRANTY SET FORTH IN {{warranties_section_ref|upper}}.a ABOVE, {{service_provider_short_name|upper}} MAKES NO OTHER WARRANTIES WHATSOEVER WITH RESPECT TO THE SUPPORT SERVICES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, AND SPECIFICALLY DISCLAIMS ALL IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT, AND ANY WARRANTIES ARISING FROM COURSE OF DEALING, COURSE OF PERFORMANCE, OR USAGE OF TRADE. {{service_provider_short_name|upper}} DOES NOT WARRANT THAT THE SUPPORT SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR WILL MEET ALL OF CLIENT'S REQUIREMENTS OR RESOLVE ALL ISSUES.
 
 LIMITATION OF LIABILITY:
 EXCLUSION OF INDIRECT AND CONSEQUENTIAL DAMAGES: IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER PARTY OR TO ANY THIRD PARTY FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, LOSS OF DATA, BUSINESS INTERRUPTION, LOSS OF GOODWILL, OR COST OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES) ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT OR THE SUPPORT SERVICES, WHETHER BASED ON WARRANTY, CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, STATUTE, OR ANY OTHER LEGAL THEORY, EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
@@ -4706,5 +4711,25 @@ By: _______________________________
 Name: {{client_signatory_name}}
 Title: {{client_signatory_title}}
 EOD;
+    }
+
+    /**
+     * Create standard contract clauses
+     */
+    private function createStandardClauses(): void
+    {
+        $clauses = ContractClause::getDefaultMSPClauses();
+        
+        foreach ($clauses as $clauseData) {
+            $clauseData['company_id'] = 1; // Default company for seeding
+            $clauseData['status'] = 'active';
+            $clauseData['slug'] = \Str::slug($clauseData['name']);
+            $clauseData['is_system'] = true;
+            $clauseData['created_by'] = 1;
+            $clauseData['updated_by'] = 1;
+            ContractClause::create($clauseData);
+        }
+        
+        $this->command->info('Created standard contract clauses');
     }
 }

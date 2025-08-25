@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\ContactCreated;
-use App\Services\ContractAutomationService;
+use App\Domains\Contract\Services\ContractAutomationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;

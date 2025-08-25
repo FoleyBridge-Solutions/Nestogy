@@ -62,7 +62,7 @@ class GenerateRecurringInvoices extends Command
         try {
             if ($contractId) {
                 // Generate for specific contract
-                $contract = \App\Domains\Financial\Models\Contract::find($contractId);
+                $contract = \App\Domains\Contract\Models\Contract::find($contractId);
 
                 if (!$contract) {
                     $this->error('Contract not found');

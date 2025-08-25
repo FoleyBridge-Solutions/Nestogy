@@ -85,71 +85,9 @@ class StoreQuoteRequest extends FormRequest
             'pricing_model.per_minute_overage' => 'nullable|numeric|min:0|max:99.99',
             'pricing_model.equipment_lease' => 'nullable|numeric|min:0|max:999999.99',
             
-            // Relationships - conditional validation based on status
-            'category_id' => [
-                function ($attribute, $value, $fail) {
-                    $status = $this->input('status', 'Draft');
-                    
-                    // For draft status, allow null values
-                    if ($status === 'Draft' && ($value === null || $value === '')) {
-                        return;
-                    }
-                    
-                    // For non-draft status, require valid category
-                    if (!$value) {
-                        $fail('The category field is required.');
-                        return;
-                    }
-                    
-                    if (!is_numeric($value)) {
-                        $fail('The category must be a number.');
-                        return;
-                    }
-                    
-                    $user = \Auth::user();
-                    $category = Category::find($value);
-                    if (!$category) {
-                        $fail('The selected category is invalid.');
-                        return;
-                    }
-                    
-                    if ($category->company_id !== $user->company_id) {
-                        $fail('The selected category is invalid.');
-                    }
-                },
-            ],
-            'client_id' => [
-                function ($attribute, $value, $fail) {
-                    $status = $this->input('status', 'Draft');
-                    
-                    // For draft status, allow null values
-                    if ($status === 'Draft' && ($value === null || $value === '')) {
-                        return;
-                    }
-                    
-                    // For non-draft status, require valid client
-                    if (!$value) {
-                        $fail('The client field is required.');
-                        return;
-                    }
-                    
-                    if (!is_numeric($value)) {
-                        $fail('The client must be a number.');
-                        return;
-                    }
-                    
-                    $user = \Auth::user();
-                    $client = Client::find($value);
-                    if (!$client) {
-                        $fail('The selected client is invalid.');
-                        return;
-                    }
-                    
-                    if ($client->company_id !== $user->company_id) {
-                        $fail('The selected client is invalid.');
-                    }
-                },
-            ],
+            // Relationships - simplified validation
+            'category_id' => 'nullable|integer|exists:categories,id',
+            'client_id' => 'required|integer|exists:clients,id',
             
             // Quote items (optional during creation)
             'items' => 'nullable|array',
@@ -238,38 +176,31 @@ class StoreQuoteRequest extends FormRequest
         ]);
 
         $validator->after(function ($validator) {
+            // Validate client belongs to user's company
+            if ($this->client_id) {
+                $client = Client::where('id', $this->client_id)
+                    ->where('company_id', Auth::user()->company_id)
+                    ->first();
+                
+                if (!$client) {
+                    $validator->errors()->add('client_id', 'The selected client is invalid.');
+                }
+            }
+
+            // Validate category belongs to user's company  
+            if ($this->category_id) {
+                $category = Category::where('id', $this->category_id)
+                    ->where('company_id', Auth::user()->company_id)
+                    ->first();
+                
+                if (!$category) {
+                    $validator->errors()->add('category_id', 'The selected category is invalid.');
+                }
+            }
+            
             // Validate discount percentage doesn't exceed 100%
             if ($this->discount_type === 'percentage' && $this->discount_amount > 100) {
                 $validator->errors()->add('discount_amount', 'Discount percentage cannot exceed 100%.');
-            }
-
-            // Validate VoIP configuration consistency
-            if ($this->voip_config) {
-                $extensions = $this->input('voip_config.extensions', 0);
-                $concurrentCalls = $this->input('voip_config.concurrent_calls', 0);
-                
-                if ($concurrentCalls > $extensions) {
-                    $validator->errors()->add('voip_config.concurrent_calls', 
-                        'Concurrent calls cannot exceed the number of extensions.');
-                }
-                
-                // Validate equipment doesn't exceed extensions
-                $deskPhones = $this->input('voip_config.equipment.desk_phones', 0);
-                $wirelessPhones = $this->input('voip_config.equipment.wireless_phones', 0);
-                $totalPhones = $deskPhones + $wirelessPhones;
-                
-                if ($totalPhones > $extensions) {
-                    $validator->errors()->add('voip_config.equipment', 
-                        'Total phones cannot exceed the number of extensions.');
-                }
-            }
-
-            // Validate pricing model consistency
-            if ($this->pricing_model && $this->input('pricing_model.type') === 'usage_based') {
-                if (!$this->input('pricing_model.per_minute_overage')) {
-                    $validator->errors()->add('pricing_model.per_minute_overage', 
-                        'Per minute overage rate is required for usage-based pricing.');
-                }
             }
         });
     }

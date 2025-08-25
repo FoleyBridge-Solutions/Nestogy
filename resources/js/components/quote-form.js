@@ -330,13 +330,11 @@ document.addEventListener('alpine:init', () => {
                         name: item.name,
                         description: item.description,
                         quantity: item.quantity,
-                        unit_price: item.unit_price,
+                        price: item.unit_price, // Backend expects 'price' not 'unit_price'
                         discount: item.discount || 0,
                         tax_rate: item.tax_rate || 0,
                         order: item.order
                     })),
-                    pricing: this.$store.quote.pricing,
-                    billing_config: this.$store.quote.billingConfig,
                     ...options
                 };
 

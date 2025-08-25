@@ -24,10 +24,10 @@ The Nestogy Command System is a sophisticated intent-based natural language inte
   - Classify intent types (CREATE, SHOW, GO, FIND, ACTION)
   - Extract entities and modifiers from natural language
   - Handle shortcuts and abbreviations
-  - Provide intelligent autocomplete suggestions
+  - Provide advanced autocomplete suggestions
   - Calculate confidence scores for parsed commands
 
-#### 3. EntityResolverService (Smart Entity Matching)
+#### 3. EntityResolverService (Advanced Entity Matching)
 - **Location**: `app/Services/EntityResolverService.php`
 - **Purpose**: Resolve entity references with advanced matching
 - **Capabilities**:
@@ -38,9 +38,9 @@ The Nestogy Command System is a sophisticated intent-based natural language inte
   - Multi-entity global search
   - Performance-optimized caching
 
-#### 4. CommandLearningService (Adaptive Intelligence)
+#### 4. CommandLearningService (Adaptive Processing)
 - **Location**: `app/Services/CommandLearningService.php`
-- **Purpose**: Machine learning and user adaptation
+- **Purpose**: Advanced pattern recognition and user adaptation
 - **Features**:
   - User pattern recognition and learning
   - Command success/failure tracking
@@ -119,7 +119,7 @@ const ENTITIES = [
 
 ### Enhanced Processing Pipeline
 
-The new intelligent command system uses a sophisticated multi-stage processing pipeline:
+The new advanced command system uses a sophisticated multi-stage processing pipeline:
 
 ```php
 // Stage 1: Intent Service Processing
@@ -161,7 +161,7 @@ public static function preprocessInput(string $input): string
 }
 ```
 
-### 2. Intelligent Intent Recognition
+### 2. Advanced Intent Recognition
 ```php
 public static function parseCommand(string $input, array $context = []): ParsedCommand
 {
@@ -186,7 +186,7 @@ public static function parseCommand(string $input, array $context = []): ParsedC
 }
 ```
 
-### 3. Smart Entity Resolution
+### 3. Advanced Entity Resolution
 ```php
 public static function resolve(string $entityType, $identifier, array $context = []): ?Model
 {
@@ -335,7 +335,7 @@ class CreateCommandHandler implements CommandHandlerInterface
 ## Suggestion Engine
 
 ### Real-time Autocomplete
-The suggestion engine provides intelligent autocomplete as users type:
+The suggestion engine provides advanced autocomplete as users type:
 
 ```php
 public function getSuggestions(string $partial, array $context): array

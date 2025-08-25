@@ -238,7 +238,7 @@
                     Required Training Programs
                 </label>
                 <div class="space-y-3">
-                    <template x-for="program in trainingPrograms" :key="program.value">
+                    <template x-for="program in $data.trainingPrograms || []" :key="program.value">
                         <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center space-x-3">

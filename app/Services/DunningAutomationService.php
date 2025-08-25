@@ -23,9 +23,9 @@ use Illuminate\Support\Facades\Queue;
  */
 class DunningAutomationService
 {
-    protected VoipTaxService $voipTaxService;
+    protected VoIPTaxReversalService $voipTaxService;
     
-    public function __construct(VoipTaxService $voipTaxService)
+    public function __construct(VoIPTaxReversalService $voipTaxService)
     {
         $this->voipTaxService = $voipTaxService;
     }

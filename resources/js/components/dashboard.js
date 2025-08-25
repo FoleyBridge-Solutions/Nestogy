@@ -176,8 +176,17 @@ export function modernDashboard() {
                 
                 const data = await response.json();
                 
-                // Update KPIs with animation
-                this.updateKPIs(data.stats || {});
+                // Update KPIs with animation - merge stats and flatten KPIs
+                const flattenedKpis = this.flattenKpiData(data.kpis || {}, data.stats || {});
+                this.updateKPIs(flattenedKpis);
+                
+                // Update charts with new data if available
+                if (data.revenueChartData) {
+                    this.updateRevenueChart(data.revenueChartData);
+                }
+                if (data.ticketChartData) {
+                    this.updateTicketsChart(data.ticketChartData);
+                }
                 
                 console.log('Dashboard data refreshed at:', new Date().toLocaleTimeString());
                 
@@ -189,10 +198,26 @@ export function modernDashboard() {
             }
         },
         
+        flattenKpiData(kpis, stats) {
+            // Flatten KPI data to match template expectations
+            const flattened = { ...stats }; // Start with stats as base
+            
+            // Extract values from KPI objects and add to flattened data
+            Object.keys(kpis).forEach(key => {
+                if (kpis[key] && typeof kpis[key] === 'object' && 'value' in kpis[key]) {
+                    flattened[key] = kpis[key].value;
+                    // Also add the full KPI object for advanced displays
+                    flattened[key + '_kpi'] = kpis[key];
+                }
+            });
+            
+            return flattened;
+        },
+
         updateKPIs(newKpis) {
             // Smooth transition for KPI updates
             Object.keys(newKpis).forEach(key => {
-                if (this.kpis[key]?.value !== newKpis[key]?.value) {
+                if (this.kpis[key] !== newKpis[key]) {
                     // Trigger a subtle animation class
                     const element = document.querySelector(`[data-kpi="${key}"]`);
                     if (element) {
@@ -376,6 +401,23 @@ export function modernDashboard() {
                     }
                 }
             });
+        },
+        
+        // Chart Update Methods
+        updateRevenueChart(chartData) {
+            if (this.charts.revenue && chartData.data && chartData.labels) {
+                this.charts.revenue.data.labels = chartData.labels;
+                this.charts.revenue.data.datasets[0].data = chartData.data;
+                this.charts.revenue.update('none'); // No animation for real-time updates
+            }
+        },
+        
+        updateTicketsChart(chartData) {
+            if (this.charts.tickets && chartData.data && chartData.labels) {
+                this.charts.tickets.data.labels = chartData.labels;
+                this.charts.tickets.data.datasets[0].data = chartData.data;
+                this.charts.tickets.update('none'); // No animation for real-time updates
+            }
         },
         
         // Export Functionality

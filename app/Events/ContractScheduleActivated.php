@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\ContractSchedule;
+use App\Domains\Contract\Models\ContractSchedule;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

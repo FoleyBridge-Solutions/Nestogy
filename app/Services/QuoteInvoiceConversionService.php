@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Models\Quote;
 use App\Models\Invoice;
-use App\Models\Contract;
-use App\Models\ContractMilestone;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractMilestone;
 use App\Models\QuoteInvoiceConversion;
 use App\Models\RecurringInvoice;
 use App\Models\Client;
+use App\Domains\Contract\Services\ContractGenerationService;
+use App\Domains\Financial\Services\InvoiceService;
+use App\Services\RecurringInvoiceService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -632,11 +635,11 @@ class QuoteInvoiceConversionService
     /**
      * Select optimal contract template for quote
      */
-    protected function selectOptimalTemplate(Quote $quote, array $contractData): \App\Models\ContractTemplate
+    protected function selectOptimalTemplate(Quote $quote, array $contractData): \App\Domains\Contract\Models\ContractTemplate
     {
         $templateType = $contractData['template_type'] ?? $this->determineOptimalTemplateType($quote);
         
-        return \App\Models\ContractTemplate::where('company_id', $quote->company_id)
+        return \App\Domains\Contract\Models\ContractTemplate::where('company_id', $quote->company_id)
             ->where('template_type', $templateType)
             ->where('status', 'active')
             ->where('is_default', true)

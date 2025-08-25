@@ -58,6 +58,30 @@ class Company extends Model
         'is_active',
         'suspended_at',
         'suspension_reason',
+        'hourly_rate_config',
+        'default_standard_rate',
+        'default_after_hours_rate',
+        'default_emergency_rate',
+        'default_weekend_rate',
+        'default_holiday_rate',
+        'after_hours_multiplier',
+        'emergency_multiplier',
+        'weekend_multiplier',
+        'holiday_multiplier',
+        'rate_calculation_method',
+        'minimum_billing_increment',
+        'time_rounding_method',
+        // Hierarchy fields
+        'parent_company_id',
+        'company_type',
+        'organizational_level',
+        'subsidiary_settings',
+        'access_level',
+        'billing_type',
+        'billing_parent_id',
+        'can_create_subsidiaries',
+        'max_subsidiary_depth',
+        'inherited_permissions',
     ];
 
     /**
@@ -69,6 +93,21 @@ class Company extends Model
         'suspended_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'hourly_rate_config' => 'array',
+        'default_standard_rate' => 'decimal:2',
+        'default_after_hours_rate' => 'decimal:2',
+        'default_emergency_rate' => 'decimal:2',
+        'default_weekend_rate' => 'decimal:2',
+        'default_holiday_rate' => 'decimal:2',
+        'after_hours_multiplier' => 'decimal:2',
+        'emergency_multiplier' => 'decimal:2',
+        'weekend_multiplier' => 'decimal:2',
+        'holiday_multiplier' => 'decimal:2',
+        'minimum_billing_increment' => 'decimal:2',
+        // Hierarchy casts
+        'subsidiary_settings' => 'array',
+        'inherited_permissions' => 'array',
+        'can_create_subsidiaries' => 'boolean',
     ];
 
     /**
@@ -121,11 +160,93 @@ class Company extends Model
     }
 
     /**
+     * Get the company's contract configurations.
+     */
+    public function contractConfigurations(): HasMany
+    {
+        return $this->hasMany(\App\Models\ContractConfiguration::class);
+    }
+
+    /**
      * Get the client record in Company 1 for billing (for tenant companies).
      */
     public function clientRecord()
     {
         return $this->belongsTo(Client::class, 'client_record_id');
+    }
+
+    // ===== HIERARCHY RELATIONSHIPS =====
+
+    /**
+     * Get the parent company.
+     */
+    public function parentCompany()
+    {
+        return $this->belongsTo(Company::class, 'parent_company_id');
+    }
+
+    /**
+     * Get direct child companies (subsidiaries).
+     */
+    public function childCompanies()
+    {
+        return $this->hasMany(Company::class, 'parent_company_id');
+    }
+
+    /**
+     * Get the billing parent company.
+     */
+    public function billingParent()
+    {
+        return $this->belongsTo(Company::class, 'billing_parent_id');
+    }
+
+    /**
+     * Get companies that bill through this company.
+     */
+    public function billingChildren()
+    {
+        return $this->hasMany(Company::class, 'billing_parent_id');
+    }
+
+    /**
+     * Get all hierarchy relationships where this company is the ancestor.
+     */
+    public function descendantHierarchies()
+    {
+        return $this->hasMany(CompanyHierarchy::class, 'ancestor_id');
+    }
+
+    /**
+     * Get all hierarchy relationships where this company is the descendant.
+     */
+    public function ancestorHierarchies()
+    {
+        return $this->hasMany(CompanyHierarchy::class, 'descendant_id');
+    }
+
+    /**
+     * Get subsidiary permissions granted by this company.
+     */
+    public function grantedPermissions()
+    {
+        return $this->hasMany(SubsidiaryPermission::class, 'granter_company_id');
+    }
+
+    /**
+     * Get subsidiary permissions granted to this company.
+     */
+    public function receivedPermissions()
+    {
+        return $this->hasMany(SubsidiaryPermission::class, 'grantee_company_id');
+    }
+
+    /**
+     * Get cross-company user access for this company.
+     */
+    public function crossCompanyUsers()
+    {
+        return $this->hasMany(CrossCompanyUser::class, 'company_id');
     }
 
     /**
@@ -275,6 +396,238 @@ class Company extends Model
     public static function getSupportedCurrencies(): array
     {
         return self::SUPPORTED_CURRENCIES;
+    }
+
+    /**
+     * Rate calculation methods
+     */
+    const RATE_METHOD_FIXED = 'fixed_rates';
+    const RATE_METHOD_MULTIPLIERS = 'multipliers';
+    
+    /**
+     * Time rounding methods
+     */
+    const ROUNDING_NONE = 'none';
+    const ROUNDING_UP = 'up';
+    const ROUNDING_DOWN = 'down';
+    const ROUNDING_NEAREST = 'nearest';
+    
+    /**
+     * Rate types
+     */
+    const RATE_STANDARD = 'standard';
+    const RATE_AFTER_HOURS = 'after_hours';
+    const RATE_EMERGENCY = 'emergency';
+    const RATE_WEEKEND = 'weekend';
+    const RATE_HOLIDAY = 'holiday';
+
+    /**
+     * Get hourly rate for a specific rate type.
+     */
+    public function getHourlyRate(string $rateType): float
+    {
+        if ($this->rate_calculation_method === self::RATE_METHOD_FIXED) {
+            return $this->getFixedRate($rateType);
+        }
+        
+        // Use multiplier method
+        $baseRate = $this->default_standard_rate ?? 150.00;
+        $multiplier = $this->getMultiplier($rateType);
+        
+        return round($baseRate * $multiplier, 2);
+    }
+    
+    /**
+     * Get fixed rate for rate type.
+     */
+    protected function getFixedRate(string $rateType): float
+    {
+        $rates = [
+            self::RATE_STANDARD => $this->default_standard_rate ?? 150.00,
+            self::RATE_AFTER_HOURS => $this->default_after_hours_rate ?? 225.00,
+            self::RATE_EMERGENCY => $this->default_emergency_rate ?? 300.00,
+            self::RATE_WEEKEND => $this->default_weekend_rate ?? 200.00,
+            self::RATE_HOLIDAY => $this->default_holiday_rate ?? 250.00,
+        ];
+        
+        return $rates[$rateType] ?? $rates[self::RATE_STANDARD];
+    }
+    
+    /**
+     * Get multiplier for rate type.
+     */
+    public function getMultiplier(string $rateType): float
+    {
+        $multipliers = [
+            self::RATE_STANDARD => 1.0,
+            self::RATE_AFTER_HOURS => $this->after_hours_multiplier ?? 1.5,
+            self::RATE_EMERGENCY => $this->emergency_multiplier ?? 2.0,
+            self::RATE_WEEKEND => $this->weekend_multiplier ?? 1.5,
+            self::RATE_HOLIDAY => $this->holiday_multiplier ?? 2.0,
+        ];
+        
+        return $multipliers[$rateType] ?? 1.0;
+    }
+    
+    /**
+     * Get available rate types.
+     */
+    public static function getRateTypes(): array
+    {
+        return [
+            self::RATE_STANDARD => 'Standard',
+            self::RATE_AFTER_HOURS => 'After Hours',
+            self::RATE_EMERGENCY => 'Emergency',
+            self::RATE_WEEKEND => 'Weekend',
+            self::RATE_HOLIDAY => 'Holiday',
+        ];
+    }
+    
+    /**
+     * Round time according to company settings.
+     */
+    public function roundTime(float $hours): float
+    {
+        $increment = $this->minimum_billing_increment ?? 0.25;
+        
+        switch ($this->time_rounding_method) {
+            case self::ROUNDING_UP:
+                return ceil($hours / $increment) * $increment;
+            case self::ROUNDING_DOWN:
+                return floor($hours / $increment) * $increment;
+            case self::ROUNDING_NEAREST:
+                return round($hours / $increment) * $increment;
+            default:
+                return $hours;
+        }
+    }
+
+    // ===== HIERARCHY HELPER METHODS =====
+
+    /**
+     * Check if this company is a root company (no parent).
+     */
+    public function isRoot(): bool
+    {
+        return $this->company_type === 'root' || $this->parent_company_id === null;
+    }
+
+    /**
+     * Check if this company is a subsidiary.
+     */
+    public function isSubsidiary(): bool
+    {
+        return $this->company_type === 'subsidiary' && $this->parent_company_id !== null;
+    }
+
+    /**
+     * Check if this company can create subsidiaries.
+     */
+    public function canCreateSubsidiaries(): bool
+    {
+        return $this->can_create_subsidiaries === true;
+    }
+
+    /**
+     * Get all descendant companies (children, grandchildren, etc).
+     */
+    public function getAllDescendants()
+    {
+        return CompanyHierarchy::getDescendants($this->id)
+            ->pluck('descendant_id')
+            ->map(fn($id) => Company::find($id))
+            ->filter();
+    }
+
+    /**
+     * Get all ancestor companies (parent, grandparent, etc).
+     */
+    public function getAllAncestors()
+    {
+        return CompanyHierarchy::getAncestors($this->id)
+            ->pluck('ancestor_id')
+            ->map(fn($id) => Company::find($id))
+            ->filter();
+    }
+
+    /**
+     * Get the root company in the hierarchy.
+     */
+    public function getRootCompany(): ?Company
+    {
+        return CompanyHierarchy::getRoot($this->id);
+    }
+
+    /**
+     * Check if this company can access another company's data.
+     */
+    public function canAccessCompany(int $companyId): bool
+    {
+        // Same company
+        if ($this->id === $companyId) {
+            return true;
+        }
+
+        // Check if it's in the hierarchy
+        return CompanyHierarchy::areRelated($this->id, $companyId);
+    }
+
+    /**
+     * Get the effective billing parent (could be self if independent).
+     */
+    public function getEffectiveBillingParent(): Company
+    {
+        if ($this->billing_type === 'independent' || !$this->billing_parent_id) {
+            return $this;
+        }
+
+        return $this->billingParent ?? $this;
+    }
+
+    /**
+     * Check if company has reached maximum subsidiary depth.
+     */
+    public function hasReachedMaxSubsidiaryDepth(): bool
+    {
+        return $this->organizational_level >= $this->max_subsidiary_depth;
+    }
+
+    /**
+     * Get company hierarchy tree starting from this company.
+     */
+    public function getHierarchyTree(): array
+    {
+        return CompanyHierarchy::getTree($this->id);
+    }
+
+    /**
+     * Create a subsidiary company.
+     */
+    public function createSubsidiary(array $data): ?Company
+    {
+        if (!$this->canCreateSubsidiaries()) {
+            return null;
+        }
+
+        if ($this->hasReachedMaxSubsidiaryDepth()) {
+            return null;
+        }
+
+        $subsidiaryData = array_merge($data, [
+            'parent_company_id' => $this->id,
+            'company_type' => 'subsidiary',
+            'organizational_level' => $this->organizational_level + 1,
+            'billing_type' => $data['billing_type'] ?? 'parent_billed',
+            'billing_parent_id' => $data['billing_parent_id'] ?? $this->id,
+        ]);
+
+        $subsidiary = static::create($subsidiaryData);
+
+        if ($subsidiary) {
+            CompanyHierarchy::addToHierarchy($this->id, $subsidiary->id, 'subsidiary');
+        }
+
+        return $subsidiary;
     }
 
     /**

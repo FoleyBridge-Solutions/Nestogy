@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Contract;
-use App\Models\ContractTemplate;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractTemplate;
 use App\Services\TemplateVariableMapper;
 use Illuminate\Support\Str;
 

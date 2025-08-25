@@ -6,12 +6,13 @@
         'core' => [
             'title' => 'Core Settings',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>',
-            'routes' => ['settings.general', 'settings.security', 'settings.email', 'settings.user-management'],
+            'routes' => ['settings.general', 'settings.security', 'settings.email', 'settings.user-management', 'subsidiaries.index'],
             'items' => [
                 ['route' => 'settings.general', 'title' => 'General', 'active_routes' => ['settings.general', 'settings.index']],
                 ['route' => 'settings.security', 'title' => 'Security & Access', 'active_routes' => ['settings.security']],
                 ['route' => 'settings.email', 'title' => 'Email & Communication', 'active_routes' => ['settings.email']],
-                ['route' => 'settings.user-management', 'title' => 'User Management', 'active_routes' => ['settings.user-management']]
+                ['route' => 'settings.user-management', 'title' => 'User Management', 'active_routes' => ['settings.user-management']],
+                ['route' => 'subsidiaries.index', 'title' => 'Subsidiary Management', 'active_routes' => ['subsidiaries.index', 'subsidiaries.create', 'subsidiaries.edit', 'subsidiaries.show']]
             ]
         ],
         'financial' => [
@@ -27,12 +28,14 @@
         'service' => [
             'title' => 'Service Delivery',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>',
-            'routes' => ['settings.ticketing-service-desk', 'settings.project-management', 'settings.asset-inventory', 'settings.client-portal'],
+            'routes' => ['settings.ticketing-service-desk', 'settings.project-management', 'settings.asset-inventory', 'settings.client-portal', 'settings.contract-clauses', 'settings.contract-templates', 'settings.template-clauses'],
             'items' => [
                 ['route' => 'settings.ticketing-service-desk', 'title' => 'Ticketing & Service Desk', 'active_routes' => ['settings.ticketing-service-desk']],
                 ['route' => 'settings.project-management', 'title' => 'Project Management', 'active_routes' => ['settings.project-management']],
                 ['route' => 'settings.asset-inventory', 'title' => 'Asset & Inventory', 'active_routes' => ['settings.asset-inventory']],
-                ['route' => 'settings.client-portal', 'title' => 'Client Portal', 'active_routes' => ['settings.client-portal']]
+                ['route' => 'settings.client-portal', 'title' => 'Client Portal', 'active_routes' => ['settings.client-portal']],
+                ['route' => 'settings.contract-clauses', 'title' => 'Contract Clauses', 'active_routes' => ['settings.contract-clauses']],
+                ['route' => 'settings.contract-templates', 'title' => 'Template Clauses', 'active_routes' => ['settings.contract-templates', 'settings.template-clauses']]
             ]
         ],
         'tech' => [

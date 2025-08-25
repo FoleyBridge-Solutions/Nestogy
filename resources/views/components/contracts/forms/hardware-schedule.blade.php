@@ -275,7 +275,7 @@
                     Extended Warranty Options
                 </label>
                 <div class="space-y-4">
-                    <template x-for="option in extendedWarrantyOptions" :key="option.value">
+                    <template x-for="option in $data.extendedWarrantyOptions || []" :key="option.value">
                         <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                             <label class="flex items-center justify-between cursor-pointer">
                                 <div class="flex items-center space-x-3">

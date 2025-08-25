@@ -9,8 +9,8 @@ use App\Models\Payment;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\User;
-use App\Models\Contract;
-use App\Services\VoipTaxService;
+use App\Domains\Contract\Models\Contract;
+use App\Services\VoIPTaxReversalService;
 use App\Services\PaymentGatewayService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -35,11 +35,11 @@ use Exception;
  */
 class RefundManagementService
 {
-    protected ?VoipTaxService $voipTaxService;
+    protected ?VoIPTaxReversalService $voipTaxService;
     protected ?object $gatewayService;
 
     public function __construct(
-        ?VoipTaxService $voipTaxService = null,
+        ?VoIPTaxReversalService $voipTaxService = null,
         ?object $gatewayService = null
     ) {
         $this->voipTaxService = $voipTaxService;

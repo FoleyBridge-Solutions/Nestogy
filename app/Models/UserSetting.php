@@ -77,6 +77,9 @@ class UserSetting extends Model
     const ROLE_TECH = 2;
     const ROLE_ADMIN = 3;           // Tenant administrator
     const ROLE_SUPER_ADMIN = 4;     // Platform operator (Company 1 only)
+    const ROLE_PARENT_ADMIN = 5;    // Can manage subsidiaries
+    const ROLE_SUBSIDIARY_ADMIN = 6; // Admin of subsidiary with limited parent access
+    const ROLE_CROSS_COMPANY_USER = 7; // Access across company hierarchy
 
     /**
      * Role labels mapping
@@ -86,6 +89,9 @@ class UserSetting extends Model
         self::ROLE_TECH => 'Technician',
         self::ROLE_ADMIN => 'Administrator',
         self::ROLE_SUPER_ADMIN => 'Super Administrator',
+        self::ROLE_PARENT_ADMIN => 'Parent Company Admin',
+        self::ROLE_SUBSIDIARY_ADMIN => 'Subsidiary Admin',
+        self::ROLE_CROSS_COMPANY_USER => 'Cross-Company User',
     ];
 
     /**
@@ -142,6 +148,54 @@ class UserSetting extends Model
     public function isAccountant(): bool
     {
         return $this->role === self::ROLE_ACCOUNTANT;
+    }
+
+    /**
+     * Check if user has parent admin role (can manage subsidiaries).
+     */
+    public function isParentAdmin(): bool
+    {
+        return $this->role === self::ROLE_PARENT_ADMIN;
+    }
+
+    /**
+     * Check if user has subsidiary admin role.
+     */
+    public function isSubsidiaryAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUBSIDIARY_ADMIN;
+    }
+
+    /**
+     * Check if user is a cross-company user.
+     */
+    public function isCrossCompanyUser(): bool
+    {
+        return $this->role === self::ROLE_CROSS_COMPANY_USER;
+    }
+
+    /**
+     * Check if user can manage subsidiaries.
+     */
+    public function canManageSubsidiaries(): bool
+    {
+        return in_array($this->role, [
+            self::ROLE_SUPER_ADMIN,
+            self::ROLE_PARENT_ADMIN,
+            self::ROLE_ADMIN, // Regular admins can also create subsidiaries if company allows
+        ]);
+    }
+
+    /**
+     * Check if user has any subsidiary-related role.
+     */
+    public function hasSubsidiaryRole(): bool
+    {
+        return in_array($this->role, [
+            self::ROLE_PARENT_ADMIN,
+            self::ROLE_SUBSIDIARY_ADMIN,
+            self::ROLE_CROSS_COMPANY_USER,
+        ]);
     }
 
     /**
@@ -233,13 +287,49 @@ class UserSetting extends Model
     }
 
     /**
+     * Scope to get parent admin users.
+     */
+    public function scopeParentAdmins($query)
+    {
+        return $query->where('role', self::ROLE_PARENT_ADMIN);
+    }
+
+    /**
+     * Scope to get subsidiary admin users.
+     */
+    public function scopeSubsidiaryAdmins($query)
+    {
+        return $query->where('role', self::ROLE_SUBSIDIARY_ADMIN);
+    }
+
+    /**
+     * Scope to get cross-company users.
+     */
+    public function scopeCrossCompanyUsers($query)
+    {
+        return $query->where('role', self::ROLE_CROSS_COMPANY_USER);
+    }
+
+    /**
+     * Scope to get users who can manage subsidiaries.
+     */
+    public function scopeCanManageSubsidiaries($query)
+    {
+        return $query->whereIn('role', [
+            self::ROLE_SUPER_ADMIN,
+            self::ROLE_PARENT_ADMIN,
+            self::ROLE_ADMIN,
+        ]);
+    }
+
+    /**
      * Get validation rules for user settings.
      */
     public static function getValidationRules(): array
     {
         return [
             'user_id' => 'required|integer|exists:users,id',
-            'role' => 'required|integer|in:1,2,3,4',
+            'role' => 'required|integer|in:1,2,3,4,5,6,7',
             'force_mfa' => 'boolean',
             'records_per_page' => 'integer|min:5|max:100',
             'dashboard_financial_enable' => 'boolean',

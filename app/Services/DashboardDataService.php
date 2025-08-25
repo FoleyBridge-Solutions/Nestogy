@@ -4,13 +4,14 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Quote;
-use App\Models\Contract;
+use App\Domains\Contract\Models\Contract;
 use App\Models\Client;
 use App\Models\Payment;
 use App\Models\AnalyticsSnapshot;
 use App\Models\KpiCalculation;
 use App\Models\RevenueMetric;
 use App\Models\DashboardWidget;
+use App\Domains\Financial\Services\FinancialAnalyticsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -918,8 +919,8 @@ class DashboardDataService
                 ->selectRaw('
                     AVG(sentiment_score) as avg_score,
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN sentiment_label IN ("POSITIVE", "WEAK_POSITIVE") THEN 1 ELSE 0 END) as positive_count,
-                    SUM(CASE WHEN sentiment_label IN ("NEGATIVE", "WEAK_NEGATIVE") THEN 1 ELSE 0 END) as negative_count
+                    SUM(CASE WHEN sentiment_label IN (\'POSITIVE\', \'WEAK_POSITIVE\') THEN 1 ELSE 0 END) as positive_count,
+                    SUM(CASE WHEN sentiment_label IN (\'NEGATIVE\', \'WEAK_NEGATIVE\') THEN 1 ELSE 0 END) as negative_count
                 ')
                 ->first();
 
@@ -930,8 +931,8 @@ class DashboardDataService
                 ->selectRaw('
                     AVG(sentiment_score) as avg_score,
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN sentiment_label IN ("POSITIVE", "WEAK_POSITIVE") THEN 1 ELSE 0 END) as positive_count,
-                    SUM(CASE WHEN sentiment_label IN ("NEGATIVE", "WEAK_NEGATIVE") THEN 1 ELSE 0 END) as negative_count
+                    SUM(CASE WHEN sentiment_label IN (\'POSITIVE\', \'WEAK_POSITIVE\') THEN 1 ELSE 0 END) as positive_count,
+                    SUM(CASE WHEN sentiment_label IN (\'NEGATIVE\', \'WEAK_NEGATIVE\') THEN 1 ELSE 0 END) as negative_count
                 ')
                 ->first();
 

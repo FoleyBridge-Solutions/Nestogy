@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Financial;
 
 use App\Http\Controllers\Controller;
-use App\Services\FinancialAnalyticsService;
+use App\Domains\Financial\Services\FinancialAnalyticsService;
 use App\Services\DashboardDataService;
 use App\Models\DashboardWidget;
 use App\Models\FinancialReport;

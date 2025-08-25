@@ -165,7 +165,7 @@ class TicketController extends Controller
                         ->get();
 
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('status', 'active')
+                        ->active()
                         ->orderBy('name')
                         ->get();
 
@@ -440,7 +440,7 @@ class TicketController extends Controller
                         ->get();
 
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('status', 'active')
+                        ->active()
                         ->orderBy('name')
                         ->get();
 
@@ -1317,7 +1317,7 @@ class TicketController extends Controller
                               ->orderBy('name')
                               ->get(['id', 'name']),
             'assignees' => User::where('company_id', $companyId)
-                              ->where('status', 'active')
+                              ->active()
                               ->orderBy('name')
                               ->get(['id', 'name']),
         ];
@@ -1359,7 +1359,7 @@ class TicketController extends Controller
         // For Laravel cache, we'll need to check for known user IDs
         // This is a simplified approach - in production you'd use Redis SCAN or similar
         $companyUsers = User::where('company_id', auth()->user()->company_id)
-            ->where('status', 'active')
+            ->active()
             ->pluck('id');
             
         foreach ($companyUsers as $userId) {

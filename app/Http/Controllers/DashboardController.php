@@ -23,7 +23,7 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    protected DashboardDataService $dashboardService;
+    protected ?DashboardDataService $dashboardService = null;
     protected ?RealtimeDashboardService $realtimeService = null;
     
     public function __construct()
@@ -362,6 +362,12 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $type = $request->get('type', 'all');
+        
+        // Initialize services if not already done (fallback for direct calls)
+        if (!$this->dashboardService && $user && $user->company_id) {
+            $this->dashboardService = new DashboardDataService($user->company_id);
+            $this->realtimeService = new RealtimeDashboardService($user->company_id);
+        }
         
         // Use realtime service for widget data
         if ($request->has('widget_type') && $this->realtimeService) {

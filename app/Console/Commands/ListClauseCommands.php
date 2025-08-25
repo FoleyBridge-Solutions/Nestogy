@@ -62,7 +62,7 @@ class ListClauseCommands extends Command
         }
 
         $this->info('📋 Available Clause Categories:');
-        $categories = \App\Models\ContractClause::getAvailableCategories();
+        $categories = \App\Domains\Contract\Models\ContractClause::getAvailableCategories();
         foreach ($categories as $key => $description) {
             $this->line("  <fg=yellow>{$key}:</> {$description}");
         }

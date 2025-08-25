@@ -443,7 +443,7 @@ class InvoicesController extends Controller
             
             if (isset($validated['contract_id'])) {
                 // Generate for specific contract
-                $contract = \App\Domains\Financial\Models\Contract::find($validated['contract_id']);
+                $contract = \App\Domains\Contract\Models\Contract::find($validated['contract_id']);
                 
                 if ($contract->company_id !== auth()->user()->company_id) {
                     return response()->json([

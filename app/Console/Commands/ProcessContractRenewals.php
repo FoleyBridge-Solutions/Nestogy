@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Domains\Financial\Services\ContractLifecycleService;
+use App\Domains\Contract\Services\ContractLifecycleService;
 use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

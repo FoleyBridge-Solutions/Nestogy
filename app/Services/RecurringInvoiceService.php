@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Contract;
+use App\Domains\Contract\Models\Contract;
 use App\Models\Invoice;
 use App\Models\RecurringInvoice;
-use App\Models\ContractMilestone;
-use App\Services\InvoiceService;
+use App\Domains\Contract\Models\ContractMilestone;
+use App\Domains\Financial\Services\InvoiceService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
