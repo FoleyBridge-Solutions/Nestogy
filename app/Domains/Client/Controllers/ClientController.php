@@ -945,10 +945,10 @@ class ClientController extends BaseController
 
             // Handle return_to parameter for route preservation
             $returnTo = $request->input('return_to');
-            if ($returnTo && $this->isValidReturnUrl($returnTo)) {
+            if ($returnTo && $this->isValidInternalUrl($returnTo)) {
                 // Update client ID in URL if it's a client-specific route
-                $updatedUrl = $this->updateClientIdInUrl($returnTo, $client->id);
-                return redirect($updatedUrl)->with('success', "Now working with <strong>{$client->name}</strong>");
+                $safeUrl = $this->buildSafeRedirectUrl($returnTo, $client->id);
+                return redirect($safeUrl)->with('success', "Now working with <strong>{$client->name}</strong>");
             }
 
             return redirect()
@@ -1015,67 +1015,163 @@ class ClientController extends BaseController
     }
 
     /**
-     * Validate that the return URL is safe and from our application
+     * Validate that the URL is safe for internal redirects
+     * Uses a whitelist approach to prevent open redirect vulnerabilities
      */
-    private function isValidReturnUrl($url)
+    private function isValidInternalUrl($url): bool
     {
-        // Parse the URL to get the path
+        // Parse the URL
         $parsedUrl = parse_url($url);
         
-        // Must have a valid path
-        if (!isset($parsedUrl['path'])) {
+        // Reject if URL cannot be parsed or has no path
+        if ($parsedUrl === false || !isset($parsedUrl['path'])) {
             return false;
         }
         
-        // Must be from the same host (if host is specified)
-        if (isset($parsedUrl['host'])) {
-            $currentHost = request()->getHost();
-            if ($parsedUrl['host'] !== $currentHost) {
-                return false;
+        // Reject any URL with a host/scheme (only allow relative URLs)
+        if (isset($parsedUrl['host']) || isset($parsedUrl['scheme'])) {
+            return false;
+        }
+        
+        // Reject URLs starting with // (protocol-relative URLs)
+        if (str_starts_with($url, '//')) {
+            return false;
+        }
+        
+        // Get the path for validation
+        $path = $parsedUrl['path'];
+        
+        // Normalize the path by removing multiple slashes and resolving .. and .
+        $normalizedPath = $this->normalizePath($path);
+        
+        // Whitelist of allowed path patterns for redirects
+        $allowedPatterns = [
+            '#^/clients(/\d+)?(/.*)?$#',           // Client routes
+            '#^/dashboard$#',                       // Dashboard
+            '#^/tickets(/\d+)?(/.*)?$#',           // Ticket routes  
+            '#^/invoices(/\d+)?(/.*)?$#',          // Invoice routes
+            '#^/assets(/\d+)?(/.*)?$#',            // Asset routes
+            '#^/contracts(/\d+)?(/.*)?$#',         // Contract routes
+            '#^/reports(/.*)?$#',                  // Report routes
+            '#^/settings(/.*)?$#'                  // Settings routes
+        ];
+        
+        // Check if path matches any allowed pattern
+        foreach ($allowedPatterns as $pattern) {
+            if (preg_match($pattern, $normalizedPath)) {
+                return true;
             }
         }
         
-        // Basic security check - no external redirects
-        $path = $parsedUrl['path'];
-        if (str_starts_with($path, '//') || str_contains($path, '://')) {
-            return false;
+        return false;
+    }
+    
+    /**
+     * Normalize a URL path to prevent directory traversal
+     */
+    private function normalizePath(string $path): string
+    {
+        // Split path into segments
+        $segments = explode('/', $path);
+        $normalizedSegments = [];
+        
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue; // Skip empty segments and current directory references
+            }
+            
+            if ($segment === '..') {
+                // Go up one directory (remove last segment if exists)
+                if (!empty($normalizedSegments)) {
+                    array_pop($normalizedSegments);
+                }
+                continue;
+            }
+            
+            $normalizedSegments[] = $segment;
         }
         
-        return true;
+        return '/' . implode('/', $normalizedSegments);
     }
 
     /**
-     * Update client ID in URL if it's a client-specific route
+     * Build a safe redirect URL, updating client ID if applicable
+     * Only operates on pre-validated internal URLs
      */
-    private function updateClientIdInUrl($url, $newClientId)
+    private function buildSafeRedirectUrl(string $url, int $newClientId): string
     {
         $parsedUrl = parse_url($url);
         $path = $parsedUrl['path'] ?? '';
         
-        // Pattern for client-specific routes: /clients/{id}/something
-        $pattern = '/\/clients\/(\d+)(\/.*)?$/';
+        // Normalize the path first for consistent processing
+        $normalizedPath = $this->normalizePath($path);
         
-        if (preg_match($pattern, $path, $matches)) {
-            $oldClientId = $matches[1];
+        // Pattern for client-specific routes: /clients/{id}/something
+        $pattern = '/^\/clients\/(\d+)(\/.*)?$/';
+        
+        if (preg_match($pattern, $normalizedPath, $matches)) {
             $subPath = $matches[2] ?? '';
             
-            // Replace with new client ID
+            // Build new safe path with updated client ID
             $newPath = "/clients/{$newClientId}{$subPath}";
             
-            // Rebuild the URL
-            $newUrl = $newPath;
+            // Rebuild URL with only safe components
+            $safeUrl = $newPath;
+            
+            // Add query string if present (already validated by isValidInternalUrl)
             if (isset($parsedUrl['query'])) {
-                $newUrl .= '?' . $parsedUrl['query'];
-            }
-            if (isset($parsedUrl['fragment'])) {
-                $newUrl .= '#' . $parsedUrl['fragment'];
+                // Sanitize query string to prevent injection
+                $safeQuery = $this->sanitizeQueryString($parsedUrl['query']);
+                if (!empty($safeQuery)) {
+                    $safeUrl .= '?' . $safeQuery;
+                }
             }
             
-            return $newUrl;
+            return $safeUrl;
         }
         
-        // If it's not a client-specific route, return as-is
-        return $url;
+        // For non-client routes, return normalized path with safe query
+        $safeUrl = $normalizedPath;
+        if (isset($parsedUrl['query'])) {
+            $safeQuery = $this->sanitizeQueryString($parsedUrl['query']);
+            if (!empty($safeQuery)) {
+                $safeUrl .= '?' . $safeQuery;
+            }
+        }
+        
+        return $safeUrl;
+    }
+    
+    /**
+     * Sanitize query string to prevent parameter injection
+     */
+    private function sanitizeQueryString(string $queryString): string
+    {
+        // Parse query string into parameters
+        parse_str($queryString, $params);
+        
+        // Filter out potentially dangerous parameters
+        $allowedParams = [];
+        $dangerousParams = ['_token', 'return_to', 'redirect']; // Prevent nesting
+        
+        foreach ($params as $key => $value) {
+            // Skip dangerous parameters
+            if (in_array($key, $dangerousParams)) {
+                continue;
+            }
+            
+            // Only allow alphanumeric keys and safe values
+            if (preg_match('/^[a-zA-Z0-9_-]+$/', $key)) {
+                // Sanitize the value
+                if (is_string($value)) {
+                    $allowedParams[$key] = filter_var($value, FILTER_SANITIZE_URL);
+                } elseif (is_numeric($value)) {
+                    $allowedParams[$key] = $value;
+                }
+            }
+        }
+        
+        return http_build_query($allowedParams);
     }
 
     /**

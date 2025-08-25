@@ -3,6 +3,7 @@
 namespace App\Domains\Contract\Models;
 
 use App\Traits\BelongsToCompany;
+use App\Domains\Contract\Traits\HasAuditTrail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,7 +64,7 @@ use Carbon\Carbon;
  */
 class ContractSignature extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use HasFactory, BelongsToCompany, HasAuditTrail;
 
     /**
      * The table associated with the model.
@@ -271,15 +272,12 @@ class ContractSignature extends Model
             return false;
         }
 
-        $this->update([
-            'status' => self::STATUS_SENT,
-            'sent_at' => now(),
-        ]);
-
-        $this->addToAuditTrail('signature_sent', [
-            'sent_at' => now(),
-            'sent_by' => auth()->id(),
-        ]);
+        $this->updateWithTimestampAndAudit(
+            ['status' => self::STATUS_SENT],
+            'sent_at',
+            'signature_sent',
+            ['sent_by' => auth()->id()]
+        );
 
         return true;
     }
@@ -314,40 +312,20 @@ class ContractSignature extends Model
             return false;
         }
 
-        $updateData = [
-            'status' => self::STATUS_SIGNED,
-            'signed_at' => now(),
-        ];
+        $updateData = array_merge(
+            ['status' => self::STATUS_SIGNED],
+            array_intersect_key($signatureData, array_flip([
+                'signature_data', 'signature_hash', 'ip_address', 
+                'user_agent', 'location', 'biometric_data'
+            ]))
+        );
 
-        if (isset($signatureData['signature_data'])) {
-            $updateData['signature_data'] = $signatureData['signature_data'];
-        }
-
-        if (isset($signatureData['signature_hash'])) {
-            $updateData['signature_hash'] = $signatureData['signature_hash'];
-        }
-
-        if (isset($signatureData['ip_address'])) {
-            $updateData['ip_address'] = $signatureData['ip_address'];
-        }
-
-        if (isset($signatureData['user_agent'])) {
-            $updateData['user_agent'] = $signatureData['user_agent'];
-        }
-
-        if (isset($signatureData['location'])) {
-            $updateData['location'] = $signatureData['location'];
-        }
-
-        if (isset($signatureData['biometric_data'])) {
-            $updateData['biometric_data'] = $signatureData['biometric_data'];
-        }
-
-        $this->update($updateData);
-
-        $this->addToAuditTrail('signature_signed', array_merge([
-            'signed_at' => now(),
-        ], $signatureData));
+        $this->updateWithTimestampAndAudit(
+            $updateData,
+            'signed_at',
+            'signature_signed',
+            $signatureData
+        );
 
         return true;
     }
@@ -361,16 +339,15 @@ class ContractSignature extends Model
             return false;
         }
 
-        $this->update([
-            'status' => self::STATUS_DECLINED,
-            'declined_at' => now(),
-            'decline_reason' => $reason,
-        ]);
-
-        $this->addToAuditTrail('signature_declined', [
-            'declined_at' => now(),
-            'reason' => $reason,
-        ]);
+        $this->updateWithTimestampAndAudit(
+            [
+                'status' => self::STATUS_DECLINED,
+                'decline_reason' => $reason,
+            ],
+            'declined_at',
+            'signature_declined',
+            ['reason' => $reason]
+        );
 
         return true;
     }
@@ -380,17 +357,18 @@ class ContractSignature extends Model
      */
     public function void(?string $reason = null): bool
     {
-        $this->update([
-            'status' => self::STATUS_VOIDED,
-            'voided_at' => now(),
-            'void_reason' => $reason,
-        ]);
-
-        $this->addToAuditTrail('signature_voided', [
-            'voided_at' => now(),
-            'reason' => $reason,
-            'voided_by' => auth()->id(),
-        ]);
+        $this->updateWithTimestampAndAudit(
+            [
+                'status' => self::STATUS_VOIDED,
+                'void_reason' => $reason,
+            ],
+            'voided_at',
+            'signature_voided',
+            [
+                'reason' => $reason,
+                'voided_by' => auth()->id(),
+            ]
+        );
 
         return true;
     }
@@ -425,7 +403,7 @@ class ContractSignature extends Model
         $this->update([
             'identity_verified' => true,
             'verification_code' => $verificationData['code'] ?? null,
-            'provider_metadata' => array_merge($this->provider_metadata ?? [], [
+            'provider_metadata' => $this->mergeProviderMetadata([
                 'identity_verification' => $verificationData,
                 'verified_at' => now(),
             ]),
@@ -441,46 +419,25 @@ class ContractSignature extends Model
      */
     public function updateProviderStatus(array $providerData): void
     {
-        $updateData = [];
-
-        if (isset($providerData['status'])) {
-            $updateData['status'] = $providerData['status'];
-        }
-
-        if (isset($providerData['provider_reference_id'])) {
-            $updateData['provider_reference_id'] = $providerData['provider_reference_id'];
-        }
-
-        if (isset($providerData['envelope_id'])) {
-            $updateData['envelope_id'] = $providerData['envelope_id'];
-        }
-
-        if (isset($providerData['recipient_id'])) {
-            $updateData['recipient_id'] = $providerData['recipient_id'];
-        }
-
-        $updateData['provider_metadata'] = array_merge($this->provider_metadata ?? [], $providerData);
+        $updateData = array_intersect_key($providerData, array_flip([
+            'status', 'provider_reference_id', 'envelope_id', 'recipient_id'
+        ]));
+        
+        $updateData['provider_metadata'] = $this->mergeProviderMetadata($providerData);
 
         $this->update($updateData);
-
         $this->addToAuditTrail('provider_status_updated', $providerData);
     }
 
     /**
-     * Add entry to audit trail.
+     * Merge provider metadata with existing data
      */
-    protected function addToAuditTrail(string $action, array $data): void
+    protected function mergeProviderMetadata(array $newData): array
     {
-        $auditTrail = $this->audit_trail ?? [];
-        $auditTrail[] = [
-            'action' => $action,
-            'timestamp' => now(),
-            'user_id' => auth()->id(),
-            'data' => $data,
-        ];
-
-        $this->update(['audit_trail' => $auditTrail]);
+        return array_merge($this->provider_metadata ?? [], $newData);
     }
+    
+    // Audit trail methods moved to HasAuditTrail trait
 
     /**
      * Get signature URL for external providers.

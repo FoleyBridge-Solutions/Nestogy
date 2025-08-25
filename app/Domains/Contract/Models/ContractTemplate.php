@@ -4,6 +4,8 @@ namespace App\Domains\Contract\Models;
 
 use App\Models\User;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
+use App\Domains\Contract\Traits\HasCompanyConfiguration;
+use App\Domains\Contract\Traits\HasBillingCalculations;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,7 +79,7 @@ use Carbon\Carbon;
  */
 class ContractTemplate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, SoftDeletes, BelongsToCompany, HasCompanyConfiguration, HasBillingCalculations;
 
     /**
      * The table associated with the model.
@@ -309,58 +311,7 @@ class ContractTemplate extends Model
                !empty($this->billing_model) && $this->billing_model !== $fixedBillingKey;
     }
 
-    /**
-     * Check if template supports asset-based billing.
-     */
-    public function supportsAssetBilling(): bool
-    {
-        $billingModels = $this->getCompanyConfig()->getBillingModels();
-        $assetBillingKeys = [];
-        
-        foreach ($billingModels as $key => $name) {
-            if (str_contains(strtolower($name), 'asset') || str_contains(strtolower($name), 'hybrid')) {
-                $assetBillingKeys[] = $key;
-            }
-        }
-        
-        return in_array($this->billing_model, $assetBillingKeys);
-    }
-
-    /**
-     * Check if template supports contact-based billing.
-     */
-    public function supportsContactBilling(): bool
-    {
-        $billingModels = $this->getCompanyConfig()->getBillingModels();
-        $contactBillingKeys = [];
-        
-        foreach ($billingModels as $key => $name) {
-            if (str_contains(strtolower($name), 'contact') || 
-                str_contains(strtolower($name), 'user') || 
-                str_contains(strtolower($name), 'hybrid')) {
-                $contactBillingKeys[] = $key;
-            }
-        }
-        
-        return in_array($this->billing_model, $contactBillingKeys);
-    }
-
-    /**
-     * Check if template supports tiered billing.
-     */
-    public function supportsTieredBilling(): bool
-    {
-        $billingModels = $this->getCompanyConfig()->getBillingModels();
-        $tieredBillingKeys = [];
-        
-        foreach ($billingModels as $key => $name) {
-            if (str_contains(strtolower($name), 'tiered') || str_contains(strtolower($name), 'hybrid')) {
-                $tieredBillingKeys[] = $key;
-            }
-        }
-        
-        return in_array($this->billing_model, $tieredBillingKeys);
-    }
+    // Billing support methods moved to HasBillingCalculations trait
 
     /**
      * Get supported asset types.
@@ -386,23 +337,7 @@ class ContractTemplate extends Model
         return $this->contact_access_tiers ?? [];
     }
 
-    /**
-     * Get billing rate for asset type.
-     */
-    public function getAssetBillingRate(string $assetType): ?float
-    {
-        $rules = $this->asset_billing_rules ?? [];
-        return $rules[$assetType]['rate'] ?? $this->default_per_asset_rate;
-    }
-
-    /**
-     * Get billing rate for contact tier.
-     */
-    public function getContactBillingRate(string $tier): ?float
-    {
-        $rules = $this->contact_billing_rules ?? [];
-        return $rules[$tier]['rate'] ?? $this->default_per_contact_rate;
-    }
+    // Billing rate methods moved to HasBillingCalculations trait
 
     /**
      * Get services assigned to asset type.
@@ -603,37 +538,7 @@ class ContractTemplate extends Model
         return $calculation;
     }
 
-    /**
-     * Calculate asset-based charges.
-     */
-    protected function calculateAssetCharges(array $assets): float
-    {
-        $total = 0;
-        $rules = $this->asset_billing_rules ?? [];
-
-        foreach ($assets as $assetType => $count) {
-            $rate = $rules[$assetType]['rate'] ?? $this->default_per_asset_rate ?? 0;
-            $total += $rate * $count;
-        }
-
-        return $total;
-    }
-
-    /**
-     * Calculate contact-based charges.
-     */
-    protected function calculateContactCharges(array $contacts): float
-    {
-        $total = 0;
-        $rules = $this->contact_billing_rules ?? [];
-
-        foreach ($contacts as $tier => $count) {
-            $rate = $rules[$tier]['rate'] ?? $this->default_per_contact_rate ?? 0;
-            $total += $rate * $count;
-        }
-
-        return $total;
-    }
+    // Charge calculation methods moved to HasBillingCalculations trait
 
     /**
      * Apply calculation formulas.
@@ -727,19 +632,16 @@ class ContractTemplate extends Model
      */
     public static function getValidationRules(?int $companyId = null): array
     {
-        // Get company configuration
-        $companyId = $companyId ?? auth()->user()->company_id ?? 1;
-        $config = app(ContractConfigurationRegistry::class, ['companyId' => $companyId]);
-        
-        $templateTypes = array_keys($config->getContractTypes());
-        $statuses = array_keys($config->getTemplateStatuses());
+        $instance = new static();
+        $templateTypes = array_keys($instance->getAvailableContractTypes($companyId));
+        $statuses = array_keys($instance->getConfigValue('template_statuses', [], $companyId));
         
         return [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:contract_templates,slug',
-            'template_type' => 'required|in:' . implode(',', $templateTypes),
+            'template_type' => 'required|in:' . implode(',', $templateTypes ?: ['default']),
             'template_content' => 'required|string',
-            'status' => 'required|in:' . implode(',', $statuses),
+            'status' => 'required|in:' . implode(',', $statuses ?: ['active']),
             'version' => 'required|string|max:20',
             'variable_fields' => 'nullable|array',
             'default_values' => 'nullable|array',
@@ -752,9 +654,8 @@ class ContractTemplate extends Model
      */
     public static function getAvailableTypes(?int $companyId = null): array
     {
-        $companyId = $companyId ?? auth()->user()->company_id ?? 1;
-        $config = app(ContractConfigurationRegistry::class, ['companyId' => $companyId]);
-        return $config->getContractTypes();
+        $instance = new static();
+        return $instance->getAvailableContractTypes($companyId);
     }
 
     /**
@@ -762,9 +663,8 @@ class ContractTemplate extends Model
      */
     public static function getAvailableCategories(?int $companyId = null): array
     {
-        $companyId = $companyId ?? auth()->user()->company_id ?? 1;
-        $config = app(ContractConfigurationRegistry::class, ['companyId' => $companyId]);
-        return $config->getTemplateCategories();
+        $instance = new static();
+        return $instance->getConfigValue('template_categories', [], $companyId);
     }
 
     /**
@@ -772,9 +672,8 @@ class ContractTemplate extends Model
      */
     public static function getAvailableBillingModels(?int $companyId = null): array
     {
-        $companyId = $companyId ?? auth()->user()->company_id ?? 1;
-        $config = app(ContractConfigurationRegistry::class, ['companyId' => $companyId]);
-        return $config->getBillingModels();
+        $instance = new static();
+        return $instance->getConfigValue('billing_models', [], $companyId);
     }
     
     /**
@@ -782,9 +681,8 @@ class ContractTemplate extends Model
      */
     public static function getAvailableStatuses(?int $companyId = null): array
     {
-        $companyId = $companyId ?? auth()->user()->company_id ?? 1;
-        $config = app(ContractConfigurationRegistry::class, ['companyId' => $companyId]);
-        return $config->getTemplateStatuses();
+        $instance = new static();
+        return $instance->getConfigValue('template_statuses', [], $companyId);
     }
 
     /**

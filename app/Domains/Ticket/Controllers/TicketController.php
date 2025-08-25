@@ -423,7 +423,7 @@ class TicketController extends Controller
         // In production, you would use a PDF library like dompdf or wkhtmltopdf
         return response($html)
             ->header('Content-Type', 'text/html')
-            ->header('Content-Disposition', 'inline; filename="ticket-' . ($ticket->number ?? $ticket->number) . '.html"');
+            ->header('Content-Disposition', 'inline; filename="ticket-' . ($ticket->number ?? $ticket->id) . '.html"');
     }
 
 
@@ -1101,7 +1101,7 @@ class TicketController extends Controller
                 $ticket->assignments()->update(['ticket_id' => $targetTicket->id]);
 
                 // Create merge notification in target ticket
-                $sourceTicketNumber = $ticket->number ?? $ticket->number;
+                $sourceTicketNumber = $ticket->number ?? $ticket->id;
                 $mergeMessage = "Ticket #{$sourceTicketNumber} ({$ticket->subject}) was merged into this ticket";
                 if ($request->merge_comment) {
                     $mergeMessage .= "\n\nMerge Comment: " . $request->merge_comment;
@@ -1138,7 +1138,7 @@ class TicketController extends Controller
                 ]);
 
                 // Add note to original ticket about merge
-                $targetTicketNumber = $targetTicket->number ?? $targetTicket->number;
+                $targetTicketNumber = $targetTicket->number ?? $targetTicket->id;
                 \App\Models\TicketReply::create([
                     'ticket_id' => $ticket->id,
                     'company_id' => auth()->user()->company_id,
@@ -1162,7 +1162,7 @@ class TicketController extends Controller
                 ]);
             }
 
-            $targetTicketNum = $targetTicket->number ?? $targetTicket->number;
+            $targetTicketNum = $targetTicket->number ?? $targetTicket->id;
             return redirect()->route('tickets.show', $targetTicket)
                 ->with('success', "Ticket merged successfully into #{$targetTicketNum}");
 

@@ -668,18 +668,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
         
-        // Format currency
-        formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: this.currency
-            }).format(amount || 0);
-        },
         
-        // Format percentage
-        formatPercentage(value) {
-            return `${(value || 0).toFixed(2)}%`;
-        },
         
         // Format date
         formatDate(date) {
@@ -935,13 +924,13 @@ document.addEventListener('alpine:init', () => {
             return this.calculatePricing();
         },
 
-        // Backward compatibility getters
-        get subtotal() { return this.pricing.subtotal; },
-        get discount() { return this.pricing.totalDiscount; },
-        get tax() { return this.pricing.taxAmount; },
-        get total() { return this.pricing.total; },
-        get totalSavings() { return this.pricing.savings; },
-        get monthlyRecurringRevenue() { return this.pricing.recurring.monthly; },
-        get annualRecurringRevenue() { return this.pricing.recurring.annual; }
+        // Backward compatibility getters (prefixed to avoid naming conflicts)
+        get pricingSubtotal() { return this.pricing.subtotal; },
+        get pricingDiscount() { return this.pricing.totalDiscount; },
+        get pricingTax() { return this.pricing.taxAmount; },
+        get pricingTotal() { return this.pricing.total; },
+        get pricingSavings() { return this.pricing.savings; },
+        get pricingMRR() { return this.pricing.recurring.monthly; },
+        get pricingARR() { return this.pricing.recurring.annual; }
     }));
 });

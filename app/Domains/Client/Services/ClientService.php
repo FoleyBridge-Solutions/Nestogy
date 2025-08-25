@@ -34,8 +34,9 @@ class ClientService extends BaseService
     protected function afterCreate(\Illuminate\Database\Eloquent\Model $model, array $data): void
     {
         // Create primary location if provided
+        $location = null;
         if (!empty($data['location_address']) || !empty($data['location_city']) || !empty($data['address'])) {
-            Location::create([
+            $location = Location::create([
                 'company_id' => Auth::user()->company_id,
                 'client_id' => $model->id,
                 'name' => $data['location_name'] ?? 'Primary Location',

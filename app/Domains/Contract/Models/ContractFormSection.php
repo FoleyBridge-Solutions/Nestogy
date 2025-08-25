@@ -3,6 +3,7 @@
 namespace App\Domains\Contract\Models;
 
 use App\Traits\BelongsToCompany;
+use App\Domains\Contract\Traits\HasConditionalLogic;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
  */
 class ContractFormSection extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use HasFactory, BelongsToCompany, HasConditionalLogic;
 
     protected $table = 'contract_form_sections';
 
@@ -73,64 +74,7 @@ class ContractFormSection extends Model
         return $query->where('is_active', true);
     }
 
-    /**
-     * Check if section should be visible based on conditional logic
-     */
-    public function shouldBeVisible(array $formData = []): bool
-    {
-        if (empty($this->conditional_logic)) {
-            return true;
-        }
-
-        // Simple conditional logic evaluation
-        foreach ($this->conditional_logic as $condition) {
-            $field = $condition['field'] ?? null;
-            $operator = $condition['operator'] ?? '=';
-            $value = $condition['value'] ?? null;
-
-            if (!$field || !isset($formData[$field])) {
-                continue;
-            }
-
-            $fieldValue = $formData[$field];
-
-            switch ($operator) {
-                case '=':
-                case '==':
-                    if ($fieldValue != $value) {
-                        return false;
-                    }
-                    break;
-                case '!=':
-                    if ($fieldValue == $value) {
-                        return false;
-                    }
-                    break;
-                case 'in':
-                    if (!in_array($fieldValue, (array)$value)) {
-                        return false;
-                    }
-                    break;
-                case 'not_in':
-                    if (in_array($fieldValue, (array)$value)) {
-                        return false;
-                    }
-                    break;
-                case 'empty':
-                    if (!empty($fieldValue)) {
-                        return false;
-                    }
-                    break;
-                case 'not_empty':
-                    if (empty($fieldValue)) {
-                        return false;
-                    }
-                    break;
-            }
-        }
-
-        return true;
-    }
+    // Conditional logic methods moved to HasConditionalLogic trait
 
     /**
      * Get layout configuration

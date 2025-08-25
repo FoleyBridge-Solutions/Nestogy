@@ -683,27 +683,17 @@ class TemplateVariableMapper
      */
     protected function extractFromContractFields(Contract $contract, array &$variables): void
     {
-        if (!empty($contract->title)) {
-            $variables['contract_title'] = $contract->title;
-        }
-        if (!empty($contract->contract_type)) {
-            $variables['contract_type'] = $contract->contract_type;
-        }
-        if (!empty($contract->description)) {
-            $variables['contract_description'] = $contract->description;
-        }
-        if (!empty($contract->currency_code)) {
-            $variables['currency_code'] = $contract->currency_code;
-        }
-        if (!empty($contract->payment_terms)) {
-            $variables['payment_terms'] = $contract->payment_terms;
-        }
-        if (!empty($contract->governing_law)) {
-            $variables['governing_law'] = $contract->governing_law;
-        }
-        if (!empty($contract->jurisdiction)) {
-            $variables['jurisdiction'] = $contract->jurisdiction;
-        }
+        $fieldMappings = [
+            'title' => 'contract_title',
+            'contract_type' => 'contract_type',
+            'description' => 'contract_description',
+            'currency_code' => 'currency_code',
+            'payment_terms' => 'payment_terms',
+            'governing_law' => 'governing_law',
+            'jurisdiction' => 'jurisdiction'
+        ];
+        
+        $this->extractFields($contract, $variables, $fieldMappings);
     }
     
     /**
@@ -839,5 +829,73 @@ class TemplateVariableMapper
         $variables['auto_assign_new_assets'] = $billingConfig['auto_assign_new_assets'] ?? false;
         $variables['auto_assign_contacts'] = $billingConfig['auto_assign_contacts'] ?? false;
         $variables['auto_assign_new_contacts'] = $billingConfig['auto_assign_new_contacts'] ?? false;
+    }
+
+    /**
+     * Generic method to extract fields from a model object
+     */
+    protected function extractFields(Contract $contract, array &$variables, array $fieldMappings): void
+    {
+        foreach ($fieldMappings as $sourceField => $targetField) {
+            $value = $contract->{$sourceField} ?? null;
+            if (!empty($value)) {
+                $variables[$targetField] = $value;
+            }
+        }
+    }
+
+    /**
+     * Generic method to extract and format fields from an array
+     */
+    protected function extractFromArray(array $sourceArray, array &$variables, array $fieldMappings): void
+    {
+        foreach ($fieldMappings as $sourceField => $config) {
+            $value = $sourceArray[$sourceField] ?? null;
+            
+            if (empty($value)) {
+                // Handle default values
+                if (isset($config['default'])) {
+                    $variables[$config['key']] = $config['default'];
+                }
+                continue;
+            }
+            
+            // Skip if target variable already exists and skip_if_exists is true
+            if (isset($config['skip_if_exists']) && $config['skip_if_exists'] && !empty($variables[$config['key']])) {
+                continue;
+            }
+            
+            // Apply formatting or casting
+            $formattedValue = $this->formatValue($value, $config);
+            $variables[$config['key']] = $formattedValue;
+        }
+    }
+
+    /**
+     * Format a value based on the configuration
+     */
+    protected function formatValue($value, array $config)
+    {
+        // Handle casting
+        if (isset($config['cast'])) {
+            $value = match($config['cast']) {
+                'string' => (string)$value,
+                'float' => (float)$value,
+                'int' => (int)$value,
+                'bool' => (bool)$value,
+                default => $value
+            };
+        }
+        
+        // Handle formatting
+        if (isset($config['format'])) {
+            $value = match($config['format']) {
+                'currency' => '$' . number_format((float)$value, 2),
+                'array_to_string' => is_array($value) ? implode(', ', $value) : $value,
+                default => $value
+            };
+        }
+        
+        return $value;
     }
 }

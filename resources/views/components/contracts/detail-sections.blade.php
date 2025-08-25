@@ -156,6 +156,13 @@
                         {{-- Table Layout --}}
                         <div class="table-responsive">
                             <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="width: 30%;">Field</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                 @foreach($section['fields'] as $fieldConfig)
                                     @php
                                         $fieldKey = is_string($fieldConfig) ? $fieldConfig : $fieldConfig['key'];
@@ -178,6 +185,7 @@
                                         </td>
                                     </tr>
                                 @endforeach
+                                </tbody>
                             </table>
                         </div>
                     @elseif($section['layout'] ?? 'grid' === 'list')

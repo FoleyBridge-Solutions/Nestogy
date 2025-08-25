@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class DebugUsers extends Command
 {
@@ -13,6 +12,14 @@ class DebugUsers extends Command
 
     public function handle()
     {
+        // Security warning for production environments
+        if (app()->environment('production')) {
+            $this->error('❌ WARNING: This debug command should not be used in production!');
+            if (!$this->confirm('Are you sure you want to continue?')) {
+                return 1;
+            }
+        }
+        
         $this->info('=== USER DEBUG INFO ===');
 
         // Check database connection
@@ -58,14 +65,10 @@ class DebugUsers extends Command
             $this->line('  Company ID: ' . $adminUser->company_id);
             $this->line('  Created: ' . $adminUser->created_at);
 
-            // Test password hashing
-            $testPassword = 'Admin@123456';
-            $isValid = Hash::check($testPassword, $adminUser->password);
-            $this->line('  Password check for "Admin@123456": ' . ($isValid ? '✅ VALID' : '❌ INVALID'));
-
-            $testPassword2 = 'password';
-            $isValid2 = Hash::check($testPassword2, $adminUser->password);
-            $this->line('  Password check for "password": ' . ($isValid2 ? '✅ VALID' : '❌ INVALID'));
+            // Security note: Password validation removed to prevent credential exposure
+            // To test password validation, use: php artisan tinker
+            // then: Hash::check('your_password', User::find(1)->password)
+            $this->line('  Password validation: Use tinker for secure password testing');
         } else {
             $this->error('❌ Admin user not found!');
         }

@@ -181,7 +181,7 @@ class DefinitionRegistryService
         // Analyze content for terms that might need definitions
         foreach ($registry as $key => $definition) {
             // Extract the term name from the definition
-            if (preg_match('/^([^:]+):', $definition, $matches)) {
+            if (preg_match('/^([^:]+):/', $definition, $matches)) {
                 $term = trim($matches[1]);
                 
                 // Check if the term appears in the content

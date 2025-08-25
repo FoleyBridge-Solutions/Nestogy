@@ -116,7 +116,8 @@ class WorkflowController extends Controller
                            ->withInput();
         }
 
-        DB::transaction(function () use ($request) {
+        $workflow = null;
+        DB::transaction(function () use ($request, &$workflow) {
             // Create workflow
             $workflow = TicketWorkflow::create([
                 'company_id' => auth()->user()->company_id,

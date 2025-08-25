@@ -147,8 +147,8 @@ class LoginController extends Controller
                 $this->logEnhancedLoginAttempt($request, $user, true);
             }
 
-            return $this->authenticated($request, $user)
-                ?: redirect()->intended($this->redirectPath());
+            $this->authenticated($request, $user);
+            return redirect()->intended($this->redirectPath());
         }
         
         // Log failed login attempt if audit is enabled
@@ -181,9 +181,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        if ($response = $this->loggedOut($request)) {
-            return $response;
-        }
+        $this->loggedOut($request);
 
         return $request->wantsJson()
             ? response()->json([], 204)

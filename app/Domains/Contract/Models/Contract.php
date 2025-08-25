@@ -13,6 +13,8 @@ use App\Models\Quote;
 use App\Models\RecurringInvoice;
 use App\Models\User;
 use App\Traits\BelongsToCompany;
+use App\Domains\Contract\Traits\HasCompanyConfiguration;
+use App\Domains\Contract\Traits\HasStatusWorkflow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -79,7 +81,7 @@ use Carbon\Carbon;
  */
 class Contract extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, SoftDeletes, BelongsToCompany, HasCompanyConfiguration, HasStatusWorkflow;
 
     /**
      * The table associated with the model.
@@ -179,10 +181,7 @@ class Contract extends Model
      */
     const DELETED_AT = 'archived_at';
 
-    /**
-     * Dynamic configuration cache
-     */
-    protected static $configurationCache = [];
+    // Configuration cache is now handled by HasCompanyConfiguration trait
 
     /**
      * Get the client this contract belongs to.
@@ -442,63 +441,16 @@ class Contract extends Model
         return $this->contract_number;
     }
 
-    /**
-     * Get configuration registry instance
-     */
-    protected function getConfigRegistry()
-    {
-        return app('contract.config.registry');
-    }
+    // Company configuration methods moved to HasCompanyConfiguration trait
 
-    /**
-     * Get company configuration
-     */
-    protected function getCompanyConfig(): array
-    {
-        $cacheKey = 'contract_config_' . $this->company_id;
-        
-        if (!isset(static::$configurationCache[$cacheKey])) {
-            static::$configurationCache[$cacheKey] = $this->getConfigRegistry()
-                ->getCompanyConfiguration($this->company_id);
-        }
-        
-        return static::$configurationCache[$cacheKey];
-    }
-
-    /**
-     * Get available contract types for this company
-     */
-    public function getAvailableContractTypes(): array
-    {
-        $config = $this->getCompanyConfig();
-        return $config['contract_types'] ?? [];
-    }
-
-    /**
-     * Get available statuses for this company
-     */
-    public function getAvailableStatusValues(): array
-    {
-        $config = $this->getCompanyConfig();
-        return array_keys($config['statuses'] ?? []);
-    }
-
-    /**
-     * Get status configuration
-     */
-    public function getStatusConfig(string $status): array
-    {
-        $config = $this->getCompanyConfig();
-        return $config['statuses'][$status] ?? [];
-    }
+    // Available types and statuses methods moved to HasCompanyConfiguration trait
 
     /**
      * Check if contract is active.
      */
     public function isActive(): bool
     {
-        $activeStatuses = $this->getCompanyConfig()['active_statuses'] ?? ['active'];
-        return in_array($this->status, $activeStatuses);
+        return $this->hasStatus('active_statuses');
     }
 
     /**
@@ -506,8 +458,7 @@ class Contract extends Model
      */
     public function isSigned(): bool
     {
-        $signedStatuses = $this->getCompanyConfig()['signed_signature_statuses'] ?? ['fully_executed'];
-        return in_array($this->signature_status, $signedStatuses);
+        return $this->isStatusInList($this->signature_status, 'signed_signature_statuses', ['fully_executed']);
     }
 
     /**
@@ -515,10 +466,8 @@ class Contract extends Model
      */
     public function canBeEdited(): bool
     {
-        $editableStatuses = $this->getCompanyConfig()['editable_statuses'] ?? 
-            ['draft', 'pending_review', 'under_negotiation', 'pending_signature', 'active'];
-        
-        return !$this->isSigned() && in_array($this->status, $editableStatuses);
+        $editableStatuses = ['draft', 'pending_review', 'under_negotiation', 'pending_signature', 'active'];
+        return !$this->isSigned() && $this->isStatusInList($this->status, 'editable_statuses', $editableStatuses);
     }
 
     /**
@@ -526,10 +475,7 @@ class Contract extends Model
      */
     public function canBeTerminated(): bool
     {
-        $terminableStatuses = $this->getCompanyConfig()['terminable_statuses'] ?? 
-            ['active', 'signed', 'suspended'];
-        
-        return in_array($this->status, $terminableStatuses);
+        return $this->isStatusInList($this->status, 'terminable_statuses', ['active', 'signed', 'suspended']);
     }
 
     /**
@@ -783,86 +729,7 @@ class Contract extends Model
         $this->update(['url_key' => bin2hex(random_bytes(16))]);
     }
 
-    /**
-     * Mark contract as signed.
-     */
-    public function markAsSigned(?Carbon $signedAt = null): void
-    {
-        $config = $this->getCompanyConfig();
-        $signedStatus = $config['default_signed_status'] ?? 'signed';
-        $signedSignatureStatus = $config['default_signed_signature_status'] ?? 'fully_executed';
-        
-        $this->update([
-            'status' => $signedStatus,
-            'signature_status' => $signedSignatureStatus,
-            'signed_at' => $signedAt ?? now(),
-        ]);
-    }
-
-    /**
-     * Mark contract as active.
-     */
-    public function markAsActive(?Carbon $executedAt = null): void
-    {
-        $config = $this->getCompanyConfig();
-        $activeStatus = $config['default_active_status'] ?? 'active';
-        
-        $this->update([
-            'status' => $activeStatus,
-            'executed_at' => $executedAt ?? now(),
-        ]);
-    }
-
-    /**
-     * Terminate contract.
-     */
-    public function terminate(?string $reason = null, ?Carbon $terminationDate = null): void
-    {
-        $config = $this->getCompanyConfig();
-        $terminatedStatus = $config['default_terminated_status'] ?? 'terminated';
-        
-        $this->update([
-            'status' => $terminatedStatus,
-            'terminated_at' => $terminationDate ?? now(),
-            'termination_reason' => $reason,
-        ]);
-    }
-
-    /**
-     * Suspend contract.
-     */
-    public function suspend(?string $reason = null): void
-    {
-        $config = $this->getCompanyConfig();
-        $suspendedStatus = $config['default_suspended_status'] ?? 'suspended';
-        
-        $metadata = $this->metadata ?? [];
-        $metadata['suspension_reason'] = $reason;
-        $metadata['suspended_at'] = now();
-
-        $this->update([
-            'status' => $suspendedStatus,
-            'metadata' => $metadata,
-        ]);
-    }
-
-    /**
-     * Reactivate suspended contract.
-     */
-    public function reactivate(): void
-    {
-        $config = $this->getCompanyConfig();
-        $activeStatus = $config['default_active_status'] ?? 'active';
-        
-        $metadata = $this->metadata ?? [];
-        $metadata['reactivated_at'] = now();
-        unset($metadata['suspension_reason'], $metadata['suspended_at']);
-
-        $this->update([
-            'status' => $activeStatus,
-            'metadata' => $metadata,
-        ]);
-    }
+    // Status workflow methods moved to HasStatusWorkflow trait
 
     /**
      * Create amendment.
@@ -1008,22 +875,18 @@ class Contract extends Model
      */
     public function getValidationRules(int $companyId = null): array
     {
-        $companyId = $companyId ?? $this->company_id ?? auth()->user()->company_id;
-        $configRegistry = app('contract.config.registry');
-        $config = $configRegistry->getCompanyConfiguration($companyId);
-        
-        $contractTypes = array_keys($config['contract_types'] ?? ['default' => 'Default']);
-        $statuses = array_keys($config['statuses'] ?? ['draft' => 'Draft']);
-        $renewalTypes = array_keys($config['renewal_types'] ?? ['none' => 'None']);
+        $contractTypes = array_keys($this->getAvailableContractTypes($companyId));
+        $statuses = $this->getAvailableStatusValues($companyId);
+        $renewalTypes = array_keys($this->getAvailableRenewalTypes($companyId));
         
         return [
-            'contract_type' => 'required|in:' . implode(',', $contractTypes),
-            'status' => 'required|in:' . implode(',', $statuses),
+            'contract_type' => 'required|in:' . implode(',', $contractTypes ?: ['default']),
+            'status' => 'required|in:' . implode(',', $statuses ?: ['draft']),
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'term_months' => 'nullable|integer|min:1|max:120',
-            'renewal_type' => 'required|in:' . implode(',', $renewalTypes),
+            'renewal_type' => 'required|in:' . implode(',', $renewalTypes ?: ['none']),
             'contract_value' => 'required|numeric|min:0',
             'currency_code' => 'required|string|size:3',
             'client_id' => 'required|integer|exists:clients,id',
@@ -1031,49 +894,7 @@ class Contract extends Model
         ];
     }
 
-    /**
-     * Get available contract types for company.
-     */
-    public function getAvailableTypes(int $companyId = null): array
-    {
-        $companyId = $companyId ?? $this->company_id ?? auth()->user()->company_id;
-        $config = $this->getConfigRegistry()->getCompanyConfiguration($companyId);
-        
-        return $config['contract_types'] ?? [];
-    }
-
-    /**
-     * Get available statuses for company.
-     */
-    public function getAvailableStatuses(int $companyId = null): array
-    {
-        $companyId = $companyId ?? $this->company_id ?? auth()->user()->company_id;
-        $config = $this->getConfigRegistry()->getCompanyConfiguration($companyId);
-        
-        return $config['statuses'] ?? [];
-    }
-
-    /**
-     * Get available renewal types for company.
-     */
-    public function getAvailableRenewalTypes(int $companyId = null): array
-    {
-        $companyId = $companyId ?? $this->company_id ?? auth()->user()->company_id;
-        $config = $this->getConfigRegistry()->getCompanyConfiguration($companyId);
-        
-        return $config['renewal_types'] ?? [];
-    }
-
-    /**
-     * Get available signature statuses for company.
-     */
-    public function getAvailableSignatureStatuses(int $companyId = null): array
-    {
-        $companyId = $companyId ?? $this->company_id ?? auth()->user()->company_id;
-        $config = $this->getConfigRegistry()->getCompanyConfiguration($companyId);
-        
-        return $config['signature_statuses'] ?? [];
-    }
+    // Configuration getter methods moved to HasCompanyConfiguration trait
 
     /**
      * Get audit history for this contract.

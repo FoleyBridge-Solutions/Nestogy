@@ -246,18 +246,9 @@ class DefinitionRegistry
      */
     public function getDefinitionsForCategories(array $categories): array
     {
-        $requiredDefinitions = [];
-        
-        foreach ($this->definitions as $key => $definition) {
-            foreach ($definition['required_by'] as $requiredBy) {
-                if (in_array($requiredBy, $categories)) {
-                    $requiredDefinitions[$key] = $definition;
-                    break;
-                }
-            }
-        }
-        
-        return $requiredDefinitions;
+        return $this->filterDefinitions(function ($definition) use ($categories) {
+            return !empty(array_intersect($definition['required_by'], $categories));
+        });
     }
 
     /**
@@ -265,7 +256,7 @@ class DefinitionRegistry
      */
     public function getAlwaysIncludedDefinitions(): array
     {
-        return array_filter($this->definitions, function ($definition) {
+        return $this->filterDefinitions(function ($definition) {
             return $definition['always_include'] ?? false;
         });
     }
@@ -275,30 +266,15 @@ class DefinitionRegistry
      */
     public function getDefinitionsForTemplateCategory(string $templateCategory): array
     {
-        $definitions = [];
-        
-        foreach ($this->definitions as $key => $definition) {
+        return $this->filterDefinitions(function ($definition) use ($templateCategory) {
             // Always include definitions
             if ($definition['always_include'] ?? false) {
-                $definitions[$key] = $definition;
-                continue;
+                return true;
             }
             
             // Check template category match
-            $defCategory = $definition['template_category'] ?? null;
-            if ($defCategory) {
-                if (is_array($defCategory) && in_array($templateCategory, $defCategory)) {
-                    $definitions[$key] = $definition;
-                } elseif (is_string($defCategory) && $defCategory === $templateCategory) {
-                    $definitions[$key] = $definition;
-                }
-            } elseif (!isset($definition['template_category'])) {
-                // Include general definitions for all templates
-                $definitions[$key] = $definition;
-            }
-        }
-        
-        return $definitions;
+            return $this->matchesTemplateCategory($definition, $templateCategory);
+        });
     }
 
     /**
@@ -419,5 +395,40 @@ class DefinitionRegistry
         $requiredDefinitions = array_merge($alwaysIncluded, $requiredDefinitions);
         
         return $requiredDefinitions;
+    }
+
+    /**
+     * Filter definitions by a given callback function
+     */
+    protected function filterDefinitions(callable $callback): array
+    {
+        $filtered = [];
+        
+        foreach ($this->definitions as $key => $definition) {
+            if ($callback($definition)) {
+                $filtered[$key] = $definition;
+            }
+        }
+        
+        return $filtered;
+    }
+
+    /**
+     * Check if a definition matches a template category
+     */
+    protected function matchesTemplateCategory(array $definition, string $templateCategory): bool
+    {
+        $defCategory = $definition['template_category'] ?? null;
+        
+        if ($defCategory === null) {
+            // Include general definitions for all templates
+            return true;
+        }
+        
+        if (is_array($defCategory)) {
+            return in_array($templateCategory, $defCategory);
+        }
+        
+        return $defCategory === $templateCategory;
     }
 }

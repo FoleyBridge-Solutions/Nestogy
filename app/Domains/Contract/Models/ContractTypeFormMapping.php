@@ -3,6 +3,7 @@
 namespace App\Domains\Contract\Models;
 
 use App\Traits\BelongsToCompany;
+use App\Domains\Contract\Traits\HasConditionalLogic;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ContractTypeFormMapping extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use HasFactory, BelongsToCompany, HasConditionalLogic;
 
     protected $table = 'contract_type_form_mappings';
 
@@ -52,64 +53,7 @@ class ContractTypeFormMapping extends Model
         return $this->belongsTo(ContractFormSection::class, 'section_slug', 'section_slug');
     }
 
-    /**
-     * Check if this mapping should be visible for given contract type and data
-     */
-    public function shouldBeVisible(array $formData = []): bool
-    {
-        if (empty($this->conditional_logic)) {
-            return true;
-        }
-
-        // Same conditional logic as ContractFormSection
-        foreach ($this->conditional_logic as $condition) {
-            $field = $condition['field'] ?? null;
-            $operator = $condition['operator'] ?? '=';
-            $value = $condition['value'] ?? null;
-
-            if (!$field || !isset($formData[$field])) {
-                continue;
-            }
-
-            $fieldValue = $formData[$field];
-
-            switch ($operator) {
-                case '=':
-                case '==':
-                    if ($fieldValue != $value) {
-                        return false;
-                    }
-                    break;
-                case '!=':
-                    if ($fieldValue == $value) {
-                        return false;
-                    }
-                    break;
-                case 'in':
-                    if (!in_array($fieldValue, (array)$value)) {
-                        return false;
-                    }
-                    break;
-                case 'not_in':
-                    if (in_array($fieldValue, (array)$value)) {
-                        return false;
-                    }
-                    break;
-                case 'empty':
-                    if (!empty($fieldValue)) {
-                        return false;
-                    }
-                    break;
-                case 'not_empty':
-                    if (empty($fieldValue)) {
-                        return false;
-                    }
-                    break;
-            }
-        }
-
-        return true;
-    }
+    // Conditional logic methods moved to HasConditionalLogic trait
 
     /**
      * Get field overrides for this mapping

@@ -195,8 +195,9 @@ Alpine.data('dateRangePicker', () => ({
 }));
 
 Alpine.data('enhancedSelect', () => ({
+    tomSelect: null,
     init() {
-        new TomSelect(this.$refs.select, {
+        this.tomSelect = new TomSelect(this.$refs.select, {
             plugins: ['remove_button'],
             create: false,
             sortField: {
@@ -204,6 +205,12 @@ Alpine.data('enhancedSelect', () => ({
                 direction: 'asc'
             }
         });
+    },
+    destroy() {
+        if (this.tomSelect) {
+            this.tomSelect.destroy();
+            this.tomSelect = null;
+        }
     }
 }));
 

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Domains\Financial\Services\RecurringBillingService;
 use App\Models\Recurring;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;

@@ -378,7 +378,32 @@ async function processOfflineQueue() {
 
 // Handle messages from main thread
 self.addEventListener('message', (event) => {
+    // Always verify the origin of the received message for security
+    const expectedOrigin = self.location.origin;
+    
+    // For MessageEvent from postMessage(), check event.origin
+    // For ExtendableMessageEvent from ServiceWorker context, the origin should always match
+    if (event.origin !== undefined && event.origin !== expectedOrigin) {
+        console.warn('Service Worker: Blocked message from untrusted origin:', event.origin);
+        return;
+    }
+    
+    // Additional security check: ensure the source is from a controlled client
+    if (event.source && typeof event.source.url === 'string') {
+        const sourceUrl = new URL(event.source.url);
+        if (sourceUrl.origin !== expectedOrigin) {
+            console.warn('Service Worker: Blocked message from untrusted source:', sourceUrl.origin);
+            return;
+        }
+    }
+    
     const { data } = event;
+    
+    // Validate that data exists and has expected structure
+    if (!data || typeof data !== 'object') {
+        console.warn('Service Worker: Invalid message data received');
+        return;
+    }
     
     switch (data.type) {
         case 'SKIP_WAITING':
