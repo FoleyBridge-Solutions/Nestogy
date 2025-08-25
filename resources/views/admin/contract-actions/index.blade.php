@@ -169,7 +169,7 @@
 
                     {{-- Visibility Conditions --}}
                     <div class="mb-3">
-                        <label class="form-label">Visibility Conditions</label>
+                        <label for="visibilityConditions" class="form-label">Visibility Conditions</label>
                         <div id="visibilityConditions">
                             <div class="text-muted small mb-2">Button will only show when all conditions are met</div>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="addCondition">

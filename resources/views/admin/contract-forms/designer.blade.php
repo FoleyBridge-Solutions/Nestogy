@@ -39,12 +39,12 @@
                     <div class="card-body">
                         <form id="form-config">
                             <div class="mb-3">
-                                <label class="form-label">Form Name</label>
+                                <label class="form-label" for="form-name">Form Name</label>
                                 <input type="text" class="form-control" id="form-name" placeholder="Enter form name" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Contract Type</label>
+                                <label class="form-label" for="contract-type">Contract Type</label>
                                 <select class="form-select" id="contract-type" required>
                                     <option value="">Select contract type...</option>
                                     <option value="service_agreement">Service Agreement</option>
@@ -55,13 +55,13 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Description</label>
+                                <label class="form-label" for="form-description">Description</label>
                                 <textarea class="form-control" id="form-description" rows="3" 
                                           placeholder="Brief description of this form"></textarea>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Status</label>
+                                <label class="form-label" for="form-status">Status</label>
                                 <select class="form-select" id="form-status">
                                     <option value="draft">Draft</option>
                                     <option value="active">Active</option>
@@ -187,7 +187,7 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Form Layout</label>
+                            <label class="form-label" for="form-layout">Form Layout</label>
                             <select class="form-select" id="form-layout">
                                 <option value="single-column">Single Column</option>
                                 <option value="two-column" selected>Two Column</option>
@@ -197,7 +197,7 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Form Style</label>
+                            <label class="form-label" for="form-style">Form Style</label>
                             <select class="form-select" id="form-style">
                                 <option value="standard">Standard</option>
                                 <option value="compact">Compact</option>
@@ -284,37 +284,37 @@
                             <h6 class="border-bottom pb-2 mb-3">Basic Settings</h6>
                             
                             <div class="mb-3">
-                                <label class="form-label">Field Label</label>
-                                <input type="text" class="form-control" name="label" required>
+                                <label class="form-label" for="field-label">Field Label</label>
+                                <input type="text" class="form-control" id="field-label" name="label" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Field Key</label>
-                                <input type="text" class="form-control" name="field_slug" required>
+                                <label class="form-label" for="field-slug">Field Key</label>
+                                <input type="text" class="form-control" id="field-slug" name="field_slug" required>
                                 <small class="form-text text-muted">Used for database storage (auto-generated from label)</small>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Placeholder</label>
-                                <input type="text" class="form-control" name="placeholder">
+                                <label class="form-label" for="field-placeholder">Placeholder</label>
+                                <input type="text" class="form-control" id="field-placeholder" name="placeholder">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Help Text</label>
-                                <textarea class="form-control" name="help_text" rows="2"></textarea>
+                                <label class="form-label" for="field-help-text">Help Text</label>
+                                <textarea class="form-control" id="field-help-text" name="help_text" rows="2"></textarea>
                             </div>
                             
                             <div class="row">
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="is_required">
-                                        <label class="form-check-label">Required</label>
+                                        <input type="checkbox" class="form-check-input" id="is-required" name="is_required">
+                                        <label class="form-check-label" for="is-required">Required</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="is_readonly">
-                                        <label class="form-check-label">Read Only</label>
+                                        <input type="checkbox" class="form-check-input" id="is-readonly" name="is_readonly">
+                                        <label class="form-check-label" for="is-readonly">Read Only</label>
                                     </div>
                                 </div>
                             </div>
@@ -333,8 +333,8 @@
                             <h6 class="border-bottom pb-2 mb-3">Layout & Display</h6>
                             <div class="row">
                                 <div class="col-md-4">
-                                    <label class="form-label">Column Width</label>
-                                    <select class="form-select" name="column_width">
+                                    <label class="form-label" for="column-width">Column Width</label>
+                                    <select class="form-select" id="column-width" name="column_width">
                                         <option value="col-12">Full Width</option>
                                         <option value="col-md-6" selected>Half Width</option>
                                         <option value="col-md-4">One Third</option>
@@ -342,12 +342,12 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Display Order</label>
-                                    <input type="number" class="form-control" name="sort_order" min="0">
+                                    <label class="form-label" for="sort-order">Display Order</label>
+                                    <input type="number" class="form-control" id="sort-order" name="sort_order" min="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Section</label>
-                                    <select class="form-select" name="section_id">
+                                    <label class="form-label" for="section-id">Section</label>
+                                    <select class="form-select" id="section-id" name="section_id">
                                         <option value="">No Section</option>
                                     </select>
                                 </div>
@@ -385,31 +385,31 @@
             <div class="modal-body">
                 <form id="section-config-form">
                     <div class="mb-3">
-                        <label class="form-label">Section Title</label>
-                        <input type="text" class="form-control" name="title" required>
+                        <label class="form-label" for="section-title">Section Title</label>
+                        <input type="text" class="form-control" id="section-title" name="title" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="2"></textarea>
+                        <label class="form-label" for="section-description">Description</label>
+                        <textarea class="form-control" id="section-description" name="description" rows="2"></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Icon</label>
-                        <input type="text" class="form-control" name="icon" placeholder="fas fa-info-circle">
+                        <label class="form-label" for="section-icon">Icon</label>
+                        <input type="text" class="form-control" id="section-icon" name="icon" placeholder="fas fa-info-circle">
                     </div>
                     
                     <div class="row">
                         <div class="col-6">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="is_collapsible">
-                                <label class="form-check-label">Collapsible</label>
+                                <input type="checkbox" class="form-check-input" id="is-collapsible" name="is_collapsible">
+                                <label class="form-check-label" for="is-collapsible">Collapsible</label>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="is_expanded">
-                                <label class="form-check-label">Expanded by Default</label>
+                                <input type="checkbox" class="form-check-input" id="is-expanded" name="is_expanded">
+                                <label class="form-check-label" for="is-expanded">Expanded by Default</label>
                             </div>
                         </div>
                     </div>
@@ -1007,7 +1007,7 @@
                 case 'checkbox':
                     container.innerHTML = `
                         <div class="mb-3">
-                            <label class="form-label">Options</label>
+                            <label class="form-label" for="options-container">Options</label>
                             <div id="options-container">
                                 ${(field.options || []).map((opt, i) => `
                                     <div class="input-group mb-2">
@@ -1026,8 +1026,8 @@
                         </div>
                         ${field.type === 'multiselect' ? `
                             <div class="mb-3">
-                                <label class="form-label">Maximum Selections</label>
-                                <input type="number" class="form-control" name="max_selections" 
+                                <label class="form-label" for="max-selections">Maximum Selections</label>
+                                <input type="number" class="form-control" id="max-selections" name="max_selections" 
                                        value="${field.ui_config?.max_items || ''}" min="1">
                             </div>
                         ` : ''}
@@ -1042,25 +1042,25 @@
                     container.innerHTML = `
                         <div class="row">
                             <div class="col-6">
-                                <label class="form-label">Minimum Value</label>
-                                <input type="number" class="form-control" name="min_value" 
+                                <label class="form-label" for="min-value">Minimum Value</label>
+                                <input type="number" class="form-control" id="min-value" name="min_value" 
                                        value="${field.ui_config?.min || ''}" step="any">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Maximum Value</label>
-                                <input type="number" class="form-control" name="max_value" 
+                                <label class="form-label" for="max-value">Maximum Value</label>
+                                <input type="number" class="form-control" id="max-value" name="max_value" 
                                        value="${field.ui_config?.max || ''}" step="any">
                             </div>
                         </div>
                         <div class="mt-3">
-                            <label class="form-label">Step</label>
-                            <input type="number" class="form-control" name="step_value" 
+                            <label class="form-label" for="step-value">Step</label>
+                            <input type="number" class="form-control" id="step-value" name="step_value" 
                                    value="${field.ui_config?.step || (field.type === 'percentage' ? '1' : '1')}" step="any">
                         </div>
                         ${field.type === 'currency' ? `
                             <div class="mt-3">
-                                <label class="form-label">Currency Symbol</label>
-                                <input type="text" class="form-control" name="currency_symbol" 
+                                <label class="form-label" for="currency-symbol">Currency Symbol</label>
+                                <input type="text" class="form-control" id="currency-symbol" name="currency_symbol" 
                                        value="${field.ui_config?.symbol || '$'}" maxlength="3">
                             </div>
                         ` : ''}
@@ -1070,14 +1070,14 @@
                 case 'textarea':
                     container.innerHTML = `
                         <div class="mb-3">
-                            <label class="form-label">Rows</label>
-                            <input type="number" class="form-control" name="textarea_rows" 
+                            <label class="form-label" for="textarea-rows">Rows</label>
+                            <input type="number" class="form-control" id="textarea-rows" name="textarea_rows" 
                                    value="${field.ui_config?.rows || '4'}" min="2" max="20">
                         </div>
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="enable_wysiwyg" 
+                            <input type="checkbox" class="form-check-input" id="enable-wysiwyg" name="enable_wysiwyg" 
                                    ${field.ui_config?.wysiwyg ? 'checked' : ''}>
-                            <label class="form-check-label">Enable WYSIWYG Editor</label>
+                            <label class="form-check-label" for="enable-wysiwyg">Enable WYSIWYG Editor</label>
                         </div>
                     `;
                     break;
@@ -1085,23 +1085,23 @@
                 case 'file':
                     container.innerHTML = `
                         <div class="mb-3">
-                            <label class="form-label">Allowed File Types</label>
-                            <input type="text" class="form-control" name="allowed_types" 
+                            <label class="form-label" for="allowed-types">Allowed File Types</label>
+                            <input type="text" class="form-control" id="allowed-types" name="allowed_types" 
                                    value="${(field.ui_config?.accept_types || []).join(', ')}"
                                    placeholder="image/*, .pdf, .doc">
                             <small class="form-text text-muted">Comma-separated list of MIME types or extensions</small>
                         </div>
                         <div class="row">
                             <div class="col-6">
-                                <label class="form-label">Max File Size (MB)</label>
-                                <input type="number" class="form-control" name="max_file_size" 
+                                <label class="form-label" for="max-file-size">Max File Size (MB)</label>
+                                <input type="number" class="form-control" id="max-file-size" name="max_file_size" 
                                        value="${field.ui_config?.max_file_size || '10'}" min="1">
                             </div>
                             <div class="col-6">
                                 <div class="form-check mt-4">
-                                    <input type="checkbox" class="form-check-input" name="allow_multiple" 
+                                    <input type="checkbox" class="form-check-input" id="allow-multiple" name="allow_multiple" 
                                            ${field.ui_config?.multiple ? 'checked' : ''}>
-                                    <label class="form-check-label">Allow Multiple Files</label>
+                                    <label class="form-check-label" for="allow-multiple">Allow Multiple Files</label>
                                 </div>
                             </div>
                         </div>
@@ -1113,13 +1113,13 @@
                     container.innerHTML = `
                         <div class="row">
                             <div class="col-6">
-                                <label class="form-label">Min Date</label>
-                                <input type="date" class="form-control" name="min_date" 
+                                <label class="form-label" for="min-date">Min Date</label>
+                                <input type="date" class="form-control" id="min-date" name="min_date" 
                                        value="${field.ui_config?.min_date || ''}">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Max Date</label>
-                                <input type="date" class="form-control" name="max_date" 
+                                <label class="form-label" for="max-date">Max Date</label>
+                                <input type="date" class="form-control" id="max-date" name="max_date" 
                                        value="${field.ui_config?.max_date || ''}">
                             </div>
                         </div>
@@ -1178,8 +1178,8 @@
                 <div class="conditional-rule">
                     <div class="row">
                         <div class="col-md-3">
-                            <label class="form-label">Field</label>
-                            <select class="form-select condition-field">
+                            <label class="form-label" for="condition-field">Field</label>
+                            <select class="form-select condition-field" id="condition-field">
                                 <option value="">Select field...</option>
                                 ${formData.fields.map(f => `
                                     <option value="${f.field_slug}" ${rule && rule.field === f.field_slug ? 'selected' : ''}>
@@ -1189,8 +1189,8 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Operator</label>
-                            <select class="form-select condition-operator">
+                            <label class="form-label" for="condition-operator">Operator</label>
+                            <select class="form-select condition-operator" id="condition-operator">
                                 <option value="equals" ${rule && rule.operator === 'equals' ? 'selected' : ''}>Equals</option>
                                 <option value="not_equals" ${rule && rule.operator === 'not_equals' ? 'selected' : ''}>Not Equals</option>
                                 <option value="contains" ${rule && rule.operator === 'contains' ? 'selected' : ''}>Contains</option>
@@ -1199,13 +1199,13 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Value</label>
-                            <input type="text" class="form-control condition-value" 
+                            <label class="form-label" for="condition-value">Value</label>
+                            <input type="text" class="form-control condition-value" id="condition-value" 
                                    value="${rule ? rule.value : ''}" placeholder="Comparison value">
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Action</label>
-                            <select class="form-select condition-action">
+                            <label class="form-label" for="condition-action">Action</label>
+                            <select class="form-select condition-action" id="condition-action">
                                 <option value="show" ${rule && rule.action === 'show' ? 'selected' : ''}>Show</option>
                                 <option value="hide" ${rule && rule.action === 'hide' ? 'selected' : ''}>Hide</option>
                                 <option value="require" ${rule && rule.action === 'require' ? 'selected' : ''}>Require</option>

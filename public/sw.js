@@ -376,32 +376,86 @@ async function processOfflineQueue() {
     }
 }
 
+// Message rate limiting for security
+let messageCount = 0;
+let lastMessageReset = Date.now();
+const MESSAGE_RATE_LIMIT = 100; // Max 100 messages per minute
+const MESSAGE_RATE_WINDOW = 60000; // 1 minute
+
 // Handle messages from main thread
 self.addEventListener('message', (event) => {
-    // Always verify the origin of the received message for security
+    // Rate limiting check
+    const now = Date.now();
+    if (now - lastMessageReset > MESSAGE_RATE_WINDOW) {
+        messageCount = 0;
+        lastMessageReset = now;
+    }
+    
+    messageCount++;
+    if (messageCount > MESSAGE_RATE_LIMIT) {
+        console.warn('Service Worker: Message rate limit exceeded, ignoring message');
+        return;
+    }
+    
+    // Comprehensive origin verification for security
     const expectedOrigin = self.location.origin;
     
-    // For MessageEvent from postMessage(), check event.origin
-    // For ExtendableMessageEvent from ServiceWorker context, the origin should always match
-    if (event.origin !== undefined && event.origin !== expectedOrigin) {
+    // Step 1: Verify event origin (for postMessage events)
+    if (event.origin && event.origin !== expectedOrigin) {
         console.warn('Service Worker: Blocked message from untrusted origin:', event.origin);
         return;
     }
     
-    // Additional security check: ensure the source is from a controlled client
-    if (event.source && typeof event.source.url === 'string') {
-        const sourceUrl = new URL(event.source.url);
-        if (sourceUrl.origin !== expectedOrigin) {
-            console.warn('Service Worker: Blocked message from untrusted source:', sourceUrl.origin);
-            return;
+    // Step 2: Verify source client origin (for service worker messages)
+    if (event.source) {
+        // Check if source has URL property and verify its origin
+        if (typeof event.source.url === 'string') {
+            try {
+                const sourceUrl = new URL(event.source.url);
+                if (sourceUrl.origin !== expectedOrigin) {
+                    console.warn('Service Worker: Blocked message from untrusted source URL:', sourceUrl.origin);
+                    return;
+                }
+            } catch (error) {
+                console.warn('Service Worker: Invalid source URL format, blocking message');
+                return;
+            }
+        }
+        
+        // Additional check: ensure source is a controlled client
+        if (typeof event.source.id === 'string') {
+            // For service worker clients, verify they are controlled by this SW
+            self.clients.get(event.source.id).then(client => {
+                if (!client) {
+                    console.warn('Service Worker: Message from uncontrolled client, ignoring');
+                    return;
+                }
+            }).catch(() => {
+                console.warn('Service Worker: Cannot verify client, blocking message');
+                return;
+            });
         }
     }
     
+    // Step 3: Only access data after complete origin verification
     const { data } = event;
     
     // Validate that data exists and has expected structure
     if (!data || typeof data !== 'object') {
         console.warn('Service Worker: Invalid message data received');
+        return;
+    }
+    
+    // Validate message type and use whitelist approach
+    const allowedMessageTypes = [
+        'SKIP_WAITING',
+        'GET_CACHE_STATUS', 
+        'CLEAR_CACHE',
+        'FORCE_UPDATE'
+    ];
+    
+    if (!data.type || typeof data.type !== 'string' || !allowedMessageTypes.includes(data.type)) {
+        console.warn('Service Worker: Invalid or unauthorized message type:', data.type);
         return;
     }
     

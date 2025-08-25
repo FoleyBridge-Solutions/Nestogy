@@ -51,10 +51,10 @@
                         <table class="table min-w-full divide-y divide-gray-200-sm">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Unit Price</th>
-                                    <th>Quantity</th>
-                                    <th>Total</th>
+                                    <th scope="col">Product</th>
+                                    <th scope="col">Unit Price</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -79,12 +79,12 @@
                             </tbody>
                             <tfoot>
                                 <tr class="table-light">
-                                    <th colspan="3">Subtotal</th>
-                                    <th>${{ number_format($bundleTotal, 2) }}</th>
+                                    <th scope="row" colspan="3">Subtotal</th>
+                                    <th scope="col">${{ number_format($bundleTotal, 2) }}</th>
                                 </tr>
                                 @if($bundle->discount_type)
                                     <tr>
-                                        <th colspan="3">
+                                        <th scope="row" colspan="3">
                                             Discount
                                             @if($bundle->discount_type === 'percentage')
                                                 ({{ $bundle->discount_value }}%)
@@ -92,7 +92,7 @@
                                                 (Fixed)
                                             @endif
                                         </th>
-                                        <th class="text-red-600">
+                                        <th scope="col" class="text-red-600">
                                             @if($bundle->discount_type === 'percentage')
                                                 -${{ number_format($bundleTotal * $bundle->discount_value / 100, 2) }}
                                             @else
@@ -102,8 +102,8 @@
                                     </tr>
                                 @endif
                                 <tr class="table-primary">
-                                    <th colspan="3">Bundle Price</th>
-                                    <th>
+                                    <th scope="row" colspan="3">Bundle Price</th>
+                                    <th scope="col">
                                         @if($bundle->fixed_price)
                                             ${{ number_format($bundle->fixed_price, 2) }}
                                         @else

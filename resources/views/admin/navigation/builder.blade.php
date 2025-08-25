@@ -39,12 +39,12 @@
                     <div class="card-body">
                         <form id="navigation-config">
                             <div class="mb-3">
-                                <label class="form-label">Configuration Name</label>
+                                <label class="form-label" for="nav-config-name">Configuration Name</label>
                                 <input type="text" class="form-control" id="nav-config-name" placeholder="Enter configuration name" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Contract Type</label>
+                                <label class="form-label" for="nav-contract-type">Contract Type</label>
                                 <select class="form-select" id="nav-contract-type" required>
                                     <option value="">Select contract type...</option>
                                     <option value="service_agreement">Service Agreement</option>
@@ -56,7 +56,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Navigation Style</label>
+                                <label class="form-label" for="nav-style">Navigation Style</label>
                                 <select class="form-select" id="nav-style">
                                     <option value="horizontal">Horizontal Tabs</option>
                                     <option value="vertical">Vertical Menu</option>
@@ -66,7 +66,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Position</label>
+                                <label class="form-label" for="nav-position">Position</label>
                                 <select class="form-select" id="nav-position">
                                     <option value="top">Top of Page</option>
                                     <option value="left">Left Sidebar</option>
@@ -302,7 +302,7 @@
                                 <div class="breadcrumb-settings">
                                     <div class="row">
                                         <div class="col-md-4">
-                                            <label class="form-label">Separator</label>
+                                            <label class="form-label" for="breadcrumb-separator">Separator</label>
                                             <select class="form-select form-select-sm" id="breadcrumb-separator">
                                                 <option value="/">/</option>
                                                 <option value=">" selected>></option>
@@ -312,7 +312,7 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Max Items</label>
+                                            <label class="form-label" for="breadcrumb-max-items">Max Items</label>
                                             <input type="number" class="form-control form-control-sm" 
                                                    id="breadcrumb-max-items" value="5" min="3" max="10">
                                         </div>
@@ -351,23 +351,23 @@
                             <h6 class="border-bottom pb-2 mb-3">Basic Settings</h6>
                             
                             <div class="mb-3">
-                                <label class="form-label">Label</label>
-                                <input type="text" class="form-control" name="label" required>
+                                <label class="form-label" for="nav-item-label">Label</label>
+                                <input type="text" class="form-control" id="nav-item-label" name="label" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Icon</label>
-                                <input type="text" class="form-control" name="icon" placeholder="fas fa-home">
+                                <label class="form-label" for="nav-item-icon">Icon</label>
+                                <input type="text" class="form-control" id="nav-item-icon" name="icon" placeholder="fas fa-home">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">URL/Route</label>
-                                <input type="text" class="form-control" name="url" placeholder="/contracts/{id}/overview">
+                                <label class="form-label" for="nav-item-url">URL/Route</label>
+                                <input type="text" class="form-control" id="nav-item-url" name="url" placeholder="/contracts/{id}/overview">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" name="description" rows="2"></textarea>
+                                <label class="form-label" for="nav-item-description">Description</label>
+                                <textarea class="form-control" id="nav-item-description" name="description" rows="2"></textarea>
                             </div>
                         </div>
                         
@@ -376,8 +376,8 @@
                             <h6 class="border-bottom pb-2 mb-3">Advanced Settings</h6>
                             
                             <div class="mb-3">
-                                <label class="form-label">Target</label>
-                                <select class="form-select" name="target">
+                                <label class="form-label" for="nav-item-target">Target</label>
+                                <select class="form-select" id="nav-item-target" name="target">
                                     <option value="_self">Same Window</option>
                                     <option value="_blank">New Window</option>
                                     <option value="_modal">Modal</option>
@@ -385,13 +385,13 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Badge</label>
-                                <input type="text" class="form-control" name="badge" placeholder="New">
+                                <label class="form-label" for="nav-item-badge">Badge</label>
+                                <input type="text" class="form-control" id="nav-item-badge" name="badge" placeholder="New">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Badge Color</label>
-                                <select class="form-select" name="badge_color">
+                                <label class="form-label" for="nav-item-badge-color">Badge Color</label>
+                                <select class="form-select" id="nav-item-badge-color" name="badge_color">
                                     <option value="primary">Primary</option>
                                     <option value="secondary">Secondary</option>
                                     <option value="success">Success</option>
@@ -404,14 +404,14 @@
                             <div class="row">
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="is_active">
-                                        <label class="form-check-label">Active</label>
+                                        <input type="checkbox" class="form-check-input" id="nav-is-active" name="is_active">
+                                        <label class="form-check-label" for="nav-is-active">Active</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="is_visible">
-                                        <label class="form-check-label">Visible</label>
+                                        <input type="checkbox" class="form-check-input" id="nav-is-visible" name="is_visible">
+                                        <label class="form-check-label" for="nav-is-visible">Visible</label>
                                     </div>
                                 </div>
                             </div>
@@ -423,8 +423,8 @@
                             
                             <div class="row">
                                 <div class="col-md-6">
-                                    <label class="form-label">Required Permission</label>
-                                    <select class="form-select" name="permission">
+                                    <label class="form-label" for="nav-permission">Required Permission</label>
+                                    <select class="form-select" id="nav-permission" name="permission">
                                         <option value="">No permission required</option>
                                         <option value="view_contracts">View Contracts</option>
                                         <option value="edit_contracts">Edit Contracts</option>
@@ -433,8 +433,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Display Condition</label>
-                                    <select class="form-select" name="condition">
+                                    <label class="form-label" for="nav-condition">Display Condition</label>
+                                    <select class="form-select" id="nav-condition" name="condition">
                                         <option value="">Always show</option>
                                         <option value="has_data">Only if data exists</option>
                                         <option value="contract_active">Only if contract is active</option>
@@ -445,8 +445,8 @@
                             </div>
                             
                             <div class="mt-3" id="custom-condition-config" style="display: none;">
-                                <label class="form-label">Custom Condition Code</label>
-                                <textarea class="form-control" name="custom_condition" rows="3" 
+                                <label class="form-label" for="nav-custom-condition">Custom Condition Code</label>
+                                <textarea class="form-control" id="nav-custom-condition" name="custom_condition" rows="3" 
                                           placeholder="PHP code that returns boolean (e.g., $contract->status === 'active')"></textarea>
                             </div>
                         </div>
@@ -472,7 +472,7 @@
             <div class="modal-body">
                 <div class="preview-container">
                     <div class="preview-styles mb-3">
-                        <label class="form-label">Preview Style:</label>
+                        <label class="form-label" for="preview-style">Preview Style:</label>
                         <div class="btn-group btn-group-sm" role="group">
                             <input type="radio" class="btn-check" name="preview-style" id="preview-desktop" value="desktop" checked>
                             <label class="btn btn-outline-primary" for="preview-desktop">Desktop</label>

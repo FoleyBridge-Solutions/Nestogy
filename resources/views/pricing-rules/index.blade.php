@@ -51,15 +51,15 @@
                 <table class="min-w-full divide-y divide-gray-200 [&>tbody>tr:hover]:bg-gray-100 dark:bg-gray-800">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Target</th>
-                            <th>Client</th>
-                            <th>Value</th>
-                            <th>Priority</th>
-                            <th>Valid Period</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Target</th>
+                            <th scope="col">Client</th>
+                            <th scope="col">Value</th>
+                            <th scope="col">Priority</th>
+                            <th scope="col">Valid Period</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

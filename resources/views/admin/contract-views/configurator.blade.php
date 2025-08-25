@@ -39,12 +39,12 @@
                     <div class="card-body">
                         <form id="view-config">
                             <div class="mb-3">
-                                <label class="form-label">Configuration Name</label>
+                                <label class="form-label" for="config-name">Configuration Name</label>
                                 <input type="text" class="form-control" id="config-name" placeholder="Enter configuration name" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Contract Type</label>
+                                <label class="form-label" for="contract-type">Contract Type</label>
                                 <select class="form-select" id="contract-type" required>
                                     <option value="">Select contract type...</option>
                                     <option value="service_agreement">Service Agreement</option>
@@ -55,7 +55,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">View Layout</label>
+                                <label class="form-label" for="view-layout">View Layout</label>
                                 <select class="form-select" id="view-layout">
                                     <option value="standard">Standard Layout</option>
                                     <option value="compact">Compact Layout</option>
@@ -64,7 +64,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Sidebar Position</label>
+                                <label class="form-label" for="sidebar-position">Sidebar Position</label>
                                 <select class="form-select" id="sidebar-position">
                                     <option value="right">Right Sidebar</option>
                                     <option value="left">Left Sidebar</option>
@@ -294,23 +294,23 @@
                         <h6 class="border-bottom pb-2 mb-3">Basic Settings</h6>
                         <form id="section-basic-config">
                             <div class="mb-3">
-                                <label class="form-label">Section Title</label>
-                                <input type="text" class="form-control" name="title" required>
+                                <label class="form-label" for="section-title">Section Title</label>
+                                <input type="text" class="form-control" id="section-title" name="title" required>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" name="description" rows="2"></textarea>
+                                <label class="form-label" for="section-description">Description</label>
+                                <textarea class="form-control" id="section-description" name="description" rows="2"></textarea>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Icon</label>
-                                <input type="text" class="form-control" name="icon" placeholder="fas fa-info-circle">
+                                <label class="form-label" for="section-icon">Icon</label>
+                                <input type="text" class="form-control" id="section-icon" name="icon" placeholder="fas fa-info-circle">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">Layout Type</label>
-                                <select class="form-select" name="layout">
+                                <label class="form-label" for="layout-type">Layout Type</label>
+                                <select class="form-select" id="layout-type" name="layout">
                                     <option value="grid">Grid Layout</option>
                                     <option value="table">Table Layout</option>
                                     <option value="list">List Layout</option>
@@ -320,14 +320,14 @@
                             <div class="row">
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="collapsible">
-                                        <label class="form-check-label">Collapsible</label>
+                                        <input type="checkbox" class="form-check-input" id="collapsible" name="collapsible">
+                                        <label class="form-check-label" for="collapsible">Collapsible</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="hide_empty">
-                                        <label class="form-check-label">Hide Empty Fields</label>
+                                        <input type="checkbox" class="form-check-input" id="hide-empty" name="hide_empty">
+                                        <label class="form-check-label" for="hide-empty">Hide Empty Fields</label>
                                     </div>
                                 </div>
                             </div>
@@ -381,13 +381,13 @@
             <div class="modal-body">
                 <form id="field-display-config">
                     <div class="mb-3">
-                        <label class="form-label">Display Label</label>
-                        <input type="text" class="form-control" name="label" required>
+                        <label class="form-label" for="display-label">Display Label</label>
+                        <input type="text" class="form-control" id="display-label" name="label" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Display Type</label>
-                        <select class="form-select" name="type">
+                        <label class="form-label" for="display-type">Display Type</label>
+                        <select class="form-select" id="display-type" name="type">
                             <option value="text">Text</option>
                             <option value="currency">Currency</option>
                             <option value="date">Date</option>
@@ -408,8 +408,8 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Column Size</label>
-                        <select class="form-select" name="col_size">
+                        <label class="form-label" for="column-size">Column Size</label>
+                        <select class="form-select" id="column-size" name="col_size">
                             <option value="col-12">Full Width</option>
                             <option value="col-md-6" selected>Half Width</option>
                             <option value="col-md-4">One Third</option>
@@ -418,12 +418,12 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Help Text</label>
-                        <textarea class="form-control" name="help_text" rows="2"></textarea>
+                        <label class="form-label" for="help-text">Help Text</label>
+                        <textarea class="form-control" id="help-text" name="help_text" rows="2"></textarea>
                     </div>
                     
                     <div class="mb-3" id="field-actions-config" style="display: none;">
-                        <label class="form-label">Field Actions</label>
+                        <label class="form-label" for="actions-list">Field Actions</label>
                         <div class="actions-list" id="actions-list">
                             <button type="button" class="btn btn-outline-primary btn-sm" id="add-field-action">
                                 <i class="fas fa-plus"></i> Add Action
@@ -451,18 +451,18 @@
             <div class="modal-body">
                 <form id="custom-tab-form">
                     <div class="mb-3">
-                        <label class="form-label">Tab Label</label>
-                        <input type="text" class="form-control" name="label" required>
+                        <label class="form-label" for="tab-label">Tab Label</label>
+                        <input type="text" class="form-control" id="tab-label" name="label" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Tab Icon</label>
-                        <input type="text" class="form-control" name="icon" placeholder="fas fa-star">
+                        <label class="form-label" for="tab-icon">Tab Icon</label>
+                        <input type="text" class="form-control" id="tab-icon" name="icon" placeholder="fas fa-star">
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Content Type</label>
-                        <select class="form-select" name="content_type">
+                        <label class="form-label" for="content-type">Content Type</label>
+                        <select class="form-select" id="content-type" name="content_type">
                             <option value="sections">Sections (Configure below)</option>
                             <option value="component">Custom Component</option>
                             <option value="external">External Content (URL)</option>
@@ -470,14 +470,14 @@
                     </div>
                     
                     <div class="mb-3" id="component-config" style="display: none;">
-                        <label class="form-label">Component Path</label>
-                        <input type="text" class="form-control" name="component" 
+                        <label class="form-label" for="component-path">Component Path</label>
+                        <input type="text" class="form-control" id="component-path" name="component" 
                                placeholder="components.contracts.custom-tab">
                     </div>
                     
                     <div class="mb-3" id="external-config" style="display: none;">
-                        <label class="form-label">External URL</label>
-                        <input type="url" class="form-control" name="external_url" 
+                        <label class="form-label" for="external-url">External URL</label>
+                        <input type="url" class="form-control" id="external-url" name="external_url" 
                                placeholder="https://example.com/content/{contract_id}">
                     </div>
                 </form>

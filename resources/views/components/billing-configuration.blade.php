@@ -66,7 +66,7 @@ class="billing-configuration">
         <div class="p-6">
             <!-- Billing Model -->
             <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Billing Model</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="billing-model">Billing Model</label>
                 <div class="btn-group w-100" role="group">
                     <button type="button"
                             @click="setBillingModel('one_time')"
@@ -91,8 +91,8 @@ class="billing-configuration">
             
             <!-- Billing Cycle (for subscription/usage-based) -->
             <div class="mb-3" x-show="billingOptions.model !== 'one_time'">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Billing Cycle</label>
-                <select x-model="billingOptions.cycle" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="billing-cycle">Billing Cycle</label>
+                <select x-model="billingOptions.cycle" id="billing-cycle" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                     <option value="quarterly">Quarterly</option>
@@ -104,15 +104,17 @@ class="billing-configuration">
             <!-- Date Range -->
             <div class="flex flex-wrap -mx-4">
                 <div class="md:w-1/2 px-4 mb-3">
-                    <label class="form-label">Start Date</label>
+                    <label class="form-label" for="start-date">Start Date</label>
                     <input type="date" 
                            x-model="billingOptions.startDate" 
+                           id="start-date"
                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                 </div>
                 <div class="md:w-1/2 px-4 mb-3" x-show="billingOptions.model !== 'one_time'">
-                    <label class="form-label">End Date (Optional)</label>
+                    <label class="form-label" for="end-date">End Date (Optional)</label>
                     <input type="date" 
                            x-model="billingOptions.endDate" 
+                           id="end-date"
                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                            placeholder="No end date">
                 </div>
@@ -120,8 +122,8 @@ class="billing-configuration">
             
             <!-- Payment Terms -->
             <div class="mb-3">
-                <label class="form-label">Payment Terms (Days)</label>
-                <select x-model="billingOptions.paymentTerms" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <label class="form-label" for="payment-terms">Payment Terms (Days)</label>
+                <select x-model="billingOptions.paymentTerms" id="payment-terms" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     <option value="0">Due on Receipt</option>
                     <option value="15">Net 15</option>
                     <option value="30">Net 30</option>
@@ -137,19 +139,21 @@ class="billing-configuration">
                 
                 <div class="flex flex-wrap -mx-4">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Trial Period (Days)</label>
+                        <label class="form-label" for="trial-days">Trial Period (Days)</label>
                         <input type="number" 
                                x-model="subscription.trialDays" 
+                               id="trial-days"
                                class="form-control" 
                                min="0"
                                placeholder="0">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Setup Fee</label>
+                        <label class="form-label" for="setup-fee">Setup Fee</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
                             <input type="number" 
                                    x-model="subscription.setupFee" 
+                                   id="setup-fee"
                                    class="form-control" 
                                    min="0" 
                                    step="0.01"
@@ -160,17 +164,19 @@ class="billing-configuration">
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Minimum Term (Months)</label>
+                        <label class="form-label" for="minimum-term">Minimum Term (Months)</label>
                         <input type="number" 
                                x-model="subscription.minimumTerm" 
+                               id="minimum-term"
                                class="form-control" 
                                min="0"
                                placeholder="No minimum">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Grace Period (Days)</label>
+                        <label class="form-label" for="grace-period">Grace Period (Days)</label>
                         <input type="number" 
                                x-model="subscription.gracePeriodDays" 
+                               id="grace-period"
                                class="form-control" 
                                min="0"
                                placeholder="7">
@@ -195,10 +201,11 @@ class="billing-configuration">
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Late Fee (%)</label>
+                        <label class="form-label" for="late-fee">Late Fee (%)</label>
                         <div class="input-group">
                             <input type="number" 
                                    x-model="billingOptions.lateFeePercentage" 
+                                   id="late-fee"
                                    class="form-control" 
                                    min="0" 
                                    max="100" 
@@ -208,10 +215,11 @@ class="billing-configuration">
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Early Payment Discount (%)</label>
+                        <label class="form-label" for="early-payment-discount">Early Payment Discount (%)</label>
                         <div class="input-group">
                             <input type="number" 
                                    x-model="billingOptions.earlyPaymentDiscount" 
+                                   id="early-payment-discount"
                                    class="form-control" 
                                    min="0" 
                                    max="100" 

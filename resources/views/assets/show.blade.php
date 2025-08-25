@@ -128,7 +128,7 @@
                 <!-- Basic Information -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
+                        <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Client</dt>
                             <dd class="mt-1">
                                 <a href="{{ route('clients.show', $asset->client) }}" 
@@ -136,31 +136,33 @@
                                     {{ $asset->client->name }}
                                 </a>
                             </dd>
-                        </div>
-                        <div>
+                        </dl>
+                        <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Serial Number</dt>
                             <dd class="mt-1">
                                 <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">
                                     {{ $asset->serial ?: 'N/A' }}
                                 </code>
                             </dd>
-                        </div>
+                        </dl>
                         @if($asset->asset_tag)
-                        <div>
+                        <dl>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Asset Tag</dt>
                             <dd class="mt-1">
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full">
                                     {{ $asset->asset_tag }}
                                 </span>
                             </dd>
-                        </div>
+                        </dl>
                         @endif
                     </div>
                     
                     @if($asset->description)
                     <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $asset->description }}</dd>
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $asset->description }}</dd>
+                        </dl>
                     </div>
                     @endif
                 </div>

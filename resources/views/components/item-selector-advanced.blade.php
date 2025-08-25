@@ -56,8 +56,8 @@
             <div x-show="showFilters" x-transition class="mt-3">
                 <div class="flex flex-wrap -mx-4">
                     <div class="col-md-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select x-model="filters.category" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm-sm">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="category-filter">Category</label>
+                        <select x-model="filters.category" id="category-filter" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm-sm">
                             <option value="">All Categories</option>
                             <template x-for="category in categories" :key="category">
                                 <option :value="category" x-text="category"></option>
@@ -66,8 +66,8 @@
                     </div>
                     
                     <div class="col-md-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Billing Model</label>
-                        <select x-model="filters.billingModel" class="form-select form-select-sm">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="billing-model-filter">Billing Model</label>
+                        <select x-model="filters.billingModel" id="billing-model-filter" class="form-select form-select-sm">
                             <option value="">All Models</option>
                             <option value="one_time">One-time</option>
                             <option value="subscription">Subscription</option>
@@ -76,15 +76,17 @@
                     </div>
                     
                     <div class="col-md-4">
-                        <label class="form-label">Price Range</label>
+                        <label class="form-label" for="price-range-min">Price Range</label>
                         <div class="input-group input-group-sm">
                             <input type="number" 
                                    x-model="filters.priceRange.min" 
+                                   id="price-range-min"
                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
                                    placeholder="Min">
                             <span class="input-group-text">-</span>
                             <input type="number" 
                                    x-model="filters.priceRange.max" 
+                                   id="price-range-max"
                                    class="form-control" 
                                    placeholder="Max">
                         </div>
@@ -212,13 +214,13 @@
             <table class="min-w-full divide-y divide-gray-200 [&>tbody>tr:hover]:bg-gray-100">
                 <thead>
                     <tr>
-                        <th width="30"></th>
-                        <th>Product</th>
-                        <th>SKU</th>
-                        <th>Category</th>
-                        <th>Billing</th>
-                        <th>Price</th>
-                        <th>Actions</th>
+                        <th width="30" scope="col"></th>
+                        <th scope="col">Product</th>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Billing</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -387,9 +389,9 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>Discount</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Discount</th>
                                 </tr>
                             </thead>
                             <tbody>

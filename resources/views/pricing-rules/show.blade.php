@@ -49,22 +49,22 @@
                 <div class="flex flex-wrap -mx-4">
                     <div class="md:w-1/2 px-4">
                         <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-muted">Rule Type</label>
-                            <div class="fw-bold">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-muted" for="rule-type-display">Rule Type</label>
+                            <div class="fw-bold" id="rule-type-display">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-muted">Priority</label>
-                            <div class="fw-bold">{{ $pricingRule->priority }}</div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-muted" for="priority-display">Priority</label>
+                            <div class="fw-bold" id="priority-display">{{ $pricingRule->priority }}</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Rule Value -->
                 <div class="mb-4">
-                    <label class="form-label text-muted">Rule Value</label>
-                    <div class="fw-bold fs-5">
+                    <label class="form-label text-muted" for="rule-value-display">Rule Value</label>
+                    <div class="fw-bold fs-5" id="rule-value-display">
                         @if($pricingRule->rule_type === 'discount')
                             <span class="text-red-600">
                                 @if($pricingRule->discount_type === 'percentage')
@@ -96,8 +96,8 @@
                         <table class="table min-w-full divide-y divide-gray-200-sm">
                             <thead>
                                 <tr>
-                                    <th>Quantity Range</th>
-                                    <th>Price per Unit</th>
+                                    <th scope="col">Quantity Range</th>
+                                    <th scope="col">Price per Unit</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -124,8 +124,8 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label text-muted">Applies To</label>
-                            <div class="fw-bold">
+                            <label class="form-label text-muted" for="applies-to-display">Applies To</label>
+                            <div class="fw-bold" id="applies-to-display">
                                 @if($pricingRule->target_type === 'product')
                                     <i class="fas fa-box text-blue-600"></i> Specific Product
                                     @if($pricingRule->product)
@@ -144,8 +144,8 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label text-muted">Client</label>
-                            <div class="fw-bold">
+                            <label class="form-label text-muted" for="client-display">Client</label>
+                            <div class="fw-bold" id="client-display">
                                 @if($pricingRule->client_id)
                                     <i class="fas fa-user text-info"></i> Specific Client
                                     @if($pricingRule->client)
@@ -166,16 +166,16 @@
                         @if($pricingRule->valid_from)
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label text-muted">Valid From</label>
-                                    <div class="fw-bold">{{ $pricingRule->valid_from->format('M j, Y') }}</div>
+                                    <label class="form-label text-muted" for="valid-from-display">Valid From</label>
+                                    <div class="fw-bold" id="valid-from-display">{{ $pricingRule->valid_from->format('M j, Y') }}</div>
                                 </div>
                             </div>
                         @endif
                         @if($pricingRule->valid_to)
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label text-muted">Valid To</label>
-                                    <div class="fw-bold">{{ $pricingRule->valid_to->format('M j, Y') }}</div>
+                                    <label class="form-label text-muted" for="valid-to-display">Valid To</label>
+                                    <div class="fw-bold" id="valid-to-display">{{ $pricingRule->valid_to->format('M j, Y') }}</div>
                                 </div>
                             </div>
                         @endif
@@ -190,8 +190,8 @@
                 <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-4">Rule Summary</h5>
 
                 <div class="mb-3">
-                    <label class="form-label text-muted">Status</label>
-                    <div>
+                    <label class="form-label text-muted" for="status-display">Status</label>
+                    <div id="status-display">
                         @if($pricingRule->is_active)
                             <span class="badge bg-success">Active</span>
                         @else
@@ -201,8 +201,8 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-muted">Priority Level</label>
-                    <div class="fw-bold">
+                    <label class="form-label text-muted" for="priority-level-display">Priority Level</label>
+                    <div class="fw-bold" id="priority-level-display">
                         {{ $pricingRule->priority }}
                         @if($pricingRule->priority >= 80)
                             <span class="badge bg-danger ml-1">High</span>
@@ -215,14 +215,14 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-muted">Rule Type</label>
-                    <div class="fw-bold">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</div>
+                    <label class="form-label text-muted" for="rule-type-summary-display">Rule Type</label>
+                    <div class="fw-bold" id="rule-type-summary-display">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</div>
                 </div>
 
                 @if($pricingRule->valid_from || $pricingRule->valid_to)
                     <div class="mb-3">
-                        <label class="form-label text-muted">Validity</label>
-                        <div class="fw-bold">
+                        <label class="form-label text-muted" for="validity-display">Validity</label>
+                        <div class="fw-bold" id="validity-display">
                             @if($pricingRule->valid_from && $pricingRule->valid_to)
                                 @if(now()->between($pricingRule->valid_from, $pricingRule->valid_to))
                                     <span class="text-green-600">Currently Valid</span>

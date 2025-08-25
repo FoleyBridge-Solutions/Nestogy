@@ -227,7 +227,7 @@
                         @endforeach
                         
                         @if(!empty($availableRowActions))
-                            <th width="120" class="text-center">Actions</th>
+                            <th width="120" class="text-center" scope="col">Actions</th>
                         @endif
                     </tr>
                 </thead>

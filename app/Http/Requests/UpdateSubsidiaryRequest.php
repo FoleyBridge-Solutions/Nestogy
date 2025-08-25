@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CompanyHierarchy;
 
@@ -11,21 +10,20 @@ use App\Models\CompanyHierarchy;
  * 
  * Validates data for updating an existing subsidiary company.
  */
-class UpdateSubsidiaryRequest extends FormRequest
+class UpdateSubsidiaryRequest extends BaseSubsidiaryRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        $user = Auth::user();
-        $subsidiary = $this->route('subsidiary');
-        
-        // User must be authenticated and have subsidiary management permissions
-        if (!$user || !$user->settings?->canManageSubsidiaries()) {
+        if (!$this->canManageSubsidiaries()) {
             return false;
         }
 
+        $user = Auth::user();
+        $subsidiary = $this->route('subsidiary');
+        
         // Subsidiary must be a descendant of user's company
         return CompanyHierarchy::isDescendant($subsidiary->id, $user->company_id);
     }
@@ -35,46 +33,14 @@ class UpdateSubsidiaryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $subsidiary = $this->route('subsidiary');
-        
-        return [
-            // Basic company information
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'website' => 'nullable|url|max:255',
-            
-            // Address information
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'zip' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
-            
-            // Subsidiary-specific settings
-            'access_level' => 'required|in:full,limited,read_only',
-            'billing_type' => 'required|in:independent,parent_billed,shared',
-            'can_create_subsidiaries' => 'boolean',
-            'max_subsidiary_depth' => 'integer|min:0|max:10',
-            
+        return array_merge($this->getCommonRules(), [
             // Status management
             'is_active' => 'boolean',
             'suspension_reason' => 'nullable|string|max:500',
             
-            // Currency and localization
-            'currency' => 'nullable|string|in:USD,EUR,GBP,CAD,AUD,JPY',
-            'locale' => 'nullable|string|max:10',
-            
-            // Subsidiary settings
-            'subsidiary_settings' => 'array',
-            'subsidiary_settings.department' => 'nullable|string|max:100',
-            'subsidiary_settings.cost_center' => 'nullable|string|max:100',
-            'subsidiary_settings.budget_limit' => 'nullable|numeric|min:0',
-            'subsidiary_settings.auto_approval_limit' => 'nullable|numeric|min:0',
-            
             // Hierarchy management
             'move_to_parent' => 'nullable|exists:companies,id',
-        ];
+        ]);
     }
 
     /**
@@ -82,14 +48,10 @@ class UpdateSubsidiaryRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return [
-            'name' => 'company name',
-            'max_subsidiary_depth' => 'maximum subsidiary depth',
+        return array_merge($this->getCommonAttributes(), [
             'suspension_reason' => 'suspension reason',
-            'subsidiary_settings.budget_limit' => 'budget limit',
-            'subsidiary_settings.auto_approval_limit' => 'auto-approval limit',
             'move_to_parent' => 'new parent company',
-        ];
+        ]);
     }
 
     /**
@@ -97,14 +59,10 @@ class UpdateSubsidiaryRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
-            'name.required' => 'The subsidiary name is required.',
-            'access_level.required' => 'Please specify the access level for this subsidiary.',
-            'billing_type.required' => 'Please specify how this subsidiary will be billed.',
-            'max_subsidiary_depth.max' => 'Maximum subsidiary depth cannot exceed 10 levels.',
+        return array_merge($this->getCommonMessages(), [
             'move_to_parent.exists' => 'The selected parent company does not exist.',
             'suspension_reason.required_if' => 'A suspension reason is required when deactivating a subsidiary.',
-        ];
+        ]);
     }
 
     /**
@@ -128,12 +86,8 @@ class UpdateSubsidiaryRequest extends FormRequest
             $this->merge(['suspension_reason' => 'Administrative action']);
         }
 
-        // Merge subsidiary settings
-        $currentSettings = $subsidiary->subsidiary_settings ?? [];
-        $newSettings = $this->subsidiary_settings ?? [];
-        $this->merge([
-            'subsidiary_settings' => array_merge($currentSettings, $newSettings)
-        ]);
+        // Prepare subsidiary settings with current settings as base
+        $this->prepareSubsidiarySettings($subsidiary->subsidiary_settings ?? []);
     }
 
     /**
@@ -192,12 +146,8 @@ class UpdateSubsidiaryRequest extends FormRequest
                 }
             }
 
-            // Validate billing type changes
-            if ($this->billing_type === 'shared' && 
-                $this->currency !== $userCompany->currency) {
-                $validator->errors()->add('currency',
-                    'Currency must match parent company when using shared billing.');
-            }
+            // Validate currency compatibility with billing type
+            $this->validateCurrencyBilling($validator, $userCompany->currency);
 
             // Validate suspension
             if ($this->boolean('is_active') === false) {

@@ -310,7 +310,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Variables Used in This Clause</label>
+                                <label for="clauseVariables" class="form-label">Variables Used in This Clause</label>
                                 <div id="clauseVariables">
                                     <div class="input-group input-group-sm mb-2">
                                         <input type="text" class="form-control" placeholder="Variable name (e.g., client.name)" name="variable_name[]">
@@ -354,7 +354,7 @@
                                     <hr>
 
                                     <div class="mb-3">
-                                        <label class="form-label">Inclusion Conditions</label>
+                                        <label for="clauseConditions" class="form-label">Inclusion Conditions</label>
                                         <div class="form-text mb-2">When should this clause be included?</div>
                                         <div id="clauseConditions">
                                             <div class="condition-group mb-2 p-2 border rounded">
