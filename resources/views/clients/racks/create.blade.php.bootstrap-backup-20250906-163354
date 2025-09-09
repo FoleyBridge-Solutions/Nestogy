@@ -1,0 +1,432 @@
+@extends('layouts.app')
+
+@section('title', 'Add Client Rack')
+
+@section('content')
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Add Client Rack</h3>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Create a new server rack record for a client.</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{{ route('clients.racks.standalone.index') }}" 
+                           class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Racks
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg">
+            <form method="POST" action="{{ route('clients.racks.standalone.store') }}" class="space-y-8 divide-y divide-gray-200">
+                @csrf
+                
+                <div class="space-y-8 divide-y divide-gray-200 p-6">
+                    <!-- Basic Information -->
+                    <div>
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Basic Information</h3>
+                            <p class="mt-1 text-sm text-gray-500">Basic rack identification and client assignment.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Client -->
+                            <div class="sm:col-span-3">
+                                <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</label>
+                                <select id="client_id" 
+                                        name="client_id" 
+                                        required
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('client_id') border-red-300 @enderror">
+                                    <option value="">Select a client</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ (old('client_id', $selectedClientId) == $client->id) ? 'selected' : '' }}>
+                                            {{ $client->display_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('client_id')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Rack Name -->
+                            <div class="sm:col-span-3">
+                                <label for="name" class="block text-sm font-medium text-gray-700">Rack Name *</label>
+                                <input type="text" 
+                                       name="name" 
+                                       id="name" 
+                                       value="{{ old('name') }}"
+                                       required
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('name') border-red-300 @enderror">
+                                @error('name')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Location -->
+                            <div class="sm:col-span-3">
+                                <label for="location" class="block text-sm font-medium text-gray-700">Location *</label>
+                                <input type="text" 
+                                       name="location" 
+                                       id="location" 
+                                       value="{{ old('location') }}"
+                                       required
+                                       placeholder="e.g., Data Center A, Row 3"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('location') border-red-300 @enderror">
+                                @error('location')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Rack Number -->
+                            <div class="sm:col-span-3">
+                                <label for="rack_number" class="block text-sm font-medium text-gray-700">Rack Number</label>
+                                <input type="number" 
+                                       name="rack_number" 
+                                       id="rack_number" 
+                                       value="{{ old('rack_number') }}"
+                                       min="1"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('rack_number') border-red-300 @enderror">
+                                @error('rack_number')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Status -->
+                            <div class="sm:col-span-3">
+                                <label for="status" class="block text-sm font-medium text-gray-700">Status *</label>
+                                <select id="status" 
+                                        name="status" 
+                                        required
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('status') border-red-300 @enderror">
+                                    @foreach($statuses as $key => $label)
+                                        <option value="{{ $key }}" {{ old('status', 'active') === $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('status')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Description -->
+                            <div class="sm:col-span-6">
+                                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea id="description" 
+                                          name="description" 
+                                          rows="3" 
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('description') border-red-300 @enderror">{{ old('description') }}</textarea>
+                                @error('description')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Physical Specifications -->
+                    <div class="pt-8">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Physical Specifications</h3>
+                            <p class="mt-1 text-sm text-gray-500">Physical dimensions and capacity specifications.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Height Units -->
+                            <div class="sm:col-span-2">
+                                <label for="height_units" class="block text-sm font-medium text-gray-700">Height (U) *</label>
+                                <select id="height_units" 
+                                        name="height_units" 
+                                        required
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('height_units') border-red-300 @enderror">
+                                    <option value="">Select height</option>
+                                    @foreach($heights as $value => $label)
+                                        <option value="{{ $value }}" {{ old('height_units', '42') == $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                    <option value="custom">Custom</option>
+                                </select>
+                                @error('height_units')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Width -->
+                            <div class="sm:col-span-2">
+                                <label for="width_inches" class="block text-sm font-medium text-gray-700">Width (inches)</label>
+                                <input type="number" 
+                                       name="width_inches" 
+                                       id="width_inches" 
+                                       value="{{ old('width_inches', '19') }}"
+                                       min="0"
+                                       step="0.01"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('width_inches') border-red-300 @enderror">
+                                @error('width_inches')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Depth -->
+                            <div class="sm:col-span-2">
+                                <label for="depth_inches" class="block text-sm font-medium text-gray-700">Depth (inches)</label>
+                                <input type="number" 
+                                       name="depth_inches" 
+                                       id="depth_inches" 
+                                       value="{{ old('depth_inches', '36') }}"
+                                       min="0"
+                                       step="0.01"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('depth_inches') border-red-300 @enderror">
+                                @error('depth_inches')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Max Weight -->
+                            <div class="sm:col-span-3">
+                                <label for="max_weight_lbs" class="block text-sm font-medium text-gray-700">Max Weight (lbs)</label>
+                                <input type="number" 
+                                       name="max_weight_lbs" 
+                                       id="max_weight_lbs" 
+                                       value="{{ old('max_weight_lbs') }}"
+                                       min="0"
+                                       step="0.01"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('max_weight_lbs') border-red-300 @enderror">
+                                @error('max_weight_lbs')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Cooling Requirements -->
+                            <div class="sm:col-span-3">
+                                <label for="cooling_requirements" class="block text-sm font-medium text-gray-700">Cooling Requirements</label>
+                                <select id="cooling_requirements" 
+                                        name="cooling_requirements" 
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('cooling_requirements') border-red-300 @enderror">
+                                    <option value="">Select cooling type</option>
+                                    @foreach($coolingRequirements as $key => $label)
+                                        <option value="{{ $key }}" {{ old('cooling_requirements') === $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('cooling_requirements')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Power & Environment -->
+                    <div class="pt-8">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Power & Environment</h3>
+                            <p class="mt-1 text-sm text-gray-500">Power capacity and environmental monitoring.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Power Capacity -->
+                            <div class="sm:col-span-3">
+                                <label for="power_capacity_watts" class="block text-sm font-medium text-gray-700">Power Capacity (W) *</label>
+                                <input type="number" 
+                                       name="power_capacity_watts" 
+                                       id="power_capacity_watts" 
+                                       value="{{ old('power_capacity_watts') }}"
+                                       required
+                                       min="0"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('power_capacity_watts') border-red-300 @enderror">
+                                @error('power_capacity_watts')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Power Used -->
+                            <div class="sm:col-span-3">
+                                <label for="power_used_watts" class="block text-sm font-medium text-gray-700">Power Used (W)</label>
+                                <input type="number" 
+                                       name="power_used_watts" 
+                                       id="power_used_watts" 
+                                       value="{{ old('power_used_watts', '0') }}"
+                                       min="0"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('power_used_watts') border-red-300 @enderror">
+                                @error('power_used_watts')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Temperature -->
+                            <div class="sm:col-span-3">
+                                <label for="temperature_celsius" class="block text-sm font-medium text-gray-700">Temperature (°C)</label>
+                                <input type="number" 
+                                       name="temperature_celsius" 
+                                       id="temperature_celsius" 
+                                       value="{{ old('temperature_celsius') }}"
+                                       min="-50"
+                                       max="100"
+                                       step="0.1"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('temperature_celsius') border-red-300 @enderror">
+                                @error('temperature_celsius')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Humidity -->
+                            <div class="sm:col-span-3">
+                                <label for="humidity_percent" class="block text-sm font-medium text-gray-700">Humidity (%)</label>
+                                <input type="number" 
+                                       name="humidity_percent" 
+                                       id="humidity_percent" 
+                                       value="{{ old('humidity_percent') }}"
+                                       min="0"
+                                       max="100"
+                                       step="0.1"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('humidity_percent') border-red-300 @enderror">
+                                @error('humidity_percent')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Network Connections -->
+                            <div class="sm:col-span-6">
+                                <label for="network_connections" class="block text-sm font-medium text-gray-700">Network Connections</label>
+                                <textarea id="network_connections" 
+                                          name="network_connections" 
+                                          rows="2" 
+                                          placeholder="e.g., 2x 10Gb Ethernet, 4x Cat6"
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('network_connections') border-red-300 @enderror">{{ old('network_connections') }}</textarea>
+                                @error('network_connections')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hardware Details -->
+                    <div class="pt-8">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Hardware Details</h3>
+                            <p class="mt-1 text-sm text-gray-500">Manufacturer and warranty information.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Manufacturer -->
+                            <div class="sm:col-span-2">
+                                <label for="manufacturer" class="block text-sm font-medium text-gray-700">Manufacturer</label>
+                                <input type="text" 
+                                       name="manufacturer" 
+                                       id="manufacturer" 
+                                       value="{{ old('manufacturer') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('manufacturer') border-red-300 @enderror">
+                                @error('manufacturer')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Model -->
+                            <div class="sm:col-span-2">
+                                <label for="model" class="block text-sm font-medium text-gray-700">Model</label>
+                                <input type="text" 
+                                       name="model" 
+                                       id="model" 
+                                       value="{{ old('model') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('model') border-red-300 @enderror">
+                                @error('model')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Serial Number -->
+                            <div class="sm:col-span-2">
+                                <label for="serial_number" class="block text-sm font-medium text-gray-700">Serial Number</label>
+                                <input type="text" 
+                                       name="serial_number" 
+                                       id="serial_number" 
+                                       value="{{ old('serial_number') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('serial_number') border-red-300 @enderror">
+                                @error('serial_number')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Purchase Date -->
+                            <div class="sm:col-span-3">
+                                <label for="purchase_date" class="block text-sm font-medium text-gray-700">Purchase Date</label>
+                                <input type="date" 
+                                       name="purchase_date" 
+                                       id="purchase_date" 
+                                       value="{{ old('purchase_date') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('purchase_date') border-red-300 @enderror">
+                                @error('purchase_date')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Warranty Expiry -->
+                            <div class="sm:col-span-3">
+                                <label for="warranty_expiry" class="block text-sm font-medium text-gray-700">Warranty Expiry</label>
+                                <input type="date" 
+                                       name="warranty_expiry" 
+                                       id="warranty_expiry" 
+                                       value="{{ old('warranty_expiry') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('warranty_expiry') border-red-300 @enderror">
+                                @error('warranty_expiry')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Maintenance Schedule -->
+                            <div class="sm:col-span-6">
+                                <label for="maintenance_schedule" class="block text-sm font-medium text-gray-700">Maintenance Schedule</label>
+                                <textarea id="maintenance_schedule" 
+                                          name="maintenance_schedule" 
+                                          rows="2" 
+                                          placeholder="e.g., Quarterly filter cleaning, Annual inspection"
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('maintenance_schedule') border-red-300 @enderror">{{ old('maintenance_schedule') }}</textarea>
+                                @error('maintenance_schedule')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="sm:col-span-6">
+                                <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                                <textarea id="notes" 
+                                          name="notes" 
+                                          rows="3" 
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('notes') border-red-300 @enderror">{{ old('notes') }}</textarea>
+                                @error('notes')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="pt-5">
+                    <div class="flex justify-end space-x-3 px-6 pb-6">
+                        <a href="{{ route('clients.racks.standalone.index') }}" 
+                           class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Create Rack
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection

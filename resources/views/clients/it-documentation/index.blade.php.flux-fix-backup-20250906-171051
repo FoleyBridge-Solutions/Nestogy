@@ -1,0 +1,236 @@
+@extends('layouts.app')
+
+@section('title', 'IT Documentation')
+
+@section('content')
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">IT Documentation</h1>
+                    <p class="mt-1 text-sm text-gray-500">Manage technical documentation and procedures</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ route('clients.it-documentation.export', request()->query()) }}" 
+                       class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Export
+                    </a>
+                    @can('create', \App\Domains\Client\Models\ClientITDocumentation::class)
+                        <a href="{{ route('clients.it-documentation.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            New Documentation
+                        </a>
+                    @endcan
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8 sm:px-6">
+            <form method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Search -->
+                    <div>
+                        <label for="search" class="block text-sm font-medium text-gray-700">Search</flux:label>
+                        <input type="text" 
+                               name="search" 
+                               id="search"
+                               value="{{ $filters['search'] ?? '' }}"
+                               placeholder="Search documentation..."
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+
+                    <!-- Client Filter -->
+                    <div>
+                        <label for="client_id" class="block text-sm font-medium text-gray-700">Client</flux:label>
+                        <select name="client_id" id="client_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">All Clients</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}" {{ ($filters['client_id'] ?? '') == $client->id ? 'selected' : '' }}>
+                                    {{ $client->name }}
+                                </option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div>
+                        <label for="it_category" class="block text-sm font-medium text-gray-700">Category</flux:label>
+                        <select name="it_category" id="it_category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $key => $category)
+                                <option value="{{ $key }}" {{ ($filters['it_category'] ?? '') == $key ? 'selected' : '' }}>
+                                    {{ $category }}
+                                </option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <!-- Access Level Filter -->
+                    <div>
+                        <label for="access_level" class="block text-sm font-medium text-gray-700">Access Level</flux:label>
+                        <select name="access_level" id="access_level" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">All Levels</option>
+                            @foreach($accessLevels as $key => $level)
+                                <option value="{{ $key }}" {{ ($filters['access_level'] ?? '') == $key ? 'selected' : '' }}>
+                                    {{ $level }}
+                                </option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" 
+                               name="needs_review" 
+                               value="1" 
+                               {{ ($filters['needs_review'] ?? false) ? 'checked' : '' }}
+                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <span class="ml-2 text-sm text-gray-700">Needs Review</span>
+                    </flux:label>
+
+                    <div class="flex space-x-2">
+                        <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            Search
+                        </flux:button>
+                        <a href="{{ route('clients.it-documentation.index') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Documentation List -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-8 sm:px-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">
+                Documentation 
+                <span class="text-sm text-gray-500">({{ $documentation->count() }} items)</span>
+            </h2>
+        </div>
+
+        @if($documentation->count() > 0)
+            <div class="divide-y divide-gray-200">
+                @foreach($documentation as $doc)
+                    <div class="p-6 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">{{ $doc->category_icon }}</span>
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">
+                                            <a href="{{ route('clients.it-documentation.show', $doc) }}" class="hover:text-blue-600">
+                                                {{ $doc->name }}
+                                            </a>
+                                        </h3>
+                                        <div class="flex items-center space-x-4 mt-1">
+                                            <span class="text-sm text-gray-500">{{ $doc->client->name }}</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                {{ $categories[$doc->it_category] }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $doc->access_level_color }}-100 text-{{ $doc->access_level_color }}-800">
+                                                {{ $accessLevels[$doc->access_level] }}
+                                            </span>
+                                            @if($doc->needsReview())
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    Review Due
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($doc->description)
+                                    <p class="mt-2 text-sm text-gray-600">{{ Str::limit($doc->description, 150) }}</p>
+                                @endif
+
+                                @if($doc->tags && count($doc->tags) > 0)
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        @foreach($doc->tags as $tag)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ $tag }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                <div class="mt-2 text-xs text-gray-500">
+                                    <span>Version {{ $doc->version }}</span>
+                                    <span class="mx-2">•</span>
+                                    <span>By {{ $doc->author->name }}</span>
+                                    <span class="mx-2">•</span>
+                                    <span>{{ $doc->updated_at->format('M j, Y') }}</span>
+                                    @if($doc->hasFile())
+                                        <span class="mx-2">•</span>
+                                        <span>{{ $doc->file_size_human }}</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                @can('view', $doc)
+                                    <a href="{{ route('clients.it-documentation.show', $doc) }}" 
+                                       class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                        View
+                                    </a>
+                                @endcan
+                                
+                                @can('update', $doc)
+                                    <a href="{{ route('clients.it-documentation.edit', $doc) }}" 
+                                       class="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                                        Edit
+                                    </a>
+                                @endcan
+
+                                @if($doc->hasFile())
+                                    @can('download', $doc)
+                                        <a href="{{ route('clients.it-documentation.download', $doc) }}" 
+                                           class="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                                            Download
+                                        </a>
+                                    @endcan
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-6 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No IT documentation found</h3>
+                <p class="mt-1 text-sm text-gray-500">Get started by creating your first IT documentation.</p>
+                @can('create', \App\Domains\Client\Models\ClientITDocumentation::class)
+                    <div class="mt-6">
+                        <a href="{{ route('clients.it-documentation.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            New Documentation
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        @endif
+    </div>
+</div>
+@endsection

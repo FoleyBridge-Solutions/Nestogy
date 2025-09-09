@@ -1,0 +1,628 @@
+<div class="space-y-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Pricing Structure & Billing Model</h4>
+        
+        <!-- Billing Model Selection -->
+        <div class="mb-8">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">Billing Model</label>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <template x-for="model in billingModels" :key="model.value">
+                    <label class="flex flex-flex-1 px-6 p-6 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                           :class="pricingSchedule.billingModel === model.value ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''">
+                        <input type="radio" 
+                               :value="model.value"
+                               x-model="pricingSchedule.billingModel"
+                               class="sr-only">
+                        <div class="text-center">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white" x-text="model.label"></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="model.description"></div>
+                        </div>
+                    </label>
+                </template>
+            </div>
+        </div>
+
+        <!-- Base Pricing Structure -->
+        <div class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">Base Pricing Structure</h5>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monthly Base Fee</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                        <input type="number" 
+                               x-model="pricingSchedule.basePricing.monthlyBase"
+                               min="0" 
+                               step="0.01"
+                               placeholder="0.00"
+                               class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Fixed monthly recurring fee</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Setup Fee</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                        <input type="number" 
+                               x-model="pricingSchedule.basePricing.setupFee"
+                               min="0" 
+                               step="0.01"
+                               placeholder="0.00"
+                               class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">One-time implementation fee</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hourly Rate</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                        <input type="number" 
+                               x-model="pricingSchedule.basePricing.hourlyRate"
+                               min="0" 
+                               step="0.01"
+                               placeholder="0.00"
+                               class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">For additional work/projects</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template-Specific Pricing Sections -->
+        
+        <!-- Infrastructure/MSP Asset Pricing -->
+        <div x-show="getScheduleType() === 'infrastructure' && ['per_asset', 'tiered'].includes(pricingSchedule.billingModel)" class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">Asset Type Pricing</h5>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Set pricing for asset types configured in Schedule A - Infrastructure coverage.</p>
+            <div class="space-y-4">
+                <template x-for="assetType in infrastructureSchedule.supportedAssetTypes" :key="assetType">
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x-html="availableAssetTypes.find(at => at.value === assetType)?.icon"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white" x-text="availableAssetTypes.find(at => at.value === assetType)?.label"></div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="availableAssetTypes.find(at => at.value === assetType)?.description"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center">
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" 
+                                               x-model="pricingSchedule.assetTypePricing[assetType].enabled"
+                                               @change="if (!pricingSchedule.assetTypePricing[assetType]) pricingSchedule.assetTypePricing[assetType] = { enabled: false, price: '' }"
+                                               class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">Include in pricing</span>
+                                    </label>
+                                </div>
+                                
+                                <div x-show="pricingSchedule.assetTypePricing[assetType]?.enabled" class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                    <input type="number" 
+                                           x-model="pricingSchedule.assetTypePricing[assetType].price"
+                                           min="0" 
+                                           step="0.01"
+                                           placeholder="0.00"
+                                           class="w-20 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">/month</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- No assets configured message -->
+                <div x-show="infrastructureSchedule.supportedAssetTypes.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div class="text-gray-500 dark:text-gray-400">
+                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v1M7 8h10l-1 4H8l-1-4z"/>
+                        </svg>
+                        <p class="text-sm">No asset types configured in Schedule A yet.</p>
+                        <p class="text-xs mt-1">Add supported asset types in Schedule A to set pricing here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telecom Service Pricing -->
+        <div x-show="getScheduleType() === 'telecom'" class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">Telecommunications Service Pricing</h5>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Set pricing for telecommunications services configured in Schedule A.</p>
+            
+            <div class="space-y-4">
+                <!-- Channel/Line Pricing -->
+                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">SIP Channels/Lines</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400" x-text="'Configured: ' + telecomSchedule.channelCount + ' channels'"></div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                            <input type="number" 
+                                   x-model="pricingSchedule.telecomPricing.perChannel"
+                                   min="0" 
+                                   step="0.01"
+                                   placeholder="0.00"
+                                   class="w-20 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">/channel/month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calling Plan Pricing -->
+                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Calling Plan</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400" x-text="'Plan: ' + telecomSchedule.callingPlan.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                            <input type="number" 
+                                   x-model="pricingSchedule.telecomPricing.callingPlan"
+                                   min="0" 
+                                   step="0.01"
+                                   placeholder="0.00"
+                                   class="w-20 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">/month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Services (if enabled) -->
+                <div x-show="telecomSchedule.emergencyServices === 'enabled'" class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">E911 Emergency Services</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Enhanced 911 location services</div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                            <input type="number" 
+                                   x-model="pricingSchedule.telecomPricing.e911"
+                                   min="0" 
+                                   step="0.01"
+                                   placeholder="0.00"
+                                   class="w-20 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">/line/month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hardware/VAR Pricing -->
+        <div x-show="getScheduleType() === 'hardware'" class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">Hardware & Services Pricing</h5>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Set pricing for hardware categories and services configured in Schedule A.</p>
+            
+            <div class="space-y-4">
+                <!-- Hardware Category Pricing -->
+                <template x-for="category in hardwareSchedule.selectedCategories" :key="category">
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white" x-text="hardwareCategories.find(hc => hc.value === category)?.label + ' Hardware'"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400" x-text="hardwareCategories.find(hc => hc.value === category)?.description"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Markup %</label>
+                                <input type="number" 
+                                       x-model="pricingSchedule.hardwarePricing.categoryMarkup[category]"
+                                       min="0" 
+                                       step="0.1"
+                                       placeholder="15.0"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Margin $</label>
+                                <input type="number" 
+                                       x-model="pricingSchedule.hardwarePricing.categoryMinMargin[category]"
+                                       min="0" 
+                                       step="0.01"
+                                       placeholder="50.00"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Professional Services Pricing (if services are enabled) -->
+                <div x-show="Object.values(hardwareSchedule.services).some(service => service)" class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                    <h6 class="text-sm font-medium text-gray-900 dark:text-white mb-6">Professional Services Rates</h6>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div x-show="hardwareSchedule.services.basicInstallation || hardwareSchedule.services.advancedConfiguration">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Installation Rate</label>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                <input type="number" 
+                                       x-model="pricingSchedule.hardwarePricing.installationRate"
+                                       min="0" 
+                                       step="0.01"
+                                       placeholder="150.00"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">/hour</span>
+                            </div>
+                        </div>
+                        <div x-show="hardwareSchedule.services.projectManagement">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Project Management</label>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                <input type="number" 
+                                       x-model="pricingSchedule.hardwarePricing.projectManagementRate"
+                                       min="0" 
+                                       step="0.01"
+                                       placeholder="200.00"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">/hour</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No categories configured message -->
+                <div x-show="hardwareSchedule.selectedCategories.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div class="text-gray-500 dark:text-gray-400">
+                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        <p class="text-sm">No hardware categories configured in Schedule A yet.</p>
+                        <p class="text-xs mt-1">Select hardware categories in Schedule A to set pricing here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Framework Pricing -->
+        <div x-show="getScheduleType() === 'compliance'" class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">Compliance Framework Pricing</h5>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Set pricing for compliance frameworks and services configured in Schedule A.</p>
+            
+            <div class="space-y-4">
+                <!-- Framework-based pricing -->
+                <template x-for="framework in complianceSchedule.selectedFrameworks" :key="framework">
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white" x-text="complianceFrameworks.find(cf => cf.value === framework)?.label + ' Compliance'"></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400" x-text="complianceFrameworks.find(cf => cf.value === framework)?.description"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Setup Fee</label>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                    <input type="number" 
+                                           x-model="pricingSchedule.compliancePricing.frameworkSetup[framework]"
+                                           min="0" 
+                                           step="0.01"
+                                           placeholder="5000.00"
+                                           class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Monitoring</label>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                    <input type="number" 
+                                           x-model="pricingSchedule.compliancePricing.frameworkMonthly[framework]"
+                                           min="0" 
+                                           step="0.01"
+                                           placeholder="1500.00"
+                                           class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <span class="text-xs text-gray-600 dark:text-gray-400">/month</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Audit Services (if configured) -->
+                <div x-show="Object.values(complianceSchedule.audits).some(audit => audit)" class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                    <h6 class="text-sm font-medium text-gray-900 dark:text-white mb-6">Audit Services</h6>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div x-show="complianceSchedule.audits.external">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">External Audit</label>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                <input type="number" 
+                                       x-model="pricingSchedule.compliancePricing.externalAudit"
+                                       min="0" 
+                                       step="0.01"
+                                       placeholder="15000.00"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">/audit</span>
+                            </div>
+                        </div>
+                        <div x-show="complianceSchedule.audits.penetrationTesting">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Penetration Testing</label>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">$</span>
+                                <input type="number" 
+                                       x-model="pricingSchedule.compliancePricing.penetrationTesting"
+                                       min="0" 
+                                       step="0.01"
+                                       placeholder="8000.00"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">/test</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No frameworks configured message -->
+                <div x-show="complianceSchedule.selectedFrameworks.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div class="text-gray-500 dark:text-gray-400">
+                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <p class="text-sm">No compliance frameworks configured in Schedule A yet.</p>
+                        <p class="text-xs mt-1">Select compliance frameworks in Schedule A to set pricing here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Per-User Pricing (shown when billing model supports it) -->
+        <div x-show="['per_user', 'tiered'].includes(pricingSchedule.billingModel)" class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">User Pricing</h5>
+            <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">Price per User/Contact</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Monthly fee per managed user account</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-600 dark:text-gray-400">$</span>
+                        <input type="number" 
+                               x-model="pricingSchedule.perUnitPricing.perUser"
+                               min="0" 
+                               step="0.01"
+                               placeholder="0.00"
+                               class="w-24 px-6 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <span class="text-gray-600 dark:text-gray-400">/month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tiered Pricing (shown when tiered model selected) -->
+        <div x-show="pricingSchedule.billingModel === 'tiered'" class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h5 class="text-md font-medium text-gray-900 dark:text-white">Pricing Tiers</h5>
+                <button type="button" 
+                        @click="addPricingTier()"
+                        class="inline-flex items-center px-6 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/20">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Tier
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <template x-for="(tier, index) in pricingSchedule.tiers" :key="index">
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h6 class="text-sm font-medium text-gray-900 dark:text-white" x-text="'Tier ' + (index + 1)"></h6>
+                            <button type="button" 
+                                    @click="removePricingTier(index)"
+                                    x-show="pricingSchedule.tiers.length > 1"
+                                    class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Quantity</label>
+                                <input type="number" 
+                                       x-model="tier.minQuantity"
+                                       min="0"
+                                       placeholder="1"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Quantity</label>
+                                <input type="number" 
+                                       x-model="tier.maxQuantity"
+                                       min="0"
+                                       placeholder="10"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Price per Unit</label>
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-xs">$</span>
+                                    <input type="number" 
+                                           x-model="tier.price"
+                                           min="0" 
+                                           step="0.01"
+                                           placeholder="0.00"
+                                           class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Discount %</label>
+                                <input type="number" 
+                                       x-model="tier.discountPercentage"
+                                       min="0" 
+                                       max="100"
+                                       step="0.1"
+                                       placeholder="0"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Additional Fees -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h5 class="text-md font-medium text-gray-900 dark:text-white">Additional Fees (Optional)</h5>
+                <button type="button" 
+                        @click="addAdditionalFee()"
+                        class="inline-flex items-center px-6 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/20">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Fee
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <template x-for="(fee, index) in pricingSchedule.additionalFees" :key="index">
+                    <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h6 class="text-sm font-medium text-gray-900 dark:text-white">Additional Fee</h6>
+                            <button type="button" 
+                                    @click="removeAdditionalFee(index)"
+                                    class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fee Name</label>
+                                <input type="text" 
+                                       x-model="fee.name"
+                                       placeholder="e.g., Expedited Support"
+                                       class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-xs">$</span>
+                                    <input type="number" 
+                                           x-model="fee.amount"
+                                           min="0" 
+                                           step="0.01"
+                                           placeholder="0.00"
+                                           class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency</label>
+                                <select x-model="fee.frequency" 
+                                        class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="one_time">One-time</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="annual">Annual</option>
+                                    <option value="per_incident">Per Incident</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                                <select x-model="fee.type" 
+                                        class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="fixed">Fixed Amount</option>
+                                    <option value="percentage">Percentage</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                            <input type="text" 
+                                   x-model="fee.description"
+                                   placeholder="Optional description of when this fee applies"
+                                   class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Payment Terms -->
+        <div class="mb-8">
+            <h5 class="text-md font-medium text-gray-900 dark:text-white mb-6">Payment Terms</h5>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Frequency</label>
+                    <select x-model="pricingSchedule.paymentTerms.billingFrequency" 
+                            class="w-full px-6 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="semi_annual">Semi-Annual</option>
+                        <option value="annual">Annual</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Terms</label>
+                    <select x-model="pricingSchedule.paymentTerms.terms" 
+                            class="w-full px-6 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="net_15">Net 15 Days</option>
+                        <option value="net_30">Net 30 Days</option>
+                        <option value="net_45">Net 45 Days</option>
+                        <option value="net_60">Net 60 Days</option>
+                        <option value="due_on_receipt">Due on Receipt</option>
+                        <option value="advance_payment">Advance Payment</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Late Fee (%)</label>
+                    <input type="number" 
+                           x-model="pricingSchedule.paymentTerms.lateFeePercentage"
+                           min="0" 
+                           max="10"
+                           step="0.1"
+                           placeholder="1.5"
+                           class="w-full px-6 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Monthly late fee percentage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Summary -->
+    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-6">
+        <h5 class="text-sm font-medium text-green-900 dark:text-green-100 mb-2">Pricing Schedule Summary</h5>
+        <div class="text-sm text-green-800 dark:text-green-200 space-y-1">
+            <div x-show="pricingSchedule.basePricing.monthlyBase > 0">
+                <span class="font-medium">Monthly Base:</span> 
+                <span x-text="'$' + parseFloat(pricingSchedule.basePricing.monthlyBase || 0).toFixed(2)"></span>
+            </div>
+            <div x-show="pricingSchedule.basePricing.setupFee > 0">
+                <span class="font-medium">Setup Fee:</span> 
+                <span x-text="'$' + parseFloat(pricingSchedule.basePricing.setupFee || 0).toFixed(2)"></span>
+            </div>
+            <div x-show="pricingSchedule.billingModel">
+                <span class="font-medium">Billing Model:</span> 
+                <span x-text="pricingSchedule.billingModel.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></span>
+            </div>
+            <div x-show="Object.values(pricingSchedule.assetTypePricing).some(pricing => pricing.enabled)">
+                <span class="font-medium">Asset Types Priced:</span> 
+                <span x-text="Object.values(pricingSchedule.assetTypePricing).filter(pricing => pricing.enabled).length + ' types'"></span>
+            </div>
+            <div x-show="pricingSchedule.perUnitPricing.perUser > 0">
+                <span class="font-medium">Per User:</span> 
+                <span x-text="'$' + parseFloat(pricingSchedule.perUnitPricing.perUser || 0).toFixed(2) + '/mo'"></span>
+            </div>
+            <div x-show="pricingSchedule.additionalFees.length > 0">
+                <span class="font-medium">Additional Fees:</span> 
+                <span x-text="pricingSchedule.additionalFees.length + ' configured'"></span>
+            </div>
+        </div>
+    </div>
+</div>

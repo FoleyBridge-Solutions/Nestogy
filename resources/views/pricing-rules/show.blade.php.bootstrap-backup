@@ -1,0 +1,370 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <x-page-header>
+        <x-slot name="title">{{ $pricingRule->name }}</x-slot>
+        <x-slot name="description">Pricing rule details and configuration</x-slot>
+        <x-slot name="actions">
+            @can('update', $pricingRule)
+                <a href="{{ route('pricing-rules.edit', $pricingRule) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Rule
+                </a>
+            @endcan
+            <a href="{{ route('pricing-rules.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Pricing Rules
+            </a>
+        </x-slot>
+    </x-page-header>
+
+    <div class="row">
+        <!-- Rule Details -->
+        <div class="col-md-8">
+            <x-content-card>
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h5 class="card-title mb-1">{{ $pricingRule->name }}</h5>
+                        <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</span>
+                        @if($pricingRule->is_active)
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-secondary">Inactive</span>
+                        @endif
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">Priority</small>
+                        <div class="fw-bold">{{ $pricingRule->priority }}</div>
+                    </div>
+                </div>
+
+                @if($pricingRule->description)
+                    <div class="mb-4">
+                        <h6>Description</h6>
+                        <p class="text-muted">{{ $pricingRule->description }}</p>
+                    </div>
+                @endif
+
+                <!-- Rule Configuration -->
+                <h6 class="mb-3">Rule Configuration</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Rule Type</label>
+                            <div class="fw-bold">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Priority</label>
+                            <div class="fw-bold">{{ $pricingRule->priority }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule Value -->
+                <div class="mb-4">
+                    <label class="form-label text-muted">Rule Value</label>
+                    <div class="fw-bold fs-5">
+                        @if($pricingRule->rule_type === 'discount')
+                            <span class="text-danger">
+                                @if($pricingRule->discount_type === 'percentage')
+                                    {{ $pricingRule->discount_value }}% Discount
+                                @else
+                                    ${{ number_format($pricingRule->discount_value, 2) }} Off
+                                @endif
+                            </span>
+                        @elseif($pricingRule->rule_type === 'markup')
+                            <span class="text-warning">
+                                @if($pricingRule->markup_type === 'percentage')
+                                    +{{ $pricingRule->markup_value }}% Markup
+                                @else
+                                    +${{ number_format($pricingRule->markup_value, 2) }} Markup
+                                @endif
+                            </span>
+                        @elseif($pricingRule->rule_type === 'fixed_price')
+                            <span class="text-primary">${{ number_format($pricingRule->fixed_price, 2) }}</span>
+                        @elseif($pricingRule->rule_type === 'tiered')
+                            <span class="text-info">Tiered Pricing</span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Tiered Pricing Details -->
+                @if($pricingRule->rule_type === 'tiered' && $pricingRule->pricing_tiers)
+                    <h6 class="mb-3">Pricing Tiers</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Quantity Range</th>
+                                    <th>Price per Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($pricingRule->pricing_tiers as $tier)
+                                    <tr>
+                                        <td>
+                                            {{ $tier['min_quantity'] }}
+                                            @if(isset($tier['max_quantity']) && $tier['max_quantity'])
+                                                - {{ $tier['max_quantity'] }}
+                                            @else
+                                                +
+                                            @endif
+                                        </td>
+                                        <td>${{ number_format($tier['price'], 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+
+                <!-- Target Information -->
+                <h6 class="mt-4 mb-3">Target</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Applies To</label>
+                            <div class="fw-bold">
+                                @if($pricingRule->target_type === 'product')
+                                    <i class="fas fa-box text-primary"></i> Specific Product
+                                    @if($pricingRule->product)
+                                        <br><small class="text-muted">{{ $pricingRule->product->name }}</small>
+                                    @endif
+                                @elseif($pricingRule->target_type === 'category')
+                                    <i class="fas fa-tags text-success"></i> Product Category
+                                    @if($pricingRule->category)
+                                        <br><small class="text-muted">{{ $pricingRule->category->name }}</small>
+                                    @endif
+                                @else
+                                    <i class="fas fa-globe text-secondary"></i> All Products
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Client</label>
+                            <div class="fw-bold">
+                                @if($pricingRule->client_id)
+                                    <i class="fas fa-user text-info"></i> Specific Client
+                                    @if($pricingRule->client)
+                                        <br><small class="text-muted">{{ $pricingRule->client->name }}</small>
+                                    @endif
+                                @else
+                                    <i class="fas fa-users text-secondary"></i> All Clients
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validity Period -->
+                @if($pricingRule->valid_from || $pricingRule->valid_to)
+                    <h6 class="mt-4 mb-3">Validity Period</h6>
+                    <div class="row">
+                        @if($pricingRule->valid_from)
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">Valid From</label>
+                                    <div class="fw-bold">{{ $pricingRule->valid_from->format('M j, Y') }}</div>
+                                </div>
+                            </div>
+                        @endif
+                        @if($pricingRule->valid_to)
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">Valid To</label>
+                                    <div class="fw-bold">{{ $pricingRule->valid_to->format('M j, Y') }}</div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+            </x-content-card>
+        </div>
+
+        <!-- Rule Summary -->
+        <div class="col-md-4">
+            <x-content-card>
+                <h5 class="card-title mb-4">Rule Summary</h5>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Status</label>
+                    <div>
+                        @if($pricingRule->is_active)
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-secondary">Inactive</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Priority Level</label>
+                    <div class="fw-bold">
+                        {{ $pricingRule->priority }}
+                        @if($pricingRule->priority >= 80)
+                            <span class="badge bg-danger ms-1">High</span>
+                        @elseif($pricingRule->priority >= 50)
+                            <span class="badge bg-warning ms-1">Medium</span>
+                        @else
+                            <span class="badge bg-secondary ms-1">Low</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Rule Type</label>
+                    <div class="fw-bold">{{ ucfirst(str_replace('_', ' ', $pricingRule->rule_type)) }}</div>
+                </div>
+
+                @if($pricingRule->valid_from || $pricingRule->valid_to)
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Validity</label>
+                        <div class="fw-bold">
+                            @if($pricingRule->valid_from && $pricingRule->valid_to)
+                                @if(now()->between($pricingRule->valid_from, $pricingRule->valid_to))
+                                    <span class="text-success">Currently Valid</span>
+                                @elseif(now()->lt($pricingRule->valid_from))
+                                    <span class="text-warning">Starts {{ $pricingRule->valid_from->diffForHumans() }}</span>
+                                @else
+                                    <span class="text-danger">Expired {{ $pricingRule->valid_to->diffForHumans() }}</span>
+                                @endif
+                            @elseif($pricingRule->valid_from)
+                                @if(now()->gte($pricingRule->valid_from))
+                                    <span class="text-success">Valid</span>
+                                @else
+                                    <span class="text-warning">Starts {{ $pricingRule->valid_from->diffForHumans() }}</span>
+                                @endif
+                            @elseif($pricingRule->valid_to)
+                                @if(now()->lte($pricingRule->valid_to))
+                                    <span class="text-success">Valid</span>
+                                @else
+                                    <span class="text-danger">Expired {{ $pricingRule->valid_to->diffForHumans() }}</span>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Created</label>
+                    <div class="fw-bold">{{ $pricingRule->created_at->format('M j, Y') }}</div>
+                </div>
+
+                @if($pricingRule->updated_at != $pricingRule->created_at)
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Last Updated</label>
+                        <div class="fw-bold">{{ $pricingRule->updated_at->format('M j, Y') }}</div>
+                    </div>
+                @endif
+
+                <hr>
+
+                <div class="d-grid gap-2">
+                    @can('update', $pricingRule)
+                        <a href="{{ route('pricing-rules.edit', $pricingRule) }}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edit Rule
+                        </a>
+                    @endcan
+                    
+                    @can('delete', $pricingRule)
+                        <button type="button" class="btn btn-outline-danger" 
+                                onclick="confirmDelete('{{ $pricingRule->name }}', '{{ route('pricing-rules.destroy', $pricingRule) }}')">
+                            <i class="fas fa-trash"></i> Delete Rule
+                        </button>
+                    @endcan
+                </div>
+            </x-content-card>
+
+            <!-- Price Calculator -->
+            @if($pricingRule->target_type === 'product' && $pricingRule->product)
+                <x-content-card class="mt-3">
+                    <h5 class="card-title mb-4">Price Calculator</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Original Price</label>
+                        <div class="fw-bold">${{ number_format($pricingRule->product->price, 2) }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="calc_quantity" class="form-label">Quantity</label>
+                        <input type="number" id="calc_quantity" class="form-control" value="1" min="1">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Final Price</label>
+                        <div class="fw-bold text-success fs-5" id="calculated_price">
+                            ${{ number_format($pricingRule->product->price, 2) }}
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="calculatePrice()">
+                        <i class="fas fa-calculator"></i> Calculate
+                    </button>
+                </x-content-card>
+            @endif
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(name, url) {
+    if (confirm(`Are you sure you want to delete the pricing rule "${name}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+@if($pricingRule->target_type === 'product' && $pricingRule->product)
+function calculatePrice() {
+    const quantity = parseInt(document.getElementById('calc_quantity').value) || 1;
+    const originalPrice = {{ $pricingRule->product->price }};
+    const ruleType = '{{ $pricingRule->rule_type }}';
+    
+    let finalPrice = originalPrice;
+    
+    @if($pricingRule->rule_type === 'discount')
+        @if($pricingRule->discount_type === 'percentage')
+            finalPrice = originalPrice * (1 - {{ $pricingRule->discount_value }} / 100);
+        @else
+            finalPrice = originalPrice - {{ $pricingRule->discount_value }};
+        @endif
+    @elseif($pricingRule->rule_type === 'markup')
+        @if($pricingRule->markup_type === 'percentage')
+            finalPrice = originalPrice * (1 + {{ $pricingRule->markup_value }} / 100);
+        @else
+            finalPrice = originalPrice + {{ $pricingRule->markup_value }};
+        @endif
+    @elseif($pricingRule->rule_type === 'fixed_price')
+        finalPrice = {{ $pricingRule->fixed_price }};
+    @elseif($pricingRule->rule_type === 'tiered' && $pricingRule->pricing_tiers)
+        const tiers = @json($pricingRule->pricing_tiers);
+        for (let tier of tiers) {
+            if (quantity >= tier.min_quantity && (!tier.max_quantity || quantity <= tier.max_quantity)) {
+                finalPrice = tier.price;
+                break;
+            }
+        }
+    @endif
+    
+    finalPrice = Math.max(0, finalPrice); // Ensure price doesn't go negative
+    const totalPrice = finalPrice * quantity;
+    
+    document.getElementById('calculated_price').textContent = 
+        `$${finalPrice.toFixed(2)} × ${quantity} = $${totalPrice.toFixed(2)}`;
+}
+
+// Auto-calculate when quantity changes
+document.getElementById('calc_quantity').addEventListener('input', calculatePrice);
+@endif
+</script>
+@endsection

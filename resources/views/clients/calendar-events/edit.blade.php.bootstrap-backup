@@ -1,0 +1,385 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Calendar Event')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Edit Calendar Event</h1>
+                <div class="btn-group">
+                    <a href="{{ route('clients.calendar-events.standalone.show', $calendarEvent) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-eye me-2"></i>View Event
+                    </a>
+                    <a href="{{ route('clients.calendar-events.standalone.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Events
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST" action="{{ route('clients.calendar-events.standalone.update', $calendarEvent) }}">
+                                @csrf
+                                @method('PUT')
+
+                                <!-- Client Selection -->
+                                <div class="mb-3">
+                                    <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
+                                    <select name="client_id" 
+                                            id="client_id" 
+                                            class="form-select @error('client_id') is-invalid @enderror" 
+                                            required>
+                                        <option value="">Select a client...</option>
+                                        @foreach($clients as $client)
+                                            <option value="{{ $client->id }}" 
+                                                    {{ old('client_id', $calendarEvent->client_id) == $client->id ? 'selected' : '' }}>
+                                                {{ $client->display_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('client_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Event Title -->
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Event Title <span class="text-danger">*</span></label>
+                                    <input type="text" 
+                                           name="title" 
+                                           id="title" 
+                                           class="form-control @error('title') is-invalid @enderror" 
+                                           value="{{ old('title', $calendarEvent->title) }}" 
+                                           required 
+                                           maxlength="255"
+                                           placeholder="Enter event title">
+                                    @error('title')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Event Type -->
+                                <div class="mb-3">
+                                    <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
+                                    <select name="event_type" 
+                                            id="event_type" 
+                                            class="form-select @error('event_type') is-invalid @enderror" 
+                                            required>
+                                        <option value="">Select event type...</option>
+                                        @foreach($types as $key => $value)
+                                            <option value="{{ $key }}" {{ old('event_type', $calendarEvent->event_type) == $key ? 'selected' : '' }}>
+                                                {{ $value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('event_type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea name="description" 
+                                              id="description" 
+                                              class="form-control @error('description') is-invalid @enderror" 
+                                              rows="3" 
+                                              placeholder="Event description...">{{ old('description', $calendarEvent->description) }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Location -->
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" 
+                                           name="location" 
+                                           id="location" 
+                                           class="form-control @error('location') is-invalid @enderror" 
+                                           value="{{ old('location', $calendarEvent->location) }}" 
+                                           maxlength="255"
+                                           placeholder="Event location">
+                                    @error('location')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Date and Time -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="start_datetime" class="form-label">Start Date & Time <span class="text-danger">*</span></label>
+                                            <input type="datetime-local" 
+                                                   name="start_datetime" 
+                                                   id="start_datetime" 
+                                                   class="form-control @error('start_datetime') is-invalid @enderror" 
+                                                   value="{{ old('start_datetime', $calendarEvent->start_datetime->format('Y-m-d\TH:i')) }}" 
+                                                   required>
+                                            @error('start_datetime')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="end_datetime" class="form-label">End Date & Time <span class="text-danger">*</span></label>
+                                            <input type="datetime-local" 
+                                                   name="end_datetime" 
+                                                   id="end_datetime" 
+                                                   class="form-control @error('end_datetime') is-invalid @enderror" 
+                                                   value="{{ old('end_datetime', $calendarEvent->end_datetime->format('Y-m-d\TH:i')) }}" 
+                                                   required>
+                                            @error('end_datetime')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- All Day Event -->
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               name="all_day" 
+                                               id="all_day" 
+                                               value="1" 
+                                               {{ old('all_day', $calendarEvent->all_day) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="all_day">
+                                            All Day Event
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Status and Priority -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                            <select name="status" 
+                                                    id="status" 
+                                                    class="form-select @error('status') is-invalid @enderror" 
+                                                    required>
+                                                @foreach($statuses as $key => $value)
+                                                    <option value="{{ $key }}" {{ old('status', $calendarEvent->status) == $key ? 'selected' : '' }}>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('status')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
+                                            <select name="priority" 
+                                                    id="priority" 
+                                                    class="form-select @error('priority') is-invalid @enderror" 
+                                                    required>
+                                                @foreach($priorities as $key => $value)
+                                                    <option value="{{ $key }}" {{ old('priority', $calendarEvent->priority) == $key ? 'selected' : '' }}>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('priority')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Attendees -->
+                                <div class="mb-3">
+                                    <label for="attendees" class="form-label">Attendees</label>
+                                    <input type="text" 
+                                           name="attendees" 
+                                           id="attendees" 
+                                           class="form-control @error('attendees') is-invalid @enderror" 
+                                           value="{{ old('attendees', is_array($calendarEvent->attendees) ? implode(', ', $calendarEvent->attendees) : '') }}" 
+                                           placeholder="Enter attendee emails separated by commas">
+                                    <div class="form-text">Separate multiple email addresses with commas</div>
+                                    @error('attendees')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Reminder -->
+                                <div class="mb-3">
+                                    <label for="reminder_minutes" class="form-label">Reminder</label>
+                                    <select name="reminder_minutes" id="reminder_minutes" class="form-select @error('reminder_minutes') is-invalid @enderror">
+                                        <option value="">No Reminder</option>
+                                        @foreach($reminderOptions as $key => $value)
+                                            <option value="{{ $key }}" {{ old('reminder_minutes', $calendarEvent->reminder_minutes) == $key ? 'selected' : '' }}>
+                                                {{ $value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('reminder_minutes')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Notes</label>
+                                    <textarea name="notes" 
+                                              id="notes" 
+                                              class="form-control @error('notes') is-invalid @enderror" 
+                                              rows="3" 
+                                              placeholder="Additional notes...">{{ old('notes', $calendarEvent->notes) }}</textarea>
+                                    @error('notes')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Update Event
+                                    </button>
+                                    <a href="{{ route('clients.calendar-events.standalone.show', $calendarEvent) }}" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-xl-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-clock me-2"></i>Event History
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="small text-muted">
+                                <div class="mb-2">
+                                    <strong>Created:</strong> {{ $calendarEvent->created_at->format('M j, Y g:i A') }}
+                                    @if($calendarEvent->creator)
+                                        <br><strong>Created by:</strong> {{ $calendarEvent->creator->name }}
+                                    @endif
+                                </div>
+                                @if($calendarEvent->updated_at != $calendarEvent->created_at)
+                                    <div class="mb-2">
+                                        <strong>Last updated:</strong> {{ $calendarEvent->updated_at->format('M j, Y g:i A') }}
+                                    </div>
+                                @endif
+                                @if($calendarEvent->accessed_at)
+                                    <div>
+                                        <strong>Last viewed:</strong> {{ $calendarEvent->accessed_at->format('M j, Y g:i A') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Event Guidelines
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="small text-muted">
+                                <h6>Status Options:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Scheduled:</strong> Event is planned but not confirmed</li>
+                                    <li><strong>Confirmed:</strong> Event is confirmed by all parties</li>
+                                    <li><strong>In Progress:</strong> Event is currently happening</li>
+                                    <li><strong>Completed:</strong> Event has been completed successfully</li>
+                                    <li><strong>Cancelled:</strong> Event has been cancelled</li>
+                                    <li><strong>No Show:</strong> Attendees did not show up</li>
+                                    <li><strong>Rescheduled:</strong> Event has been moved to another time</li>
+                                </ul>
+
+                                <h6 class="mt-3">Tips:</h6>
+                                <ul class="list-unstyled">
+                                    <li>• Update status as the event progresses</li>
+                                    <li>• Use notes to track important outcomes</li>
+                                    <li>• Set reminders for follow-up actions</li>
+                                    <li>• Keep attendee information up to date</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle all-day checkbox
+    const allDayCheck = document.getElementById('all_day');
+    const startDateTime = document.getElementById('start_datetime');
+    const endDateTime = document.getElementById('end_datetime');
+
+    // Set initial state based on whether it's an all-day event
+    if (allDayCheck.checked) {
+        startDateTime.type = 'date';
+        endDateTime.type = 'date';
+        
+        // Convert datetime values to date values
+        if (startDateTime.value) {
+            startDateTime.value = startDateTime.value.split('T')[0];
+        }
+        if (endDateTime.value) {
+            endDateTime.value = endDateTime.value.split('T')[0];
+        }
+    }
+
+    allDayCheck.addEventListener('change', function() {
+        if (this.checked) {
+            // Convert to date inputs for all-day events
+            const startDate = startDateTime.value ? startDateTime.value.split('T')[0] : '';
+            const endDate = endDateTime.value ? endDateTime.value.split('T')[0] : '';
+            
+            startDateTime.type = 'date';
+            endDateTime.type = 'date';
+            
+            if (startDate) startDateTime.value = startDate;
+            if (endDate) endDateTime.value = endDate;
+        } else {
+            // Convert back to datetime inputs
+            const startDate = startDateTime.value || '';
+            const endDate = endDateTime.value || '';
+            
+            startDateTime.type = 'datetime-local';
+            endDateTime.type = 'datetime-local';
+            
+            // Add default time if converting from date
+            if (startDate) startDateTime.value = startDate + 'T09:00';
+            if (endDate) endDateTime.value = endDate + 'T10:00';
+        }
+    });
+
+    // Auto-update end time when start time changes
+    startDateTime.addEventListener('change', function() {
+        if (!allDayCheck.checked && this.value && !endDateTime.value) {
+            const startTime = new Date(this.value);
+            const endTime = new Date(startTime.getTime() + (60 * 60 * 1000)); // Add 1 hour
+            
+            const year = endTime.getFullYear();
+            const month = String(endTime.getMonth() + 1).padStart(2, '0');
+            const day = String(endTime.getDate()).padStart(2, '0');
+            const hours = String(endTime.getHours()).padStart(2, '0');
+            const minutes = String(endTime.getMinutes()).padStart(2, '0');
+            
+            endDateTime.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+});
+</script>
+@endpush

@@ -1,0 +1,509 @@
+@extends('layouts.app')
+
+@section('title', 'Add Client Certificate')
+
+@section('content')
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Add Client Certificate</h3>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Create a new certificate record for a client.</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{{ route('clients.certificates.standalone.index') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Certificates
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white shadow rounded-lg">
+            <form method="POST" action="{{ route('clients.certificates.standalone.store') }}" class="space-y-8 divide-y divide-gray-200">
+                @csrf
+                
+                <div class="space-y-8 divide-y divide-gray-200 p-6">
+                    <!-- Basic Information -->
+                    <div>
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Basic Information</h3>
+                            <p class="mt-1 text-sm text-gray-500">Basic certificate identification and client assignment.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Client -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</flux:label>
+                                <select id="client_id" 
+                                        name="client_id" 
+                                        required
+                                        class="mt-1 block w-full py-2 px-6 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('client_id') border-red-300 @enderror">
+                                    <option value="">Select a client</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ (old('client_id', $selectedClientId) == $client->id) ? 'selected' : '' }}>
+                                            {{ $client->display_name }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('client_id')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Certificate Name -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="name" class="block text-sm font-medium text-gray-700">Certificate Name *</flux:label>
+                                <input type="text" 
+                                       name="name" 
+                                       id="name" 
+                                       value="{{ old('name') }}"
+                                       required
+                                       placeholder="e.g., example.com SSL Certificate"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('name') border-red-300 @enderror">
+                                @error('name')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Type -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="type" class="block text-sm font-medium text-gray-700">Certificate Type *</flux:label>
+                                <select id="type" 
+                                        name="type" 
+                                        required
+                                        class="mt-1 block w-full py-2 px-6 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('type') border-red-300 @enderror">
+                                    <option value="">Select type</option>
+                                    @foreach($types as $key => $label)
+                                        <option value="{{ $key }}" {{ old('type', 'ssl_tls') === $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('type')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Status -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="status" class="block text-sm font-medium text-gray-700">Status *</flux:label>
+                                <select id="status" 
+                                        name="status" 
+                                        required
+                                        class="mt-1 block w-full py-2 px-6 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('status') border-red-300 @enderror">
+                                    @foreach($statuses as $key => $label)
+                                        <option value="{{ $key }}" {{ old('status', 'active') === $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('status')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Description -->
+                            <div class="sm:flex-1 px-6-span-6">
+                                <label for="description" class="block text-sm font-medium text-gray-700">Description</flux:label>
+                                <textarea id="description" 
+                                          name="description" 
+                                          rows="3" 
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('description') border-red-300 @enderror">{{ old('description') }}</flux:textarea>
+                                @error('description')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate Details -->
+                    <div class="pt-8">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Certificate Details</h3>
+                            <p class="mt-1 text-sm text-gray-500">Technical certificate information and specifications.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Issuer -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="issuer" class="block text-sm font-medium text-gray-700">Issuer</flux:label>
+                                <input type="text" 
+                                       name="issuer" 
+                                       id="issuer" 
+                                       value="{{ old('issuer') }}"
+                                       placeholder="e.g., Let's Encrypt Authority X3"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('issuer') border-red-300 @enderror">
+                                @error('issuer')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Subject -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="subject" class="block text-sm font-medium text-gray-700">Subject</flux:label>
+                                <input type="text" 
+                                       name="subject" 
+                                       id="subject" 
+                                       value="{{ old('subject') }}"
+                                       placeholder="e.g., CN=example.com"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('subject') border-red-300 @enderror">
+                                @error('subject')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Serial Number -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="serial_number" class="block text-sm font-medium text-gray-700">Serial Number</flux:label>
+                                <input type="text" 
+                                       name="serial_number" 
+                                       id="serial_number" 
+                                       value="{{ old('serial_number') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('serial_number') border-red-300 @enderror">
+                                @error('serial_number')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Key Size -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="key_size" class="block text-sm font-medium text-gray-700">Key Size</flux:label>
+                                <select id="key_size" 
+                                        name="key_size" 
+                                        class="mt-1 block w-full py-2 px-6 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('key_size') border-red-300 @enderror">
+                                    <option value="">Select key size</option>
+                                    @foreach($keySizes as $size => $label)
+                                        <option value="{{ $size }}" {{ old('key_size', '2048') == $size ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('key_size')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Algorithm -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="algorithm" class="block text-sm font-medium text-gray-700">Algorithm</flux:label>
+                                <select id="algorithm" 
+                                        name="algorithm" 
+                                        class="mt-1 block w-full py-2 px-6 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('algorithm') border-red-300 @enderror">
+                                    <option value="">Select algorithm</option>
+                                    @foreach($algorithms as $key => $label)
+                                        <option value="{{ $key }}" {{ old('algorithm', 'rsa') === $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('algorithm')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Wildcard -->
+                            <div class="sm:flex-1 px-6-span-3 flex items-center pt-6">
+                                <div class="flex items-center h-5">
+                                    <input id="is_wildcard" 
+                                           name="is_wildcard" 
+                                           type="checkbox" 
+                                           value="1"
+                                           {{ old('is_wildcard') ? 'checked' : '' }}
+                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <label for="is_wildcard" class="ml-2 text-sm font-medium text-gray-700">Wildcard Certificate</flux:label>
+                                </div>
+                            </div>
+
+                            <!-- Domain Names -->
+                            <div class="sm:flex-1 px-6-span-6">
+                                <label for="domain_names" class="block text-sm font-medium text-gray-700">Domain Names</flux:label>
+                                <textarea id="domain_names" 
+                                          name="domain_names" 
+                                          rows="2" 
+                                          placeholder="example.com, www.example.com, mail.example.com (comma-separated)"
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('domain_names') border-red-300 @enderror">{{ old('domain_names') }}</flux:textarea>
+                                <p class="mt-2 text-sm text-gray-500">Enter domain names covered by this certificate, separated by commas.</p>
+                                @error('domain_names')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Fingerprint SHA1 -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="fingerprint_sha1" class="block text-sm font-medium text-gray-700">SHA1 Fingerprint</flux:label>
+                                <input type="text" 
+                                       name="fingerprint_sha1" 
+                                       id="fingerprint_sha1" 
+                                       value="{{ old('fingerprint_sha1') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('fingerprint_sha1') border-red-300 @enderror">
+                                @error('fingerprint_sha1')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Fingerprint SHA256 -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="fingerprint_sha256" class="block text-sm font-medium text-gray-700">SHA256 Fingerprint</flux:label>
+                                <input type="text" 
+                                       name="fingerprint_sha256" 
+                                       id="fingerprint_sha256" 
+                                       value="{{ old('fingerprint_sha256') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('fingerprint_sha256') border-red-300 @enderror">
+                                @error('fingerprint_sha256')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dates & Renewal -->
+                    <div class="pt-8">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Dates & Renewal</h3>
+                            <p class="mt-1 text-sm text-gray-500">Certificate validity period and renewal settings.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Issued At -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="issued_at" class="block text-sm font-medium text-gray-700">Issue Date</flux:label>
+                                <input type="date" 
+                                       name="issued_at" 
+                                       id="issued_at" 
+                                       value="{{ old('issued_at') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('issued_at') border-red-300 @enderror">
+                                @error('issued_at')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Expires At -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="expires_at" class="block text-sm font-medium text-gray-700">Expiry Date *</flux:label>
+                                <input type="date" 
+                                       name="expires_at" 
+                                       id="expires_at" 
+                                       value="{{ old('expires_at') }}"
+                                       required
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('expires_at') border-red-300 @enderror">
+                                @error('expires_at')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Renewal Date -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="renewal_date" class="block text-sm font-medium text-gray-700">Renewal Date</flux:label>
+                                <input type="date" 
+                                       name="renewal_date" 
+                                       id="renewal_date" 
+                                       value="{{ old('renewal_date') }}"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('renewal_date') border-red-300 @enderror">
+                                @error('renewal_date')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Days Before Expiry Alert -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="days_before_expiry_alert" class="block text-sm font-medium text-gray-700">Alert Days Before Expiry</flux:label>
+                                <input type="number" 
+                                       name="days_before_expiry_alert" 
+                                       id="days_before_expiry_alert" 
+                                       value="{{ old('days_before_expiry_alert', '30') }}"
+                                       min="1"
+                                       max="365"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('days_before_expiry_alert') border-red-300 @enderror">
+                                @error('days_before_expiry_alert')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Auto Renewal -->
+                            <div class="sm:flex-1 px-6-span-6 flex items-center">
+                                <div class="flex items-center h-5">
+                                    <input id="auto_renewal" 
+                                           name="auto_renewal" 
+                                           type="checkbox" 
+                                           value="1"
+                                           {{ old('auto_renewal') ? 'checked' : '' }}
+                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <label for="auto_renewal" class="ml-2 text-sm font-medium text-gray-700">Enable Auto Renewal</flux:label>
+                                </div>
+                                <p class="ml-6 text-sm text-gray-500">Automatically renew this certificate before expiry</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Paths & Vendor -->
+                    <div class="pt-8">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">File Paths & Vendor</h3>
+                            <p class="mt-1 text-sm text-gray-500">Certificate file locations and vendor information.</p>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <!-- Certificate Path -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="certificate_path" class="block text-sm font-medium text-gray-700">Certificate File Path</flux:label>
+                                <input type="text" 
+                                       name="certificate_path" 
+                                       id="certificate_path" 
+                                       value="{{ old('certificate_path') }}"
+                                       placeholder="/path/to/certificate.crt"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('certificate_path') border-red-300 @enderror">
+                                @error('certificate_path')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Private Key Path -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="private_key_path" class="block text-sm font-medium text-gray-700">Private Key Path</flux:label>
+                                <input type="text" 
+                                       name="private_key_path" 
+                                       id="private_key_path" 
+                                       value="{{ old('private_key_path') }}"
+                                       placeholder="/path/to/private.key"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('private_key_path') border-red-300 @enderror">
+                                @error('private_key_path')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Intermediate Path -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="intermediate_path" class="block text-sm font-medium text-gray-700">Intermediate Certificate Path</flux:label>
+                                <input type="text" 
+                                       name="intermediate_path" 
+                                       id="intermediate_path" 
+                                       value="{{ old('intermediate_path') }}"
+                                       placeholder="/path/to/intermediate.crt"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('intermediate_path') border-red-300 @enderror">
+                                @error('intermediate_path')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Root CA Path -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="root_ca_path" class="block text-sm font-medium text-gray-700">Root CA Certificate Path</flux:label>
+                                <input type="text" 
+                                       name="root_ca_path" 
+                                       id="root_ca_path" 
+                                       value="{{ old('root_ca_path') }}"
+                                       placeholder="/path/to/rootca.crt"
+                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('root_ca_path') border-red-300 @enderror">
+                                @error('root_ca_path')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Vendor -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="vendor" class="block text-sm font-medium text-gray-700">Certificate Vendor</flux:label>
+                                <select id="vendor" 
+                                        name="vendor" 
+                                        class="mt-1 block w-full py-2 px-6 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('vendor') border-red-300 @enderror">
+                                    <option value="">Select vendor</option>
+                                    @foreach($vendors as $key => $label)
+                                        <option value="{{ $key }}" {{ old('vendor') === $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('vendor')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Purchase Cost -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="purchase_cost" class="block text-sm font-medium text-gray-700">Purchase Cost</flux:label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" 
+                                           name="purchase_cost" 
+                                           id="purchase_cost" 
+                                           value="{{ old('purchase_cost') }}"
+                                           min="0"
+                                           step="0.01"
+                                           placeholder="0.00"
+                                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md @error('purchase_cost') border-red-300 @enderror">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">USD</span>
+                                    </div>
+                                </div>
+                                @error('purchase_cost')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Renewal Cost -->
+                            <div class="sm:flex-1 px-6-span-3">
+                                <label for="renewal_cost" class="block text-sm font-medium text-gray-700">Annual Renewal Cost</flux:label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" 
+                                           name="renewal_cost" 
+                                           id="renewal_cost" 
+                                           value="{{ old('renewal_cost') }}"
+                                           min="0"
+                                           step="0.01"
+                                           placeholder="0.00"
+                                           class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md @error('renewal_cost') border-red-300 @enderror">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">USD</span>
+                                    </div>
+                                </div>
+                                @error('renewal_cost')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="sm:flex-1 px-6-span-6">
+                                <label for="notes" class="block text-sm font-medium text-gray-700">Notes</flux:label>
+                                <textarea id="notes" 
+                                          name="notes" 
+                                          rows="3" 
+                                          class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md @error('notes') border-red-300 @enderror">{{ old('notes') }}</flux:textarea>
+                                @error('notes')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="pt-5">
+                    <div class="flex justify-end space-x-3 px-6 pb-6">
+                        <a href="{{ route('clients.certificates.standalone.index') }}"
+                           class="bg-white py-2 px-6 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                                class="ml-3 inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Create Certificate
+                        </flux:button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection

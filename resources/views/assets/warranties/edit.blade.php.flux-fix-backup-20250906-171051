@@ -1,0 +1,545 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="w-full px-6">
+    <div class="flex flex-wrap -mx-4">
+        <div class="flex-1 px-6-12">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="h3 mb-0">Edit Warranty</h1>
+                    <p class="text-gray-600 mb-0">Update warranty information and coverage details</p>
+                </div>
+                <div>
+                    <a href="{{ route('assets.warranties.show', $warranty ?? 1) }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-info">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                    <a href="{{ route('assets.warranties.index') }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-6">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Information</h5>
+                                <div class="flex gap-2">
+                                    @php
+                                        $status = $warranty->status ?? 'active';
+                                        $statusColors = [
+                                            'active' => 'bg-success',
+                                            'expired' => 'bg-danger',
+                                            'inactive' => 'bg-secondary',
+                                            'renewed' => 'bg-info'
+                                        ];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$status] ?? 'bg-gray-600' }}">
+                                        {{ ucfirst($status) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <form action="{{ route('assets.warranties.update', $warranty ?? 1) }}" method="POST" id="warrantyForm">
+                                @csrf
+                                @method('PUT')
+
+                                <!-- Asset Selection -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="md:w-1/2 px-6">
+                                        <label for="asset_id" class="block text-sm font-medium text-gray-700 mb-1">Asset <span class="text-red-600">*</span></flux:label>
+                                        <select name="asset_id" id="asset_id" class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('asset_id') border-red-500 @enderror" required>
+                                            <option value="">Select an asset...</option>
+                                            @foreach($assets ?? [] as $asset)
+                                                <option value="{{ $asset->id }}" 
+                                                    {{ (old('asset_id', $warranty->asset_id ?? '') == $asset->id) ? 'selected' : '' }}>
+                                                    {{ $asset->name }} ({{ $asset->asset_tag }})
+                                                </option>
+                                            @endforeach
+                                        </flux:select>
+                                        @error('asset_id')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_type" class="block text-sm font-medium text-gray-700 mb-1">Warranty Type <span class="text-red-600">*</span></flux:label>
+                                        <select name="warranty_type" id="warranty_type" class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_type') border-red-500 @enderror" required>
+                                            <option value="">Select type...</option>
+                                            <option value="manufacturer" {{ old('warranty_type', $warranty->warranty_type ?? 'manufacturer') === 'manufacturer' ? 'selected' : '' }}>Manufacturer</option>
+                                            <option value="extended" {{ old('warranty_type', $warranty->warranty_type ?? '') === 'extended' ? 'selected' : '' }}>Extended</option>
+                                            <option value="service" {{ old('warranty_type', $warranty->warranty_type ?? '') === 'service' ? 'selected' : '' }}>Service Contract</option>
+                                            <option value="maintenance" {{ old('warranty_type', $warranty->warranty_type ?? '') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                                        </flux:select>
+                                        @error('warranty_type')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Warranty Provider and Number -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="provider_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Provider <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                        <input type="text" name="provider_name" id="provider_name" 
+                                               class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('provider_name') border-red-500 @enderror" 
+                                               value="{{ old('provider_name', $warranty->provider_name ?? 'Dell Technologies') }}" required 
+                                               placeholder="e.g., Dell Technologies, HP Inc.">
+                                        @error('provider_name')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Number</flux:label>
+                                        <input type="text" name="warranty_number" id="warranty_number" 
+                                               class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_number') border-red-500 @enderror" 
+                                               value="{{ old('warranty_number', $warranty->warranty_number ?? 'WRN-123456789') }}" 
+                                               placeholder="WRN-123456789">
+                                        @error('warranty_number')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Coverage Details -->
+                                <div class="mb-6">
+                                    <label for="coverage_details" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Coverage Details <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                    <textarea name="coverage_details" id="coverage_details" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('coverage_details') border-red-500 @enderror" 
+                                              rows="3" required 
+                                              placeholder="Describe what is covered under this warranty...">{{ old('coverage_details', $warranty->coverage_details ?? 'Full hardware replacement including parts and labor, 24/7 support with 4-hour response time, on-site service included for critical failures.') }}</flux:textarea>
+                                    @error('coverage_details')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Warranty Dates -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                        <input type="date" name="warranty_start_date" id="warranty_start_date" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_start_date') border-red-500 @enderror" 
+                                               value="{{ old('warranty_start_date', isset($warranty->warranty_start_date) ? $warranty->warranty_start_date->format('Y-m-d') : now()->subMonths(6)->format('Y-m-d')) }}" required>
+                                        @error('warranty_start_date')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                        <input type="date" name="warranty_end_date" id="warranty_end_date" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_end_date') border-red-500 @enderror" 
+                                               value="{{ old('warranty_end_date', isset($warranty->warranty_end_date) ? $warranty->warranty_end_date->format('Y-m-d') : now()->addMonths(18)->format('Y-m-d')) }}" required>
+                                        @error('warranty_end_date')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</flux:label>
+                                        <select name="status" id="status" class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('status') border-red-500 @enderror">
+                                            <option value="active" {{ old('status', $warranty->status ?? 'active') === 'active' ? 'selected' : '' }}>Active</option>
+                                            <option value="expired" {{ old('status', $warranty->status ?? '') === 'expired' ? 'selected' : '' }}>Expired</option>
+                                            <option value="inactive" {{ old('status', $warranty->status ?? '') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                            <option value="renewed" {{ old('status', $warranty->status ?? '') === 'renewed' ? 'selected' : '' }}>Renewed</option>
+                                        </flux:select>
+                                        @error('status')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="notification_days" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notify before expiry (days)</flux:label>
+                                        <input type="number" name="notification_days" id="notification_days" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('notification_days') border-red-500 @enderror" 
+                                               value="{{ old('notification_days', $warranty->notification_days ?? 30) }}" 
+                                               min="1" max="365" placeholder="30">
+                                        @error('notification_days')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Cost Information -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Cost</flux:label>
+                                        <div class="flex">
+                                            <span class="flex-text">$</span>
+                                            <input type="number" name="cost" id="cost" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('cost') border-red-500 @enderror" 
+                                                   value="{{ old('cost', $warranty->cost ?? 299.99) }}" 
+                                                   min="0" step="0.01" placeholder="0.00">
+                                        </div>
+                                        @error('cost')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="deductible" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deductible</flux:label>
+                                        <div class="flex">
+                                            <span class="flex-text">$</span>
+                                            <input type="number" name="deductible" id="deductible" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('deductible') border-red-500 @enderror" 
+                                                   value="{{ old('deductible', $warranty->deductible ?? 0) }}" 
+                                                   min="0" step="0.01" placeholder="0.00">
+                                        </div>
+                                        @error('deductible')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Contact and Support Information -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="contact_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Contact Name</flux:label>
+                                        <input type="text" name="contact_name" id="contact_name" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_name') border-red-500 @enderror" 
+                                               value="{{ old('contact_name', $warranty->contact_name ?? '') }}" 
+                                               placeholder="Contact person name">
+                                        @error('contact_name')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Phone</flux:label>
+                                        <input type="tel" name="contact_phone" id="contact_phone" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_phone') border-red-500 @enderror" 
+                                               value="{{ old('contact_phone', $warranty->contact_phone ?? '+1-800-555-0199') }}" 
+                                               placeholder="(555) 123-4567">
+                                        @error('contact_phone')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="contact_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Email</flux:label>
+                                        <input type="email" name="contact_email" id="contact_email" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_email') border-red-500 @enderror" 
+                                               value="{{ old('contact_email', $warranty->contact_email ?? 'support@dell.com') }}" 
+                                               placeholder="support@provider.com">
+                                        @error('contact_email')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="support_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Portal URL</flux:label>
+                                        <input type="url" name="support_url" id="support_url" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('support_url') border-red-500 @enderror" 
+                                               value="{{ old('support_url', $warranty->support_url ?? 'https://support.dell.com') }}" 
+                                               placeholder="https://support.provider.com">
+                                        @error('support_url')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Auto-renewal -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-12">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" name="auto_renewal" id="auto_renewal" 
+                                                   class="flex items-center-input" value="1" 
+                                                   {{ old('auto_renewal', $warranty->auto_renewal ?? false) ? 'checked' : '' }}>
+                                            <label for="auto_renewal" class="flex items-center-label">
+                                                Auto-renewal enabled
+                                            </flux:label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms and Conditions -->
+                                <div class="mb-6">
+                                    <label for="terms_conditions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Terms & Conditions</flux:label>
+                                    <textarea name="terms_conditions" id="terms_conditions" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('terms_conditions') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Important terms, limitations, and conditions...">{{ old('terms_conditions', $warranty->terms_conditions ?? 'Standard manufacturer warranty terms apply. Coverage excludes damage due to misuse, environmental factors, or unauthorized modifications.') }}</flux:textarea>
+                                    @error('terms_conditions')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-6">
+                                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Additional Notes</flux:label>
+                                    <textarea name="notes" id="notes" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('notes') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Additional notes about this warranty...">{{ old('notes', $warranty->notes ?? 'Warranty registered and confirmed active. Keep proof of purchase for warranty claims.') }}</flux:textarea>
+                                    @error('notes')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Submit Buttons -->
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-save"></i> Update Warranty
+                                    </flux:button>
+                                    @if($status === 'expired')
+                                        <button type="submit" name="renew" value="1" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-info">
+                                            <i class="fas fa-refresh"></i> Save & Renew
+                                        </flux:button>
+                                    @endif
+                                    @if($status === 'active')
+                                        <button type="submit" name="mark_expired" value="1" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> Save & Mark Expired
+                                        </flux:button>
+                                    @endif
+                                    <a href="{{ route('assets.warranties.show', $warranty ?? 1) }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-info">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    <a href="{{ route('assets.warranties.index') }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Info -->
+                <div class="flex-1 px-6-md-4">
+                    <!-- Warranty Status -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Status</h6>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <strong>Current Status:</strong>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$status] ?? 'bg-gray-600' }} ml-2">
+                                    {{ ucfirst($status) }}
+                                </span>
+                            </div>
+                            @php
+                                $endDate = $warranty->warranty_end_date ?? now()->addMonths(18);
+                                $daysRemaining = now()->diffInDays($endDate, false);
+                                $isExpiring = $daysRemaining <= 30 && $daysRemaining > 0;
+                                $isExpired = $daysRemaining < 0;
+                            @endphp
+                            @if($isExpired)
+                                <div class="px-6 py-6 rounded bg-red-100 border border-red-400 text-red-700">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Expired:</strong> {{ abs($daysRemaining) }} days ago
+                                </div>
+                            @elseif($isExpiring)
+                                <div class="px-6 py-6 rounded bg-yellow-100 border border-yellow-400 text-yellow-700">
+                                    <i class="fas fa-clock"></i>
+                                    <strong>Expires:</strong> in {{ $daysRemaining }} days
+                                </div>
+                            @else
+                                <div class="mb-2">
+                                    <strong>Days Remaining:</strong> {{ $daysRemaining }}
+                                </div>
+                            @endif
+                            @if(isset($warranty->created_at))
+                                <div class="mb-2">
+                                    <strong>Created:</strong> {{ $warranty->created_at->format('M d, Y g:i A') }}
+                                </div>
+                            @endif
+                            @if(isset($warranty->updated_at))
+                                <div class="mb-2">
+                                    <strong>Last Updated:</strong> {{ $warranty->updated_at->format('M d, Y g:i A') }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Asset Information -->
+                    <div id="assetInfo" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6" style="{{ old('asset_id', $warranty->asset_id ?? '') ? '' : 'display: none;' }}">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Asset Information</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div id="assetDetails">
+                                @if(isset($warranty->asset))
+                                    <div class="mb-2">
+                                        <strong>{{ $warranty->asset->name }}</strong>
+                                        <br><small class="text-gray-600">{{ $warranty->asset->asset_tag }}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-gray-600 dark:text-gray-400">Category:</small> {{ $warranty->asset->category }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-gray-600 dark:text-gray-400">Location:</small> {{ $warranty->asset->location }}
+                                    </div>
+                                    <div class="mb-6">
+                                        <small class="text-gray-600 dark:text-gray-400">Serial:</small> {{ $warranty->asset->serial_number }}
+                                    </div>
+                                    <a href="{{ route('assets.show', $warranty->asset->id) }}" class="px-4 py-2 font-medium rounded-md transition-colors px-6 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> View Asset
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warranty Calculator -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Calculator</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div id="warrantyCalc">
+                                <small class="text-gray-600 dark:text-gray-400">Duration will be calculated based on start and end dates</small>
+                                <div id="durationResult" class="mt-2 p-2 bg-gray-100 rounded" style="display: none;">
+                                    <strong>Duration:</strong> <span id="durationText"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Quick Actions</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="grid gap-2">
+                                <button type="button" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-info px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="checkWarrantyStatus()">
+                                    <i class="fas fa-search"></i> Check Status Online
+                                </flux:button>
+                                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors border border-green-600 text-green-600 hover:bg-green-50 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="contactSupport()">
+                                    <i class="fas fa-phone"></i> Contact Support
+                                </flux:button>
+                                <button type="button" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-warning px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="downloadCertificate()">
+                                    <i class="fas fa-certificate"></i> Download Certificate
+                                </flux:button>
+                                @if($status === 'active')
+                                    <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="renewWarranty()">
+                                        <i class="fas fa-refresh"></i> Start Renewal
+                                    </flux:button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('warranty_start_date');
+    const endDateInput = document.getElementById('warranty_end_date');
+    const durationResult = document.getElementById('durationResult');
+    const durationText = document.getElementById('durationText');
+    
+    // Warranty duration calculator
+    function calculateDuration() {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (end > start) {
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const months = Math.floor(diffDays / 30);
+                const remainingDays = diffDays % 30;
+                
+                let durationString = '';
+                if (months > 0) {
+                    durationString += months + ' month' + (months > 1 ? 's' : '');
+                    if (remainingDays > 0) {
+                        durationString += ', ' + remainingDays + ' day' + (remainingDays > 1 ? 's' : '');
+                    }
+                } else {
+                    durationString = diffDays + ' day' + (diffDays > 1 ? 's' : '');
+                }
+                
+                durationText.textContent = durationString;
+                durationResult.style.display = 'block';
+            } else {
+                durationResult.style.display = 'none';
+            }
+        } else {
+            durationResult.style.display = 'none';
+        }
+    }
+    
+    startDateInput.addEventListener('change', calculateDuration);
+    endDateInput.addEventListener('change', calculateDuration);
+    
+    // Initial calculation
+    calculateDuration();
+    
+    // Form validation
+    const form = document.getElementById('warrantyForm');
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Check required fields
+        const requiredFields = ['asset_id', 'warranty_type', 'provider_name', 'coverage_details', 'warranty_start_date', 'warranty_end_date'];
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                field.classList.remove('border-red-500');
+            }
+        });
+        
+        // Validate date range
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (endDate <= startDate) {
+            endDateInput.classList.add('border-red-500');
+            isValid = false;
+            alert('Warranty end date must be after start date.');
+        } else {
+            endDateInput.classList.remove('border-red-500');
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields correctly.');
+        }
+    });
+});
+
+// Quick action functions
+function checkWarrantyStatus() {
+    const supportUrl = document.getElementById('support_url').value;
+    if (supportUrl) {
+        window.open(supportUrl, '_blank');
+    } else {
+        alert('Support portal URL not available');
+    }
+}
+
+function contactSupport() {
+    const phone = document.getElementById('contact_phone').value;
+    if (phone) {
+        window.open(`tel:${phone}`);
+    } else {
+        alert('Support phone number not available');
+    }
+}
+
+function downloadCertificate() {
+    window.open('{{ route("assets.warranties.show", $warranty ?? 1) }}?format=pdf', '_blank');
+}
+
+function renewWarranty() {
+    if (confirm('Start the warranty renewal process?')) {
+        window.location.href = '{{ route("assets.warranties.renew", $warranty ?? 1) }}';
+    }
+}
+</script>
+@endpush

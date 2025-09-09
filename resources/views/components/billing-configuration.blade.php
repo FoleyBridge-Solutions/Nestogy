@@ -1,0 +1,304 @@
+{{-- Billing Configuration Component --}}
+<div x-data="{
+    billingOptions: {
+        model: 'one_time',
+        cycle: 'monthly',
+        paymentTerms: 30,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        autoRenew: false,
+        lateFeePercentage: 0,
+        earlyPaymentDiscount: 0
+    },
+    subscription: {
+        trialDays: 0,
+        setupFee: 0,
+        minimumTerm: 0,
+        gracePeriodDays: 7
+    },
+    paymentMethods: {
+        creditCard: true,
+        ach: false,
+        check: false,
+        wire: false
+    },
+    
+    init() {
+        // Watch for changes and dispatch event
+        this.$watch('billingOptions', () => {
+            this.emitConfiguration();
+        }, { deep: true });
+        
+        this.$watch('subscription', () => {
+            this.emitConfiguration();
+        }, { deep: true });
+    },
+    
+    setBillingModel(model) {
+        this.billingOptions.model = model;
+        this.emitConfiguration();
+    },
+    
+    emitConfiguration() {
+        const config = {
+            billing_options: this.billingOptions,
+            subscription: this.subscription,
+            payment_methods: this.paymentMethods
+        };
+        
+        this.$dispatch('billing-configured', { configuration: config });
+        
+        // Update root for other components
+        if (this.$root) {
+            this.$root.billingConfig = config;
+        }
+    }
+}"
+class="billing-configuration">
+    
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+            <h6 class="mb-0">
+                <i class="fas fa-cog mr-2"></i>Billing Configuration
+            </h6>
+        </div>
+        
+        <div class="p-6">
+            <!-- Billing Model -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="billing-model">Billing Model</label>
+                <div class="px-6 py-2 font-medium rounded-md transition-colors-group w-100" role="group">
+                    <button type="button"
+                            @click="setBillingModel('one_time')"
+                            class="px-6 py-2 font-medium rounded-md transition-colors"
+                            :class="billingOptions.model === 'one_time' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'px-6 py-2 font-medium rounded-md transition-colors-outline-primary'">
+                        <i class="fas fa-shopping-cart"></i> One-time
+                    </button>
+                    <button type="button"
+                            @click="setBillingModel('subscription')"
+                            class="px-6 py-2 font-medium rounded-md transition-colors"
+                            :class="billingOptions.model === 'subscription' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'px-6 py-2 font-medium rounded-md transition-colors-outline-primary'">
+                        <i class="fas fa-sync"></i> Subscription
+                    </button>
+                    <button type="button"
+                            @click="setBillingModel('usage_based')"
+                            class="px-6 py-2 font-medium rounded-md transition-colors"
+                            :class="billingOptions.model === 'usage_based' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'px-6 py-2 font-medium rounded-md transition-colors-outline-primary'">
+                        <i class="fas fa-tachometer-alt"></i> Usage-based
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Billing Cycle (for subscription/usage-based) -->
+            <div class="mb-6" x-show="billingOptions.model !== 'one_time'">
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="billing-cycle">Billing Cycle</label>
+                <select x-model="billingOptions.cycle" id="billing-cycle" class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="semi_annually">Semi-Annually</option>
+                    <option value="annually">Annually</option>
+                </select>
+            </div>
+            
+            <!-- Date Range -->
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-1/2 px-6 mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="start-date">Start Date</label>
+                    <input type="date" 
+                           x-model="billingOptions.startDate" 
+                           id="start-date"
+                           class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div class="md:w-1/2 px-6 mb-6" x-show="billingOptions.model !== 'one_time'">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="end-date">End Date (Optional)</label>
+                    <input type="date" 
+                           x-model="billingOptions.endDate" 
+                           id="end-date"
+                           class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="No end date">
+                </div>
+            </div>
+            
+            <!-- Payment Terms -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="payment-terms">Payment Terms (Days)</label>
+                <select x-model="billingOptions.paymentTerms" id="payment-terms" class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="0">Due on Receipt</option>
+                    <option value="15">Net 15</option>
+                    <option value="30">Net 30</option>
+                    <option value="45">Net 45</option>
+                    <option value="60">Net 60</option>
+                    <option value="90">Net 90</option>
+                </select>
+            </div>
+            
+            <!-- Subscription Settings (if subscription) -->
+            <div x-show="billingOptions.model === 'subscription'" class="border-t pt-3 mt-6">
+                <h6 class="mb-6">Subscription Settings</h6>
+                
+                <div class="flex flex-wrap -mx-4">
+                    <div class="flex-1 px-6-md-6 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="trial-days">Trial Period (Days)</label>
+                        <input type="number" 
+                               x-model="subscription.trialDays" 
+                               id="trial-days"
+                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                               min="0"
+                               placeholder="0">
+                    </div>
+                    <div class="flex-1 px-6-md-6 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="setup-fee">Setup Fee</label>
+                        <div class="flex">
+                            <span class="flex-text">$</span>
+                            <input type="number" 
+                                   x-model="subscription.setupFee" 
+                                   id="setup-fee"
+                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                   min="0" 
+                                   step="0.01"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap -mx-4">
+                    <div class="flex-1 px-6-md-6 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="minimum-term">Minimum Term (Months)</label>
+                        <input type="number" 
+                               x-model="subscription.minimumTerm" 
+                               id="minimum-term"
+                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                               min="0"
+                               placeholder="No minimum">
+                    </div>
+                    <div class="flex-1 px-6-md-6 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="grace-period">Grace Period (Days)</label>
+                        <input type="number" 
+                               x-model="subscription.gracePeriodDays" 
+                               id="grace-period"
+                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                               min="0"
+                               placeholder="7">
+                    </div>
+                </div>
+                
+                <!-- Auto-renewal -->
+                <div class="flex items-center">
+                    <input type="checkbox" 
+                           x-model="billingOptions.autoRenew" 
+                           class="flex items-center-input" 
+                           id="autoRenew">
+                    <label class="flex items-center-label" for="autoRenew">
+                        Enable Auto-renewal
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Late Fees & Early Payment -->
+            <div class="border-t pt-3 mt-6">
+                <h6 class="mb-6">Fees & Discounts</h6>
+                
+                <div class="flex flex-wrap -mx-4">
+                    <div class="flex-1 px-6-md-6 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="late-fee">Late Fee (%)</label>
+                        <div class="flex">
+                            <input type="number" 
+                                   x-model="billingOptions.lateFeePercentage" 
+                                   id="late-fee"
+                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                   min="0" 
+                                   max="100" 
+                                   step="0.01"
+                                   placeholder="0">
+                            <span class="flex-text">%</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 px-6-md-6 mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="early-payment-discount">Early Payment Discount (%)</label>
+                        <div class="flex">
+                            <input type="number" 
+                                   x-model="billingOptions.earlyPaymentDiscount" 
+                                   id="early-payment-discount"
+                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                   min="0" 
+                                   max="100" 
+                                   step="0.01"
+                                   placeholder="0">
+                            <span class="flex-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Methods -->
+            <div class="border-t pt-3 mt-6">
+                <h6 class="mb-6">Accepted Payment Methods</h6>
+                
+                <div class="flex flex-wrap -mx-4">
+                    <div class="flex-1 px-6-md-6">
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" 
+                                   x-model="paymentMethods.creditCard" 
+                                   class="flex items-center-input" 
+                                   id="pmCreditCard">
+                            <label class="flex items-center-label" for="pmCreditCard">
+                                <i class="fas fa-credit-bg-white rounded-lg shadow-md overflow-hidden"></i> Credit/Debit Card
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" 
+                                   x-model="paymentMethods.ach" 
+                                   class="flex items-center-input" 
+                                   id="pmACH">
+                            <label class="flex items-center-label" for="pmACH">
+                                <i class="fas fa-university"></i> ACH Transfer
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 px-6-md-6">
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" 
+                                   x-model="paymentMethods.check" 
+                                   class="flex items-center-input" 
+                                   id="pmCheck">
+                            <label class="flex items-center-label" for="pmCheck">
+                                <i class="fas fa-money-check"></i> Check
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" 
+                                   x-model="paymentMethods.wire" 
+                                   class="flex items-center-input" 
+                                   id="pmWire">
+                            <label class="flex items-center-label" for="pmWire">
+                                <i class="fas fa-exchange-alt"></i> Wire Transfer
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-footer bg-gray-100">
+            <div class="flex justify-between items-center">
+                <div>
+                    <small class="text-gray-600">
+                        Model: <strong x-text="billingOptions.model.replace('_', ' ')"></strong>
+                        <span x-show="billingOptions.model !== 'one_time'">
+                            | Cycle: <strong x-text="billingOptions.cycle"></strong>
+                        </span>
+                        | Terms: <strong x-text="billingOptions.paymentTerms + ' days'"></strong>
+                    </small>
+                </div>
+                <button @click="emitConfiguration()" class="btn px-4 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-primary">
+                    <i class="fas fa-check"></i> Apply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

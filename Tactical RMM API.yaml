@@ -1,0 +1,3653 @@
+openapi: 3.0.3
+info:
+  title: Tactical RMM API
+  version: 1.2.0
+  description: Simple and Fast remote monitoring and management tool
+paths:
+  /:
+    get:
+      operationId: root_retrieve
+      security:
+      - API Key Auth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /accounts/{id}/users/:
+    get:
+      operationId: accounts_users_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: accounts_users_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: accounts_users_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/apikeys/:
+    get:
+      operationId: accounts_apikeys_retrieve
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: accounts_apikeys_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/apikeys/{id}/:
+    put:
+      operationId: accounts_apikeys_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: accounts_apikeys_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/reset2fa/:
+    put:
+      operationId: accounts_reset2fa_update
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/resetpw/:
+    put:
+      operationId: accounts_resetpw_update
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/roles/:
+    get:
+      operationId: accounts_roles_retrieve
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: accounts_roles_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/roles/{id}/:
+    get:
+      operationId: accounts_roles_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: accounts_roles_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: accounts_roles_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/sessions/{id}/:
+    delete:
+      operationId: accounts_sessions_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/ssoproviders/:
+    get:
+      operationId: accounts_ssoproviders_retrieve
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: accounts_ssoproviders_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/ssoproviders/{id}/:
+    put:
+      operationId: accounts_ssoproviders_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: accounts_ssoproviders_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/ssoproviders/account/:
+    delete:
+      operationId: accounts_ssoproviders_account_destroy
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/ssoproviders/settings/:
+    get:
+      operationId: accounts_ssoproviders_settings_retrieve
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: accounts_ssoproviders_settings_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/ssoproviders/token/:
+    post:
+      operationId: accounts_ssoproviders_token_create
+      tags:
+      - accounts
+      responses:
+        '200':
+          description: No response body
+  /accounts/users/:
+    get:
+      operationId: accounts_users_retrieve
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: accounts_users_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/users/{id}/sessions/:
+    get:
+      operationId: accounts_users_sessions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: accounts_users_sessions_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /accounts/users/reset/:
+    post:
+      operationId: accounts_users_reset_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: accounts_users_reset_update
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/users/reset_totp/:
+    post:
+      operationId: accounts_users_reset_totp_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: accounts_users_reset_totp_update
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/users/setup_totp/:
+    post:
+      operationId: accounts_users_setup_totp_create
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /accounts/users/ui/:
+    patch:
+      operationId: accounts_users_ui_partial_update
+      tags:
+      - accounts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/:
+    get:
+      operationId: agents_retrieve
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/:
+    get:
+      operationId: agents_retrieve_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: agents_update
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: agents_destroy
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /agents/{agent_id}/{port}/webvnc/:
+    get:
+      operationId: agents_webvnc_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: port
+        schema:
+          type: string
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/checks/:
+    get:
+      operationId: agents_checks_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: agents_checks_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/cmd/:
+    post:
+      operationId: agents_cmd_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/eventlog/{logtype}/{days}/:
+    get:
+      operationId: agents_eventlog_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: days
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: logtype
+        schema:
+          type: string
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/history/:
+    get:
+      operationId: agents_history_retrieve_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/meshcentral/:
+    get:
+      operationId: agents_meshcentral_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: agents_meshcentral_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/meshcentral/recover/:
+    get:
+      operationId: agents_meshcentral_recover_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: agents_meshcentral_recover_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/notes/:
+    get:
+      operationId: agents_notes_retrieve_3
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: agents_notes_create_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/pendingactions/:
+    get:
+      operationId: agents_pendingactions_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: agents_pendingactions_destroy
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /agents/{agent_id}/ping/:
+    get:
+      operationId: agents_ping_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/processes/:
+    get:
+      operationId: agents_processes_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: agents_processes_destroy
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /agents/{agent_id}/processes/{pid}/:
+    get:
+      operationId: agents_processes_retrieve_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: integer
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: agents_processes_destroy_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: integer
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /agents/{agent_id}/reboot/:
+    post:
+      operationId: agents_reboot_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: agents_reboot_partial_update
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/recover/:
+    post:
+      operationId: agents_recover_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/runscript/:
+    post:
+      operationId: agents_runscript_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/shutdown/:
+    post:
+      operationId: agents_shutdown_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/tasks/:
+    get:
+      operationId: agents_tasks_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: agents_tasks_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/wmi/:
+    post:
+      operationId: agents_wmi_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/{agent_id}/wol/:
+    post:
+      operationId: agents_wol_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/actions/bulk/:
+    post:
+      operationId: agents_actions_bulk_create
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/bulkrecovery/:
+    get:
+      operationId: agents_bulkrecovery_retrieve
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/history/:
+    get:
+      operationId: agents_history_retrieve
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/installer/:
+    post:
+      operationId: agents_installer_create
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/maintenance/bulk/:
+    post:
+      operationId: agents_maintenance_bulk_create
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/notes/:
+    get:
+      operationId: agents_notes_retrieve
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: agents_notes_create
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/notes/{id}/:
+    get:
+      operationId: agents_notes_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: agents_notes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: agents_notes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /agents/scripthistory/:
+    get:
+      operationId: agents_scripthistory_retrieve
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/update/:
+    post:
+      operationId: agents_update_create
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /agents/versions/:
+    get:
+      operationId: agents_versions_retrieve
+      tags:
+      - agents
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /alerts/:
+    post:
+      operationId: alerts_create
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: alerts_partial_update
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /alerts/{id}/:
+    get:
+      operationId: alerts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: alerts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: alerts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /alerts/bulk/:
+    post:
+      operationId: alerts_bulk_create
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /alerts/templates/:
+    get:
+      operationId: alerts_templates_retrieve
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: alerts_templates_create
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /alerts/templates/{id}/:
+    get:
+      operationId: alerts_templates_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: alerts_templates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: alerts_templates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /alerts/templates/{id}/related/:
+    get:
+      operationId: alerts_templates_related_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /api/schema/:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      tags:
+      - api
+      security:
+      - API Key Auth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v3/{agentid}/checkinterval/:
+    get:
+      operationId: api_v3_checkinterval_retrieve
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/{agentid}/checkrunner/:
+    get:
+      operationId: api_v3_checkrunner_retrieve_2
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_v3_checkrunner_partial_update_2
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/{agentid}/config/:
+    get:
+      operationId: api_v3_config_retrieve
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/{agentid}/runchecks/:
+    get:
+      operationId: api_v3_runchecks_retrieve
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/{id}/{agentid}/histresult/:
+    patch:
+      operationId: api_v3_histresult_partial_update
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/{id}/{agentid}/taskrunner/:
+    get:
+      operationId: api_v3_taskrunner_retrieve
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_v3_taskrunner_partial_update
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/{id}/chocoresult/:
+    patch:
+      operationId: api_v3_chocoresult_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/checkin/:
+    post:
+      operationId: api_v3_checkin_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/checkrunner/:
+    get:
+      operationId: api_v3_checkrunner_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_v3_checkrunner_partial_update
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/choco/:
+    post:
+      operationId: api_v3_choco_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/installer/:
+    get:
+      operationId: api_v3_installer_retrieve
+      tags:
+      - api
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v3_installer_create
+      tags:
+      - api
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v3/meshexe/:
+    post:
+      operationId: api_v3_meshexe_create
+      description: Sends the mesh exe to the installer
+      tags:
+      - api
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v3/newagent/:
+    post:
+      operationId: api_v3_newagent_create
+      tags:
+      - api
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v3/software/:
+    post:
+      operationId: api_v3_software_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/superseded/:
+    post:
+      operationId: api_v3_superseded_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/syncmesh/:
+    post:
+      operationId: api_v3_syncmesh_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v3/winupdates/:
+    post:
+      operationId: api_v3_winupdates_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: api_v3_winupdates_update
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: api_v3_winupdates_partial_update
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v4/{agentid}/{id}/chocoresult/:
+    patch:
+      operationId: api_v4_chocoresult_partial_update
+      parameters:
+      - in: path
+        name: agentid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /automation/checks/{check}/status/:
+    get:
+      operationId: automation_checks_status_retrieve
+      parameters:
+      - in: path
+        name: check
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/patchpolicy/:
+    post:
+      operationId: automation_patchpolicy_create
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: automation_patchpolicy_update
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: automation_patchpolicy_destroy
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /automation/patchpolicy/{id}/:
+    post:
+      operationId: automation_patchpolicy_create_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: automation_patchpolicy_update_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: automation_patchpolicy_destroy_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /automation/patchpolicy/reset/:
+    post:
+      operationId: automation_patchpolicy_reset_create
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/policies/:
+    get:
+      operationId: automation_policies_retrieve
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: automation_policies_create
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/policies/{id}/:
+    get:
+      operationId: automation_policies_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: automation_policies_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: automation_policies_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /automation/policies/{id}/related/:
+    get:
+      operationId: automation_policies_related_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/policies/{policy}/checks/:
+    get:
+      operationId: automation_policies_checks_retrieve
+      parameters:
+      - in: path
+        name: policy
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: automation_policies_checks_create
+      parameters:
+      - in: path
+        name: policy
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/policies/{policy}/tasks/:
+    get:
+      operationId: automation_policies_tasks_retrieve
+      parameters:
+      - in: path
+        name: policy
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: automation_policies_tasks_create
+      parameters:
+      - in: path
+        name: policy
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/policies/overview/:
+    get:
+      operationId: automation_policies_overview_retrieve
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/tasks/{task}/run/:
+    get:
+      operationId: automation_tasks_run_retrieve
+      parameters:
+      - in: path
+        name: task
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: automation_tasks_run_create
+      parameters:
+      - in: path
+        name: task
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /automation/tasks/{task}/status/:
+    get:
+      operationId: automation_tasks_status_retrieve
+      parameters:
+      - in: path
+        name: task
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: automation_tasks_status_create
+      parameters:
+      - in: path
+        name: task
+        schema:
+          type: integer
+        required: true
+      tags:
+      - automation
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /checks/:
+    get:
+      operationId: checks_retrieve
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: checks_create
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /checks/{agent_id}/resetall/:
+    post:
+      operationId: checks_resetall_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /checks/{agent_id}/run/:
+    post:
+      operationId: checks_run_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /checks/{id}/:
+    get:
+      operationId: checks_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: checks_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: checks_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /checks/{id}/history/:
+    patch:
+      operationId: checks_history_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /checks/{id}/reset/:
+    post:
+      operationId: checks_reset_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /checks/{target}/{id}/csbulkrun/:
+    post:
+      operationId: checks_csbulkrun_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: target
+        schema:
+          type: string
+        required: true
+      tags:
+      - checks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /clients/:
+    get:
+      operationId: clients_retrieve
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: clients_create
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /clients/{id}/:
+    get:
+      operationId: clients_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: clients_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: clients_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /clients/{uid}/deploy/:
+    get:
+      operationId: clients_deploy_retrieve
+      parameters:
+      - in: path
+        name: uid
+        schema:
+          type: string
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /clients/deployments/:
+    get:
+      operationId: clients_deployments_retrieve
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: clients_deployments_create
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: clients_deployments_destroy
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /clients/deployments/{id}/:
+    get:
+      operationId: clients_deployments_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: clients_deployments_create_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: clients_deployments_destroy_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /clients/sites/:
+    get:
+      operationId: clients_sites_retrieve
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: clients_sites_create
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /clients/sites/{id}/:
+    get:
+      operationId: clients_sites_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: clients_sites_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: clients_sites_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - clients
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /core/clearcache/:
+    get:
+      operationId: core_clearcache_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/codesign/:
+    get:
+      operationId: core_codesign_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: core_codesign_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: core_codesign_partial_update
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: core_codesign_destroy
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /core/customfields/:
+    get:
+      operationId: core_customfields_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: core_customfields_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: core_customfields_partial_update
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/customfields/{id}/:
+    get:
+      operationId: core_customfields_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: core_customfields_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: core_customfields_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /core/dashinfo/:
+    get:
+      operationId: core_dashinfo_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/emailtest/:
+    post:
+      operationId: core_emailtest_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/keystore/:
+    get:
+      operationId: core_keystore_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: core_keystore_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/keystore/{id}/:
+    put:
+      operationId: core_keystore_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: core_keystore_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /core/openai/generate/:
+    post:
+      operationId: core_openai_generate_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/servermaintenance/:
+    post:
+      operationId: core_servermaintenance_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/serverscript/test/:
+    post:
+      operationId: core_serverscript_test_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/settings/:
+    get:
+      operationId: core_settings_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: core_settings_update
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/smstest/:
+    post:
+      operationId: core_smstest_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/urlaction/:
+    get:
+      operationId: core_urlaction_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: core_urlaction_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/urlaction/{id}/:
+    put:
+      operationId: core_urlaction_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: core_urlaction_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /core/urlaction/run/:
+    patch:
+      operationId: core_urlaction_run_partial_update
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/urlaction/run/test/:
+    post:
+      operationId: core_urlaction_run_test_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/version/:
+    get:
+      operationId: core_version_retrieve
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /core/webtermperms/:
+    post:
+      operationId: core_webtermperms_create
+      tags:
+      - core
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /logout/:
+    post:
+      operationId: logout_create
+      tags:
+      - logout
+      responses:
+        '200':
+          description: No response body
+  /logoutall/:
+    post:
+      operationId: logoutall_create
+      description: |-
+        Log the user out of all sessions
+        I.E. deletes all auth tokens for the user
+      tags:
+      - logoutall
+      responses:
+        '200':
+          description: No response body
+  /logs/audit/:
+    patch:
+      operationId: logs_audit_partial_update
+      tags:
+      - logs
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /logs/debug/:
+    patch:
+      operationId: logs_debug_partial_update
+      tags:
+      - logs
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /logs/pendingactions/:
+    get:
+      operationId: logs_pendingactions_retrieve
+      tags:
+      - logs
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: logs_pendingactions_destroy
+      tags:
+      - logs
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /logs/pendingactions/{id}/:
+    get:
+      operationId: logs_pendingactions_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - logs
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: logs_pendingactions_destroy_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - logs
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /reporting/assets/:
+    get:
+      operationId: reporting_assets_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/{path}:
+    get:
+      operationId: reporting_assets_retrieve_2
+      parameters:
+      - in: path
+        name: path
+        schema:
+          type: string
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/all/:
+    get:
+      operationId: reporting_assets_all_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/delete/:
+    post:
+      operationId: reporting_assets_delete_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/download/:
+    get:
+      operationId: reporting_assets_download_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/newfolder/:
+    post:
+      operationId: reporting_assets_newfolder_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/rename/:
+    put:
+      operationId: reporting_assets_rename_update
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/assets/upload/:
+    post:
+      operationId: reporting_assets_upload_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/dataqueries/:
+    get:
+      operationId: reporting_dataqueries_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: reporting_dataqueries_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/dataqueries/{id}/:
+    get:
+      operationId: reporting_dataqueries_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: reporting_dataqueries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: reporting_dataqueries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /reporting/htmltemplates/:
+    get:
+      operationId: reporting_htmltemplates_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: reporting_htmltemplates_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/htmltemplates/{id}/:
+    get:
+      operationId: reporting_htmltemplates_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: reporting_htmltemplates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: reporting_htmltemplates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /reporting/queryschema/:
+    get:
+      operationId: reporting_queryschema_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/templates/:
+    get:
+      operationId: reporting_templates_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportTemplate'
+          description: ''
+    post:
+      operationId: reporting_templates_create
+      tags:
+      - reporting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReportTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReportTemplate'
+        required: true
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportTemplate'
+          description: ''
+  /reporting/templates/{id}/:
+    get:
+      operationId: reporting_templates_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportTemplate'
+          description: ''
+    put:
+      operationId: reporting_templates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReportTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReportTemplate'
+        required: true
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportTemplate'
+          description: ''
+    delete:
+      operationId: reporting_templates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /reporting/templates/{id}/export/:
+    post:
+      operationId: reporting_templates_export_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/templates/{id}/run/:
+    post:
+      operationId: reporting_templates_run_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/templates/import/:
+    post:
+      operationId: reporting_templates_import_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/templates/preview/:
+    post:
+      operationId: reporting_templates_preview_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/templates/preview/analysis/:
+    post:
+      operationId: reporting_templates_preview_analysis_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /reporting/templates/shared/:
+    get:
+      operationId: reporting_templates_shared_retrieve
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: reporting_templates_shared_create
+      tags:
+      - reporting
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /scripts/:
+    get:
+      operationId: scripts_retrieve
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: scripts_create
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /scripts/{agent_id}/test/:
+    post:
+      operationId: scripts_test_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /scripts/{id}/:
+    get:
+      operationId: scripts_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: scripts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: scripts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /scripts/{id}/download/:
+    get:
+      operationId: scripts_download_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /scripts/snippets/:
+    get:
+      operationId: scripts_snippets_retrieve
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: scripts_snippets_create
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /scripts/snippets/{id}/:
+    get:
+      operationId: scripts_snippets_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: scripts_snippets_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: scripts_snippets_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - scripts
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /services/{agent_id}/:
+    get:
+      operationId: services_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - services
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /services/{agent_id}/{svcname}/:
+    get:
+      operationId: services_retrieve_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: svcname
+        schema:
+          type: string
+        required: true
+      tags:
+      - services
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: services_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: svcname
+        schema:
+          type: string
+        required: true
+      tags:
+      - services
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: services_update
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      - in: path
+        name: svcname
+        schema:
+          type: string
+        required: true
+      tags:
+      - services
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /software/:
+    get:
+      operationId: software_retrieve
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: software_create
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: software_update
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /software/{agent_id}/:
+    get:
+      operationId: software_retrieve_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: software_create_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: software_update_2
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /software/chocos/:
+    get:
+      operationId: software_chocos_retrieve
+      tags:
+      - software
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /tasks/:
+    get:
+      operationId: tasks_retrieve
+      tags:
+      - tasks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: tasks_create
+      tags:
+      - tasks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /tasks/{id}/:
+    get:
+      operationId: tasks_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: tasks_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: tasks_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      security:
+      - API Key Auth: []
+      responses:
+        '204':
+          description: No response body
+  /tasks/{id}/run/:
+    post:
+      operationId: tasks_run_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /v2/checkcreds/:
+    post:
+      operationId: v2_checkcreds_create
+      tags:
+      - v2
+      security:
+      - API Key Auth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /v2/login/:
+    post:
+      operationId: v2_login_create
+      tags:
+      - v2
+      security:
+      - API Key Auth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /winupdate/{agent_id}/:
+    get:
+      operationId: winupdate_retrieve
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - winupdate
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /winupdate/{agent_id}/install/:
+    post:
+      operationId: winupdate_install_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - winupdate
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /winupdate/{agent_id}/scan/:
+    post:
+      operationId: winupdate_scan_create
+      parameters:
+      - in: path
+        name: agent_id
+        schema:
+          type: string
+          pattern: ^[^/]{20}[^/]+$
+        required: true
+      tags:
+      - winupdate
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+  /winupdate/{id}/:
+    put:
+      operationId: winupdate_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - winupdate
+      security:
+      - API Key Auth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    ReportTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        template_md:
+          type: string
+        template_css:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        template_variables:
+          type: string
+        depends_on:
+          type: array
+          items:
+            type: string
+            maxLength: 20
+        template_html:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - name
+      - template_md
+    TypeEnum:
+      enum:
+      - markdown
+      - html
+      - plaintext
+      type: string
+      description: |-
+        * `markdown` - Markdown
+        * `html` - Html
+        * `plaintext` - Plain Text
+  securitySchemes:
+    API Key Auth:
+      type: apiKey
+      in: header
+      name: X-API-KEY

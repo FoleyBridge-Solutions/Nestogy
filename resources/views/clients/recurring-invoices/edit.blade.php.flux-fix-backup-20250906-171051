@@ -1,0 +1,526 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Recurring Invoice')
+
+@section('content')
+<div class="w-full px-6">
+    <div class="flex flex-wrap -mx-4">
+        <div class="flex-1 px-6-12">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="h3 mb-0">Edit Recurring Invoice</h1>
+                <div class="px-6 py-2 font-medium rounded-md transition-colors-group">
+                    <a href="{{ route('clients.recurring-invoices.standalone.show', $recurringInvoice) }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                        <i class="fas fa-eye mr-2"></i>View Invoice
+                    </a>
+                    <a href="{{ route('clients.recurring-invoices.standalone.index') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Invoices
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap -mx-4">
+                <div class="lg:w-2/3 px-4 flex-1 px-6-xl-6">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-6">
+                            <form method="POST" action="{{ route('clients.recurring-invoices.standalone.update', $recurringInvoice) }}">
+                                @csrf
+                                @method('PUT')
+
+                                <!-- Client Selection -->
+                                <div class="mb-6">
+                                    <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client <span class="text-red-600">*</span></flux:label>
+                                    <select name="client_id" 
+                                            id="client_id" 
+                                            class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') border-red-500 @enderror" 
+                                            required>
+                                        <option value="">Select a client...</option>
+                                        @foreach($clients as $client)
+                                            <option value="{{ $client->id }}" 
+                                                    {{ old('client_id', $recurringInvoice->client_id) == $client->id ? 'selected' : '' }}>
+                                                {{ $client->display_name }}
+                                            </option>
+                                        @endforeach
+                                    </flux:select>
+                                    @error('client_id')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Template Name -->
+                                <div class="mb-6">
+                                    <label for="template_name" class="block text-sm font-medium text-gray-700 mb-1">Template Name <span class="text-red-600">*</span></flux:label>
+                                    <input type="text" 
+                                           name="template_name" 
+                                           id="template_name" 
+                                           class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('template_name') border-red-500 @enderror" 
+                                           value="{{ old('template_name', $recurringInvoice->template_name) }}" 
+                                           required 
+                                           maxlength="255"
+                                           placeholder="Enter template name">
+                                    @error('template_name')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-6">
+                                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</flux:label>
+                                    <textarea name="description" 
+                                              id="description" 
+                                              class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('description') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Invoice description...">{{ old('description', $recurringInvoice->description) }}</flux:textarea>
+                                    @error('description')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Amount and Currency -->
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="md:w-1/2 px-6">
+                                        <div class="mb-6">
+                                            <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                            <input type="number" 
+                                                   name="amount" 
+                                                   id="amount" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('amount') border-red-500 @enderror" 
+                                                   value="{{ old('amount', $recurringInvoice->amount) }}" 
+                                                   required 
+                                                   min="0" 
+                                                   step="0.01"
+                                                   placeholder="0.00">
+                                            @error('amount')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="md:w-1/2 px-6">
+                                        <div class="mb-6">
+                                            <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Currency <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                            <select name="currency" 
+                                                    id="currency" 
+                                                    class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('currency') border-red-500 @enderror" 
+                                                    required>
+                                                @foreach($currencies as $key => $value)
+                                                    <option value="{{ $key }}" {{ old('currency', $recurringInvoice->currency) == $key ? 'selected' : '' }}>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </flux:select>
+                                            @error('currency')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tax Rate -->
+                                <div class="mb-6">
+                                    <label for="tax_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tax Rate (%)</flux:label>
+                                    <input type="number" 
+                                           name="tax_rate" 
+                                           id="tax_rate" 
+                                           class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('tax_rate') border-red-500 @enderror" 
+                                           value="{{ old('tax_rate', $recurringInvoice->tax_rate) }}" 
+                                           min="0" 
+                                           max="100" 
+                                           step="0.01"
+                                           placeholder="0.00">
+                                    @error('tax_rate')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Frequency Settings -->
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                            <select name="frequency" 
+                                                    id="frequency" 
+                                                    class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('frequency') border-red-500 @enderror" 
+                                                    required>
+                                                @foreach($frequencies as $key => $value)
+                                                    <option value="{{ $key }}" {{ old('frequency', $recurringInvoice->frequency) == $key ? 'selected' : '' }}>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </flux:select>
+                                            @error('frequency')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="interval_count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Interval Count</flux:label>
+                                            <input type="number" 
+                                                   name="interval_count" 
+                                                   id="interval_count" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('interval_count') border-red-500 @enderror" 
+                                                   value="{{ old('interval_count', $recurringInvoice->interval_count) }}" 
+                                                   min="1" 
+                                                   placeholder="1">
+                                            <div class="form-text">Number of frequency periods between invoices</div>
+                                            @error('interval_count')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Date Settings -->
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                            <input type="date" 
+                                                   name="start_date" 
+                                                   id="start_date" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('start_date') border-red-500 @enderror" 
+                                                   value="{{ old('start_date', $recurringInvoice->start_date ? $recurringInvoice->start_date->format('Y-m-d') : '') }}" 
+                                                   required>
+                                            @error('start_date')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date (Optional)</flux:label>
+                                            <input type="date" 
+                                                   name="end_date" 
+                                                   id="end_date" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('end_date') border-red-500 @enderror" 
+                                                   value="{{ old('end_date', $recurringInvoice->end_date ? $recurringInvoice->end_date->format('Y-m-d') : '') }}">
+                                            <div class="form-text">Leave blank for indefinite recurring</div>
+                                            @error('end_date')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Timing Options -->
+                                <div class="flex flex-wrap -mx-4" id="timing-options">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6" id="day-of-month-field">
+                                            <label for="day_of_month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Day of Month</flux:label>
+                                            <input type="number" 
+                                                   name="day_of_month" 
+                                                   id="day_of_month" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('day_of_month') border-red-500 @enderror" 
+                                                   value="{{ old('day_of_month', $recurringInvoice->day_of_month) }}" 
+                                                   min="1" 
+                                                   max="31"
+                                                   placeholder="1-31">
+                                            <div class="form-text">For monthly/quarterly/annual frequencies</div>
+                                            @error('day_of_month')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6" id="day-of-week-field">
+                                            <label for="day_of_week" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Day of Week</flux:label>
+                                            <select name="day_of_week" id="day_of_week" class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('day_of_week') border-red-500 @enderror">
+                                                <option value="">Select day...</option>
+                                                @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
+                                                    <option value="{{ $day }}" {{ old('day_of_week', $recurringInvoice->day_of_week) == $day ? 'selected' : '' }}>
+                                                        {{ $day }}
+                                                    </option>
+                                                @endforeach
+                                            </flux:select>
+                                            <div class="form-text">For weekly frequencies</div>
+                                            @error('day_of_week')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status and Settings -->
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status <span class="text-red-600 dark:text-red-400">*</span></flux:label>
+                                            <select name="status" 
+                                                    id="status" 
+                                                    class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('status') border-red-500 @enderror" 
+                                                    required>
+                                                @foreach($statuses as $key => $value)
+                                                    <option value="{{ $key }}" {{ old('status', $recurringInvoice->status) == $key ? 'selected' : '' }}>
+                                                        {{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </flux:select>
+                                            @error('status')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="payment_terms_days" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Terms (Days)</flux:label>
+                                            <input type="number" 
+                                                   name="payment_terms_days" 
+                                                   id="payment_terms_days" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('payment_terms_days') border-red-500 @enderror" 
+                                                   value="{{ old('payment_terms_days', $recurringInvoice->payment_terms_days) }}" 
+                                                   min="1" 
+                                                   max="365"
+                                                   placeholder="30">
+                                            @error('payment_terms_days')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Invoice Settings -->
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="invoice_prefix" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Prefix</flux:label>
+                                            <input type="text" 
+                                                   name="invoice_prefix" 
+                                                   id="invoice_prefix" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('invoice_prefix') border-red-500 @enderror" 
+                                                   value="{{ old('invoice_prefix', $recurringInvoice->invoice_prefix) }}" 
+                                                   maxlength="10"
+                                                   placeholder="REC">
+                                            @error('invoice_prefix')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <div class="flex items-center mt-6">
+                                                <input class="flex items-center-input" 
+                                                       type="checkbox" 
+                                                       name="auto_send" 
+                                                       id="auto_send" 
+                                                       value="1" 
+                                                       {{ old('auto_send', $recurringInvoice->auto_send) ? 'checked' : '' }}>
+                                                <label class="flex items-center-label" for="auto_send">
+                                                    Auto-send invoices when generated
+                                                </flux:label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Late Fees -->
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="late_fee_percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Late Fee Percentage (%)</flux:label>
+                                            <input type="number" 
+                                                   name="late_fee_percentage" 
+                                                   id="late_fee_percentage" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('late_fee_percentage') border-red-500 @enderror" 
+                                                   value="{{ old('late_fee_percentage', $recurringInvoice->late_fee_percentage) }}" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   step="0.01"
+                                                   placeholder="0.00">
+                                            @error('late_fee_percentage')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <label for="late_fee_flat_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Late Fee Flat Amount</flux:label>
+                                            <input type="number" 
+                                                   name="late_fee_flat_amount" 
+                                                   id="late_fee_flat_amount" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('late_fee_flat_amount') border-red-500 @enderror" 
+                                                   value="{{ old('late_fee_flat_amount', $recurringInvoice->late_fee_flat_amount) }}" 
+                                                   min="0" 
+                                                   step="0.01"
+                                                   placeholder="0.00">
+                                            @error('late_fee_flat_amount')
+                                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Line Items -->
+                                <div class="mb-6">
+                                    <label for="line_items" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Line Items</flux:label>
+                                    <textarea name="line_items" 
+                                              id="line_items" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('line_items') border-red-500 @enderror" 
+                                              rows="4" 
+                                              placeholder="Enter line items (one per line)...">{{ old('line_items', is_array($recurringInvoice->line_items) ? implode("\n", array_column($recurringInvoice->line_items, 'description')) : '') }}</flux:textarea>
+                                    <div class="form-text">Enter each line item on a separate line</div>
+                                    @error('line_items')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-6">
+                                    <label for="invoice_notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Notes</flux:label>
+                                    <textarea name="invoice_notes" 
+                                              id="invoice_notes" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('invoice_notes') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Notes to include on generated invoices...">{{ old('invoice_notes', $recurringInvoice->invoice_notes) }}</flux:textarea>
+                                    @error('invoice_notes')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Payment Instructions -->
+                                <div class="mb-6">
+                                    <label for="payment_instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Instructions</flux:label>
+                                    <textarea name="payment_instructions" 
+                                              id="payment_instructions" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('payment_instructions') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Payment instructions for clients...">{{ old('payment_instructions', $recurringInvoice->payment_instructions) }}</flux:textarea>
+                                    @error('payment_instructions')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-save mr-2"></i>Update Recurring Invoice
+                                    </flux:button>
+                                    <a href="{{ route('clients.recurring-invoices.standalone.show', $recurringInvoice) }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/3 px-4 flex-1 px-6-xl-6">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                <i class="fas fa-clock mr-2"></i>Invoice History
+                            </h5>
+                        </div>
+                        <div class="p-6">
+                            <div class="small text-gray-600">
+                                <div class="mb-2">
+                                    <strong>Created:</strong> {{ $recurringInvoice->created_at->format('M j, Y g:i A') }}
+                                    @if($recurringInvoice->creator)
+                                        <br><strong>Created by:</strong> {{ $recurringInvoice->creator->name }}
+                                    @endif
+                                </div>
+                                @if($recurringInvoice->updated_at != $recurringInvoice->created_at)
+                                    <div class="mb-2">
+                                        <strong>Last updated:</strong> {{ $recurringInvoice->updated_at->format('M j, Y g:i A') }}
+                                    </div>
+                                @endif
+                                @if($recurringInvoice->last_invoice_date)
+                                    <div class="mb-2">
+                                        <strong>Last invoice:</strong> {{ $recurringInvoice->last_invoice_date->format('M j, Y') }}
+                                    </div>
+                                @endif
+                                @if($recurringInvoice->next_invoice_date)
+                                    <div>
+                                        <strong>Next invoice:</strong> {{ $recurringInvoice->next_invoice_date->format('M j, Y') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mt-6">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                <i class="fas fa-chart-bar mr-2"></i>Performance
+                            </h5>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="flex flex-wrap -mx-4 g-2 text-center">
+                                <div class="flex-1 px-6-6">
+                                    <div class="p-2 bg-gray-100 rounded">
+                                        <div class="font-bold text-blue-600">{{ $recurringInvoice->invoice_count ?? 0 }}</div>
+                                        <small class="text-gray-600">Invoices Generated</small>
+                                    </div>
+                                </div>
+                                <div class="flex-1 px-6-6">
+                                    <div class="p-2 bg-gray-100 rounded">
+                                        <div class="font-bold text-green-600">{{ $recurringInvoice->getCurrencySymbol() }}{{ number_format($recurringInvoice->total_revenue ?? 0, 0) }}</div>
+                                        <small class="text-gray-600 dark:text-gray-400">Total Revenue</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mt-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                <i class="fas fa-info-circle mr-2"></i>Update Guidelines
+                            </h5>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="small text-gray-600 dark:text-gray-400">
+                                <h6>Important Notes:</h6>
+                                <ul class="list-unstyled">
+                                    <li>• Changing frequency will recalculate the next invoice date</li>
+                                    <li>• Status changes affect invoice generation</li>
+                                    <li>• Amount changes only apply to future invoices</li>
+                                    <li>• Date changes may affect scheduling</li>
+                                </ul>
+
+                                <h6 class="mt-6">Best Practices:</h6>
+                                <ul class="list-unstyled">
+                                    <li>• Test changes with draft status first</li>
+                                    <li>• Notify clients of significant changes</li>
+                                    <li>• Keep detailed notes for reference</li>
+                                    <li>• Monitor performance after changes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const frequencySelect = document.getElementById('frequency');
+    const dayOfMonthField = document.getElementById('day-of-month-field');
+    const dayOfWeekField = document.getElementById('day-of-week-field');
+
+    function toggleTimingOptions() {
+        const frequency = frequencySelect.value;
+        
+        // Show/hide day of month field
+        if (['monthly', 'quarterly', 'semiannually', 'annually'].includes(frequency)) {
+            dayOfMonthField.style.display = 'block';
+        } else {
+            dayOfMonthField.style.display = 'none';
+        }
+        
+        // Show/hide day of week field
+        if (['weekly', 'biweekly'].includes(frequency)) {
+            dayOfWeekField.style.display = 'block';
+        } else {
+            dayOfWeekField.style.display = 'none';
+        }
+    }
+
+    frequencySelect.addEventListener('change', toggleTimingOptions);
+    
+    // Initialize on page load
+    toggleTimingOptions();
+});
+</script>
+@endpush

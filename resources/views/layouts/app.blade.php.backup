@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    @fluxAppearance
+
+    <!-- Apply theme IMMEDIATELY before any CSS loads -->
+    <script>
+        @php
+            $userTheme = optional(optional(auth()->user())->userSetting)->theme ?? 'auto';
+        @endphp
+        (function() {
+            const userTheme = '{{ $userTheme }}';
+            if (userTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (userTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else if (userTheme === 'auto') {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        })();
+    </script>
+
+    <title>{{ $currentCompany?->name ?? config('app.name', 'Nestogy ERP') }} - @yield('title', 'Dashboard')</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
+
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Livewire Styles -->
+    @livewireStyles
+    
+    <!-- Current User Context for JavaScript -->
+    <script>
+        window.CURRENT_USER = {!! json_encode([
+            'id' => auth()->id(),
+            'company_id' => optional(auth()->user())->company_id,
+            'name' => optional(auth()->user())->name,
+            'theme' => optional(optional(auth()->user())->userSetting)->theme ?? 'auto',
+            'selected_client_id' => session('selected_client_id'),
+            'selected_client' => session('selected_client_id') ? optional(\App\Models\Client::where('company_id', optional(auth()->user())->company_id)->find(session('selected_client_id')))->only(['id', 'name', 'company_name', 'email']) : null
+        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
+    </script>
+    
+    <!-- Company Customization Styles -->
+    @if(auth()->check() && auth()->user()->company_id)
+        @php
+            $settingsService = app(\App\Services\SettingsService::class);
+            $companyCss = $settingsService->generateCompanyCss(auth()->user()->company);
+        @endphp
+        <style>
+            {!! $companyCss !!}
+        </style>
+    @endif
+    
+    <!-- Additional Styles -->
+    @stack('styles')
+</head>
+<body class="min-h-screen bg-white dark:bg-zinc-800">
+    <!-- Flux UI Layout Structure -->
+    <flux:header container class="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+        <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
+        
+        <!-- Brand -->
+        <flux:brand href="{{ route('dashboard') }}" 
+                    logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
+                    name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                    class="max-lg:hidden dark:hidden" />
+        <flux:brand href="{{ route('dashboard') }}" 
+                    logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
+                    name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                    class="max-lg:hidden! hidden dark:flex" />
+        
+        <!-- Main Navigation -->
+        <flux:navbar class="-mb-px max-lg:hidden">
+            <x-workflow-navbar :active-domain="$activeDomain ?? null" />
+        </flux:navbar>
+
+        <flux:spacer />
+        
+        <!-- Header Actions -->
+        <flux:navbar class="me-4">
+            <flux:navbar.item icon="magnifying-glass" href="#" label="Search" 
+                            onclick="window.dispatchEvent(new CustomEvent('open-command-palette'))" />
+            <flux:navbar.item class="max-lg:hidden" icon="cog-6-tooth" href="{{ route('settings.index') }}" label="Settings" />
+            <flux:navbar.item class="max-lg:hidden" icon="information-circle" href="#" label="Help" />
+        </flux:navbar>
+        
+        <!-- User Profile Dropdown -->
+        <flux:dropdown position="top" align="start">
+            <flux:profile avatar="{{ Auth::user()->getAvatarUrl() ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}">
+                {{ auth()->user()->name ?? 'User' }}
+            </flux:profile>
+
+            <flux:menu>
+                <div class="px-4 py-3 border-b">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ Auth::user()->name }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</div>
+                </div>
+                
+                <flux:menu.item icon="user" href="{{ route('users.profile') }}">Profile</flux:menu.item>
+                <flux:menu.item icon="cog-6-tooth" href="{{ route('settings.index') }}">Settings</flux:menu.item>
+                
+                <flux:menu.separator />
+                
+                <flux:menu.radio.group>
+                    @php
+                        $currentTheme = optional(optional(auth()->user())->userSetting)->theme ?? 'auto';
+                    @endphp
+                    <flux:menu.radio name="theme" value="auto" {{ $currentTheme === 'auto' ? 'checked' : '' }}>System</flux:menu.radio>
+                    <flux:menu.radio name="theme" value="light" {{ $currentTheme === 'light' ? 'checked' : '' }}>Light</flux:menu.radio>  
+                    <flux:menu.radio name="theme" value="dark" {{ $currentTheme === 'dark' ? 'checked' : '' }}>Dark</flux:menu.radio>
+                </flux:menu.radio.group>
+
+                <flux:menu.separator />
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <flux:menu.item icon="arrow-right-start-on-rectangle" onclick="this.closest('form').submit()">Sign out</flux:menu.item>
+                </form>
+            </flux:menu>
+        </flux:dropdown>
+    </flux:header>
+
+    <!-- Flux Sidebar for domain navigation -->
+    @if($activeDomain ?? null)
+        <flux:sidebar stashable sticky class="lg:hidden bg-zinc-50 dark:bg-zinc-900 border-r rtl:border-r-0 rtl:border-l border-zinc-200 dark:border-zinc-700">
+            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+            <flux:brand href="{{ route('dashboard') }}" 
+                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
+                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                        class="px-2 dark:hidden" />
+            <flux:brand href="{{ route('dashboard') }}" 
+                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
+                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                        class="px-2 hidden dark:flex" />
+            
+            <x-domain-sidebar
+                :active-domain="$activeDomain"
+                :active-item="$activeItem ?? null"
+                :mobile="true"
+            />
+        </flux:sidebar>
+    @endif
+
+    <!-- Flux Main Content Area -->
+    <flux:main container>
+        <!-- Command Palette -->
+        <x-command-palette />
+
+        <!-- Breadcrumbs -->
+        @if(!empty($breadcrumbs))
+            <flux:breadcrumbs class="mb-6">
+                @foreach($breadcrumbs as $breadcrumb)
+                    @if($loop->last || ($breadcrumb['active'] ?? false))
+                        <flux:breadcrumbs.item>{{ $breadcrumb['name'] }}</flux:breadcrumbs.item>
+                    @else
+                        <flux:breadcrumbs.item href="{{ isset($breadcrumb['route']) ? route($breadcrumb['route']) : '#' }}">
+                            {{ $breadcrumb['name'] }}
+                        </flux:breadcrumbs.item>
+                    @endif
+                @endforeach
+            </flux:breadcrumbs>
+        @endif
+
+        <!-- Flash Messages using Flux UI -->
+        @if (session('success'))
+            <flux:toast variant="success" class="mb-6">
+                {{ session('success') }}
+            </flux:toast>
+        @endif
+
+        @if (session('error'))
+            <flux:toast variant="danger" class="mb-6">
+                {{ session('error') }}
+            </flux:toast>
+        @endif
+
+        @if ($errors->any())
+            <flux:toast variant="danger" class="mb-6">
+                <div>
+                    <div class="font-medium mb-2">Please correct the following errors:</div>
+                    <ul class="text-sm space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </flux:toast>
+        @endif
+
+        <!-- Page Content -->
+        @yield('content')
+    </flux:main>
+
+    <!-- Additional Scripts -->
+    @stack('scripts')
+    
+    <!-- Livewire Scripts -->
+    @livewireScripts
+    
+    <!-- Flux Scripts -->
+    @fluxScripts
+    
+    <!-- Register Alpine.js components with Flux's Alpine instance -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            // Register components with Flux's Alpine instance
+            if (window.commandPalette) {
+                Alpine.data('commandPalette', window.commandPalette);
+            }
+            if (window.clientSwitcher) {
+                Alpine.data('clientSwitcher', window.clientSwitcher);
+            }
+            if (window.modernDashboard) {
+                Alpine.data('modernDashboard', window.modernDashboard);
+            }
+            if (window.modernLayout) {
+                Alpine.data('modernLayout', window.modernLayout);
+            }
+        });
+
+        // Theme handling for Flux UI
+        document.addEventListener('DOMContentLoaded', function() {
+            // Listen for theme changes from Flux menu
+            document.addEventListener('change', function(e) {
+                if (e.target.name === 'theme') {
+                    const theme = e.target.value;
+                    
+                    // Apply theme immediately
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                    } else if (theme === 'light') {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
+                    } else if (theme === 'auto') {
+                        localStorage.removeItem('theme');
+                        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                        }
+                    }
+                    
+                    // Save to user preferences via AJAX
+                    fetch('/settings/theme', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ theme: theme })
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

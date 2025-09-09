@@ -1,0 +1,509 @@
+@extends('layouts.app')
+
+@section('title', $recurring->name)
+
+@section('content')
+<div class="container mx-auto px-4 mx-auto px-4 mx-auto px-4 py-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{ $recurring->name }}</h1>
+                <p class="text-gray-600 mt-1">{{ $recurring->client->name ?? 'No Client' }}</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{{ route('financial.recurring.index') }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Recurring Billing
+                </a>
+                
+                <!-- Generate Invoice -->
+                <form method="POST" action="{{ route('financial.recurring.generate-invoice', $recurring) }}" class="inline">
+                    @csrf
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Generate Invoice
+                    </button>
+                </form>
+
+                @if($recurring->status)
+                    <form method="POST" action="{{ route('financial.recurring.pause', $recurring) }}" class="inline">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Pause
+                        </button>
+                    </form>
+                @else
+                    <form method="POST" action="{{ route('financial.recurring.resume', $recurring) }}" class="inline">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15" />
+                            </svg>
+                            Resume
+                        </button>
+                    </form>
+                @endif
+
+                <a href="{{ route('financial.recurring.edit', $recurring) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                </a>
+            </div>
+        </div>
+
+        <!-- Service Status -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Service Status</h3>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->status) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
+                        {{ $recurring->status ? 'Active' : 'Inactive' }}
+                    </span>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Start Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ \Carbon\Carbon::parse($recurring->start_date)->format('M d, Y') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Next Billing</dt>
+                        <dd class="mt-1 text-sm text-gray-900 @if(\Carbon\Carbon::parse($recurring->next_billing_date)->isPast()) text-red-600 font-medium @endif">
+                            {{ \Carbon\Carbon::parse($recurring->next_billing_date)->format('M d, Y') }}
+                            @if(\Carbon\Carbon::parse($recurring->next_billing_date)->isPast())
+                                <span class="block text-xs text-red-500">Overdue</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Billing Cycle</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $recurring->billing_cycle)) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Base Amount</dt>
+                        <dd class="mt-1 text-sm text-gray-900">${{ number_format($recurring->amount, 2) }} {{ $recurring->currency_code }}</dd>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Basic Information -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Service Details</h3>
+                </div>
+                <div class="px-6 py-4 space-y-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Service Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $recurring->service_type)) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Billing Type</dt>
+                        <dd class="mt-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->billing_type === 'flat') bg-gray-100 text-gray-800 @elseif($recurring->billing_type === 'usage_based') bg-blue-100 text-blue-800 @elseif($recurring->billing_type === 'tiered') bg-green-100 text-green-800 @elseif($recurring->billing_type === 'hybrid') bg-purple-100 text-purple-800 @elseif($recurring->billing_type === 'volume_discount') bg-indigo-100 text-indigo-800 @else bg-gray-100 text-gray-800 @endif">
+                                {{ ucfirst(str_replace('_', ' ', $recurring->billing_type)) }}
+                            </span>
+                        </dd>
+                    </div>
+                    @if($recurring->description)
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Description</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ $recurring->description }}</dd>
+                    </div>
+                    @endif
+                    @if($recurring->category)
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Category</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ $recurring->category->name }}</dd>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- VoIP Features -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">VoIP Features</h3>
+                </div>
+                <div class="px-6 py-4 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Contract Escalations</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->contract_escalation_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                            {{ $recurring->contract_escalation_enabled ? 'Enabled' : 'Disabled' }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Proration</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->proration_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                            {{ $recurring->proration_enabled ? 'Enabled' : 'Disabled' }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">VoIP Tax Calculation</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->tax_calculation_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                            {{ $recurring->tax_calculation_enabled ? 'Enabled' : 'Disabled' }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Auto Send Invoices</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->auto_send) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                            {{ $recurring->auto_send ? 'Enabled' : 'Disabled' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Tiers -->
+        @if(!empty($recurring->service_tiers))
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Service Tiers</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Allowance</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Rate</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overage Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($recurring->service_tiers as $tier)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ ucfirst(str_replace('_', ' ', $tier['service_type'])) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ number_format($tier['monthly_allowance']) }}
+                                @if(isset($tier['allowance_unit']))
+                                    {{ $tier['allowance_unit'] }}
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${{ number_format($tier['base_rate'], 4) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${{ number_format($tier['overage_rate'], 4) }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <!-- Usage Summary (if available) -->
+        @if(!empty($usageSummary))
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Current Month Usage</h3>
+                    <a href="{{ route('financial.recurring.usage-data', $recurring) }}" 
+                       class="text-sm text-indigo-600 hover:text-indigo-900">View Details</a>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Total Usage</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">{{ number_format($usageSummary['total_usage'] ?? 0) }}</dd>
+                        <dd class="text-xs text-gray-500">{{ $usageSummary['usage_unit'] ?? 'minutes' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Usage Charges</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">${{ number_format($usageSummary['total_cost'] ?? 0, 2) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Period</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ $usageSummary['period_start'] ?? '' }} - {{ $usageSummary['period_end'] ?? '' }}</dd>
+                    </div>
+                </div>
+                
+                @if(!empty($usageSummary['by_service_type']))
+                <div class="mt-6">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Usage by Service Type</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($usageSummary['by_service_type'] as $serviceType => $data)
+                        <div class="border border-gray-200 rounded-lg p-3">
+                            <div class="text-sm font-medium text-gray-900">{{ ucfirst(str_replace('_', ' ', $serviceType)) }}</div>
+                            <div class="mt-1 text-lg font-semibold text-gray-600">{{ number_format($data['usage']) }}</div>
+                            <div class="text-xs text-gray-500">${{ number_format($data['cost'], 2) }}</div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        <!-- Recent Invoices -->
+        @if(!empty($recentInvoices) && $recentInvoices->count() > 0)
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Recent Invoices</h3>
+                    <a href="{{ route('financial.invoices.index', ['recurring_id' => $recurring->id]) }}" 
+                       class="text-sm text-indigo-600 hover:text-indigo-900">View All</a>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($recentInvoices->take(5) as $invoice)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                #{{ $invoice->number }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ \Carbon\Carbon::parse($invoice->date)->format('M j, Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${{ number_format($invoice->amount, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-800 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
+                                    {{ $invoice->status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ route('financial.invoices.show', $invoice) }}" 
+                                   class="text-indigo-600 hover:text-indigo-900">View</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <!-- Contract Escalations -->
+        @if(!empty($recurring->metadata['contract_escalations']))
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Contract Escalations</h3>
+            </div>
+            <div class="px-6 py-4">
+                <div class="space-y-3">
+                    @foreach($recurring->metadata['contract_escalations'] as $escalation)
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ $escalation['percentage'] }}% increase
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                Effective: {{ \Carbon\Carbon::parse($escalation['effective_date'])->format('M j, Y') }}
+                            </div>
+                            @if(!empty($escalation['description']))
+                            <div class="text-sm text-gray-600 mt-1">
+                                {{ $escalation['description'] }}
+                            </div>
+                            @endif
+                        </div>
+                        <div>
+                            @if(\Carbon\Carbon::parse($escalation['effective_date'])->isFuture())
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Applied
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Billing Statistics -->
+        @if(!empty($billingStats))
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Billing Statistics</h3>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Total Invoices</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">{{ $billingStats['total_invoices'] ?? 0 }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Total Billed</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">${{ number_format($billingStats['total_billed'] ?? 0, 2) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Average Invoice</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">${{ number_format($billingStats['average_invoice'] ?? 0, 2) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Last Generated</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            @if(!empty($billingStats['last_generated']))
+                                {{ \Carbon\Carbon::parse($billingStats['last_generated'])->format('M j, Y') }}
+                            @else
+                                Never
+                            @endif
+                        </dd>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+</div>
+
+<!-- Usage Data Modal -->
+<div id="usageDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 1000;">
+    <div class="relative top-20 mx-auto p-5 border max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Process Usage Data</h3>
+                <button id="closeUsageModal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('financial.recurring.process-usage-data', $recurring) }}" enctype="multipart/form-data">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data Source</label>
+                        <select name="data_source" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="usage_file">Upload File</option>
+                            <option value="manual_usage">Manual Entry</option>
+                            <option value="cdr_records">CDR Records</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Usage File</label>
+                        <input type="file" name="usage_file" accept=".csv,.json,.xml" 
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Processing Date</label>
+                        <input type="date" name="processing_date" value="{{ now()->toDateString() }}" 
+                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="closeUsageModalBtn"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-m <!-- Usage Data Modal --> <div id="usageDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 1000;">
+    <div class="relative top-20 mx-auto p-5 border max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Process Usage Data</h3>
+                <button id="closeUsageModal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('financial.recurring.process-usage-data', $recurring) }}" enctype="multipart/form-data">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data Source</label>
+                        <select name="data_source" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="usage_file">Upload File</option>
+                            <option value="manual_usage">Manual Entry</option>
+                            <option value="cdr_records">CDR Records</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Usage File</label>
+                        <input type="file" name="usage_file" accept=".csv,.json,.xml" 
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Processing Date</label>
+                        <input type="date" name="processing_date" value="{{ now()->toDateString() }}" 
+                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="closeUsageModalBtn"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                        Process Usage Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const usageDataModal = document.getElementById('usageDataModal');
+    const closeUsageModal = document.getElementById('closeUsageModal');
+    const closeUsageModalBtn = document.getElementById('closeUsageModalBtn');
+
+    // Show usage data modal
+    window.showUsageDataModal = function() {
+        usageDataModal.classList.remove('hidden');
+    };
+
+    // Close modal handlers
+    closeUsageModal.addEventListener('click', function() {
+        usageDataModal.classList.add('hidden');
+    });
+
+    closeUsageModalBtn.addEventListener('click', function() {
+        usageDataModal.classList.add('hidden');
+    });
+
+    // Close modal when clicking outside
+    usageDataModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
+});
+</script>
+@endpush
+@endsection

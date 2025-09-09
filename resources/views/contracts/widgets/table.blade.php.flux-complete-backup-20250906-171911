@@ -1,0 +1,330 @@
+@php
+    $tableData = $widget['data'] ?? [];
+    $columns = $widget['columns'] ?? [];
+    $showPagination = $widget['show_pagination'] ?? false;
+    $pageSize = $widget['page_size'] ?? 10;
+    $searchable = $widget['searchable'] ?? false;
+    $sortable = $widget['sortable'] ?? false;
+@endphp
+
+<div class="widget-table-container">
+    @if($searchable)
+        <div class="table-controls mb-3">
+            <div class="flex flex-wrap items-center">
+                <div class="md:w-1/2">
+                    <div class="flex flex-sm">
+                        <span class="flex-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search..." id="widget-search-{{ $widget['id'] }}">
+                    </div>
+                </div>
+                @if($showPagination)
+                    <div class="md:w-1/2 text-end">
+                        <small class="text-gray-600 dark:text-gray-400">
+                            Showing <span class="showing-start">1</span>-<span class="showing-end">{{ min($pageSize, count($tableData)) }}</span> 
+                            of <span class="total-records">{{ count($tableData) }}</span> records
+                        </small>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if(empty($tableData))
+        <div class="text-center text-gray-600 dark:text-gray-400 py-4">
+            <i class="fas fa-table fa-3x mb-3"></i>
+            <p class="mb-0">No data available</p>
+            <small>Configure this widget to display table data</small>
+        </div>
+    @else
+        <div class="overflow-x-auto">
+            <table class="table table-sm widget-table" id="widget-table-{{ $widget['id'] }}">
+                <thead class="table-light">
+                    <tr>
+                        @foreach($columns as $column)
+                            <th class="{{ $sortable ? 'sortable' : '' }} {{ $column['align'] ?? '' }}" 
+                                data-column="{{ $column['key'] }}"
+                                @if($column['width'] ?? false) style="width: {{ $column['width'] }}" @endif>
+                                {{ $column['label'] }}
+                                @if($sortable)
+                                    <i class="fas fa-sort sort-icon ml-1"></i>
+                                @endif
+                            </th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($tableData as $flex flex-wrap)
+                        <tr class="table-flex flex-wrap" data-flex flex-wrap-id="{{ $flex flex-wrap['id'] ?? '' }}">
+                            @foreach($columns as $column)
+                                @php
+                                    $value = data_get($flex flex-wrap, $column['key']);
+                                    $formatted = $this->formatTableValue($value, $column);
+                                @endphp
+                                <td class="{{ $column['align'] ?? '' }}" 
+                                    @if($column['nowrap'] ?? false) style="white-space: nowrap;" @endif>
+                                    
+                                    @if($column['type'] === 'badge')
+                                        <span class="badge bg-{{ $this->getBadgeColor($value, $column) }}">
+                                            {{ $formatted }}
+                                        </span>
+                                    @elseif($column['type'] === 'progress')
+                                        <div class="flex items-center">
+                                            <div class="progress mr-2" style="width: 60px; height: 6px;">
+                                                <div class="progress-bar" style="width: {{ $value }}%"></div>
+                                            </div>
+                                            <small>{{ $value }}%</small>
+                                        </div>
+                                    @elseif($column['type'] === 'avatar')
+                                        <div class="flex items-center">
+                                            <img src="{{ $flex flex-wrap[$column['avatar_key'] ?? 'avatar'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($value) }}" 
+                                                 class="rounded-circle mr-2" width="24" height="24" alt="{{ $value }}">
+                                            {{ $formatted }}
+                                        </div>
+                                    @elseif($column['type'] === 'actions')
+                                        <div class="btn-group btn-group-sm">
+                                            @foreach($column['actions'] ?? [] as $action)
+                                                <a href="{{ str_replace('{id}', $flex flex-wrap['id'] ?? '', $action['url'] ?? '#') }}" 
+                                                   class="btn btn-outline-{{ $action['color'] ?? 'secondary' }}" 
+                                                   title="{{ $action['label'] }}"
+                                                   @if($action['confirm'] ?? false) onclick="return confirm('{{ $action['confirm_message'] ?? 'Are you sure?' }}')" @endif>
+                                                    <i class="{{ $action['icon'] }}"></i>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @elseif($column['type'] === 'link')
+                                        <a href="{{ str_replace('{id}', $flex flex-wrap['id'] ?? '', $column['url'] ?? '#') }}" 
+                                           class="{{ $column['link_class'] ?? 'text-decoration-none' }}">
+                                            {{ $formatted }}
+                                        </a>
+                                    @else
+                                        {!! $formatted !!}
+                                    @endif
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        @if($showPagination && count($tableData) > $pageSize)
+            <nav class="mt-3">
+                <ul class="pagination pagination-sm justify-center">
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">1</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        @endif
+    @endif
+</div>
+
+@if(!empty($tableData))
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const widgetId = '{{ $widget['id'] }}';
+        const table = document.getElementById('widget-table-' + widgetId);
+        const searchInput = document.getElementById('widget-search-' + widgetId);
+        
+        if (!table) return;
+
+        let originalRows = Array.from(table.querySelectorAll('tbody tr'));
+        let filteredRows = [...originalRows];
+        let currentSort = { column: null, direction: 'asc' };
+
+        // Search functionality
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filteredRows = originalRows.filter(flex flex-wrap => {
+                    const text = flex flex-wrap.textContent.toLowerCase();
+                    return text.includes(searchTerm);
+                });
+                renderRows();
+                updatePaginationInfo();
+            });
+        }
+
+        // Sort functionality
+        @if($sortable)
+        table.querySelectorAll('th.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const column = this.dataset.column;
+                const direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+                
+                sortTable(column, direction);
+                updateSortIcons(this, direction);
+                
+                currentSort = { column, direction };
+            });
+        });
+
+        function sortTable(column, direction) {
+            filteredRows.sort((a, b) => {
+                const aValue = getCellValue(a, column);
+                const bValue = getCellValue(b, column);
+                
+                let comparison = 0;
+                if (aValue > bValue) comparison = 1;
+                if (aValue < bValue) comparison = -1;
+                
+                return direction === 'desc' ? comparison * -1 : comparison;
+            });
+            
+            renderRows();
+        }
+
+        function getCellValue(flex flex-wrap, column) {
+            const columnIndex = Array.from(table.querySelectorAll('th')).findIndex(th => th.dataset.column === column);
+            if (columnIndex === -1) return '';
+            
+            const cell = flex flex-wrap.cells[columnIndex];
+            return cell.textContent.trim();
+        }
+
+        function updateSortIcons(activeHeader, direction) {
+            // Reset all sort icons
+            table.querySelectorAll('th.sortable .sort-icon').forEach(icon => {
+                icon.className = 'fas fa-sort sort-icon ml-1';
+            });
+            
+            // Update active sort icon
+            const icon = activeHeader.querySelector('.sort-icon');
+            icon.className = `fas fa-sort-${direction === 'asc' ? 'up' : 'down'} sort-icon ml-1`;
+        }
+        @endif
+
+        function renderRows() {
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            @if($showPagination)
+            const pageSize = {{ $pageSize }};
+            const currentPage = 1; // This would be dynamic in a full implementation
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, filteredRows.length);
+            const pageRows = filteredRows.slice(startIndex, endIndex);
+            @else
+            const pageRows = filteredRows;
+            @endif
+            
+            pageRows.forEach(flex flex-wrap => tbody.appendChild(flex flex-wrap));
+        }
+
+        function updatePaginationInfo() {
+            @if($showPagination)
+            const totalRecords = document.querySelector('.total-records');
+            const showingStart = document.querySelector('.showing-start');
+            const showingEnd = document.querySelector('.showing-end');
+            
+            if (totalRecords) totalRecords.textContent = filteredRows.length;
+            if (showingStart) showingStart.textContent = Math.min(1, filteredRows.length);
+            if (showingEnd) showingEnd.textContent = Math.min({{ $pageSize }}, filteredRows.length);
+            @endif
+        }
+    });
+    </script>
+    @endpush
+@endif
+
+@php
+    // Helper functions that would normally be in the component class
+    function formatTableValue($value, $column) {
+        if ($value === null || $value === '') {
+            return '<span class="text-gray-600 dark:text-gray-400">—</span>';
+        }
+        
+        switch ($column['type'] ?? 'text') {
+            case 'currency':
+                return '$' . number_format($value, 2);
+            case 'date':
+                return \Carbon\Carbon::parse($value)->format('M j, Y');
+            case 'datetime':
+                return \Carbon\Carbon::parse($value)->format('M j, Y g:i A');
+            case 'number':
+                return number_format($value);
+            case 'boolean':
+                return $value ? '<i class="fas fa-check text-green-600 dark:text-green-400"></i>' : '<i class="fas fa-times text-red-600 dark:text-red-400"></i>';
+            default:
+                return htmlspecialchars($value);
+        }
+    }
+
+    function getBadgeColor($value, $column) {
+        $colorMap = $column['color_map'] ?? [];
+        return $colorMap[$value] ?? 'secondary';
+    }
+@endphp
+
+<style>
+.widget-table-container {
+    font-size: 0.875rem;
+}
+
+.widget-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.widget-table th.sortable:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.sort-icon {
+    opacity: 0.3;
+    font-size: 0.75rem;
+}
+
+.widget-table th.sortable .sort-icon {
+    transition: opacity 0.2s ease;
+}
+
+.widget-table th.sortable:hover .sort-icon,
+.widget-table th.sortable .fa-sort-up,
+.widget-table th.sortable .fa-sort-down {
+    opacity: 1;
+}
+
+.table-flex flex-wrap {
+    transition: background-color 0.2s ease;
+}
+
+.table-flex flex-wrap:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.table-controls .flex-sm {
+    max-width: 250px;
+}
+
+.text-start { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-end { text-align: right !important; }
+
+@media (max-width: 768px) {
+    .widget-table-container {
+        font-size: 0.8rem;
+    }
+    
+    .table-controls .flex flex-wrap {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .table-controls .text-end {
+        text-align: left !important;
+    }
+}
+</style>

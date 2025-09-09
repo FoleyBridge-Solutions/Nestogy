@@ -1,0 +1,326 @@
+@extends('layouts.app')
+
+@section('title', 'Tickets')
+
+@section('content')
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white dark:text-white">Tickets</h3>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage support tickets and service requests.</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{{ route('tickets.export.csv', request()->query()) }}" 
+                           class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export CSV
+                        </a>
+                        <a href="{{ route('tickets.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            New Ticket
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <form method="GET" action="{{ route('tickets.index') }}" class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                        <!-- Search -->
+                        <div>
+                            <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Search</label>
+                            <input type="text" 
+                                   name="search" 
+                                   id="search" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Ticket #, subject, description..."
+                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Status</label>
+                            <select name="status" 
+                                    id="status" 
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Statuses</option>
+                                @foreach($filterOptions['statuses'] as $status)
+                                    <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>
+                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Priority -->
+                        <div>
+                            <label for="priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Priority</label>
+                            <select name="priority" 
+                                    id="priority" 
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Priorities</option>
+                                @foreach($filterOptions['priorities'] as $priority)
+                                    <option value="{{ $priority }}" {{ request('priority') === $priority ? 'selected' : '' }}>
+                                        {{ $priority }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Client Filter (Hidden when specific client is selected) -->
+                        @php $selectedClient = \App\Services\NavigationService::getSelectedClient(); @endphp
+                        @if(!$selectedClient)
+                        <div>
+                            <label for="client_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client</label>
+                            <select name="client_id" 
+                                    id="client_id" 
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Clients</option>
+                                @foreach($filterOptions['clients'] as $client)
+                                    <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
+                                        {{ $client->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @else
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client</label>
+                            <div class="mt-1 block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 sm:text-sm">
+                                {{ $selectedClient->name }}
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Actions -->
+                        <div class="flex items-end space-x-3">
+                            <button type="submit" 
+                                    class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Filter
+                            </button>
+                            <a href="{{ route('tickets.index') }}" 
+                               class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Clear
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Filter Buttons -->
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('tickets.index', ['unassigned' => '1'] + request()->query()) }}" 
+                           class="inline-flex items-center px-6 py-1.5 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 {{ request('unassigned') ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : '' }}">
+                            Unassigned
+                        </a>
+                        <a href="{{ route('tickets.index', ['overdue' => '1'] + request()->query()) }}" 
+                           class="inline-flex items-center px-6 py-1.5 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 {{ request('overdue') ? 'bg-red-50 border-red-300 text-red-700' : '' }}">
+                            Overdue
+                        </a>
+                        <a href="{{ route('tickets.index', ['watching' => '1'] + request()->query()) }}" 
+                           class="inline-flex items-center px-6 py-1.5 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 {{ request('watching') ? 'bg-yellow-50 border-yellow-300 text-yellow-700' : '' }}">
+                            Watching
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tickets Table -->
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-6 py-8 sm:px-6 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white dark:text-white">
+                    Tickets 
+                    <span class="text-sm text-gray-500">({{ $tickets->total() }} total)</span>
+                </h3>
+            </div>
+            
+            @if($tickets->count() > 0)
+                <div class="overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                            <tr>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                                <th scope="col-span-12" class="relative px-6 py-6"><span class="sr-only">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 dark:bg-gray-800 divide-y divide-gray-200">
+                            @foreach($tickets as $ticket)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-white dark:text-white">#{{ $ticket->ticket_number }}</span>
+                                                @if($ticket->priorityQueue)
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        Priority Queue
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="text-sm text-gray-900 dark:text-white dark:text-white mt-1">{{ $ticket->subject }}</div>
+                                            @if($ticket->tags)
+                                                <div class="flex flex-wrap gap-1 mt-2">
+                                                    @foreach($ticket->tags as $tag)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                            {{ $tag }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $ticket->client->name }}</div>
+                                        @if($ticket->contact)
+                                            <div class="text-sm text-gray-500">{{ $ticket->contact->name }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                            @if($ticket->status === 'new') bg-blue-100 text-blue-800
+                                            @elseif($ticket->status === 'open') bg-yellow-100 text-yellow-800
+                                            @elseif($ticket->status === 'in_progress') bg-purple-100 text-purple-800
+                                            @elseif($ticket->status === 'pending') bg-orange-100 text-orange-800
+                                            @elseif($ticket->status === 'resolved') bg-green-100 text-green-800
+                                            @elseif($ticket->status === 'closed') bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200
+                                            @else bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200
+                                            @endif">
+                                            {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                            @if($ticket->priority === 'Critical') bg-red-100 text-red-800
+                                            @elseif($ticket->priority === 'High') bg-orange-100 text-orange-800
+                                            @elseif($ticket->priority === 'Medium') bg-yellow-100 text-yellow-800
+                                            @elseif($ticket->priority === 'Low') bg-green-100 text-green-800
+                                            @else bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200
+                                            @endif">
+                                            {{ $ticket->priority }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 dark:text-white dark:text-white">
+                                        @if($ticket->assignee)
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-8 w-8">
+                                                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                                        <span class="text-xs font-medium text-indigo-800">
+                                                            {{ strtoupper(substr($ticket->assignee->name, 0, 2)) }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-2">
+                                                    <div class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $ticket->assignee->name }}</div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-500 italic">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">
+                                        <div>{{ $ticket->updated_at->format('M j, Y') }}</div>
+                                        <div>{{ $ticket->updated_at->format('g:i A') }}</div>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end space-x-2">
+                                            <a href="{{ route('tickets.show', $ticket) }}" 
+                                               class="text-indigo-600 hover:text-indigo-900">View</a>
+                                            <a href="{{ route('tickets.edit', $ticket) }}" 
+                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <div class="relative inline-block text-left">
+                                                <button type="button" 
+                                                        class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400 focus:outline-none"
+                                                        onclick="toggleDropdown('dropdown-{{ $ticket->id }}')">
+                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                    </svg>
+                                                </button>
+                                                <div id="dropdown-{{ $ticket->id }}" 
+                                                     class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
+                                                    <div class="py-1">
+                                                        @if($ticket->assignee !== auth()->user())
+                                                            <a href="{{ route('tickets.assignments.assign', $ticket) }}" 
+                                                               class="block px-6 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800">Assign to Me</a>
+                                                        @endif
+                                                        <a href="{{ route('tickets.assignments.watchers.add', $ticket) }}" 
+                                                           class="block px-6 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800">Watch Ticket</a>
+                                                        <a href="{{ route('tickets.time-tracking.create', ['ticket_id' => $ticket->id]) }}" 
+                                                           class="block px-6 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800">Log Time</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 px-6 py-6 border-t border-gray-200 dark:border-gray-700 dark:border-gray-700 sm:px-6">
+                    {{ $tickets->appends(request()->query())->links() }}
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white dark:text-white">No tickets found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new support ticket.</p>
+                    <div class="mt-6">
+                        <a href="{{ route('tickets.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            New Ticket
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDropdown(id) {
+    const dropdown = document.getElementById(id);
+    const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+    
+    // Hide all other dropdowns
+    allDropdowns.forEach(d => {
+        if (d.id !== id) {
+            d.classList.add('hidden');
+        }
+    });
+    
+    // Toggle current dropdown
+    dropdown.classList.toggle('hidden');
+}
+
+// Hide dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('[onclick^="toggleDropdown"]')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+            d.classList.add('hidden');
+        });
+    }
+});
+</script>
+@endsection

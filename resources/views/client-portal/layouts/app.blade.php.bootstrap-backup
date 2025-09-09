@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('title') - {{ config('app.name') }} Client Portal</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Additional Styles -->
+    @stack('styles')
+</head>
+<body class="font-sans bg-gray-50 antialiased">
+    <!-- Sidebar -->
+    <nav class="fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-indigo-600 to-indigo-800 overflow-y-auto z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300" 
+         id="sidebar"
+         x-data="{ sidebarOpen: false }"
+         :class="{ 'translate-x-0': sidebarOpen }">
+        <div class="p-6">
+            <!-- Brand -->
+            <div class="text-center mb-6">
+                <h4 class="text-white text-xl font-bold">{{ config('app.name') }}</h4>
+                <p class="text-indigo-200 text-sm">Client Portal</p>
+            </div>
+
+            <!-- User Info -->
+            @auth('client')
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 mb-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <h6 class="text-white font-medium mb-1">{{ auth('client')->user()->name }}</h6>
+                    <p class="text-indigo-200 text-sm">{{ auth('client')->user()->email }}</p>
+                </div>
+            </div>
+            @endauth
+
+            <!-- Navigation -->
+            <nav class="space-y-1">
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.dashboard') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.dashboard') }}">
+                    <i class="fas fa-tachometer-alt w-5 text-center mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.contracts*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.contracts') }}">
+                    <i class="fas fa-file-contract w-5 text-center mr-3"></i>
+                    <span class="font-medium">My Contracts</span>
+                </a>
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.invoices*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.contracts', ['type' => 'invoices']) }}">
+                    <i class="fas fa-file-invoice-dollar w-5 text-center mr-3"></i>
+                    <span class="font-medium">Invoices</span>
+                </a>
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.milestones*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.contracts', ['view' => 'milestones']) }}">
+                    <i class="fas fa-tasks w-5 text-center mr-3"></i>
+                    <span class="font-medium">Milestones</span>
+                </a>
+                <a class="flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 {{ request()->routeIs('client.profile*') ? 'bg-white bg-opacity-20' : '' }}" 
+                   href="{{ route('client.profile') }}">
+                    <i class="fas fa-user-cog w-5 text-center mr-3"></i>
+                    <span class="font-medium">Profile & Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-6">
+            <hr class="border-indigo-400 mb-4">
+            <div class="text-center">
+                <form action="{{ route('client.logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full px-4 py-2 bg-transparent border border-white text-white rounded-lg hover:bg-white hover:text-indigo-600 transition-colors duration-200 touch-manipulation">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navigation -->
+        <nav class="bg-white border-b border-gray-200 shadow-sm" x-data="{ notificationsOpen: false }">
+            <div class="px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Mobile Menu Button -->
+                    <button class="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation" 
+                            type="button" 
+                            @click="$refs.sidebar.classList.toggle('translate-x-0')">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <!-- Page Title -->
+                    <div class="flex-1">
+                        <h1 class="text-xl font-semibold text-gray-900">
+                            @yield('title', 'Dashboard')
+                        </h1>
+                    </div>
+
+                    <!-- Top Right Items -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors relative touch-manipulation" 
+                                    type="button" 
+                                    @click="notificationsOpen = !notificationsOpen">
+                                <i class="fas fa-bell"></i>
+                                <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    3
+                                </span>
+                            </button>
+                            
+                            <!-- Notifications Dropdown -->
+                            <div x-show="notificationsOpen"
+                                 @click.away="notificationsOpen = false"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                                 style="display: none;">
+                                <div class="p-4 border-b border-gray-200">
+                                    <h6 class="font-semibold text-gray-900">Notifications</h6>
+                                </div>
+                                <div class="p-4">
+                                    <a class="block p-3 hover:bg-gray-50 rounded-lg transition-colors touch-manipulation" href="#">
+                                        <div class="flex">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-signature text-yellow-500"></i>
+                                            </div>
+                                            <div class="ml-3 flex-1">
+                                                <div class="font-medium text-gray-900">Signature Required</div>
+                                                <p class="text-sm text-gray-500">Contract ABC-123 needs your signature</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="p-3 border-t border-gray-200">
+                                    <a class="text-center block text-sm text-indigo-600 hover:text-indigo-800 font-medium" href="#">View all notifications</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Time -->
+                        <span class="text-sm text-gray-500 hidden sm:block">{{ now()->format('M j, Y g:i A') }}</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <main class="p-4">
+            <!-- Flash Messages -->
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
+
+            @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
+
+            @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
+
+            @if(session('info'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle"></i> {{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
+
+            @yield('content')
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-5 py-4 bg-light">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <small class="text-muted">
+                            Need help? <a href="mailto:support@example.com">Contact Support</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (for compatibility) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert-dismissible').alert('close');
+        }, 5000);
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // CSRF Token setup for AJAX
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+    </script>
+
+    @stack('scripts')
+</body>
+</html>

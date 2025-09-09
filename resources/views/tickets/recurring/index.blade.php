@@ -1,0 +1,477 @@
+@extends('layouts.app')
+
+@section('title', 'Recurring Tickets')
+
+@section('content')
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Recurring Tickets</h3>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Automate ticket creation with recurring schedules and custom configurations.</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="processAllSchedules()"
+                                class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Process Schedules
+                        </button>
+                        <a href="{{ route('tickets.recurring.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            New Recurring Ticket
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="bg-white overflow-hidden shadow-sm rounded-lg border">
+                        <div class="p-8">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Schedules</dt>
+                                        <dd class="text-lg font-medium text-gray-900">{{ $recurringStats['total_schedules'] }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-lg border">
+                        <div class="p-8">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-8 w-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Active</dt>
+                                        <dd class="text-lg font-medium text-green-600">{{ $recurringStats['active_schedules'] }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-lg border">
+                        <div class="p-8">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-8 w-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">This Month</dt>
+                                        <dd class="text-lg font-medium text-blue-600">{{ $recurringStats['tickets_created_this_month'] }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-lg border">
+                        <div class="p-8">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-8 w-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Next Due</dt>
+                                        <dd class="text-lg font-medium text-orange-600">
+                                            @if($recurringStats['next_due_date'])
+                                                {{ \Carbon\Carbon::parse($recurringStats['next_due_date'])->format('M j') }}
+                                            @else
+                                                None
+                                            @endif
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm text-gray-700">Status:</label>
+                            <select name="status_filter" onchange="filterByStatus(this.value)" class="rounded-md border-gray-300 text-sm">
+                                <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All</option>
+                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="paused" {{ request('status') === 'paused' ? 'selected' : '' }}>Paused</option>
+                                <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm text-gray-700">Frequency:</label>
+                            <select name="frequency_filter" onchange="filterByFrequency(this.value)" class="rounded-md border-gray-300 text-sm">
+                                <option value="all" {{ request('frequency') === 'all' ? 'selected' : '' }}>All</option>
+                                <option value="daily" {{ request('frequency') === 'daily' ? 'selected' : '' }}>Daily</option>
+                                <option value="weekly" {{ request('frequency') === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                                <option value="monthly" {{ request('frequency') === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                <option value="yearly" {{ request('frequency') === 'yearly' ? 'selected' : '' }}>Yearly</option>
+                                <option value="custom" {{ request('frequency') === 'custom' ? 'selected' : '' }}>Custom</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" 
+                                   name="search" 
+                                   placeholder="Search schedules..."
+                                   value="{{ request('search') }}"
+                                   onkeyup="searchSchedules(this.value)"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recurring Tickets List -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-8 sm:px-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Recurring Schedules 
+                        <span class="text-sm text-gray-500">({{ $recurringTickets->total() }} schedules)</span>
+                    </h3>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="bulkToggleStatus()"
+                                class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Toggle Selected
+                        </button>
+                        <button type="button" 
+                                onclick="exportSchedules()"
+                                class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            @if($recurringTickets->count() > 0)
+                <div class="overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col-span-12" class="px-6 py-6 text-left">
+                                    <input type="checkbox" 
+                                           id="selectAll"
+                                           onchange="toggleSelectAll()"
+                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                </th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Due</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                                <th scope="col-span-12" class="relative px-6 py-6"><span class="sr-only">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($recurringTickets as $recurring)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <input type="checkbox" 
+                                               name="selected_recurring[]" 
+                                               value="{{ $recurring->id }}"
+                                               class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">{{ $recurring->title }}</span>
+                                                @if($recurring->template)
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        Template
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="text-sm text-gray-900 mt-1">{{ Str::limit($recurring->description, 60) }}</div>
+                                            <div class="text-sm text-gray-500">
+                                                Client: {{ $recurring->client->name }}
+                                                @if($recurring->assignee)
+                                                    • Assignee: {{ $recurring->assignee->name }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <div>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                @if($recurring->frequency === 'daily') bg-green-100 text-green-800
+                                                @elseif($recurring->frequency === 'weekly') bg-blue-100 text-blue-800
+                                                @elseif($recurring->frequency === 'monthly') bg-purple-100 text-purple-800
+                                                @elseif($recurring->frequency === 'yearly') bg-red-100 text-red-800
+                                                @else bg-gray-100 text-gray-800
+                                                @endif">
+                                                {{ ucfirst($recurring->frequency) }}
+                                            </span>
+                                            @if($recurring->frequency_config)
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    {{ $recurring->getFrequencyDescription() }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                @if($recurring->status === 'active') bg-green-100 text-green-800
+                                                @elseif($recurring->status === 'paused') bg-yellow-100 text-yellow-800
+                                                @elseif($recurring->status === 'completed') bg-blue-100 text-blue-800
+                                                @else bg-gray-100 text-gray-800
+                                                @endif">
+                                                {{ ucfirst($recurring->status) }}
+                                            </span>
+                                            @if($recurring->status === 'active' && $recurring->isOverdue())
+                                                <svg class="ml-2 h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                </svg>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
+                                        @if($recurring->next_run_at)
+                                            <div>
+                                                {{ $recurring->next_run_at->format('M j, Y') }}
+                                                <div class="text-xs text-gray-500">
+                                                    {{ $recurring->next_run_at->format('g:i A') }}
+                                                    @if($recurring->next_run_at->isPast())
+                                                        <span class="text-red-600">(Overdue)</span>
+                                                    @elseif($recurring->next_run_at->isToday())
+                                                        <span class="text-orange-600">(Today)</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-500">Not scheduled</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
+                                        <div>
+                                            {{ $recurring->tickets_generated }} tickets
+                                            <div class="text-xs text-gray-500">
+                                                Since {{ $recurring->created_at->format('M j, Y') }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 w-16 bg-gray-200 rounded-full h-2">
+                                                @php
+                                                    $successRate = $recurring->tickets_generated > 0 ? 
+                                                        (($recurring->tickets_generated - $recurring->failed_generations) / $recurring->tickets_generated) * 100 : 100;
+                                                @endphp
+                                                <div class="bg-green-600 h-2 rounded-full" 
+                                                     style="width: {{ $successRate }}%"></div>
+                                            </div>
+                                            <span class="ml-2 text-xs text-gray-600">{{ number_format($successRate, 0) }}%</span>
+                                        </div>
+                                        @if($recurring->failed_generations > 0)
+                                            <div class="text-xs text-red-600 mt-1">
+                                                {{ $recurring->failed_generations }} failures
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end space-x-2">
+                                            @if($recurring->status === 'active')
+                                                <button type="button" 
+                                                        onclick="runNow({{ $recurring->id }})"
+                                                        class="text-green-600 hover:text-green-900 text-xs">Run Now</button>
+                                                <button type="button" 
+                                                        onclick="pauseSchedule({{ $recurring->id }})"
+                                                        class="text-yellow-600 hover:text-yellow-900 text-xs">Pause</button>
+                                            @elseif($recurring->status === 'paused')
+                                                <button type="button" 
+                                                        onclick="resumeSchedule({{ $recurring->id }})"
+                                                        class="text-green-600 hover:text-green-900 text-xs">Resume</button>
+                                            @endif
+                                            <a href="{{ route('tickets.recurring.show', $recurring) }}" 
+                                               class="text-indigo-600 hover:text-indigo-900 text-xs">View</a>
+                                            <a href="{{ route('tickets.recurring.edit', $recurring) }}" 
+                                               class="text-indigo-600 hover:text-indigo-900 text-xs">Edit</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="bg-white px-6 py-6 border-t border-gray-200 sm:px-6">
+                    {{ $recurringTickets->appends(request()->query())->links() }}
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No recurring schedules</h3>
+                    <p class="mt-1 text-sm text-gray-500">Create recurring ticket schedules to automate regular tasks and maintenance.</p>
+                    <div class="mt-6">
+                        <a href="{{ route('tickets.recurring.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create Recurring Schedule
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<script>
+function filterByStatus(status) {
+    const url = new URL(window.location);
+    url.searchParams.set('status', status);
+    window.location.href = url.toString();
+}
+
+function filterByFrequency(frequency) {
+    const url = new URL(window.location);
+    url.searchParams.set('frequency', frequency);
+    window.location.href = url.toString();
+}
+
+function searchSchedules(query) {
+    const url = new URL(window.location);
+    if (query) {
+        url.searchParams.set('search', query);
+    } else {
+        url.searchParams.delete('search');
+    }
+    
+    // Debounce the search
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+        window.location.href = url.toString();
+    }, 500);
+}
+
+function processAllSchedules() {
+    if (confirm('This will process all active recurring schedules and create due tickets. Continue?')) {
+        fetch('{{ route('tickets.recurring.process-all') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Successfully processed ${data.processed} schedules and created ${data.tickets_created} tickets.`);
+                location.reload();
+            } else {
+                alert('Failed to process schedules: ' + (data.message || 'Unknown error'));
+            }
+        });
+    }
+}
+
+function runNow(recurringId) {
+    if (confirm('Create a ticket from this recurring schedule now?')) {
+        fetch(`{{ route('tickets.recurring.index') }}/${recurringId}/run`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Ticket created successfully!');
+                location.reload();
+            } else {
+                alert('Failed to create ticket: ' + (data.message || 'Unknown error'));
+            }
+        });
+    }
+}
+
+function pauseSchedule(recurringId) {
+    if (confirm('Pause this recurring schedule?')) {
+        fetch(`{{ route('tickets.recurring.index') }}/${recurringId}/pause`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to pause schedule');
+            }
+        });
+    }
+}
+
+function resumeSchedule(recurringId) {
+    if (confirm('Resume this recurring schedule?')) {
+        fetch(`{{ route('tickets.recurring.index') }}/${recurringId}/resume`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Faile

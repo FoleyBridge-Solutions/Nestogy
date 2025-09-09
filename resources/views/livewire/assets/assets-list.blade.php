@@ -1,0 +1,211 @@
+<div class="w-full">
+    <flux:card>
+        <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
+            <div class="flex items-center justify-between">
+                <flux:heading size="lg">Assets</flux:heading>
+                <div class="flex items-center gap-2">
+                    <flux:button variant="primary" icon="plus" href="{{ route('assets.create') }}">
+                        New Asset
+                    </flux:button>
+                    <flux:dropdown>
+                        <flux:button variant="ghost" icon="ellipsis-vertical" />
+                        <flux:menu>
+                            <flux:menu.item icon="arrow-down-tray" wire:click="exportToExcel">
+                                Export to Excel
+                            </flux:menu.item>
+                            <flux:menu.item icon="arrow-up-tray" href="{{ route('assets.import.form') }}">
+                                Import from Excel
+                            </flux:menu.item>
+                            <flux:menu.item icon="document-arrow-down" href="{{ route('assets.template.download') }}">
+                                Download Template
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Filters -->
+            <div class="mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div class="md:col-span-12-span-2">
+                        <flux:input 
+                            type="search" 
+                            wire:model.live.debounce.300ms="search" 
+                            placeholder="Search assets..."
+                            icon="magnifying-glass"
+                        />
+                    </div>
+                    <div>
+                        <flux:select wire:model.live="clientId">
+                            <flux:select.option value="">All Clients</flux:select.option>
+                            @foreach($clients as $client)
+                                <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select wire:model.live="type">
+                            <flux:select.option value="">All Types</flux:select.option>
+                            @foreach($types as $assetType)
+                                <flux:select.option value="{{ $assetType }}">{{ $assetType }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select wire:model.live="status">
+                            <flux:select.option value="">All Statuses</flux:select.option>
+                            @foreach($statuses as $assetStatus)
+                                <flux:select.option value="{{ $assetStatus }}">{{ $assetStatus }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select wire:model.live="locationId">
+                            <flux:select.option value="">All Locations</flux:select.option>
+                            @foreach($locations as $location)
+                                <flux:select.option value="{{ $location->id }}">{{ $location->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+                </div>
+                
+                @if($search || $clientId || $type || $status || $locationId)
+                    <div class="mt-4">
+                        <flux:button variant="ghost" size="sm" wire:click="resetFilters">
+                            Clear Filters
+                        </flux:button>
+                    </div>
+                @endif
+            </div>
+            
+            <!-- Assets Table -->
+            <flux:table>
+                <flux:table.head>
+                    <flux:table.flex flex-wrap>
+                        <flux:table.heading>Asset Tag</flux:table.heading>
+                        <flux:table.heading>Name</flux:table.heading>
+                        <flux:table.heading>Type</flux:table.heading>
+                        <flux:table.heading>Client</flux:table.heading>
+                        <flux:table.heading>Location</flux:table.heading>
+                        <flux:table.heading>Assigned To</flux:table.heading>
+                        <flux:table.heading>Status</flux:table.heading>
+                        <flux:table.heading>Actions</flux:table.heading>
+                    </flux:table.flex flex-wrap>
+                </flux:table.head>
+                <flux:table.body>
+                    @forelse($assets as $asset)
+                        <flux:table.flex flex-wrap wire:key="asset-{{ $asset->id }}">
+                            <flux:table.cell>
+                                <a href="{{ route('assets.show', $asset) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                                    {{ $asset->asset_tag }}
+                                </a>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <div>
+                                    <div class="font-medium">{{ $asset->name }}</div>
+                                    @if($asset->manufacturer || $asset->model)
+                                        <div class="text-sm text-gray-500">
+                                            {{ $asset->manufacturer }} {{ $asset->model }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:badge variant="subtle">{{ $asset->type }}</flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @if($asset->client)
+                                    <a href="{{ route('clients.show', $asset->client) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                                        {{ $asset->client->name }}
+                                    </a>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @if($asset->location)
+                                    {{ $asset->location->name }}
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @if($asset->assignedUser)
+                                    {{ $asset->assignedUser->name }}
+                                @else
+                                    <span class="text-gray-400">Unassigned</span>
+                                @endif
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:badge 
+                                    variant="{{ $asset->status === 'Active' ? 'success' : ($asset->status === 'Maintenance' ? 'warning' : 'danger') }}"
+                                >
+                                    {{ $asset->status }}
+                                </flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:dropdown>
+                                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" />
+                                    <flux:menu>
+                                        <flux:menu.item icon="eye" href="{{ route('assets.show', $asset) }}">
+                                            View
+                                        </flux:menu.item>
+                                        <flux:menu.item icon="pencil" href="{{ route('assets.edit', $asset) }}">
+                                            Edit
+                                        </flux:menu.item>
+                                        @if($asset->status !== 'Active')
+                                            <flux:menu.item icon="arrows-right-left" href="{{ route('assets.checkinout', ['asset' => $asset, 'action' => 'checkout']) }}">
+                                                Check Out
+                                            </flux:menu.item>
+                                        @else
+                                            <flux:menu.item icon="arrows-right-left" href="{{ route('assets.checkinout', ['asset' => $asset, 'action' => 'checkin']) }}">
+                                                Check In
+                                            </flux:menu.item>
+                                        @endif
+                                        <flux:menu.separator />
+                                        <flux:menu.item 
+                                            icon="trash" 
+                                            wire:click="deleteAsset({{ $asset->id }})"
+                                            wire:confirm="Are you sure you want to delete this asset?"
+                                            class="text-red-600"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </flux:table.cell>
+                        </flux:table.flex flex-wrap>
+                    @empty
+                        <flux:table.flex flex-wrap>
+                            <flux:table.cell colspan="8">
+                                <div class="text-center py-8">
+                                    <flux:icon name="computer-desktop" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                    <flux:heading size="lg" class="text-gray-500 mb-2">No Assets Found</flux:heading>
+                                    <flux:text class="text-gray-400 mb-4">
+                                        @if($search || $clientId || $type || $status || $locationId)
+                                            No assets match your current filters.
+                                        @else
+                                            Get started by adding your first asset.
+                                        @endif
+                                    </flux:text>
+                                    @if(!($search || $clientId || $type || $status || $locationId))
+                                        <flux:button variant="primary" icon="plus" href="{{ route('assets.create') }}">
+                                            Add First Asset
+                                        </flux:button>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
+                        </flux:table.flex flex-wrap>
+                    @endforelse
+                </flux:table.body>
+            </flux:table>
+            
+            <!-- Pagination -->
+            <div class="mt-4">
+                {{ $assets->links() }}
+            </div>
+        </div>
+    </flux:card>
+</div>

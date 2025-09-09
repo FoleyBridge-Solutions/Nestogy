@@ -1,0 +1,350 @@
+@extends('layouts.app')
+
+@extends('layouts.app')
+
+@section('content')
+<div class="container mx-auto mx-auto px-6 py-8">
+    <flux:heading size="xl" level="1">
+        {{ $client->name }} - Domains
+    </flux:heading>
+
+    <div class="flex justify-between items-center mb-6">
+        <flux:subheading>
+            Manage domain registrations and DNS settings for {{ $client->name }}
+        </flux:subheading>
+
+        <div class="flex gap-3">
+            <flux:button variant="outline" href="{{ route('clients.domains.export', $client) }}">
+                Export CSV
+            </flux:button>
+            <flux:button href="{{ route('clients.domains.create', $client) }}">
+                Add Domain
+            </flux:button>
+        </div>
+    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Filters -->
+    <flux:card class="mb-6">
+        <form method="GET" action="{{ route('clients.domains.index', $client) }}" class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <!-- Search -->
+                <flux:field>
+                    <flux:input
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Domain, registrar..."
+                        label="Search" />
+                </flux:field>
+
+                <!-- Status -->
+                <flux:field>
+                    <flux:select name="status" label="Status">
+                        <flux:option value="">All Statuses</flux:option>
+                        @foreach($statuses as $key => $label)
+                            <flux:option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $label }}</flux:option>
+                        @endforeach
+                    </flux:select>
+                </flux:field>
+
+                <!-- Registrar -->
+                <flux:field>
+                    <flux:select name="registrar" label="Registrar">
+                        <flux:option value="">All Registrars</flux:option>
+                        @foreach($registrars as $key => $label)
+                            <flux:option value="{{ $key }}" {{ request('registrar') === $key ? 'selected' : '' }}>{{ $label }}</flux:option>
+                        @endforeach
+                    </flux:select>
+                </flux:field>
+
+                <!-- TLD -->
+                <flux:field>
+                    <flux:select name="tld" label="TLD">
+                        <flux:option value="">All TLDs</flux:option>
+                        @foreach($tlds as $tld)
+                            <flux:option value="{{ $tld }}" {{ request('tld') === $tld ? 'selected' : '' }}>.{{ $tld }}</flux:option>
+                        @endforeach
+                    </flux:select>
+                </flux:field>
+
+                <!-- Actions -->
+                <div class="flex items-end gap-3">
+                    <flux:button type="submit" variant="primary">
+                        Filter
+                    </flux:button>
+                    <flux:button variant="outline" href="{{ route('clients.domains.index', $client) }}">
+                        Clear
+                    </flux:button>
+                </div>
+            </div>
+        </form>
+    </flux:card>
+
+    <!-- Domains Table -->
+    <flux:card>
+        <flux:table>
+            <flux:columns>
+                <flux:column>Domain</flux:column>
+                <flux:column>Registrar</flux:column>
+                <flux:column>Status</flux:column>
+                <flux:column>Expires</flux:column>
+                <flux:column></flux:column>
+            </flux:columns>
+
+            <flux:rows>
+                @forelse($domains as $domain)
+                <flux:flex flex-wrap>
+                    <flux:cell>
+                        <div class="font-medium">{{ $domain->full_domain }}</div>
+                        @if($domain->name !== $domain->domain_name)
+                            <div class="text-sm text-gray-500">{{ $domain->name }}</div>
+                        @endif
+                    </flux:cell>
+                    <flux:cell>{{ $registrars[$domain->registrar] ?? $domain->registrar ?? '-' }}</flux:cell>
+                    <flux:cell>
+                        <flux:badge color="{{ $domain->status_color === 'green' ? 'green' : ($domain->status_color === 'red' ? 'red' : 'gray') }}">
+                            {{ $statuses[$domain->status] ?? $domain->status }}
+                        </flux:badge>
+                    </flux:cell>
+                    <flux:cell>
+                        @if($domain->expires_at)
+                            <div class="{{ $domain->isExpired() ? 'text-red-600 font-medium' : ($domain->isExpiringSoon() ? 'text-orange-600 font-medium' : '') }}">
+                                {{ $domain->expires_at->format('M j, Y') }}
+                            </div>
+                            @if($domain->days_until_expiry !== null)
+                                <div class="text-xs text-gray-500">
+                                    @if($domain->days_until_expiry > 0)
+                                        {{ $domain->days_until_expiry }} days left
+                                    @elseif($domain->days_until_expiry == 0)
+                                        Expires today
+                                    @else
+                                        Expired {{ abs($domain->days_until_expiry) }} days ago
+                                    @endif
+                                </div>
+                            @endif
+                        @else
+                            <span class="text-gray-400">Never</span>
+                        @endif
+                    </flux:cell>
+                    <flux:cell>
+                        <div class="flex gap-2">
+                            <flux:button variant="outline" size="sm" href="{{ route('clients.domains.show', [$client, $domain]) }}">
+                                View
+                            </flux:button>
+                            <flux:button variant="outline" size="sm" href="{{ route('clients.domains.edit', [$client, $domain]) }}">
+                                Edit
+                            </flux:button>
+                        </div>
+                    </flux:cell>
+                </flux:flex flex-wrap>
+                @empty
+                <flux:flex flex-wrap>
+                    <flux:cell colspan="5" class="text-center py-8">
+                        <div class="text-gray-500">No domains found</div>
+                        <flux:button href="{{ route('clients.domains.create', $client) }}" class="mt-6">
+                            Add Domain
+                        </flux:button>
+                    </flux:cell>
+                </flux:flex flex-wrap>
+                @endforelse
+            </flux:rows>
+        </flux:table>
+
+        @if($domains->hasPages())
+            <div class="mt-6">
+                {{ $domains->links() }}
+            </div>
+        @endif
+    </flux:card>
+</div>
+@endsection
+            
+            @if($domains->count() > 0)
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-6">
+                    @foreach($domains as $domain)
+                        @php
+                            $expiryStatus = $domain->expiry_status;
+                            $securityStatus = $domain->security_status;
+                        @endphp
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 
+                                    {{ $expiryStatus === 'expired' ? 'bg-red-50 border-red-200' : '' }}
+                                   {{ $expiryStatus === 'expiring_soon' ? 'bg-yellow-50 border-yellow-200' : '' }}">
+                            <!-- Domain Header -->
+                            <div class="flex items-start justify-between mb-6">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-2">🌐</span>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-medium text-gray-900 truncate">{{ $domain->full_domain }}</h4>
+                                        <p class="text-xs text-gray-500">{{ $domain->name }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-flex-1 px-6 space-y-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+                                                {{ $domain->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $domain->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                                {{ $domain->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $domain->status_color === 'blue' ? 'bg-blue-100 text-blue-800' : '' }}
+                                               {{ $domain->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                        {{ $statuses[$domain->status] }}
+                                    </span>
+                                    @if($domain->auto_renewal)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            🔄 Auto Renewal
+                                        </span>
+                                    @endif
+                                    @if($expiryStatus === 'expired')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            ❌ Expired
+                                        </span>
+                                    @elseif($expiryStatus === 'expiring_soon')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            ⚠️ Expiring
+                                        </span>
+                                    @endif
+                                    @if($securityStatus === 'vulnerable')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            🔓 Vulnerable
+                                        </span>
+                                    @elseif($securityStatus === 'warning')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            ⚠️ Security
+                                        </span>
+                                    @elseif($securityStatus === 'secure')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            🔒 Secure
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Domain Info -->
+                            <div class="space-y-2 mb-6">
+                                <div class="text-sm text-gray-600">
+                                    <strong>Client:</strong> {{ $domain->client->display_name }}
+                                </div>
+                                @if($domain->registrar)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Registrar:</strong> {{ $registrars[$domain->registrar] ?? $domain->registrar }}
+                                    </div>
+                                @endif
+                                @if($domain->dns_provider)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>DNS:</strong> {{ $domain->dns_provider }}
+                                    </div>
+                                @endif
+                                <div class="text-sm text-gray-600">
+                                    <strong>Expires:</strong> 
+                                    <span class="{{ $expiryStatus === 'expired' ? 'text-red-600' : ($expiryStatus === 'expiring_soon' ? 'text-yellow-600' : 'text-gray-900') }}">
+                                        {{ $domain->expires_at ? $domain->expires_at->format('M d, Y') : 'No expiry set' }}
+                                    </span>
+                                </div>
+                                @if($domain->days_until_expiry !== null)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Days remaining:</strong> 
+                                        <span class="{{ $domain->days_until_expiry < 0 ? 'text-red-600' : ($domain->days_until_expiry <= 30 ? 'text-yellow-600' : 'text-green-600') }}">
+                                            {{ abs($domain->days_until_expiry) }}{{ $domain->days_until_expiry < 0 ? ' (overdue)' : '' }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Usage Stats -->
+                            @if($domain->dns_records_count || $domain->subdomains_count || $domain->email_forwards_count)
+                                <div class="mb-6">
+                                    <div class="grid grid-cols-3 gap-2 text-center">
+                                        <div class="text-xs">
+                                            <div class="font-medium text-gray-900">{{ $domain->dns_records_count ?? 0 }}</div>
+                                            <div class="text-gray-500">DNS</div>
+                                        </div>
+                                        <div class="text-xs">
+                                            <div class="font-medium text-gray-900">{{ $domain->subdomains_count ?? 0 }}</div>
+                                            <div class="text-gray-500">Subdomains</div>
+                                        </div>
+                                        <div class="text-xs">
+                                            <div class="font-medium text-gray-900">{{ $domain->email_forwards_count ?? 0 }}</div>
+                                            <div class="text-gray-500">Email</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Security Features -->
+                            <div class="mb-6">
+                                <div class="flex flex-wrap gap-1">
+                                    @if($domain->privacy_protection)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            Privacy
+                                        </span>
+                                    @endif
+                                    @if($domain->lock_status)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            Locked
+                                        </span>
+                                    @endif
+                                    @if($domain->whois_guard)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            WHOIS Guard
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            @if($domain->description)
+                                <p class="text-sm text-gray-600 mb-6 line-clamp-2">{{ $domain->description }}</p>
+                            @endif
+
+                            <!-- Actions -->
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-200">
+                                <div class="flex space-x-2">
+                                    <a href="{{ route('clients.domains.standalone.show', $domain) }}" 
+                                       class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        View
+                                    </a>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <a href="{{ route('clients.domains.standalone.edit', $domain) }}" 
+                                       class="text-indigo-600 hover:text-indigo-900 text-sm">Edit</a>
+                                    <form method="POST" 
+                                          action="{{ route('clients.domains.standalone.destroy', $domain) }}" 
+                                          class="inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this domain? This action cannot be undone.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="text-red-600 hover:text-red-900 text-sm ml-2">Delete</flux:button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Pagination -->
+                <div class="bg-white px-6 py-6 border-t border-gray-200 sm:px-6">
+                    {{ $domains->links() }}
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9V3" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No domains found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by adding a new domain.</p>
+                    <div class="mt-6">
+                        <a href="{{ route('clients.domains.standalone.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Domain
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endsection

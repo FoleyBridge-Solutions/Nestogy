@@ -1,0 +1,76 @@
+@props([
+    'name',
+    'label' => null,
+    'required' => false,
+    'placeholder' => 'Select an option',
+    'value' => '',
+    'help' => null,
+    'options' => [],
+    'class' => '',
+    'containerClass' => '',
+    'id' => null,
+    'loading' => false
+])
+
+@php
+$id = $id ?? $name;
+$selectClasses = 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm transition-colors duration-200';
+
+if ($errors->has($name)) {
+    $selectClasses .= ' border-red-500 focus:ring-red-500 focus:border-red-500';
+}
+
+if ($class) {
+    $selectClasses .= ' ' . $class;
+}
+@endphp
+
+<div class="space-y-2 {{ $containerClass }}">
+    @if($label)
+        <label for="{{ $id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ $label }}
+            @if($required)
+                <span class="text-red-500">*</span>
+            @endif
+        </label>
+    @endif
+    
+    <div class="relative">
+        <select 
+            id="{{ $id }}" 
+            name="{{ $name }}" 
+            class="{{ $selectClasses }}"
+            {{ $required ? 'required' : '' }}
+            {{ $attributes->except(['name', 'label', 'required', 'placeholder', 'value', 'help', 'options', 'class', 'containerClass', 'id', 'loading']) }}
+        >
+            <option value="">{{ $placeholder }}</option>
+            
+            @if(is_array($options) && count($options) > 0)
+                @foreach($options as $optionValue => $optionLabel)
+                    <option value="{{ $optionValue }}" {{ old($name, $value) == $optionValue ? 'selected' : '' }}>
+                        {{ $optionLabel }}
+                    </option>
+                @endforeach
+            @endif
+            
+            {{ $slot }}
+        </select>
+        
+        @if($loading)
+            <div class="absolute inset-y-0 right-8 flex items-center pointer-events-none">
+                <svg class="animate-spin h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        @endif
+    </div>
+    
+    @error($name)
+        <p class="text-sm text-red-600">{{ $message }}</p>
+    @enderror
+    
+    @if($help)
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $help }}</p>
+    @endif
+</div>

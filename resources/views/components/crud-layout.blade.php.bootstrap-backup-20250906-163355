@@ -1,0 +1,82 @@
+@props([
+    'title' => '',
+    'description' => '',
+    'breadcrumbs' => [],
+    'actions' => null,
+    'showFilters' => false,
+    'filterAction' => '',
+    'filters' => []
+])
+
+<div class="space-y-6">
+    <!-- Breadcrumbs -->
+    @if(count($breadcrumbs) > 0)
+        <flux:breadcrumbs>
+            @foreach($breadcrumbs as $breadcrumb)
+                @if(isset($breadcrumb['url']) && !$loop->last)
+                    <flux:breadcrumbs.item href="{{ $breadcrumb['url'] }}">
+                        {{ $breadcrumb['label'] }}
+                    </flux:breadcrumbs.item>
+                @else
+                    <flux:breadcrumbs.item>{{ $breadcrumb['label'] }}</flux:breadcrumbs.item>
+                @endif
+            @endforeach
+        </flux:breadcrumbs>
+    @endif
+    
+    <!-- Header -->
+    <div class="flex max-md:flex-col items-start gap-4">
+        <div class="min-w-0 flex-1">
+            <flux:heading size="xl" level="1">{{ $title }}</flux:heading>
+            @if($description)
+                <flux:text class="mt-2 text-base text-zinc-600 dark:text-zinc-400">{{ $description }}</flux:text>
+            @endif
+        </div>
+        
+        @if($actions)
+            <div class="flex items-center space-x-3">
+                {{ $actions }}
+            </div>
+        @endif
+    </div>
+    
+    <flux:separator variant="subtle" />
+    
+    <!-- Flash Messages -->
+    @if(session('success'))
+        <flux:toast variant="success">
+            {{ session('success') }}
+        </flux:toast>
+    @endif
+    
+    @if(session('error'))
+        <flux:toast variant="danger">
+            {{ session('error') }}
+        </flux:toast>
+    @endif
+    
+    @if($errors->any())
+        <flux:toast variant="danger">
+            <div>
+                <div class="font-medium mb-2">Please correct the following errors:</div>
+                <ul class="text-sm space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </flux:toast>
+    @endif
+    
+    <!-- Filters -->
+    @if($showFilters && count($filters) > 0)
+        <flux:card>
+            <x-filter-form :filters="$filters" :action="$filterAction" />
+        </flux:card>
+    @endif
+    
+    <!-- Main Content -->
+    <div class="space-y-6">
+        {{ $slot }}
+    </div>
+</div>

@@ -1,0 +1,407 @@
+@extends('layouts.app')
+
+@extends('layouts.app')
+
+@section('content')
+<div class="container mx-auto mx-auto px-6 py-8">
+    <flux:heading size="xl" level="1">
+        {{ $client->name }} - Certificates
+    </flux:heading>
+
+    <div class="flex justify-between items-center mb-6">
+        <flux:subheading>
+            Manage SSL/TLS certificates and security certificates for {{ $client->name }}
+        </flux:subheading>
+
+        <div class="flex gap-3">
+            <flux:button variant="outline" href="{{ route('clients.certificates.export', $client) }}">
+                Export CSV
+            </flux:button>
+            <flux:button href="{{ route('clients.certificates.create', $client) }}">
+                Add Certificate
+            </flux:button>
+        </div>
+    </div>
+
+    <flux:table>
+        <flux:columns>
+            <flux:column>Certificate Details</flux:column>
+            <flux:column>Subject/Domains</flux:column>
+            <flux:column>Expires</flux:column>
+            <flux:column>Status</flux:column>
+            <flux:column>Actions</flux:column>
+        </flux:columns>
+
+        <flux:rows>
+            @foreach($certificates as $certificate)
+            <flux:flex flex-wrap>
+                <flux:cell>
+                    <div class="font-medium">{{ $certificate->name }}</div>
+                    <div class="text-sm text-gray-500">{{ $certificate->issuer }}</div>
+                    <div class="text-sm text-gray-500">{{ $certificate->type }}</div>
+                </flux:cell>
+                <flux:cell>
+                    <div class="font-medium">{{ $certificate->subject }}</div>
+                    @if($certificate->domain_names)
+                        <div class="text-sm text-gray-500">{{ Str::limit($certificate->domain_names, 50) }}</div>
+                    @endif
+                </flux:cell>
+                <flux:cell>
+                    <div class="font-medium">{{ $certificate->expires_at->format('M j, Y') }}</div>
+                    @if($certificate->expires_at->isPast())
+                        <flux:badge color="red">Expired</flux:badge>
+                    @elseif($certificate->expires_at->diffInDays() <= 30)
+                        <flux:badge color="yellow">Expires Soon</flux:badge>
+                    @else
+                        <div class="text-sm text-gray-500">{{ $certificate->expires_at->diffForHumans() }}</div>
+                    @endif
+                </flux:cell>
+                <flux:cell>
+                    <flux:badge color="{{ $certificate->status === 'active' ? 'green' : ($certificate->status === 'expired' ? 'red' : 'gray') }}">
+                        {{ ucfirst($certificate->status) }}
+                    </flux:badge>
+                </flux:cell>
+                <flux:cell>
+                    <flux:button variant="ghost" size="sm" href="{{ route('clients.certificates.show', [$client, $certificate]) }}">
+                        View
+                    </flux:button>
+                    <flux:button variant="ghost" size="sm" href="{{ route('clients.certificates.edit', [$client, $certificate]) }}">
+                        Edit
+                    </flux:button>
+                </flux:cell>
+            </flux:flex flex-wrap>
+            @endforeach
+        </flux:rows>
+    </flux:table>
+
+    {{ $certificates->links() }}
+</div>
+@endsection
+                            Export CSV
+                        </a>
+                        <a href="{{ route('clients.certificates.standalone.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Certificate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-8 sm:px-6">
+                <form method="GET" action="{{ route('clients.certificates.standalone.index') }}" class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
+                        <!-- Search -->
+                        <div>
+                            <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                            <input type="text" 
+                                   name="search" 
+                                   id="search" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Name, domain, issuer..."
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+
+                        <!-- Type -->
+                        <div>
+                            <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+                            <select name="type" 
+                                    id="type" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Types</option>
+                                @foreach($types as $key => $label)
+                                    <option value="{{ $key }}" {{ request('type') === $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                            <select name="status" 
+                                    id="status" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Statuses</option>
+                                @foreach($statuses as $key => $label)
+                                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Client -->
+                        <div>
+                            <label for="client_id" class="block text-sm font-medium text-gray-700">Client</label>
+                            <select name="client_id" 
+                                    id="client_id" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Clients</option>
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
+                                        {{ $client->display_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Vendor -->
+                        <div>
+                            <label for="vendor" class="block text-sm font-medium text-gray-700">Vendor</label>
+                            <select name="vendor" 
+                                    id="vendor" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">All Vendors</option>
+                                @foreach($vendors as $key => $label)
+                                    <option value="{{ $key }}" {{ request('vendor') === $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Actions and Filters -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Filters</label>
+                            <div class="space-y-1">
+                                <div class="flex items-center h-5">
+                                    <input id="expired_only" 
+                                           name="expired_only" 
+                                           type="checkbox" 
+                                           value="1"
+                                           {{ request('expired_only') ? 'checked' : '' }}
+                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <label for="expired_only" class="ml-2 text-xs text-gray-700">Expired only</label>
+                                </div>
+                                <div class="flex items-center h-5">
+                                    <input id="expiring_soon" 
+                                           name="expiring_soon" 
+                                           type="checkbox" 
+                                           value="1"
+                                           {{ request('expiring_soon') ? 'checked' : '' }}
+                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <label for="expiring_soon" class="ml-2 text-xs text-gray-700">Expiring soon</label>
+                                </div>
+                                <div class="flex items-center h-5">
+                                    <input id="wildcard_only" 
+                                           name="wildcard_only" 
+                                           type="checkbox" 
+                                           value="1"
+                                           {{ request('wildcard_only') ? 'checked' : '' }}
+                                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <label for="wildcard_only" class="ml-2 text-xs text-gray-700">Wildcard only</label>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 pt-2">
+                                <button type="submit" 
+                                        class="inline-flex items-center px-6 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Filter
+                                </button>
+                                <a href="{{ route('clients.certificates.standalone.index') }}" 
+                                   class="inline-flex items-center px-6 py-1 border border-gray-300 shadow-sm text-xs leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Clear
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Certificates Grid -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-8 sm:px-6 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Certificates 
+                    <span class="text-sm text-gray-500">({{ $certificates->total() }} total)</span>
+                </h3>
+            </div>
+            
+            @if($certificates->count() > 0)
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-6">
+                    @foreach($certificates as $certificate)
+                        @php
+                            $expiryStatus = $certificate->expiry_status;
+                            $isWildcard = $certificate->is_wildcard;
+                        @endphp
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 
+                                    {{ $expiryStatus === 'expired' ? 'bg-red-50 border-red-200' : '' }}
+                                   {{ $expiryStatus === 'expiring_soon' ? 'bg-yellow-50 border-yellow-200' : '' }}">
+                            <!-- Certificate Header -->
+                            <div class="flex items-start justify-between mb-6">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-2">
+                                        @if($certificate->type === 'ssl_tls')
+                                            🔒
+                                        @elseif($certificate->type === 'code_signing')
+                                            📝
+                                        @elseif($certificate->type === 'email_smime')
+                                            📧
+                                        @else
+                                            🛡️
+                                        @endif
+                                    </span>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-medium text-gray-900 truncate">{{ $certificate->name }}</h4>
+                                        <p class="text-xs text-gray-500">{{ $certificate->formatted_domains }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-flex-1 px-6 space-y-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+                                                {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $certificate->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                                {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $certificate->status_color === 'blue' ? 'bg-blue-100 text-blue-800' : '' }}
+                                               {{ $certificate->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                        {{ $statuses[$certificate->status] }}
+                                    </span>
+                                    @if($isWildcard)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            ★ Wildcard
+                                        </span>
+                                    @endif
+                                    @if($expiryStatus === 'expired')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            ❌ Expired
+                                        </span>
+                                    @elseif($expiryStatus === 'expiring_soon')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            ⚠️ Expiring
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Certificate Info -->
+                            <div class="space-y-2 mb-6">
+                                <div class="text-sm text-gray-600">
+                                    <strong>Client:</strong> {{ $certificate->client->display_name }}
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    <strong>Type:</strong> {{ $types[$certificate->type] ?? $certificate->type }}
+                                </div>
+                                @if($certificate->issuer)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Issuer:</strong> {{ Str::limit($certificate->issuer, 30) }}
+                                    </div>
+                                @endif
+                                @if($certificate->key_size)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Key Size:</strong> {{ $certificate->key_size }} bits
+                                        @php
+                                            $securityLevel = $certificate->security_level;
+                                        @endphp
+                                        @if($securityLevel === 'high')
+                                            <span class="text-green-600">🛡️</span>
+                                        @elseif($securityLevel === 'low')
+                                            <span class="text-red-600">⚠️</span>
+                                        @endif
+                                    </div>
+                                @endif
+                                <div class="text-sm text-gray-600">
+                                    <strong>Expires:</strong> 
+                                    <span class="{{ $expiryStatus === 'expired' ? 'text-red-600' : ($expiryStatus === 'expiring_soon' ? 'text-yellow-600' : 'text-gray-900') }}">
+                                        {{ $certificate->expires_at ? $certificate->expires_at->format('M d, Y') : 'No expiry set' }}
+                                    </span>
+                                </div>
+                                @if($certificate->days_until_expiry !== null)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Days remaining:</strong> 
+                                        <span class="{{ $certificate->days_until_expiry < 0 ? 'text-red-600' : ($certificate->days_until_expiry <= 30 ? 'text-yellow-600' : 'text-green-600') }}">
+                                            {{ abs($certificate->days_until_expiry) }}{{ $certificate->days_until_expiry < 0 ? ' (overdue)' : '' }}
+                                        </span>
+                                    </div>
+                                @endif
+                                @if($certificate->vendor)
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Vendor:</strong> {{ $vendors[$certificate->vendor] ?? $certificate->vendor }}
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Renewal Progress Bar (for expiring certificates) -->
+                            @if($certificate->expires_at && !$certificate->isExpired())
+                                @php
+                                    $totalDays = $certificate->issued_at ? $certificate->expires_at->diffInDays($certificate->issued_at) : 365;
+                                    $remainingDays = $certificate->days_until_expiry;
+                                    $usedPercentage = $totalDays > 0 ? max(0, min(100, (($totalDays - $remainingDays) / $totalDays) * 100)) : 0;
+                                @endphp
+                                <div class="mb-6">
+                                    <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                        <span>Certificate Validity</span>
+                                        <span>{{ number_format($usedPercentage, 0) }}% used</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full 
+                                                   {{ $usedPercentage < 70 ? 'bg-green-500' : '' }}
+                                                   {{ $usedPercentage >= 70 && $usedPercentage < 90 ? 'bg-yellow-500' : '' }}
+                                                  {{ $usedPercentage >= 90 ? 'bg-red-500' : '' }}" 
+                                             style="width: {{ $usedPercentage }}%"></div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Description -->
+                            @if($certificate->description)
+                                <p class="text-sm text-gray-600 mb-6 line-clamp-2">{{ $certificate->description }}</p>
+                            @endif
+
+                            <!-- Actions -->
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-200">
+                                <div class="flex space-x-2">
+                                    <a href="{{ route('clients.certificates.standalone.show', $certificate) }}" 
+                                       class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        View
+                                    </a>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <a href="{{ route('clients.certificates.standalone.edit', $certificate) }}" 
+                                       class="text-indigo-600 hover:text-indigo-900 text-sm">Edit</a>
+                                    <form method="POST" 
+                                          action="{{ route('clients.certificates.standalone.destroy', $certificate) }}" 
+                                          class="inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this certificate? This action cannot be undone.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="text-red-600 hover:text-red-900 text-sm ml-2">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Pagination -->
+                <div class="bg-white px-6 py-6 border-t border-gray-200 sm:px-6">
+                    {{ $certificates->links() }}
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No certificates found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by adding a new certificate.</p>
+                    <div class="mt-6">
+                        <a href="{{ route('clients.certificates.standalone.create') }}" 
+                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Certificate
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endsection

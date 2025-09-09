@@ -1,0 +1,587 @@
+<div class="max-w-7xl mx-auto py-8">
+    <!-- Wizard Header -->
+    <div class="mb-8">
+        <flux:card class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Quote Creation Wizard</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $stepNames[$currentStep] ?? 'Quote Wizard' }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    @if($lastSaved)
+                        <div class="text-sm text-green-600 dark:text-green-400">
+                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Saved at {{ $lastSaved }}
+                        </div>
+                    @endif
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        Step {{ $currentStep }} of {{ $totalSteps }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Indicator -->
+            <div class="flex items-center space-x-4">
+                @for ($step = 1; $step <= $totalSteps; $step++)
+                    <div class="flex items-center @if(!$loop->last) flex-1 @endif">
+                        <!-- Step Circle -->
+                        <div class="relative">
+                            <flux:button 
+                                wire:click="goToStep({{ $step }})"
+                                :disabled="!$this->canGoToStep($step)"
+                                variant="{{ $step <= $currentStep ? 'primary' : 'ghost' }}"
+                                size="sm"
+                                class="w-10 h-10 rounded-full flex items-center justify-center {{ $step == $currentStep ? 'ring-2 ring-primary-300' : '' }}"
+                            >
+                                @if ($step < $currentStep)
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                @else
+                                    {{ $step }}
+                                @endif
+                            </flux:button>
+                        </div>
+                        
+                        <!-- Step Label -->
+                        <div class="ml-3 min-w-0 @if(!$loop->last) flex-1 @endif">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ $stepNames[$step] ?? 'Step '.$step }}
+                            </p>
+                        </div>
+                        
+                        <!-- Progress Line -->
+                        @if (!$loop->last)
+                            <div class="flex-1 mx-4">
+                                <div class="h-0.5 {{ $step < $currentStep ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700' }}"></div>
+                            </div>
+                        @endif
+                    </div>
+                @endfor
+            </div>
+        </flux:card>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Main Wizard Content -->
+        <div class="lg:col-span-12-span-3">
+            <flux:card class="p-8">
+                <!-- Loading State -->
+                <div wire:loading class="absolute inset-0 bg-white/75 dark:bg-gray-800/75 flex items-center justify-center z-10 rounded-lg">
+                    <div class="flex items-center space-x-2">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Step Content -->
+                <div class="min-h-96">
+                    @switch($currentStep)
+                        @case(1)
+                            <!-- Step 1: Quote Details -->
+                            <div class="space-y-6">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quote Details</h2>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-6">Configure the basic quote information and select your client.</p>
+                                </div>
+
+                                <!-- Error Display -->
+                                @if(!empty($validationErrors))
+                                    <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                        <h4 class="text-red-800 dark:text-red-200 font-medium mb-2">Please fix the following errors:</h4>
+                                        <ul class="text-red-700 dark:text-red-300 text-sm space-y-1">
+                                            @foreach($validationErrors as $field => $error)
+                                                <li>• {{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Client Selection -->
+                                    <div>
+                                        <flux:field>
+                                            <flux:label>Client *</flux:label>
+                                            <flux:select 
+                                                wire:model.live="client_id"
+                                                wire:change="validateField('client_id')"
+                                                placeholder="Select a client..."
+                                                searchable
+                                                class="{{ isset($validationErrors['client_id']) ? 'border-red-300' : '' }}"
+                                            >
+                                                @foreach($clients as $client)
+                                                    <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                            @if(isset($validationErrors['client_id']))
+                                                <flux:error>{{ $validationErrors['client_id'] }}</flux:error>
+                                            @endif
+                                        </flux:field>
+                                    </div>
+
+                                    <!-- Category Selection -->
+                                    <div>
+                                        <flux:field>
+                                            <flux:label>Category *</flux:label>
+                                            <flux:select 
+                                                wire:model.live="category_id"
+                                                placeholder="Select a category..."
+                                                class="{{ isset($validationErrors['category_id']) ? 'border-red-300' : '' }}"
+                                            >
+                                                @foreach($categories as $category)
+                                                    <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                            @if(isset($validationErrors['category_id']))
+                                                <flux:error>{{ $validationErrors['category_id'] }}</flux:error>
+                                            @endif
+                                        </flux:field>
+                                    </div>
+
+                                    <!-- Quote Date -->
+                                    <div>
+                                        <flux:field>
+                                            <flux:label>Quote Date *</flux:label>
+                                            <flux:input 
+                                                wire:model.live="date"
+                                                type="date"
+                                                class="{{ isset($validationErrors['date']) ? 'border-red-300' : '' }}"
+                                            />
+                                            @if(isset($validationErrors['date']))
+                                                <flux:error>{{ $validationErrors['date'] }}</flux:error>
+                                            @endif
+                                        </flux:field>
+                                    </div>
+
+                                    <!-- Expiration Date -->
+                                    <div>
+                                        <flux:field>
+                                            <flux:label>Expiration Date</flux:label>
+                                            <flux:input 
+                                                wire:model.live="expire_date"
+                                                wire:change="validateField('expire_date')"
+                                                type="date"
+                                                class="{{ isset($validationErrors['expire_date']) ? 'border-red-300' : '' }}"
+                                            />
+                                            @if(isset($validationErrors['expire_date']))
+                                                <flux:error>{{ $validationErrors['expire_date'] }}</flux:error>
+                                            @endif
+                                        </flux:field>
+                                    </div>
+
+                                    <!-- Currency -->
+                                    <div>
+                                        <flux:field>
+                                            <flux:label>Currency</flux:label>
+                                            <flux:select wire:model.live="currency_code">
+                                                @foreach($currencies as $code => $name)
+                                                    <flux:select.option value="{{ $code }}">{{ $code }} - {{ $name }}</flux:select.option>
+                                                @endforeach
+                                            </flux:select>
+                                        </flux:field>
+                                    </div>
+
+                                    <!-- Discount Configuration -->
+                                    <div>
+                                        <flux:field>
+                                            <flux:label>Discount Type</flux:label>
+                                            <flux:select wire:model.live="discount_type">
+                                                <flux:select.option value="fixed">Fixed Amount</flux:select.option>
+                                                <flux:select.option value="percentage">Percentage</flux:select.option>
+                                            </flux:select>
+                                        </flux:field>
+                                    </div>
+                                </div>
+
+                                <!-- Discount Amount -->
+                                <div class="w-full md:w-1/2">
+                                    <flux:field>
+                                        <flux:label>
+                                            Discount {{ $discount_type === 'percentage' ? 'Percentage' : 'Amount' }}
+                                        </flux:label>
+                                        <flux:input 
+                                            wire:model.live="discount_amount"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="{{ $discount_type === 'percentage' ? 'Enter percentage...' : 'Enter amount...' }}"
+                                        />
+                                    </flux:field>
+                                </div>
+
+                                <!-- Scope -->
+                                <div>
+                                    <flux:field>
+                                        <flux:label>Scope of Work</flux:label>
+                                        <flux:textarea 
+                                            wire:model.live="scope"
+                                            placeholder="Describe the scope of work for this quote..."
+                                            rows="4"
+                                        />
+                                    </flux:field>
+                                </div>
+
+                                <!-- Terms and Conditions -->
+                                <div>
+                                    <flux:field>
+                                        <flux:label>Terms and Conditions</flux:label>
+                                        <flux:textarea 
+                                            wire:model.live="terms_conditions"
+                                            placeholder="Enter terms and conditions..."
+                                            rows="4"
+                                        />
+                                    </flux:field>
+                                </div>
+
+                                <!-- Notes -->
+                                <div>
+                                    <flux:field>
+                                        <flux:label>Internal Notes</flux:label>
+                                        <flux:textarea 
+                                            wire:model.live="note"
+                                            placeholder="Add any internal notes..."
+                                            rows="3"
+                                        />
+                                    </flux:field>
+                                </div>
+
+                                <!-- Template Suggestions -->
+                                @if(!empty($suggestedTemplates) && count($suggestedTemplates) > 0)
+                                    <div class="mt-8">
+                                        <h3 class="text-md font-medium text-gray-900 dark:text-white mb-4">Suggested Templates</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            @foreach($suggestedTemplates as $template)
+                                                <flux:card class="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" 
+                                                           wire:click="handleTemplateSelection({{ $template }})">
+                                                    <h4 class="font-medium text-gray-900 dark:text-white">{{ $template->name }}</h4>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                        Used {{ $template->usage_count ?? 0 }} times
+                                                    </p>
+                                                </flux:card>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                            @break
+
+                        @case(2)
+                            <!-- Step 2: Items & Pricing -->
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Items & Pricing</h2>
+                                        <p class="text-gray-600 dark:text-gray-400">Add products and services to your quote.</p>
+                                    </div>
+                                    <flux:button wire:click="addItem" variant="primary" size="sm">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                        Add Item
+                                    </flux:button>
+                                </div>
+
+                                <!-- Items Table -->
+                                @if(count($selectedItems) > 0)
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Item</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Discount</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtotal</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                                @foreach($selectedItems as $index => $item)
+                                                    <tr>
+                                                        <td class="px-6 py-4">
+                                                            <div>
+                                                                <flux:input 
+                                                                    wire:model.live="selectedItems.{{ $index }}.name"
+                                                                    placeholder="Item name..."
+                                                                    size="sm"
+                                                                />
+                                                                <flux:input 
+                                                                    wire:model.live="selectedItems.{{ $index }}.description"
+                                                                    placeholder="Description..."
+                                                                    size="sm"
+                                                                    class="mt-1"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td class="px-6 py-4">
+                                                            <flux:input 
+                                                                wire:model.live="selectedItems.{{ $index }}.quantity"
+                                                                wire:change="updateItem('{{ $item['id'] }}', 'quantity', $event.target.value)"
+                                                                type="number"
+                                                                min="1"
+                                                                step="1"
+                                                                size="sm"
+                                                                class="w-20"
+                                                            />
+                                                        </td>
+                                                        <td class="px-6 py-4">
+                                                            <flux:input 
+                                                                wire:model.live="selectedItems.{{ $index }}.unit_price"
+                                                                wire:change="updateItem('{{ $item['id'] }}', 'unit_price', $event.target.value)"
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                size="sm"
+                                                                class="w-24"
+                                                            />
+                                                        </td>
+                                                        <td class="px-6 py-4">
+                                                            <flux:input 
+                                                                wire:model.live="selectedItems.{{ $index }}.discount"
+                                                                wire:change="updateItem('{{ $item['id'] }}', 'discount', $event.target.value)"
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                size="sm"
+                                                                class="w-24"
+                                                            />
+                                                        </td>
+                                                        <td class="px-6 py-4 text-right font-medium">
+                                                            {{ $this->formatCurrency($item['subtotal']) }}
+                                                        </td>
+                                                        <td class="px-6 py-4">
+                                                            <flux:button 
+                                                                wire:click="removeItem('{{ $item['id'] }}')"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                class="text-red-600 hover:text-red-800"
+                                                            >
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                                </svg>
+                                                            </flux:button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-center py-12">
+                                        <div class="text-gray-400 mb-4">
+                                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No items yet</h3>
+                                        <p class="text-gray-500 dark:text-gray-400 mb-4">Get started by adding your first item to the quote.</p>
+                                        <flux:button wire:click="addItem" variant="primary">
+                                            Add Your First Item
+                                        </flux:button>
+                                    </div>
+                                @endif
+                            </div>
+                            @break
+
+                        @case(3)
+                            <!-- Step 3: Review & Submit -->
+                            <div class="space-y-6">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Review & Submit</h2>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-6">Review your quote before submitting.</p>
+                                </div>
+
+                                <!-- Quote Summary -->
+                                <flux:card class="p-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quote Summary</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-3">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Client:</span>
+                                                <span class="text-gray-900 dark:text-white">
+                                                    {{ $clients->find($client_id)->name ?? 'Not selected' }}
+                                                </span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Category:</span>
+                                                <span class="text-gray-900 dark:text-white">
+                                                    {{ $categories->find($category_id)->name ?? 'Not selected' }}
+                                                </span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Date:</span>
+                                                <span class="text-gray-900 dark:text-white">{{ $date }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Expiration:</span>
+                                                <span class="text-gray-900 dark:text-white">{{ $expire_date ?: 'Not set' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Currency:</span>
+                                                <span class="text-gray-900 dark:text-white">{{ $currency_code }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Items:</span>
+                                                <span class="text-gray-900 dark:text-white">{{ count($selectedItems) }} items</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Discount:</span>
+                                                <span class="text-gray-900 dark:text-white">
+                                                    {{ $discount_amount }}{{ $discount_type === 'percentage' ? '%' : ' ' . $currency_code }}
+                                                </span>
+                                            </div>
+                                            <div class="flex justify-between font-medium">
+                                                <span class="text-gray-900 dark:text-white">Total:</span>
+                                                <span class="text-gray-900 dark:text-white">{{ $this->formattedTotal }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </flux:card>
+
+                                <!-- Items Summary -->
+                                @if(count($selectedItems) > 0)
+                                    <flux:card class="p-6">
+                                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Items Summary</h3>
+                                        <div class="space-y-3">
+                                            @foreach($selectedItems as $item)
+                                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                                                    <div>
+                                                        <span class="font-medium text-gray-900 dark:text-white">{{ $item['name'] }}</span>
+                                                        @if($item['description'])
+                                                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $item['description'] }}</p>
+                                                        @endif
+                                                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                                                            Qty: {{ $item['quantity'] }} × {{ $this->formatCurrency($item['unit_price']) }}
+                                                            @if($item['discount'] > 0)
+                                                                ({{ $this->formatCurrency($item['discount']) }} discount)
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <span class="font-medium text-gray-900 dark:text-white">
+                                                            {{ $this->formatCurrency($item['subtotal']) }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </flux:card>
+                                @endif
+
+                                <!-- Final Confirmation -->
+                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <p class="text-blue-700 dark:text-blue-300">
+                                        ✓ Quote is ready to be saved or sent to the client.
+                                    </p>
+                                </div>
+                            </div>
+                            @break
+                    @endswitch
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex space-x-3">
+                        <flux:button 
+                            wire:click="prevStep" 
+                            variant="ghost"
+                            :disabled="$currentStep == 1"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            Previous
+                        </flux:button>
+                        
+                        <flux:button 
+                            wire:click="performAutoSave"
+                            variant="ghost"
+                            wire:loading.attr="disabled"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <span wire:loading.remove>Save Draft</span>
+                            <span wire:loading>Saving...</span>
+                        </flux:button>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        @if ($currentStep == $totalSteps)
+                            <flux:button 
+                                wire:click="saveQuote('draft')"
+                                variant="ghost"
+                                wire:loading.attr="disabled"
+                            >
+                                <span wire:loading.remove>Save as Draft</span>
+                                <span wire:loading>Saving...</span>
+                            </flux:button>
+                            <flux:button 
+                                wire:click="saveQuote('send')"
+                                variant="primary"
+                                wire:loading.attr="disabled"
+                            >
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                                <span wire:loading.remove>Send Quote</span>
+                                <span wire:loading>Sending...</span>
+                            </flux:button>
+                        @else
+                            <flux:button 
+                                wire:click="nextStep"
+                                variant="primary"
+                                :disabled="!$this->canProceed"
+                            >
+                                Next
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </flux:button>
+                        @endif
+                    </div>
+                </div>
+            </flux:card>
+        </div>
+
+        <!-- Sidebar - Pricing Summary -->
+        <div class="lg:col-span-12-span-1">
+            @livewire('financial.quote-pricing-summary', ['pricing' => $pricing, 'currency_code' => $currency_code])
+        </div>
+    </div>
+
+    <!-- Auto-save JavaScript -->
+    <script>
+        let autoSaveTimeout;
+        
+        document.addEventListener('livewire:initialized', () => {
+            @this.on('schedule-auto-save', () => {
+                clearTimeout(autoSaveTimeout);
+                autoSaveTimeout = setTimeout(() => {
+                    @this.call('performAutoSave');
+                }, 30000); // 30 seconds
+            });
+            
+            @this.on('auto-save-success', () => {
+                // Show success indicator
+                console.log('Auto-save successful');
+            });
+            
+            @this.on('auto-save-error', (event) => {
+                console.error('Auto-save failed:', event.message);
+            });
+            
+            @this.on('quote-saved', (event) => {
+                // Handle quote saved event
+                if (event.message) {
+                    alert(event.message);
+                }
+            });
+        });
+    </script>
+</div>

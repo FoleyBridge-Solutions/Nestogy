@@ -1,0 +1,54 @@
+@props([
+    'name',
+    'label' => null,
+    'required' => false,
+    'placeholder' => '',
+    'value' => '',
+    'help' => null,
+    'rows' => 4,
+    'class' => '',
+    'containerClass' => '',
+    'id' => null
+])
+
+@php
+$id = $id ?? $name;
+$textareaClasses = 'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm transition-colors duration-200 resize-y';
+
+if ($errors->has($name)) {
+    $textareaClasses .= ' border-red-500 focus:ring-red-500 focus:border-red-500';
+}
+
+if ($class) {
+    $textareaClasses .= ' ' . $class;
+}
+@endphp
+
+<div class="space-y-2 {{ $containerClass }}">
+    @if($label)
+        <label for="{{ $id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ $label }}
+            @if($required)
+                <span class="text-red-500">*</span>
+            @endif
+        </label>
+    @endif
+    
+    <textarea 
+        id="{{ $id }}" 
+        name="{{ $name }}" 
+        rows="{{ $rows }}"
+        class="{{ $textareaClasses }}"
+        placeholder="{{ $placeholder }}"
+        {{ $required ? 'required' : '' }}
+        {{ $attributes->except(['name', 'label', 'required', 'placeholder', 'value', 'help', 'rows', 'class', 'containerClass', 'id']) }}
+    >{{ old($name, $value) }}</textarea>
+    
+    @error($name)
+        <p class="text-sm text-red-600">{{ $message }}</p>
+    @enderror
+    
+    @if($help)
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $help }}</p>
+    @endif
+</div>

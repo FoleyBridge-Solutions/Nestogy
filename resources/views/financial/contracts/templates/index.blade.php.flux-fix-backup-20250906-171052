@@ -1,0 +1,352 @@
+@extends('layouts.app')
+
+@php
+$activeDomain = 'financial';
+$activeItem = 'contract-templates';
+$breadcrumbs = [
+    ['name' => 'Financial', 'route' => 'financial.contracts.index'],
+    ['name' => 'Contract Templates', 'active' => true]
+];
+@endphp
+
+@section('title', 'Contract Templates')
+
+@section('content')
+<div class="space-y-6" x-data="templateManager()">
+    <!-- Header with Stats and Actions -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex flex-flex-1 px-6 lg:flex-flex flex-wrap -mx-4 lg:items-center lg:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Contract Templates</h1>
+                <p class="text-gray-600 mt-1">Create and manage programmable contract templates</p>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:w-auto">
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <div class="text-2xl font-bold text-blue-600">{{ $stats['total'] }}</div>
+                    <div class="text-sm text-blue-600">Total</div>
+                </div>
+                <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                    <div class="text-2xl font-bold text-green-600">{{ $stats['active'] }}</div>
+                    <div class="text-sm text-green-600">Active</div>
+                </div>
+                <div class="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+                    <div class="text-2xl font-bold text-yellow-600">{{ $stats['draft'] }}</div>
+                    <div class="text-sm text-yellow-600">Draft</div>
+                </div>
+                <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                    <div class="text-2xl font-bold text-purple-600">{{ $stats['programmable'] }}</div>
+                    <div class="text-sm text-purple-600">Programmable</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white border border-gray-200 rounded-lg">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex flex-flex-1 px-6 lg:flex-flex flex-wrap -mx-4 lg:items-center lg:justify-between gap-4">
+                <!-- Search and Quick Filters -->
+                <div class="flex flex-flex-1 px-6 sm:flex-flex flex-wrap -mx-4 gap-3 flex-1">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 max-w-md">
+                        <input type="text" 
+                               x-model="search"
+                               @input.debounce.300ms="filterTemplates()"
+                               placeholder="Search templates..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Quick Status Filter -->
+                    <select x-model="statusFilter" 
+                            @change="filterTemplates()"
+                            class="px-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                        <option value="archived">Archived</option>
+                    </flux:select>
+
+                    <!-- Billing Model Filter -->
+                    <select x-model="billingModelFilter" 
+                            @change="filterTemplates()"
+                            class="px-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Billing Models</option>
+                        <option value="fixed">Fixed Price</option>
+                        <option value="per_asset">Per Asset</option>
+                        <option value="per_contact">Per Contact</option>
+                        <option value="tiered">Tiered</option>
+                        <option value="hybrid">Hybrid</option>
+                    </flux:select>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2">
+                    <button @click="showAdvancedFilters = !showAdvancedFilters"
+                            class="px-6 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                        </svg>
+                        Filters
+                    </flux:button>
+                    
+                    <a href="{{ route('financial.contracts.templates.create') }}" 
+                       class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        New Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters (Collapsible) -->
+        <div x-show="showAdvancedFilters" 
+             x-transition:enter="transition-all ease-out duration-200"
+             x-transition:enter-start="opacity-0 max-h-0"
+             x-transition:enter-end="opacity-100 max-h-96"
+             x-transition:leave="transition-all ease-in duration-200"
+             x-transition:leave-start="opacity-100 max-h-96"
+             x-transition:leave-end="opacity-0 max-h-0"
+             class="overflow-hidden border-t border-gray-200 bg-gray-50">
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Template Type</flux:label>
+                    <select x-model="typeFilter" 
+                            @change="filterTemplates()"
+                            class="w-full px-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Types</option>
+                        <option value="service_agreement">Service Agreement</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="support">Support</option>
+                        <option value="msp_contract">MSP Contract</option>
+                        <option value="voip_service">VoIP Service</option>
+                        <option value="security">Security</option>
+                        <option value="backup">Backup</option>
+                        <option value="monitoring">Monitoring</option>
+                    </flux:select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Created</flux:label>
+                    <select class="w-full px-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Any time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This week</option>
+                        <option value="month">This month</option>
+                        <option value="quarter">This quarter</option>
+                    </flux:select>
+                </div>
+                
+                <div class="flex items-end">
+                    <button @click="clearFilters()" 
+                            class="px-6 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Clear Filters
+                    </flux:button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        @forelse($templates as $template)
+        <div class="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+            <!-- Template Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                            <a href="{{ route('financial.contracts.templates.show', $template) }}" 
+                               class="hover:text-blue-600 transition-colors">
+                                {{ $template->name }}
+                            </a>
+                        </h3>
+                        @if($template->description)
+                            <p class="text-sm text-gray-600 line-clamp-2">{{ $template->description }}</p>
+                        @endif
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        @if($template->status === 'active') bg-green-100 text-green-800
+                        @elseif($template->status === 'draft') bg-yellow-100 text-yellow-800
+                        @else bg-gray-100 text-gray-800 @endif">
+                        {{ ucfirst($template->status) }}
+                    </span>
+                </div>
+                
+                <!-- Template Meta -->
+                <div class="flex items-center gap-4 mt-6 text-sm text-gray-500">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        {{ ucfirst(str_replace('_', ' ', $template->template_type)) }}
+                    </span>
+                    
+                    @if($template->is_programmable)
+                        <span class="flex items-center text-purple-600">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            Programmable
+                        </span>
+                    @endif
+                </div>
+            </div>
+            
+            <!-- Billing Model -->
+            <div class="px-6 py-6 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">Billing Model</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        @switch($template->billing_model)
+                            @case('fixed') Fixed Price @break
+                            @case('per_asset') Per Asset @break
+                            @case('per_contact') Per Contact @break
+                            @case('tiered') Tiered @break
+                            @case('hybrid') Hybrid @break
+                            @default {{ ucfirst($template->billing_model) }}
+                        @endswitch
+                    </span>
+                </div>
+                
+                @if($template->supportsAssetBilling() || $template->supportsContactBilling())
+                    <div class="mt-2 flex gap-2 text-xs">
+                        @if($template->supportsAssetBilling())
+                            <span class="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-700">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                </svg>
+                                Asset Billing
+                            </span>
+                        @endif
+                        @if($template->supportsContactBilling())
+                            <span class="inline-flex items-center px-2 py-1 rounded bg-blue-100 text-blue-700">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                                Contact Billing
+                            </span>
+                        @endif
+                    </div>
+                @endif
+            </div>
+            
+            <!-- Template Footer -->
+            <div class="px-6 py-6 border-t border-gray-200">
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div>
+                        <span>{{ $template->formatted_usage_count }}</span>
+                        @if($template->last_used_at)
+                            <span class="mx-1">•</span>
+                            <span>{{ $template->last_usage_description }}</span>
+                        @endif
+                    </div>
+                    
+                    <!-- Actions Dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="p-1 text-gray-400 hover:text-gray-600 rounded">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                            </svg>
+                        </flux:button>
+                        
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                            <a href="{{ route('financial.contracts.templates.show', $template) }}" 
+                               class="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100">View Details</a>
+                            <a href="{{ route('financial.contracts.templates.edit', $template) }}" 
+                               class="block px-6 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Template</a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <form action="{{ route('financial.contracts.templates.destroy', $template) }}" 
+                                  method="POST" 
+                                  onsubmit="return confirm('Are you sure you want to delete this template?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="block w-full text-left px-6 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    Delete Template
+                                </flux:button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @empty
+        <!-- Empty State -->
+        <div class="flex-1 px-6-span-full">
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="mt-6 text-lg font-medium text-gray-900">No contract templates found</h3>
+                <p class="mt-2 text-gray-500">Get started by creating your first programmable contract template.</p>
+                <div class="mt-6">
+                    <a href="{{ route('financial.contracts.templates.create') }}" 
+                       class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Template
+                    </a>
+                </div>
+            </div>
+        </div>
+        @endforelse
+    </div>
+
+    <!-- Pagination -->
+    @if($templates->hasPages())
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            {{ $templates->links() }}
+        </div>
+    @endif
+</div>
+
+<script>
+function templateManager() {
+    return {
+        search: '',
+        statusFilter: '',
+        typeFilter: '',
+        billingModelFilter: '',
+        showAdvancedFilters: false,
+        
+        filterTemplates() {
+            // Build query string
+            const params = new URLSearchParams();
+            if (this.search) params.set('search', this.search);
+            if (this.statusFilter) params.set('status', this.statusFilter);
+            if (this.typeFilter) params.set('type', this.typeFilter);
+            if (this.billingModelFilter) params.set('billing_model', this.billingModelFilter);
+            
+            // Update URL and reload
+            const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+            window.location.href = newUrl;
+        },
+        
+        clearFilters() {
+            this.search = '';
+            this.statusFilter = '';
+            this.typeFilter = '';
+            this.billingModelFilter = '';
+            this.filterTemplates();
+        }
+    }
+}
+</script>
+@endsection

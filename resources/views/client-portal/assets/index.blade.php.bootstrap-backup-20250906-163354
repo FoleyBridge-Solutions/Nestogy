@@ -1,0 +1,334 @@
+@extends('client-portal.layouts.app')
+
+@section('title', 'IT Assets')
+
+@section('content')
+<div class="portal-container mx-auto">
+    <!-- Header -->
+    <div class="portal-flex flex-wrap -mx-4 portal-mb-6">
+        <div class="portal-flex-1 px-6-12">
+            <div class="portal-flex portal-justify-between portal-items-center">
+                <div>
+                    <h1 class="portal-text-3xl portal-mb-0 text-gray-800">IT Assets</h1>
+                    <p class="text-gray-600">View and monitor your IT assets and equipment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="portal-flex flex-wrap -mx-4 portal-mb-6">
+        <div class="portal-w-6/12 px-4 portal-flex-1 px-6-xl-3 portal-mb-6">
+            <div class="portal-card portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-border-primary portal-shadow portal-h-100">
+                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body portal-py-6">
+                    <div class="portal-flex portal-items-center">
+                        <div class="portal-flex-1 px-6 portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-blue-600 dark:text-blue-400 portal-uppercase portal-mb-1">
+                                Total Assets
+                            </div>
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800">
+                                {{ $stats['total_assets'] ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="portal-flex-1 px-6-auto">
+                            <i class="fas fa-server fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-w-6/12 px-4 portal-flex-1 px-6-xl-3 portal-mb-6">
+            <div class="portal-card portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-border-success portal-shadow portal-h-100">
+                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body portal-py-6">
+                    <div class="portal-flex portal-items-center">
+                        <div class="portal-flex-1 px-6 portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-green-600 dark:text-green-400 portal-uppercase portal-mb-1">
+                                Active Assets
+                            </div>
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800">
+                                {{ $stats['active_assets'] ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="portal-flex-1 px-6-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-w-6/12 px-4 portal-flex-1 px-6-xl-3 portal-mb-6">
+            <div class="portal-card portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-border-warning portal-shadow portal-h-100">
+                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body portal-py-6">
+                    <div class="portal-flex portal-items-center">
+                        <div class="portal-flex-1 px-6 portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-yellow-600 dark:text-yellow-400 portal-uppercase portal-mb-1">
+                                Maintenance Due
+                            </div>
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800">
+                                {{ $stats['maintenance_due'] ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="portal-flex-1 px-6-auto">
+                            <i class="fas fa-wrench fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-w-6/12 px-4 portal-flex-1 px-6-xl-3 portal-mb-6">
+            <div class="portal-card portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-border-danger portal-shadow portal-h-100">
+                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body portal-py-6">
+                    <div class="portal-flex portal-items-center">
+                        <div class="portal-flex-1 px-6 portal-mr-2">
+                            <div class="portal-text-xs portal-font-bold portal-text-red-600 dark:text-red-400 portal-uppercase portal-mb-1">
+                                Warranty Expiring
+                            </div>
+                            <div class="portal-h5 portal-mb-0 portal-font-bold portal-text-gray-800">
+                                {{ $stats['warranty_expiring'] ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="portal-flex-1 px-6-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Options -->
+    <div class="portal-flex flex-wrap -mx-4 portal-mb-6">
+        <div class="portal-flex-1 px-6-12">
+            <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden portal-shadow">
+                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <form method="GET" action="{{ route('client.assets') }}" class="portal-flex portal-items-center space-x-4">
+                        <div class="portal-flex-1 px-6-auto">
+                            <label for="status" class="portal-text-sm portal-font-medium text-gray-700 portal-mr-2">
+                                Status:
+                            </flux:label>
+                            <select name="status" id="status" class="portal-block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="this.form.submit()">
+                                <option value="">All Statuses</option>
+                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                <option value="maintenance" {{ request('status') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                                <option value="retired" {{ request('status') === 'retired' ? 'selected' : '' }}>Retired</option>
+                            </flux:select>
+                        </div>
+                        
+                        <div class="portal-flex-1 px-6-auto">
+                            <label for="type" class="portal-text-sm portal-font-medium text-gray-700 portal-mr-2">
+                                Type:
+                            </flux:label>
+                            <select name="type" id="type" class="portal-block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="this.form.submit()">
+                                <option value="">All Types</option>
+                                <option value="server" {{ request('type') === 'server' ? 'selected' : '' }}>Server</option>
+                                <option value="workstation" {{ request('type') === 'workstation' ? 'selected' : '' }}>Workstation</option>
+                                <option value="laptop" {{ request('type') === 'laptop' ? 'selected' : '' }}>Laptop</option>
+                                <option value="network" {{ request('type') === 'network' ? 'selected' : '' }}>Network Equipment</option>
+                                <option value="printer" {{ request('type') === 'printer' ? 'selected' : '' }}>Printer</option>
+                                <option value="mobile" {{ request('type') === 'mobile' ? 'selected' : '' }}>Mobile Device</option>
+                                <option value="other" {{ request('type') === 'other' ? 'selected' : '' }}>Other</option>
+                            </flux:select>
+                        </div>
+                        
+                        @if(request('status') || request('type'))
+                        <div class="portal-flex-1 px-6-auto">
+                            <a href="{{ route('client.assets') }}" class="portal-btn portal-border border-gray-600 text-gray-600 hover:bg-gray-50 portal-px-6 py-2 font-medium rounded-md transition-colors-sm">
+                                Clear Filters
+                            </a>
+                        </div>
+                        @endif
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assets Table -->
+    <div class="portal-flex flex-wrap -mx-4">
+        <div class="portal-flex-1 px-6-12">
+            <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden portal-shadow">
+                <div class="px-6 py-4 portal-border-b portal-bg-gray-50 py-6">
+                    <h6 class="portal-mb-0 portal-font-bold portal-text-blue-600 dark:text-blue-400">
+                        <i class="fas fa-server portal-mr-2"></i>Your IT Assets
+                        @if(count($assets) > 0)
+                            <span class="portal-text-sm portal-font-normal text-gray-600">
+                                ({{ count($assets) }} total)
+                            </span>
+                        @endif
+                    </h6>
+                </div>
+                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    @if(count($assets) > 0)
+                    <div class="portal-min-w-full divide-y divide-gray-200 dark:divide-gray-700-responsive">
+                        <table class="portal-min-w-full divide-y divide-gray-200 dark:divide-gray-700 portal-min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Asset
+                                    </th>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Type
+                                    </th>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Status
+                                    </th>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Location
+                                    </th>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Next Maintenance
+                                    </th>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Warranty
+                                    </th>
+                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="portal-divide-y portal-divide-gray-200">
+                                @foreach($assets as $asset)
+                                <tr class="portal-min-w-full divide-y divide-gray-200 dark:divide-gray-700-flex flex-wrap -mx-4">
+                                    <td class="px-6 py-6">
+                                        <div class="portal-text-sm portal-font-medium text-gray-900">
+                                            {{ $asset->name ?? $asset->asset_tag }}
+                                        </div>
+                                        <div class="portal-text-xs text-gray-500">
+                                            @if($asset->serial_number)
+                                                SN: {{ $asset->serial_number }}
+                                            @endif
+                                            @if($asset->asset_tag)
+                                                Tag: {{ $asset->asset_tag }}
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 portal-text-sm">
+                                        {{ ucwords(str_replace('_', ' ', $asset->asset_type ?? 'Unknown')) }}
+                                        @if($asset->model)
+                                            <div class="portal-text-xs text-gray-500">{{ $asset->model }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6">
+                                        <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full
+                                            @if($asset->status === 'active') bg-green-100 text-green-800
+                                            @elseif($asset->status === 'inactive') bg-gray-100 text-gray-800
+                                            @elseif($asset->status === 'maintenance') bg-yellow-100 text-yellow-800
+                                            @elseif($asset->status === 'retired') bg-red-100 text-red-800
+                                            @else bg-blue-100 text-blue-800 @endif">
+                                            {{ ucfirst($asset->status ?? 'active') }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-6 portal-text-sm text-gray-500">
+                                        {{ $asset->location ?? 'Not specified' }}
+                                    </td>
+                                    <td class="px-6 py-6 portal-text-sm text-gray-500">
+                                        @if($asset->next_maintenance_date)
+                                            {{ $asset->next_maintenance_date->format('M j, Y') }}
+                                            @if($asset->next_maintenance_date->isPast())
+                                                <span class="portal-text-xs text-red-600">(Overdue)</span>
+                                            @elseif($asset->next_maintenance_date->diffInDays() <= 30)
+                                                <span class="portal-text-xs text-orange-600">(Due Soon)</span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6 portal-text-sm text-gray-500">
+                                        @if($asset->warranty_expire)
+                                            {{ $asset->warranty_expire->format('M j, Y') }}
+                                            @if($asset->warranty_expire->isPast())
+                                                <span class="portal-text-xs text-red-600">(Expired)</span>
+                                            @elseif($asset->warranty_expire->diffInDays() <= 30)
+                                                <span class="portal-text-xs text-orange-600">(Expiring Soon)</span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-6 portal-text-sm">
+                                        <div class="portal-flex space-x-2">
+                                            <a href="{{ route('client.assets.show', $asset) ?? '#' }}" 
+                                               class="portal-btn portal-px-4 py-1 text-sm portal-px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @else
+                    <div class="text-center py-8">
+                        <div class="portal-mb-6">
+                            <i class="fas fa-server fa-3x text-gray-300"></i>
+                        </div>
+                        <h3 class="portal-text-lg portal-font-medium text-gray-900 portal-mb-2">
+                            @if(request('status') || request('type'))
+                                No Assets Found
+                            @else
+                                No Assets
+                            @endif
+                        </h3>
+                        <p class="portal-text-sm text-gray-500 portal-mb-6">
+                            @if(request('status') || request('type'))
+                                No assets match your current filters. Try adjusting the filters above.
+                            @else
+                                You don't have any assets registered yet. Assets will appear here once they are added to your account.
+                            @endif
+                        </p>
+                        @if(request('status') || request('type'))
+                        <a href="{{ route('client.assets') }}" class="portal-btn portal-px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                            Clear Filters
+                        </a>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+<style>
+.space-x-2 > * + * { margin-left: 0.5rem; }
+.space-x-4 > * + * { margin-left: 1rem; }
+
+.portal-form-control {
+    width: auto;
+    min-width: 120px;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    background-color: white;
+}
+
+.portal-form-control:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+}
+
+/* Badge colors for status indicators */
+.bg-green-100 { background-color: #dcfce7; } .text-green-800 { color: #166534; }
+.bg-yellow-100 { background-color: #fef3c7; } .text-yellow-800 { color: #92400e; }
+.bg-red-100 { background-color: #fee2e2; } .text-red-800 { color: #991b1b; }
+.bg-blue-100 { background-color: #dbeafe; } .text-blue-800 { color: #1e40af; }
+.bg-gray-100 { background-color: #f3f4f6; } .text-gray-800 { color: #1f2937; }
+
+/* Hover effects */
+.portal-table-row:hover {
+    background-color: #f9fafb;
+}
+</style>
+@endpush

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "fluxui-server": {
+      "command": "/var/www/Nestogy/flux-ui-mcp/build/index.js"
+    }
+  }
+}

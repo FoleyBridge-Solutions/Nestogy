@@ -1,0 +1,452 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="w-full px-6">
+    <div class="flex flex-wrap -mx-4">
+        <div class="flex-1 px-6-12">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="h3 mb-0">Add Warranty</h1>
+                    <p class="text-gray-600 mb-0">Create a new warranty record for an asset</p>
+                </div>
+                <div>
+                    <a href="{{ route('assets.warranties.index') }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-6">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Information</h5>
+                        </div>
+                        <div class="p-6">
+                            <form action="{{ route('assets.warranties.store') }}" method="POST" id="warrantyForm">
+                                @csrf
+
+                                <!-- Asset Selection -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="md:w-1/2 px-6">
+                                        <label for="asset_id" class="block text-sm font-medium text-gray-700 mb-1">Asset <span class="text-red-600">*</span></label>
+                                        <select name="asset_id" id="asset_id" class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('asset_id') border-red-500 @enderror" required>
+                                            <option value="">Select an asset...</option>
+                                            @foreach($assets ?? [] as $asset)
+                                                <option value="{{ $asset->id }}" {{ old('asset_id') == $asset->id ? 'selected' : '' }}>
+                                                    {{ $asset->name }} ({{ $asset->asset_tag }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('asset_id')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_type" class="block text-sm font-medium text-gray-700 mb-1">Warranty Type <span class="text-red-600">*</span></label>
+                                        <select name="warranty_type" id="warranty_type" class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_type') border-red-500 @enderror" required>
+                                            <option value="">Select type...</option>
+                                            <option value="manufacturer" {{ old('warranty_type') === 'manufacturer' ? 'selected' : '' }}>Manufacturer</option>
+                                            <option value="extended" {{ old('warranty_type') === 'extended' ? 'selected' : '' }}>Extended</option>
+                                            <option value="service" {{ old('warranty_type') === 'service' ? 'selected' : '' }}>Service Contract</option>
+                                            <option value="maintenance" {{ old('warranty_type') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                                        </select>
+                                        @error('warranty_type')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Warranty Provider -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="provider_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Provider <span class="text-red-600 dark:text-red-400">*</span></label>
+                                        <input type="text" name="provider_name" id="provider_name" 
+                                               class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('provider_name') border-red-500 @enderror" 
+                                               value="{{ old('provider_name') }}" required 
+                                               placeholder="e.g., Dell Technologies, HP Inc.">
+                                        @error('provider_name')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Number</label>
+                                        <input type="text" name="warranty_number" id="warranty_number" 
+                                               class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_number') border-red-500 @enderror" 
+                                               value="{{ old('warranty_number') }}" 
+                                               placeholder="WRN-123456789">
+                                        @error('warranty_number')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Coverage Details -->
+                                <div class="mb-6">
+                                    <label for="coverage_details" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Coverage Details <span class="text-red-600 dark:text-red-400">*</span></label>
+                                    <textarea name="coverage_details" id="coverage_details" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('coverage_details') border-red-500 @enderror" 
+                                              rows="3" required 
+                                              placeholder="Describe what is covered under this warranty...">{{ old('coverage_details') }}</textarea>
+                                    @error('coverage_details')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Warranty Dates -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date <span class="text-red-600 dark:text-red-400">*</span></label>
+                                        <input type="date" name="warranty_start_date" id="warranty_start_date" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_start_date') border-red-500 @enderror" 
+                                               value="{{ old('warranty_start_date', now()->format('Y-m-d')) }}" required>
+                                        @error('warranty_start_date')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="warranty_end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date <span class="text-red-600 dark:text-red-400">*</span></label>
+                                        <input type="date" name="warranty_end_date" id="warranty_end_date" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('warranty_end_date') border-red-500 @enderror" 
+                                               value="{{ old('warranty_end_date') }}" required>
+                                        @error('warranty_end_date')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Cost Information -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Cost</label>
+                                        <div class="flex">
+                                            <span class="flex-text">$</span>
+                                            <input type="number" name="cost" id="cost" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('cost') border-red-500 @enderror" 
+                                                   value="{{ old('cost') }}" min="0" step="0.01" placeholder="0.00">
+                                        </div>
+                                        @error('cost')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="deductible" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deductible</label>
+                                        <div class="flex">
+                                            <span class="flex-text">$</span>
+                                            <input type="number" name="deductible" id="deductible" 
+                                                   class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('deductible') border-red-500 @enderror" 
+                                                   value="{{ old('deductible', '0.00') }}" min="0" step="0.01" placeholder="0.00">
+                                        </div>
+                                        @error('deductible')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Contact and Support Information -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="contact_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Contact Name</label>
+                                        <input type="text" name="contact_name" id="contact_name" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_name') border-red-500 @enderror" 
+                                               value="{{ old('contact_name') }}" 
+                                               placeholder="Contact person name">
+                                        @error('contact_name')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Phone</label>
+                                        <input type="tel" name="contact_phone" id="contact_phone" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_phone') border-red-500 @enderror" 
+                                               value="{{ old('contact_phone') }}" 
+                                               placeholder="(555) 123-4567">
+                                        @error('contact_phone')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="contact_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Email</label>
+                                        <input type="email" name="contact_email" id="contact_email" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('contact_email') border-red-500 @enderror" 
+                                               value="{{ old('contact_email') }}" 
+                                               placeholder="support@provider.com">
+                                        @error('contact_email')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="support_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Portal URL</label>
+                                        <input type="url" name="support_url" id="support_url" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('support_url') border-red-500 @enderror" 
+                                               value="{{ old('support_url') }}" 
+                                               placeholder="https://support.provider.com">
+                                        @error('support_url')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Renewal and Notification Settings -->
+                                <div class="flex flex-wrap -mx-4 mb-6">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" name="auto_renewal" id="auto_renewal" 
+                                                   class="flex items-center-input" value="1" 
+                                                   {{ old('auto_renewal') ? 'checked' : '' }}>
+                                            <label for="auto_renewal" class="flex items-center-label">
+                                                Auto-renewal enabled
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <label for="notification_days" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notify before expiry (days)</label>
+                                        <input type="number" name="notification_days" id="notification_days" 
+                                               class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('notification_days') border-red-500 @enderror" 
+                                               value="{{ old('notification_days', '30') }}" min="1" max="365" placeholder="30">
+                                        @error('notification_days')
+                                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Terms and Conditions -->
+                                <div class="mb-6">
+                                    <label for="terms_conditions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Terms & Conditions</label>
+                                    <textarea name="terms_conditions" id="terms_conditions" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('terms_conditions') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Important terms, limitations, and conditions...">{{ old('terms_conditions') }}</textarea>
+                                    @error('terms_conditions')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-6">
+                                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Additional Notes</label>
+                                    <textarea name="notes" id="notes" 
+                                              class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('notes') border-red-500 @enderror" 
+                                              rows="3" 
+                                              placeholder="Additional notes about this warranty...">{{ old('notes') }}</textarea>
+                                    @error('notes')
+                                        <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Submit Buttons -->
+                                <div class="flex gap-2">
+                                    <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-save"></i> Create Warranty
+                                    </button>
+                                    <button type="submit" name="status" value="active" class="inline-flex items-center px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <i class="fas fa-check"></i> Create & Activate
+                                    </button>
+                                    <a href="{{ route('assets.warranties.index') }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Info -->
+                <div class="flex-1 px-6-md-4">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Guidelines</h6>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <h6 class="text-blue-600">Warranty Types</h6>
+                                <small class="text-gray-600">
+                                    <strong>Manufacturer:</strong> Original equipment warranty<br>
+                                    <strong>Extended:</strong> Additional coverage beyond standard<br>
+                                    <strong>Service:</strong> Service and support contract<br>
+                                    <strong>Maintenance:</strong> Maintenance agreement
+                                </small>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h6 class="text-cyan-600 dark:text-cyan-400">Coverage Details</h6>
+                                <small class="text-gray-600 dark:text-gray-400">
+                                    Include specific coverage information:<br>
+                                    • Parts replacement<br>
+                                    • Labor costs<br>
+                                    • On-site service<br>
+                                    • Response time requirements
+                                </small>
+                            </div>
+
+                            <div class="px-6 py-6 rounded bg-yellow-100 border border-yellow-400 text-yellow-700">
+                                <h6 class="px-6 py-6 rounded mb-6-heading">📋 Important</h6>
+                                <small>
+                                    • Keep warranty documentation safe<br>
+                                    • Set notification reminders<br>
+                                    • Review terms carefully<br>
+                                    • Track warranty claims
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Asset Info (populated via JavaScript when asset is selected) -->
+                    <div id="assetInfo" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mt-6" style="display: none;">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Asset Information</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div id="assetDetails">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warranty Calculator -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mt-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Warranty Calculator</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div id="warrantyCalc">
+                                <small class="text-gray-600 dark:text-gray-400">Select start and end dates to calculate warranty duration</small>
+                                <div id="durationResult" class="mt-2 p-2 bg-gray-100 rounded" style="display: none;">
+                                    <strong>Duration:</strong> <span id="durationText"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const assetSelect = document.getElementById('asset_id');
+    const assetInfoCard = document.getElementById('assetInfo');
+    const assetDetails = document.getElementById('assetDetails');
+    const startDateInput = document.getElementById('warranty_start_date');
+    const endDateInput = document.getElementById('warranty_end_date');
+    const durationResult = document.getElementById('durationResult');
+    const durationText = document.getElementById('durationText');
+    
+    // Asset selection change handler
+    assetSelect.addEventListener('change', function() {
+        const assetId = this.value;
+        
+        if (assetId) {
+            // Show loading state
+            assetInfoCard.style.display = 'block';
+            assetDetails.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            
+            // In a real application, you would fetch asset details via AJAX
+            // For now, we'll show the selected asset info
+            const selectedOption = this.options[this.selectedIndex];
+            assetDetails.innerHTML = `
+                <div class="mb-2">
+                    <strong>Asset:</strong> ${selectedOption.text}
+                </div>
+                <div class="mb-2">
+                    <small class="text-gray-600 dark:text-gray-400">Existing warranty information would be loaded here via API call</small>
+                </div>
+            `;
+        } else {
+            assetInfoCard.style.display = 'none';
+        }
+    });
+    
+    // Warranty duration calculator
+    function calculateDuration() {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (end > start) {
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const months = Math.floor(diffDays / 30);
+                const remainingDays = diffDays % 30;
+                
+                let durationString = '';
+                if (months > 0) {
+                    durationString += months + ' month' + (months > 1 ? 's' : '');
+                    if (remainingDays > 0) {
+                        durationString += ', ' + remainingDays + ' day' + (remainingDays > 1 ? 's' : '');
+                    }
+                } else {
+                    durationString = diffDays + ' day' + (diffDays > 1 ? 's' : '');
+                }
+                
+                durationText.textContent = durationString;
+                durationResult.style.display = 'block';
+            } else {
+                durationResult.style.display = 'none';
+            }
+        } else {
+            durationResult.style.display = 'none';
+        }
+    }
+    
+    startDateInput.addEventListener('change', calculateDuration);
+    endDateInput.addEventListener('change', calculateDuration);
+    
+    // Auto-set end date when start date changes (default 1 year warranty)
+    startDateInput.addEventListener('change', function() {
+        if (!endDateInput.value && this.value) {
+            const startDate = new Date(this.value);
+            const endDate = new Date(startDate);
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            endDateInput.value = endDate.toISOString().split('T')[0];
+            calculateDuration();
+        }
+    });
+    
+    // Form validation
+    const form = document.getElementById('warrantyForm');
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Check required fields
+        const requiredFields = ['asset_id', 'warranty_type', 'provider_name', 'coverage_details', 'warranty_start_date', 'warranty_end_date'];
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                field.classList.remove('border-red-500');
+            }
+        });
+        
+        // Validate date range
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (endDate <= startDate) {
+            endDateInput.classList.add('border-red-500');
+            isValid = false;
+            alert('Warranty end date must be after start date.');
+        } else {
+            endDateInput.classList.remove('border-red-500');
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields correctly.');
+        }
+    });
+});
+</script>
+@endpush

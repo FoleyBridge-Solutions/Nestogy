@@ -1,0 +1,329 @@
+@props(['section', 'defaultTab' => null, 'actionUrl' => null])
+
+<div x-data="settingsTabsLazyLoader('{{ $section }}', '{{ $defaultTab }}')" x-init="init()" class="w-full">
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8 px-6 pt-4 overflow-x-auto">
+            <template x-for="(tab, tabKey) in tabs" :key="tabKey">
+                <button type="button" 
+                        @click="switchToTab(tabKey)"
+                        :disabled="loading"
+                        :class="{ 'border-primary-500 text-blue-600-600': activeTab === tabKey, 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== tabKey, 'opacity-50 cursor-not-allowed': loading }"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2">
+                    <!-- Tab Icon -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="tab.icon"></path>
+                    </svg>
+                    <!-- Tab Title -->
+                    <span x-text="tab.title"></span>
+                    <!-- Loading Indicator -->
+                    <div x-show="tabLoading[tabKey]" class="animate-spin w-3 h-3">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </button>
+            </template>
+        </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="relative min-h-[400px]">
+        <!-- Loading State -->
+        <div x-show="loading" class="p-6">
+            <x-settings.skeleton-loader :type="loadingType" />
+        </div>
+        
+        <!-- Error State -->
+        <div x-show="error && !loading" class="p-6 text-center">
+            <div class="text-red-600">
+                <svg class="w-12 h-12 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Failed to Load Tab Content</h3>
+                <p class="text-gray-600 mb-6" x-text="errorMessage"></p>
+                <button @click="loadTabContent(activeTab, true)" 
+                        class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Retry
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tab Content -->
+        <div x-show="!loading && !error">
+            <!-- Form Wrapper -->
+            <form x-show="actionUrl" :action="actionUrl" method="POST" x-html="tabContent">
+                @csrf
+                @method('PUT')
+            </form>
+            
+            <!-- Content Only -->
+            <div x-show="!actionUrl" x-html="tabContent"></div>
+        </div>
+    </div>
+    
+    <!-- Cache Status Indicator (Development) -->
+    <div x-show="window.settingsTabDebug" class="mt-6 p-6 bg-gray-100 rounded-lg text-xs text-gray-600">
+        <div class="flex justify-between items-center">
+            <span>Cache Status:</span>
+            <button @click="clearTabCache()" class="text-blue-600 hover:text-blue-800">Clear Cache</button>
+        </div>
+        <div class="mt-1">
+            <span>Cached Tabs: </span>
+            <span x-text="Object.keys(tabCache).join(', ')"></span>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('settingsTabsLazyLoader', (section, defaultTab = null) => ({
+        section: section,
+        activeTab: defaultTab || '',
+        tabs: {},
+        tabContent: '',
+        tabCache: new Map(),
+        tabLoading: {},
+        loading: true,
+        error: false,
+        errorMessage: '',
+        loadingType: 'form',
+        actionUrl: '{{ $actionUrl }}',
+        preloadQueue: [],
+        
+        async init() {
+            // Load tabs configuration first
+            await this.loadTabsConfiguration();
+            
+            // Set default tab if not provided
+            if (!this.activeTab && Object.keys(this.tabs).length > 0) {
+                this.activeTab = Object.keys(this.tabs)[0];
+            }
+            
+            // Load initial tab content
+            if (this.activeTab) {
+                await this.loadTabContent(this.activeTab);
+            }
+            
+            // Start preloading other tabs
+            this.startPreloading();
+        },
+        
+        async loadTabsConfiguration() {
+            try {
+                const response = await fetch(`/settings/api/tabs/${this.section}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.tabs = data.tabs;
+                    if (!this.activeTab && data.defaultTab) {
+                        this.activeTab = data.defaultTab;
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to load tabs configuration');
+                }
+            } catch (error) {
+                console.error('Error loading tabs configuration:', error);
+                this.error = true;
+                this.errorMessage = error.message || 'Failed to load tabs configuration';
+            }
+        },
+        
+        async switchToTab(tabKey) {
+            if (this.activeTab === tabKey) return;
+            
+            this.activeTab = tabKey;
+            await this.loadTabContent(tabKey);
+            
+            // Add remaining tabs to preload queue
+            this.queuePreloading(tabKey);
+        },
+        
+        async loadTabContent(tabKey, forceReload = false) {
+            // Check cache first
+            if (!forceReload && this.tabCache.has(tabKey)) {
+                const cached = this.tabCache.get(tabKey);
+                this.tabContent = cached.html;
+                this.loading = false;
+                this.error = false;
+                return;
+            }
+            
+            this.setTabLoading(tabKey, true);
+            this.loading = this.activeTab === tabKey;
+            this.error = false;
+            this.updateLoadingType(tabKey);
+            
+            try {
+                const response = await fetch(`/settings/api/content/${this.section}/${tabKey}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Cache the result
+                    this.tabCache.set(tabKey, {
+                        html: data.html,
+                        title: data.title,
+                        timestamp: Date.now()
+                    });
+                    
+                    // Update content if this is the active tab
+                    if (this.activeTab === tabKey) {
+                        this.tabContent = data.html;
+                        
+                        // Execute any scripts in the loaded content
+                        this.$nextTick(() => {
+                            this.executeTabScripts();
+                        });
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to load tab content');
+                }
+            } catch (error) {
+                console.error(`Error loading tab content for ${tabKey}:`, error);
+                
+                if (this.activeTab === tabKey) {
+                    this.error = true;
+                    this.errorMessage = error.message || 'An unexpected error occurred';
+                    
+                    this.$dispatch('notify', {
+                        type: 'error',
+                        message: `Failed to load ${this.tabs[tabKey]?.title || tabKey} tab: ${error.message}`
+                    });
+                }
+            } finally {
+                this.setTabLoading(tabKey, false);
+                if (this.activeTab === tabKey) {
+                    this.loading = false;
+                }
+            }
+        },
+        
+        setTabLoading(tabKey, isLoading) {
+            this.tabLoading = {
+                ...this.tabLoading,
+                [tabKey]: isLoading
+            };
+        },
+        
+        updateLoadingType(tabKey) {
+            // Set appropriate skeleton type based on tab content
+            const tabTypes = {
+                'company': 'form',
+                'localization': 'form',
+                'branding': 'form',
+                'system': 'form',
+                'smtp': 'form',
+                'imap': 'form',
+                'tickets': 'form',
+                'templates': 'table',
+                'modules': 'cards',
+                'automation': 'form',
+                'apis': 'form',
+                'compliance': 'form',
+                'audit': 'table',
+                'reporting': 'cards',
+                'retention': 'form',
+                'destruction': 'form',
+                'governance': 'form',
+                'quality': 'form',
+                'privacy': 'form',
+                'lineage': 'table',
+                'migration': 'form',
+                'billing': 'form',
+                'taxes': 'form',
+                'invoicing': 'form',
+                'payments': 'cards'
+            };
+            
+            this.loadingType = tabTypes[tabKey] || 'form';
+        },
+        
+        startPreloading() {
+            // Start preloading other tabs after a delay
+            setTimeout(() => {
+                this.preloadTabs();
+            }, 1000);
+        },
+        
+        queuePreloading(excludeTab) {
+            this.preloadQueue = Object.keys(this.tabs).filter(tab => 
+                tab !== excludeTab && !this.tabCache.has(tab)
+            );
+            this.preloadTabs();
+        },
+        
+        async preloadTabs() {
+            if (this.preloadQueue.length === 0) return;
+            
+            const nextTab = this.preloadQueue.shift();
+            if (nextTab && !this.tabCache.has(nextTab)) {
+                await this.loadTabContent(nextTab);
+            }
+            
+            // Continue preloading with a delay
+            if (this.preloadQueue.length > 0) {
+                setTimeout(() => {
+                    this.preloadTabs();
+                }, 500);
+            }
+        },
+        
+        executeTabScripts() {
+            // Execute any Alpine.js components in the loaded tab content
+            const contentElement = this.$el.querySelector('[x-html="tabContent"]');
+            if (contentElement) {
+                Alpine.initTree(contentElement);
+            }
+        },
+        
+        clearTabCache() {
+            this.tabCache.clear();
+            this.preloadQueue = [];
+            this.$dispatch('notify', {
+                type: 'success',
+                message: 'Tab cache cleared'
+            });
+        },
+        
+        // Performance monitoring
+        getCacheStats() {
+            return {
+                cached: this.tabCache.size,
+                total: Object.keys(this.tabs).length,
+                hitRate: this.tabCache.size / Object.keys(this.tabs).length * 100
+            };
+        }
+    }));
+});
+
+// Enable tab debug mode (development only)
+window.settingsTabDebug = false;
+</script>
+@endpush

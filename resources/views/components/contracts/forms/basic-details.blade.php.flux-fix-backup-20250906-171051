@@ -1,0 +1,122 @@
+@props([
+    'clients' => [],
+    'selectedClient' => null,
+    'contractTypes' => []
+])
+
+<div class="space-y-6">
+    <!-- Contract Title -->
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Contract Title *</flux:label>
+        <div class="relative">
+            <input type="text" name="title" x-model="form.title" required
+                   class="w-full px-6 py-6 text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200"
+                   placeholder="e.g., Comprehensive IT Support Agreement - Acme Corp"
+                   @input="generateTitleSuggestions()">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg x-show="form.title" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Title Suggestions -->
+        <div x-show="titleSuggestions.length > 0" x-transition class="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            <template x-for="suggestion in titleSuggestions" :key="suggestion">
+                <div @click="form.title = suggestion; titleSuggestions = []" 
+                     class="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-sm border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                    <span x-text="suggestion" class="text-gray-900 dark:text-white"></span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Client Selection -->
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Client *</flux:label>
+        <x-forms.client-search-field 
+            name="client_id" 
+            :value="$selectedClient?->id" 
+            :required="true" 
+            class="w-full" />
+    </div>
+
+    <!-- Contract Type -->
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Contract Type *</flux:label>
+        <select name="contract_type" x-model="form.contract_type" required
+                class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Select Contract Type</option>
+            @foreach($contractTypes as $value => $label)
+                <option value="{{ $value }}">{{ $label }}</option>
+            @endforeach
+        </flux:select>
+    </div>
+
+    <!-- Description -->
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Description</flux:label>
+        <textarea name="description" x-model="form.description" rows="3"
+                  class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Brief description of the contract purpose and scope..."></flux:textarea>
+    </div>
+
+    <!-- Contract Dates -->
+    <div class="space-y-6">
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Start Date *</flux:label>
+            <input type="date" name="start_date" x-model="form.start_date" required
+                   class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">End Date</flux:label>
+                <input type="date" name="end_date" x-model="form.end_date"
+                       @input="if(form.end_date) form.term_months = ''"
+                       class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Specific end date for the contract</p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">OR Term (Months)</flux:label>
+                <input type="number" name="term_months" x-model="form.term_months" min="1" max="120" 
+                       @input="if(form.term_months) form.end_date = ''"
+                       placeholder="12"
+                       class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Contract duration in months</p>
+            </div>
+        </div>
+        
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+            <p class="text-xs text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> Provide either an end date or a term in months. If both are provided, the end date takes precedence.
+            </p>
+        </div>
+    </div>
+
+    <!-- Payment Terms -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Currency</flux:label>
+            <select name="currency_code" x-model="form.currency_code"
+                    class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="USD">USD - US Dollar</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="CAD">CAD - Canadian Dollar</option>
+            </flux:select>
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-6">Payment Terms</flux:label>
+            <select name="payment_terms" x-model="form.payment_terms"
+                    class="w-full px-6 py-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select Payment Terms</option>
+                <option value="net_15">Net 15</option>
+                <option value="net_30">Net 30</option>
+                <option value="net_45">Net 45</option>
+                <option value="net_60">Net 60</option>
+                <option value="due_on_receipt">Due on Receipt</option>
+            </flux:select>
+        </div>
+    </div>
+</div>

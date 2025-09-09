@@ -1,0 +1,354 @@
+{{-- Pricing Summary Component --}}
+{{-- Complete pricing summary with review and actions for quote finalization --}}
+
+<div x-data="pricingSummary()" 
+     x-init="init()"
+     @pricing-updated.window="updateFromStore($event.detail)"
+     class="pricing-summary">
+    
+    <!-- Main Summary Card -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden border-primary">
+        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50 bg-blue-600 text-white">
+            <div class="flex justify-between items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>Quote Summary
+                </h5>
+                <div class="text-end">
+                    <div class="h6 mb-0" x-text="formatCurrency(pricing.total)"></div>
+                    <small x-show="pricing.recurring && pricing.recurring.monthly > 0">
+                        MRR: <span x-text="formatCurrency(pricing.recurring.monthly)"></span>
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Selected Items Summary -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h6 class="mb-0">Selected Items</h6>
+                    <small class="text-gray-600" x-text="itemCount + ' items'"></small>
+                </div>
+                
+                <div class="selected-items-summary" style="max-height: 200px; overflow-y: auto;">
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <div>
+                                <div class="fw-semibold" x-text="item.name"></div>
+                                <small class="text-gray-600">
+                                    Qty: <span x-text="item.quantity"></span>
+                                    <span x-show="item.billing_cycle && item.billing_cycle !== 'one_time'">
+                                        | <span x-text="formatBillingCycle(item.billing_cycle)"></span>
+                                    </span>
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div x-text="formatCurrency(item.subtotal)"></div>
+                                <small class="text-gray-600 dark:text-gray-400" x-text="formatCurrency(item.unit_price) + ' each'"></small>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <div x-show="selectedItems.length === 0" class="text-center text-gray-600 dark:text-gray-400 py-6">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                    <div>No items selected</div>
+                </div>
+            </div>
+            
+            <!-- Pricing Breakdown -->
+            <div class="pricing-breakdown">
+                <div class="flex justify-between mb-2">
+                    <span>Subtotal:</span>
+                    <span class="fw-semibold" x-text="formatCurrency(pricing.subtotal)"></span>
+                </div>
+                
+                <div x-show="pricing.discount > 0" class="flex justify-between mb-2">
+                    <span class="text-green-600">
+                        <i class="fas fa-percentage mr-1"></i>Discount:
+                    </span>
+                    <span class="text-green-600">
+                        -<span x-text="formatCurrency(pricing.discount)"></span>
+                    </span>
+                </div>
+                
+                <div x-show="pricing.savings > 0" class="flex justify-between mb-2">
+                    <span class="text-green-600 dark:text-green-400">
+                        <i class="fas fa-piggy-bank mr-1"></i>Volume Savings:
+                    </span>
+                    <span class="text-green-600 dark:text-green-400">
+                        -<span x-text="formatCurrency(pricing.savings)"></span>
+                    </span>
+                </div>
+                
+                <div x-show="pricing.tax > 0" class="flex justify-between mb-2">
+                    <span>
+                        <i class="fas fa-receipt mr-1"></i>Tax:
+                    </span>
+                    <span x-text="formatCurrency(pricing.tax)"></span>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="flex justify-between mb-6">
+                    <strong class="h5">Total:</strong>
+                    <strong class="h4 text-blue-600" x-text="formatCurrency(pricing.total)"></strong>
+                </div>
+                
+                <!-- Recurring Revenue Summary -->
+                <div x-show="pricing.recurring && (pricing.recurring.monthly > 0 || pricing.recurring.annual > 0)" 
+                     class="bg-gray-100 p-6 rounded">
+                    <h6 class="mb-2">
+                        <i class="fas fa-sync-alt mr-2"></i>Recurring Revenue
+                    </h6>
+                    
+                    <div class="flex flex-wrap -mx-4">
+                        <div class="flex-1 px-6-6" x-show="pricing.recurring.monthly > 0">
+                            <div class="text-center">
+                                <div class="h5 text-cyan-600 dark:text-cyan-400 mb-0" x-text="formatCurrency(pricing.recurring.monthly)"></div>
+                                <small class="text-gray-600 dark:text-gray-400">Monthly (MRR)</small>
+                            </div>
+                        </div>
+                        <div class="flex-1 px-6-6" x-show="pricing.recurring.annual > 0">
+                            <div class="text-center">
+                                <div class="h5 text-cyan-600 dark:text-cyan-400 mb-0" x-text="formatCurrency(pricing.recurring.annual)"></div>
+                                <small class="text-gray-600 dark:text-gray-400">Annual (ARR)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Total Savings Badge -->
+            <div x-show="totalSavings > 0" class="px-6 py-6 rounded bg-green-100 border border-green-400 text-green-700 mt-6 mb-0">
+                <div class="flex items-center">
+                    <i class="fas fa-trophy mr-2"></i>
+                    <div>
+                        <strong>You're saving </strong>
+                        <span x-text="formatCurrency(totalSavings)"></span>
+                        <span class="text-gray-600 dark:text-gray-400" x-show="pricing.subtotal > 0">
+                            (<span x-text="Math.round((totalSavings / pricing.subtotal) * 100)"></span>% off)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Footer -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden-footer">
+            <div class="flex justify-between items-center">
+                <div class="px-6 py-2 font-medium rounded-md transition-colors-group" role="group">
+                    <button @click="exportQuote('pdf')" 
+                            class="btn border border-gray-600 text-gray-600 hover:bg-gray-50 px-6 py-2 font-medium rounded-md transition-colors-sm"
+                            :disabled="selectedItems.length === 0">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </flux:button>
+                    <button @click="exportQuote('email')" 
+                            class="btn border border-gray-600 text-gray-600 hover:bg-gray-50 px-6 py-2 font-medium rounded-md transition-colors-sm"
+                            :disabled="selectedItems.length === 0">
+                        <i class="fas fa-envelope"></i> Email
+                    </flux:button>
+                </div>
+                
+                <div class="px-6 py-2 font-medium rounded-md transition-colors-group" role="group">
+                    <button @click="saveAsDraft()" 
+                            class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-primary"
+                            :disabled="selectedItems.length === 0">
+                        <i class="fas fa-save"></i> Save Draft
+                    </flux:button>
+                    <button @click="finalizeQuote()" 
+                            class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            :disabled="!canFinalize">
+                        <i class="fas fa-check"></i> Create Quote
+                    </flux:button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Applied Rules/Promotions -->
+    <div x-show="pricing.appliedRules?.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mt-6">
+        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+            <h6 class="mb-0">
+                <i class="fas fa-tags mr-2"></i>Applied Pricing Rules
+            </h6>
+        </div>
+        <div class="p-6">
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700 divide-y divide-gray-200 dark:divide-gray-700-flush">
+                <template x-for="rule in pricing.appliedRules" :key="rule.id">
+                    <li class="divide-y divide-gray-200 dark:divide-gray-700-item flex justify-between items-center">
+                        <div>
+                            <div class="fw-semibold" x-text="rule.name"></div>
+                            <small class="text-gray-600 dark:text-gray-400" x-text="rule.description"></small>
+                        </div>
+                        <div class="text-end">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success" x-text="rule.discount + '% off'"></span>
+                            <div class="small text-gray-600 dark:text-gray-400">
+                                -<span x-text="formatCurrency(rule.savings || 0)"></span>
+                            </div>
+                        </div>
+                    </li>
+                </template>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Warning Messages -->
+    <div x-show="warnings.length > 0" class="px-6 py-6 rounded bg-yellow-100 border border-yellow-400 text-yellow-700 mt-6">
+        <h6 class="px-6 py-6 rounded mb-6-heading">
+            <i class="fas fa-exclamation-triangle mr-2"></i>Review Required
+        </h6>
+        <ul class="mb-0">
+            <template x-for="warning in warnings" :key="warning">
+                <li x-text="warning"></li>
+            </template>
+        </ul>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function pricingSummary() {
+    return {
+        pricing: {
+            subtotal: 0,
+            discount: 0,
+            savings: 0,
+            tax: 0,
+            total: 0,
+            recurring: {
+                monthly: 0,
+                annual: 0
+            },
+            appliedRules: []
+        },
+        selectedItems: [],
+        itemCount: 0,
+        warnings: [],
+        
+        init() {
+            // Watch store for pricing and items changes
+            if (this.$store && this.$store.quote) {
+                this.$watch('$store.quote.pricing', (newPricing) => {
+                    if (newPricing) {
+                        this.pricing = { ...newPricing };
+                        this.validateQuote();
+                    }
+                }, { deep: true });
+                
+                this.$watch('$store.quote.selectedItems', (items) => {
+                    if (items) {
+                        this.selectedItems = [...items];
+                        this.itemCount = items.length;
+                        this.validateQuote();
+                    }
+                }, { deep: true });
+                
+                // Initial load from store
+                this.pricing = { ...this.$store.quote.pricing };
+                this.selectedItems = [...(this.$store.quote.selectedItems || [])];
+                this.itemCount = this.selectedItems.length;
+                this.validateQuote();
+            }
+        },
+        
+        get totalSavings() {
+            return (this.pricing.discount || 0) + (this.pricing.savings || 0);
+        },
+        
+        get canFinalize() {
+            return this.selectedItems.length > 0 && 
+                   this.pricing.total > 0 && 
+                   this.warnings.length === 0;
+        },
+        
+        updateFromStore(pricingData) {
+            if (pricingData) {
+                this.pricing = { ...pricingData };
+                this.validateQuote();
+            }
+        },
+        
+        validateQuote() {
+            this.warnings = [];
+            
+            if (this.selectedItems.length === 0) {
+                this.warnings.push('No items selected for this quote');
+            }
+            
+            if (this.pricing.total <= 0) {
+                this.warnings.push('Quote total must be greater than $0');
+            }
+            
+            // Check for missing client selection (from parent component)
+            if (this.$store?.quote?.document?.client_id === null) {
+                this.warnings.push('Client must be selected before creating quote');
+            }
+            
+            // Check for subscription items without billing configuration
+            const hasSubscriptions = this.selectedItems.some(item => 
+                item.billing_cycle && item.billing_cycle !== 'one_time'
+            );
+            
+            if (hasSubscriptions && !this.$store?.quote?.billingConfig) {
+                this.warnings.push('Billing configuration required for subscription items');
+            }
+        },
+        
+        formatCurrency(amount) {
+            const currency = (this.$store && this.$store.quote) ? 
+                this.$store.quote.document.currency_code : 'USD';
+                
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currency || 'USD'
+            }).format(amount || 0);
+        },
+        
+        formatBillingCycle(cycle) {
+            const cycles = {
+                'one_time': 'One-time',
+                'monthly': 'Monthly',
+                'quarterly': 'Quarterly',
+                'annually': 'Annual'
+            };
+            return cycles[cycle] || cycle;
+        },
+        
+        async saveAsDraft() {
+            if (this.selectedItems.length === 0) return;
+            
+            // Dispatch event to parent component
+            this.$dispatch('save-quote-draft', {
+                items: this.selectedItems,
+                pricing: this.pricing,
+                billing: this.$store?.quote?.billingConfig
+            });
+        },
+        
+        async finalizeQuote() {
+            if (!this.canFinalize) return;
+            
+            // Dispatch event to parent component for quote creation
+            this.$dispatch('finalize-quote', {
+                items: this.selectedItems,
+                pricing: this.pricing,
+                billing: this.$store?.quote?.billingConfig,
+                document: this.$store?.quote?.document
+            });
+        },
+        
+        async exportQuote(format) {
+            if (this.selectedItems.length === 0) return;
+            
+            // Dispatch export event
+            this.$dispatch('export-quote', {
+                format: format,
+                items: this.selectedItems,
+                pricing: this.pricing
+            });
+        }
+    };
+}
+</script>
+@endpush

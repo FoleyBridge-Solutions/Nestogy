@@ -1,0 +1,432 @@
+@extends('layouts.app')
+
+@section('title', 'Calendar Event Details')
+
+@section('content')
+<div class="w-full px-6">
+    <div class="flex flex-wrap -mx-4">
+        <div class="flex-1 px-6-12">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="h3 mb-0">Calendar Event Details</h1>
+                <div class="px-6 py-2 font-medium rounded-md transition-colors-group">
+                    <a href="{{ route('clients.calendar-events.standalone.edit', $calendarEvent) }}" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-edit mr-2"></i>Edit Event
+                    </a>
+                    <a href="{{ route('clients.calendar-events.standalone.index') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Events
+                    </a>
+                    <button type="button" 
+                            class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-danger" 
+                            onclick="deleteEvent({{ $calendarEvent->id }})">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap -mx-4">
+                <div class="flex-1 px-6-lg-8">
+                    <!-- Main Event Details -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">
+                                    @switch($calendarEvent->event_type)
+                                        @case('meeting')
+                                            <i class="fas fa-users text-blue-600 mr-2"></i>
+                                            @break
+                                        @case('appointment')
+                                            <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                                            @break
+                                        @case('consultation')
+                                            <i class="fas fa-comments text-cyan-600 dark:text-cyan-400 mr-2"></i>
+                                            @break
+                                        @case('training')
+                                            <i class="fas fa-graduation-cap text-yellow-600 dark:text-yellow-400 mr-2"></i>
+                                            @break
+                                        @case('maintenance')
+                                            <i class="fas fa-tools text-gray-600 dark:text-gray-400 mr-2"></i>
+                                            @break
+                                        @case('support')
+                                            <i class="fas fa-headset text-blue-600 mr-2"></i>
+                                            @break
+                                        @case('follow_up')
+                                            <i class="fas fa-phone text-cyan-600 dark:text-cyan-400 mr-2"></i>
+                                            @break
+                                        @default
+                                            <i class="fas fa-calendar-alt text-gray-600 mr-2"></i>
+                                    @endswitch
+                                    {{ $calendarEvent->title }}
+                                </h5>
+                                <div class="flex gap-2">
+                                    @switch($calendarEvent->status)
+                                        @case('scheduled')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-600">Scheduled</span>
+                                            @break
+                                        @case('confirmed')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success">Confirmed</span>
+                                            @break
+                                        @case('in_progress')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning">In Progress</span>
+                                            @break
+                                        @case('completed')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success">Completed</span>
+                                            @break
+                                        @case('cancelled')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger">Cancelled</span>
+                                            @break
+                                        @case('no_show')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600">No Show</span>
+                                            @break
+                                        @case('rescheduled')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info">Rescheduled</span>
+                                            @break
+                                        @default
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600">{{ ucfirst($calendarEvent->status) }}</span>
+                                    @endswitch
+
+                                    @switch($calendarEvent->priority)
+                                        @case('high')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger">High Priority</span>
+                                            @break
+                                        @case('medium')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning">Medium Priority</span>
+                                            @break
+                                        @case('low')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success">Low Priority</span>
+                                            @break
+                                    @endswitch
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap -mx-4">
+                                <div class="md:w-1/2 px-6">
+                                    <h6 class="text-gray-600">Event Type</h6>
+                                    <p class="mb-6">{{ ucfirst(str_replace('_', ' ', $calendarEvent->event_type)) }}</p>
+
+                                    <h6 class="text-gray-600 dark:text-gray-400">Client</h6>
+                                    <p class="mb-6">
+                                        <a href="{{ route('clients.show', $calendarEvent->client) }}" class="text-decoration-none">
+                                            {{ $calendarEvent->client->display_name }}
+                                        </a>
+                                    </p>
+
+                                    @if($calendarEvent->location)
+                                        <h6 class="text-gray-600 dark:text-gray-400">Location</h6>
+                                        <p class="mb-6">
+                                            <i class="fas fa-map-marker-alt text-gray-600 dark:text-gray-400 mr-2"></i>
+                                            {{ $calendarEvent->location }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <div class="md:w-1/2 px-6">
+                                    <h6 class="text-gray-600 dark:text-gray-400">Date & Time</h6>
+                                    @if($calendarEvent->all_day)
+                                        <p class="mb-2">
+                                            <i class="fas fa-calendar text-gray-600 dark:text-gray-400 mr-2"></i>
+                                            {{ $calendarEvent->start_datetime->format('l, F j, Y') }}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info ml-2">All Day</span>
+                                        </p>
+                                    @else
+                                        <p class="mb-2">
+                                            <i class="fas fa-calendar text-gray-600 dark:text-gray-400 mr-2"></i>
+                                            {{ $calendarEvent->start_datetime->format('l, F j, Y') }}
+                                        </p>
+                                        <p class="mb-2">
+                                            <i class="fas fa-clock text-gray-600 dark:text-gray-400 mr-2"></i>
+                                            {{ $calendarEvent->start_datetime->format('g:i A') }} - {{ $calendarEvent->end_datetime->format('g:i A') }}
+                                            <small class="text-gray-600 dark:text-gray-400">({{ $calendarEvent->duration_human }})</small>
+                                        </p>
+                                    @endif
+
+                                    @if($calendarEvent->is_today)
+                                        <div class="px-6 py-6 rounded bg-yellow-100 border border-yellow-400 text-yellow-700 py-2 mb-2">
+                                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                                            <strong>Today!</strong> This event is scheduled for today.
+                                        </div>
+                                    @elseif($calendarEvent->is_upcoming)
+                                        <div class="px-6 py-6 rounded bg-cyan-100 border border-cyan-400 text-cyan-700 py-2 mb-2">
+                                            <i class="fas fa-clock mr-2"></i>
+                                            <strong>Upcoming:</strong> {{ $calendarEvent->time_until }}
+                                        </div>
+                                    @elseif($calendarEvent->is_past)
+                                        <div class="alert px-6 py-6 rounded mb-6-secondary py-2 mb-2">
+                                            <i class="fas fa-history mr-2"></i>
+                                            <strong>Past:</strong> {{ $calendarEvent->time_since }}
+                                        </div>
+                                    @endif
+
+                                    @if($calendarEvent->reminder_minutes > 0)
+                                        <h6 class="text-gray-600 dark:text-gray-400 mt-6">Reminder</h6>
+                                        <p class="mb-6">
+                                            <i class="fas fa-bell text-gray-600 dark:text-gray-400 mr-2"></i>
+                                            {{ \App\Domains\Client\Models\ClientCalendarEvent::getReminderOptions()[$calendarEvent->reminder_minutes] ?? $calendarEvent->reminder_minutes . ' minutes' }} before event
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+
+                            @if($calendarEvent->description)
+                                <hr>
+                                <h6 class="text-gray-600 dark:text-gray-400">Description</h6>
+                                <div class="mb-6">
+                                    {!! nl2br(e($calendarEvent->description)) !!}
+                                </div>
+                            @endif
+
+                            @if($calendarEvent->attendees && count($calendarEvent->attendees) > 0)
+                                <hr>
+                                <h6 class="text-gray-600 dark:text-gray-400">Attendees</h6>
+                                <div class="mb-6">
+                                    @foreach($calendarEvent->attendees as $attendee)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-dark mr-2 mb-1">
+                                            <i class="fas fa-user mr-1"></i>{{ $attendee }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            @if($calendarEvent->notes)
+                                <hr>
+                                <h6 class="text-gray-600 dark:text-gray-400">Notes</h6>
+                                <div class="bg-gray-100 p-6 rounded">
+                                    {!! nl2br(e($calendarEvent->notes)) !!}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 px-6-lg-4">
+                    <!-- Event Metadata -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                <i class="fas fa-info-circle mr-2"></i>Event Information
+                            </h5>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap -mx-4 g-2 mb-6">
+                                <div class="flex-1 px-6-6">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="font-bold text-blue-600 dark:text-blue-400">{{ $calendarEvent->duration_minutes }}</div>
+                                        <small class="text-gray-600 dark:text-gray-400">Minutes</small>
+                                    </div>
+                                </div>
+                                <div class="flex-1 px-6-6">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="font-bold text-green-600">{{ count($calendarEvent->attendees ?? []) }}</div>
+                                        <small class="text-gray-600 dark:text-gray-400">Attendees</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="small text-gray-600 dark:text-gray-400">
+                                <div class="flex justify-between mb-2">
+                                    <span>Created:</span>
+                                    <span>{{ $calendarEvent->created_at->format('M j, Y g:i A') }}</span>
+                                </div>
+                                @if($calendarEvent->creator)
+                                    <div class="flex justify-between mb-2">
+                                        <span>Created by:</span>
+                                        <span>{{ $calendarEvent->creator->name }}</span>
+                                    </div>
+                                @endif
+                                @if($calendarEvent->updated_at != $calendarEvent->created_at)
+                                    <div class="flex justify-between mb-2">
+                                        <span>Last updated:</span>
+                                        <span>{{ $calendarEvent->updated_at->format('M j, Y g:i A') }}</span>
+                                    </div>
+                                @endif
+                                @if($calendarEvent->accessed_at)
+                                    <div class="flex justify-between">
+                                        <span>Last viewed:</span>
+                                        <span>{{ $calendarEvent->accessed_at->format('M j, Y g:i A') }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                <i class="fas fa-bolt mr-2"></i>Quick Actions
+                            </h5>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="grid gap-2">
+                                @if(in_array($calendarEvent->status, ['scheduled', 'confirmed']))
+                                    <button class="btn border border-green-600 text-green-600 hover:bg-green-50 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="updateStatus('in_progress')">
+                                        <i class="fas fa-play mr-2"></i>Mark as In Progress
+                                    </button>
+                                @endif
+
+                                @if(in_array($calendarEvent->status, ['scheduled', 'confirmed', 'in_progress']))
+                                    <button class="btn border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="updateStatus('completed')">
+                                        <i class="fas fa-check mr-2"></i>Mark as Completed
+                                    </button>
+                                @endif
+
+                                @if(!in_array($calendarEvent->status, ['cancelled', 'completed']))
+                                    <button class="btn border border-red-600 text-red-600 hover:bg-red-50 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="updateStatus('cancelled')">
+                                        <i class="fas fa-times mr-2"></i>Cancel Event
+                                    </button>
+                                @endif
+
+                                <hr class="my-2">
+                                
+                                <a href="{{ route('clients.calendar-events.standalone.create', ['client_id' => $calendarEvent->client_id]) }}" 
+                                   class="btn  px-6 py-2 font-medium rounded-md transition-colors-sm">
+                                    <i class="fas fa-plus mr-2"></i>New Event for Client
+                                </a>
+                                
+                                <a href="{{ route('clients.show', $calendarEvent->client) }}" 
+                                   class="btn border border-gray-600 text-gray-600 hover:bg-gray-50 px-6 py-2 font-medium rounded-md transition-colors-sm">
+                                    <i class="fas fa-user mr-2"></i>View Client
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Related Events -->
+                    @if($calendarEvent->client->calendarEvents()->where('id', '!=', $calendarEvent->id)->exists())
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                                <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                    <i class="fas fa-calendar-alt mr-2"></i>Other Client Events
+                                </h5>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                                <div class="divide-y divide-gray-200 dark:divide-gray-700 divide-y divide-gray-200 dark:divide-gray-700-flush">
+                                    @foreach($calendarEvent->client->calendarEvents()->where('id', '!=', $calendarEvent->id)->orderBy('start_datetime', 'desc')->limit(5)->get() as $relatedEvent)
+                                        <div class="divide-y divide-gray-200 dark:divide-gray-700-item px-0 py-2">
+                                            <div class="flex justify-between items-start">
+                                                <div class="small">
+                                                    <a href="{{ route('clients.calendar-events.standalone.show', $relatedEvent) }}" 
+                                                       class="text-decoration-none font-bold">
+                                                        {{ Str::limit($relatedEvent->title, 30) }}
+                                                    </a>
+                                                    <div class="text-gray-600 dark:text-gray-400">
+                                                        {{ $relatedEvent->start_datetime->format('M j, Y') }}
+                                                        @if(!$relatedEvent->all_day)
+                                                            at {{ $relatedEvent->start_datetime->format('g:i A') }}
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary small">
+                                                    {{ ucfirst($relatedEvent->status) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="text-center mt-2">
+                                    <a href="{{ route('clients.calendar-events.standalone.index', ['client_id' => $calendarEvent->client_id]) }}" 
+                                       class="btn border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 font-medium rounded-md transition-colors-sm">
+                                        View All Client Events
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="fixed inset-0 z-50 overflow-y-auto fade" id="deleteEventModal" tabindex="-1">
+    <div class="fixed inset-0 z-50 overflow-y-auto-dialog">
+        <div class="fixed inset-0 z-50 overflow-y-auto-content">
+            <div class="fixed inset-0 z-50 overflow-y-auto-header">
+                <h5 class="fixed inset-0 z-50 overflow-y-auto-title">Delete Calendar Event</h5>
+                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors-close" @click="$dispatch('close-modal')"></button>
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-body">
+                Are you sure you want to delete this calendar event? This action cannot be undone.
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-footer">
+                <button type="button" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
+                <form id="deleteEventForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex items-center px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Delete Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Update Modal -->
+<div class="fixed inset-0 z-50 overflow-y-auto fade" id="statusUpdateModal" tabindex="-1">
+    <div class="fixed inset-0 z-50 overflow-y-auto-dialog">
+        <div class="fixed inset-0 z-50 overflow-y-auto-content">
+            <div class="fixed inset-0 z-50 overflow-y-auto-header">
+                <h5 class="fixed inset-0 z-50 overflow-y-auto-title">Update Event Status</h5>
+                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors-close" @click="$dispatch('close-modal')"></button>
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-body">
+                <p id="statusUpdateMessage"></p>
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-footer">
+                <button type="button" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</button>
+                <form id="statusUpdateForm" method="POST" class="inline">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="status" id="newStatus">
+                    <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="statusUpdateButton">Update Status</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function deleteEvent(eventId) {
+    const form = document.getElementById('deleteEventForm');
+    form.action = '/clients/calendar-events/' + eventId;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
+    modal.show();
+}
+
+function updateStatus(newStatus) {
+    const messages = {
+        'in_progress': 'Mark this event as in progress?',
+        'completed': 'Mark this event as completed?',
+        'cancelled': 'Cancel this event?'
+    };
+
+    const buttonTexts = {
+        'in_progress': 'Mark In Progress',
+        'completed': 'Mark Completed',
+        'cancelled': 'Cancel Event'
+    };
+
+    document.getElementById('statusUpdateMessage').textContent = messages[newStatus];
+    document.getElementById('newStatus').value = newStatus;
+    document.getElementById('statusUpdateButton').textContent = buttonTexts[newStatus];
+    
+    const form = document.getElementById('statusUpdateForm');
+    form.action = '{{ route("clients.calendar-events.standalone.update", $calendarEvent) }}';
+    
+    // Copy all current form data
+    @foreach(['client_id', 'title', 'description', 'event_type', 'location', 'start_datetime', 'end_datetime', 'all_day', 'priority', 'attendees', 'reminder_minutes', 'notes'] as $field)
+        const {{ $field }}Input = document.createElement('input');
+        {{ $field }}Input.type = 'hidden';
+        {{ $field }}Input.name = '{{ $field }}';
+        {{ $field }}Input.value = @json($calendarEvent->{$field} ?? '');
+        form.appendChild({{ $field }}Input);
+    @endforeach
+
+    const modal = new bootstrap.Modal(document.getElementById('statusUpdateModal'));
+    modal.show();
+}
+</script>
+@endpush

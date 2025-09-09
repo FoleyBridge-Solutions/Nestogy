@@ -1,0 +1,471 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="w-full px-6">
+    <div class="flex flex-wrap -mx-4">
+        <div class="flex-1 px-6-12">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="h3 mb-0">Maintenance Details</h1>
+                    <p class="text-gray-600 mb-0">View maintenance information and history</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('assets.maintenance.edit', $maintenance ?? 1) }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    @if(isset($maintenance) && in_array($maintenance->status ?? 'scheduled', ['scheduled', 'in_progress']))
+                        <button type="button" class="inline-flex items-center px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="markCompleted()">
+                            <i class="fas fa-check"></i> Mark Complete
+                        </flux:button>
+                    @endif
+                    @if(isset($maintenance) && $maintenance->status === 'completed' && $maintenance->recurring_interval)
+                        <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-info" onclick="scheduleNext()">
+                            <i class="fas fa-calendar-plus"></i> Schedule Next
+                        </flux:button>
+                    @endif
+                    <a href="{{ route('assets.maintenance.index') }}" class="px-6 py-2 font-medium rounded-md transition-colors px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap -mx-4">
+                <div class="md:w-2/3 px-6">
+                    <!-- Main Details -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <div class="flex justify-between items-center">
+                                <h5 class="bg-white rounded-lg shadow-md overflow-hidden-title mb-0">{{ $maintenance->title ?? 'Sample Maintenance Task' }}</h5>
+                                <div class="flex gap-2">
+                                    @php
+                                        $status = $maintenance->status ?? 'scheduled';
+                                        $statusColors = [
+                                            'scheduled' => 'bg-primary',
+                                            'in_progress' => 'bg-info',
+                                            'completed' => 'bg-success',
+                                            'cancelled' => 'bg-secondary'
+                                        ];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$status] ?? 'bg-gray-600' }}">
+                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                    </span>
+                                    @php
+                                        $priority = $maintenance->priority ?? 'medium';
+                                        $priorityColors = [
+                                            'low' => 'bg-success',
+                                            'medium' => 'bg-warning',
+                                            'high' => 'bg-danger',
+                                            'critical' => 'bg-danger'
+                                        ];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityColors[$priority] ?? 'bg-gray-600' }}">
+                                        {{ ucfirst($priority) }} Priority
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap -mx-4 mb-6">
+                                <div class="md:w-1/2 px-6">
+                                    <strong>Asset:</strong>
+                                    <div class="ml-3">
+                                        {{ $maintenance->asset->name ?? 'Sample Asset' }}
+                                        <br><small class="text-gray-600">{{ $maintenance->asset->asset_tag ?? 'AST-001' }}</small>
+                                    </div>
+                                </div>
+                                <div class="flex-1 px-6-md-6">
+                                    <strong>Maintenance Type:</strong>
+                                    <div class="ml-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary">{{ ucfirst($maintenance->maintenance_type ?? 'Preventive') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if(isset($maintenance->description) || true)
+                                <div class="mb-6">
+                                    <strong>Description:</strong>
+                                    <div class="ml-4 mt-1">
+                                        {{ $maintenance->description ?? 'Regular preventive maintenance to ensure optimal performance and prevent unexpected failures.' }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(isset($maintenance->instructions) || true)
+                                <div class="mb-6">
+                                    <strong>Instructions:</strong>
+                                    <div class="ml-4 mt-1">
+                                        <div class="bg-gray-100 p-6 rounded">
+                                            {!! nl2br(e($maintenance->instructions ?? "1. Power down the asset safely\n2. Perform visual inspection\n3. Clean components\n4. Check connections\n5. Test functionality\n6. Document findings")) !!}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(isset($maintenance->notes) || true)
+                                <div class="mb-6">
+                                    <strong>Notes:</strong>
+                                    <div class="ml-4 mt-1">
+                                        <div class="bg-gray-100 p-6 rounded">
+                                            {{ $maintenance->notes ?? 'Additional maintenance notes and observations will be recorded here.' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Schedule & Assignment -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Schedule & Assignment</h6>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex flex-wrap -mx-4">
+                                <div class="flex-1 px-6-md-6">
+                                    <div class="mb-6">
+                                        <strong>Scheduled Date:</strong>
+                                        <div class="ml-4">
+                                            @php
+                                                $scheduledDate = $maintenance->scheduled_date ?? now()->addDays(7);
+                                                $isOverdue = $scheduledDate->isPast() && $status !== 'completed';
+                                            @endphp
+                                            {{ $scheduledDate->format('M d, Y') }}
+                                            @if($isOverdue)
+                                                <span class="text-red-600 ml-2">
+                                                    <i class="fas fa-exclamation-triangle"></i> Overdue
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if(isset($maintenance->estimated_duration))
+                                        <div class="mb-6">
+                                            <strong>Estimated Duration:</strong>
+                                            <div class="ml-4">{{ $maintenance->estimated_duration }} hours</div>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="flex-1 px-6-md-6">
+                                    <div class="mb-6">
+                                        <strong>Assigned To:</strong>
+                                        <div class="ml-4">
+                                            @if(isset($maintenance->assignedUser))
+                                                <div class="flex items-center">
+                                                    <div class="mr-2">
+                                                        <i class="fas fa-user-circle fa-lg text-gray-600 dark:text-gray-400"></i>
+                                                    </div>
+                                                    <div>
+                                                        {{ $maintenance->assignedUser->name }}
+                                                        <br><small class="text-gray-600 dark:text-gray-400">{{ $maintenance->assignedUser->email }}</small>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-gray-600 dark:text-gray-400">Unassigned</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if(isset($maintenance->recurring_interval))
+                                        <div class="mb-6">
+                                            <strong>Recurring:</strong>
+                                            <div class="ml-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info">{{ ucfirst(str_replace('_', ' ', $maintenance->recurring_interval)) }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cost Information -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Cost Information</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="flex flex-wrap -mx-4">
+                                <div class="flex-1 px-6-md-6">
+                                    <div class="mb-6">
+                                        <strong>Estimated Cost:</strong>
+                                        <div class="ml-4">
+                                            ${{ number_format($maintenance->estimated_cost ?? 150.00, 2) }}
+                                        </div>
+                                    </div>
+                                    @if(isset($maintenance->actual_cost))
+                                        <div class="mb-6">
+                                            <strong>Actual Cost:</strong>
+                                            <div class="ml-4">
+                                                ${{ number_format($maintenance->actual_cost, 2) }}
+                                                @if($maintenance->actual_cost > ($maintenance->estimated_cost ?? 0))
+                                                    <span class="text-yellow-600 dark:text-yellow-400 ml-2">
+                                                        <i class="fas fa-exclamation-triangle"></i> Over Budget
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="flex-1 px-6-md-6">
+                                    @if(isset($maintenance->parts_cost))
+                                        <div class="mb-6">
+                                            <strong>Parts Cost:</strong>
+                                            <div class="ml-4">${{ number_format($maintenance->parts_cost, 2) }}</div>
+                                        </div>
+                                    @endif
+                                    @if(isset($maintenance->labor_cost))
+                                        <div class="mb-6">
+                                            <strong>Labor Cost:</strong>
+                                            <div class="ml-4">${{ number_format($maintenance->labor_cost, 2) }}</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completion Details -->
+                    @if($status === 'completed')
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header bg-success text-white">
+                                <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                                    <i class="fas fa-check-circle"></i> Completion Details
+                                </h6>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                                <div class="flex flex-wrap -mx-4">
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <strong>Completed Date:</strong>
+                                            <div class="ml-4">{{ ($maintenance->completed_at ?? now())->format('M d, Y g:i A') }}</div>
+                                        </div>
+                                        @if(isset($maintenance->actual_duration))
+                                            <div class="mb-6">
+                                                <strong>Actual Duration:</strong>
+                                                <div class="ml-4">{{ $maintenance->actual_duration }} hours</div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 px-6-md-6">
+                                        <div class="mb-6">
+                                            <strong>Completed By:</strong>
+                                            <div class="ml-4">{{ $maintenance->completedBy->name ?? 'John Technician' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if(isset($maintenance->completion_notes))
+                                    <div class="mb-6">
+                                        <strong>Completion Notes:</strong>
+                                        <div class="ml-4 mt-1">
+                                            <div class="bg-light p-6 rounded">
+                                                {{ $maintenance->completion_notes }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Sidebar -->
+                <div class="flex-1 px-6-md-4">
+                    <!-- Asset Quick Info -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Asset Information</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="mb-2">
+                                <strong>{{ $maintenance->asset->name ?? 'Sample Server' }}</strong>
+                                <br><small class="text-gray-600 dark:text-gray-400">{{ $maintenance->asset->asset_tag ?? 'SRV-001' }}</small>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-gray-600 dark:text-gray-400">Category:</small> {{ $maintenance->asset->category ?? 'Hardware' }}
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-gray-600 dark:text-gray-400">Location:</small> {{ $maintenance->asset->location ?? 'Data Center A' }}
+                            </div>
+                            <div class="mb-6">
+                                <small class="text-gray-600 dark:text-gray-400">Status:</small> 
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success">{{ $maintenance->asset->status ?? 'Active' }}</span>
+                            </div>
+                            <a href="{{ route('assets.show', $maintenance->asset_id ?? 1) }}" class="px-4 py-2 font-medium rounded-md transition-colors px-6 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> View Asset Details
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance History -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Recent Maintenance</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="timeline">
+                                @php
+                                    $recentMaintenance = [
+                                        ['date' => '2024-01-15', 'type' => 'Preventive', 'status' => 'completed'],
+                                        ['date' => '2023-10-15', 'type' => 'Corrective', 'status' => 'completed'],
+                                        ['date' => '2023-07-15', 'type' => 'Preventive', 'status' => 'completed'],
+                                    ];
+                                @endphp
+                                @foreach($recentMaintenance as $item)
+                                    <div class="flex items-center mb-6">
+                                        <div class="mr-3">
+                                            @if($item['status'] === 'completed')
+                                                <i class="fas fa-check-circle text-green-600"></i>
+                                            @else
+                                                <i class="fas fa-clock text-yellow-600 dark:text-yellow-400"></i>
+                                            @endif
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="font-bold">{{ $item['type'] }}</div>
+                                            <small class="text-gray-600 dark:text-gray-400">{{ \Carbon\Carbon::parse($item['date'])->format('M d, Y') }}</small>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <a href="{{ route('assets.maintenance.index', ['asset_id' => $maintenance->asset_id ?? 1]) }}" 
+                               class="px-4 py-2 font-medium rounded-md transition-colors px-6 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-outline-secondary w-100">
+                                View All Maintenance
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                            <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Quick Actions</h6>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                            <div class="grid gap-2">
+                                @if($status === 'scheduled')
+                                    <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors bg-cyan-600 text-white hover:bg-cyan-700 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="startMaintenance()">
+                                        <i class="fas fa-play"></i> Start Maintenance
+                                    </flux:button>
+                                @endif
+                                @if(in_array($status, ['scheduled', 'in_progress']))
+                                    <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors bg-yellow-500 text-white hover:bg-yellow-600 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="postponeMaintenance()">
+                                        <i class="fas fa-calendar-plus"></i> Postpone
+                                    </flux:button>
+                                    <button type="button" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="cancelMaintenance()">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </flux:button>
+                                @endif
+                                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="duplicateMaintenance()">
+                                    <i class="fas fa-copy"></i> Duplicate Task
+                                </flux:button>
+                                <button type="button" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-info px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="exportMaintenance()">
+                                    <i class="fas fa-download"></i> Export Details
+                                </flux:button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Modals -->
+<div class="fixed inset-0 z-50 overflow-y-auto fade" id="actionModal" tabindex="-1">
+    <div class="fixed inset-0 z-50 overflow-y-auto-dialog">
+        <div class="fixed inset-0 z-50 overflow-y-auto-content">
+            <div class="fixed inset-0 z-50 overflow-y-auto-header">
+                <h5 class="fixed inset-0 z-50 overflow-y-auto-title" id="modalTitle">Confirm Action</h5>
+                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors-close" @click="$dispatch('close-modal')"></flux:button>
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-body" id="modalBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-footer">
+                <button type="button" class="inline-flex items-center px-6 py-2 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" @click="$dispatch('close-modal')">Cancel</flux:button>
+                <form id="actionForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="confirmButton">Confirm</flux:button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function showActionModal(title, message, action, buttonClass = 'btn-primary', buttonText = 'Confirm') {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = message;
+    document.getElementById('confirmButton').className = `btn ${buttonClass}`;
+    document.getElementById('confirmButton').textContent = buttonText;
+    
+    const form = document.getElementById('actionForm');
+    form.action = action;
+    
+    const modal = new bootstrap.Modal(document.getElementById('actionModal'));
+    modal.show();
+}
+
+function markCompleted() {
+    showActionModal(
+        'Mark Maintenance Complete',
+        'Are you sure you want to mark this maintenance as completed?',
+        '{{ route("assets.maintenance.complete", $maintenance ?? 1) }}',
+        'btn-success',
+        'Mark Complete'
+    );
+}
+
+function startMaintenance() {
+    const form = document.getElementById('actionForm');
+    form.action = '{{ route("assets.maintenance.update", $maintenance ?? 1) }}';
+    
+    // Add hidden input for status
+    const statusInput = document.createElement('input');
+    statusInput.type = 'hidden';
+    statusInput.name = 'status';
+    statusInput.value = 'in_progress';
+    form.appendChild(statusInput);
+    
+    showActionModal(
+        'Start Maintenance',
+        'Are you sure you want to start this maintenance task?',
+        '{{ route("assets.maintenance.update", $maintenance ?? 1) }}',
+        'btn-info',
+        'Start'
+    );
+}
+
+function postponeMaintenance() {
+    window.location.href = '{{ route("assets.maintenance.edit", $maintenance ?? 1) }}';
+}
+
+function cancelMaintenance() {
+    showActionModal(
+        'Cancel Maintenance',
+        'Are you sure you want to cancel this maintenance? This action cannot be undone.',
+        '{{ route("assets.maintenance.update", $maintenance ?? 1) }}',
+        'btn-secondary',
+        'Cancel Maintenance'
+    );
+}
+
+function scheduleNext() {
+    showActionModal(
+        'Schedule Next Maintenance',
+        'Create the next recurring maintenance based on this schedule?',
+        '{{ route("assets.maintenance.schedule-next", $maintenance ?? 1) }}',
+        'btn-info',
+        'Schedule Next'
+    );
+}
+
+function duplicateMaintenance() {
+    window.location.href = '{{ route("assets.maintenance.create", ["duplicate" => $maintenance->id ?? 1]) }}';
+}
+
+function exportMaintenance() {
+    window.open('{{ route("assets.maintenance.show", $maintenance ?? 1) }}?format=pdf', '_blank');
+}
+</script>
+@endpush

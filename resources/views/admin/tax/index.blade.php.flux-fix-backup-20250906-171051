@@ -1,0 +1,334 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    <i class="fas fa-calculator text-blue-600 mr-3"></i>
+                    Tax System Administration
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Manage tax profiles, rates, and system performance for your MSP platform
+                </p>
+            </div>
+            <div class="mt-6 flex md:mt-0 md:ml-4 space-x-3">
+                <a href="{{ route('admin.tax.performance') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                    <i class="fas fa-chart-line mr-1"></i>
+                    Performance
+                </a>
+                <button type="button" onclick="exportTaxConfig()" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                    <i class="fas fa-download mr-1"></i>
+                    Export Config
+                </flux:button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-list-alt text-blue-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Tax Profiles</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['tax_profiles'] }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-8 py-6">
+                    <div class="text-sm">
+                        <a href="{{ route('admin.tax.profiles') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                            Manage profiles
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-percentage text-green-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Tax Rates</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['tax_rates'] }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-8 py-6">
+                    <div class="text-sm">
+                        <a href="{{ route('admin.tax.rates') }}" class="font-medium text-green-600 hover:text-green-500">
+                            Manage rates
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-map-marker-alt text-purple-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Jurisdictions</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['jurisdictions'] }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-8 py-6">
+                    <div class="text-sm">
+                        <a href="{{ route('admin.tax.jurisdictions') }}" class="font-medium text-purple-600 hover:text-purple-500">
+                            Manage jurisdictions
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-tags text-orange-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Tax Categories</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['categories'] }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-8 py-6">
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-orange-600 hover:text-orange-500">
+                            View categories
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Management -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Cache Management -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-6 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-memory text-blue-600 mr-2"></i>
+                        Cache Management
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Tax Profiles Cached</div>
+                                <div class="text-sm text-gray-500">{{ $performanceStats['memory_cache_size']['tax_profiles'] ?? 0 }} profiles</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">Calculation Cache</div>
+                                <div class="text-sm text-gray-500">{{ $performanceStats['memory_cache_size']['calculation_cache'] ?? 0 }} entries</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <form action="{{ route('admin.tax.clear-caches') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-warning px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="return confirm('Clear all tax caches?')">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Clear Caches
+                                </flux:button>
+                            </form>
+                            
+                            <form action="{{ route('admin.tax.warm-caches') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-info px-6 py-2 font-medium rounded-md transition-colors-sm">
+                                    <i class="fas fa-fire mr-1"></i>
+                                    Warm Caches
+                                </flux:button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Calculator -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-6 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-calculator text-green-600 mr-2"></i>
+                        Test Tax Calculator
+                    </h3>
+                </div>
+                <div class="p-6" x-data="taxTester()">
+                    <form @submit.prevent="runTest()">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Base Price</flux:label>
+                                <input type="number" x-model="testData.base_price" step="0.01" min="0.01" required
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Quantity</flux:label>
+                                    <input type="number" x-model="testData.quantity" min="1" 
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Customer</flux:label>
+                                    <select x-model="testData.customer_id" 
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="">None</option>
+                                        <!-- Add customer options dynamically -->
+                                    </flux:select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" :disabled="testing" class="btn bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 font-medium rounded-md transition-colors-sm w-full">
+                                <i class="fas fa-play mr-1" x-show="!testing"></i>
+                                <i class="fas fa-spinner fa-spin mr-1" x-show="testing"></i>
+                                <span x-text="testing ? 'Testing...' : 'Run Test'"></span>
+                            </flux:button>
+                        </div>
+                    </form>
+                    
+                    <!-- Test Results -->
+                    <div x-show="result" x-transition class="mt-6 p-6 bg-gray-50 rounded-md">
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-900">Test Result:</div>
+                            <pre x-text="JSON.stringify(result, null, 2)" class="text-xs text-gray-600 mt-2 overflow-auto"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Calculations -->
+        @if($recentCalculations->count() > 0)
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-6 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-history text-gray-600 mr-2"></i>
+                    Recent Tax Calculations
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engine</th>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($recentCalculations as $calc)
+                        <tr>
+                            <td class="px-6 py-6 whitespace-nowrap text-sm font-mono text-gray-900">
+                                {{ substr($calc->calculation_id, -8) }}
+                            </td>
+                            <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
+                                {{ ucfirst($calc->calculation_type) }}
+                            </td>
+                            <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
+                                {{ $calc->engine_used ?? 'General' }}
+                            </td>
+                            <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
+                                ${{ number_format($calc->total_amount ?? 0, 2) }}
+                            </td>
+                            <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900">
+                                {{ number_format($calc->calculation_time_ms ?? 0, 1) }}ms
+                            </td>
+                            <td class="px-6 py-6 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {{ $calc->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ ucfirst($calc->status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">
+                                {{ \Carbon\Carbon::parse($calc->created_at)->format('M j, H:i') }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+    </div>
+</div>
+
+<script>
+function taxTester() {
+    return {
+        testing: false,
+        result: null,
+        testData: {
+            base_price: 100.00,
+            quantity: 1,
+            customer_id: '',
+            category_id: '',
+        },
+        
+        async runTest() {
+            this.testing = true;
+            this.result = null;
+            
+            try {
+                const response = await fetch('{{ route("admin.tax.test-calculation") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        test_data: this.testData
+                    })
+                });
+                
+                this.result = await response.json();
+            } catch (error) {
+                this.result = { error: error.message };
+            } finally {
+                this.testing = false;
+            }
+        }
+    };
+}
+
+async function exportTaxConfig() {
+    try {
+        const response = await fetch('{{ route("admin.tax.export-config") }}');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'tax-config-' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        alert('Export failed: ' + error.message);
+    }
+}
+</script>
+@endsection

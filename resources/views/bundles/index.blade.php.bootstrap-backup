@@ -1,0 +1,161 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <x-page-header>
+        <x-slot name="title">Product Bundles</x-slot>
+        <x-slot name="description">Manage product bundles and package deals</x-slot>
+        <x-slot name="actions">
+            @can('create', App\Models\ProductBundle::class)
+                <a href="{{ route('bundles.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Bundle
+                </a>
+            @endcan
+        </x-slot>
+    </x-page-header>
+
+    <x-content-card>
+        <!-- Search and Filters -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <form method="GET" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2" 
+                           placeholder="Search bundles..." 
+                           value="{{ request('search') }}">
+                    <select name="is_active" class="form-select me-2" style="width: auto;">
+                        <option value="">All Statuses</option>
+                        <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>Active</option>
+                        <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>Inactive</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    @if(request()->hasAny(['search', 'is_active']))
+                        <a href="{{ route('bundles.index') }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
+        @if($bundles->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Products</th>
+                            <th>Price</th>
+                            <th>Discount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($bundles as $bundle)
+                            <tr>
+                                <td>
+                                    <strong>{{ $bundle->name }}</strong>
+                                    @if($bundle->sku)
+                                        <br><small class="text-muted">SKU: {{ $bundle->sku }}</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ $bundle->description }}">
+                                        {{ $bundle->description }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ $bundle->products->count() }} products
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($bundle->fixed_price)
+                                        <span class="fw-bold text-success">${{ number_format($bundle->fixed_price, 2) }}</span>
+                                    @else
+                                        <span class="text-muted">Calculated</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bundle->discount_type === 'percentage')
+                                        <span class="text-info">{{ $bundle->discount_value }}%</span>
+                                    @elseif($bundle->discount_type === 'fixed')
+                                        <span class="text-info">${{ number_format($bundle->discount_value, 2) }}</span>
+                                    @else
+                                        <span class="text-muted">None</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bundle->is_active)
+                                        <span class="badge bg-success">Active</span>
+                                    @else
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        @can('view', $bundle)
+                                            <a href="{{ route('bundles.show', $bundle) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @endcan
+                                        @can('update', $bundle)
+                                            <a href="{{ route('bundles.edit', $bundle) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcan
+                                        @can('delete', $bundle)
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete('{{ $bundle->name }}', '{{ route('bundles.destroy', $bundle) }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        @endcan
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{ $bundles->links() }}
+        @else
+            <div class="text-center py-5">
+                <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No product bundles found</h5>
+                <p class="text-muted">
+                    @if(request()->hasAny(['search', 'is_active']))
+                        Try adjusting your search criteria or <a href="{{ route('bundles.index') }}">view all bundles</a>.
+                    @else
+                        Create your first product bundle to get started.
+                    @endif
+                </p>
+                @can('create', App\Models\ProductBundle::class)
+                    <a href="{{ route('bundles.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Bundle
+                    </a>
+                @endcan
+            </div>
+        @endif
+    </x-content-card>
+</div>
+
+<script>
+function confirmDelete(name, url) {
+    if (confirm(`Are you sure you want to delete the bundle "${name}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+@endsection

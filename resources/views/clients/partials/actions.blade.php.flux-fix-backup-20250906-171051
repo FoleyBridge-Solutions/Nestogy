@@ -1,0 +1,32 @@
+<div class="btn-group px-6 py-2 font-medium rounded-md transition-colors-group-sm" role="group">
+    <a href="{{ route('clients.show', $client) }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-info" title="View">
+        <i class="fas fa-eye"></i>
+    </a>
+    <a href="{{ route('clients.edit', $client) }}" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="Edit">
+        <i class="fas fa-edit"></i>
+    </a>
+    @if($client->archived_at)
+        <form action="{{ route('clients.restore', $client) }}" method="POST" class="inline">
+            @csrf
+            @method('PATCH')
+            <button type="submit" class="inline-flex items-center px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" title="Restore" onclick="return confirm('Are you sure you want to restore this client?')">
+                <i class="fas fa-undo"></i>
+            </flux:button>
+        </form>
+    @else
+        <form action="{{ route('clients.archive', $client) }}" method="POST" class="inline">
+            @csrf
+            @method('PATCH')
+            <button type="submit" class="btn px-6 py-2 font-medium rounded-md transition-colors-warning" title="Archive" onclick="return confirm('Are you sure you want to archive this client?')">
+                <i class="fas fa-archive"></i>
+            </flux:button>
+        </form>
+    @endif
+    <form action="{{ route('clients.destroy', $client) }}" method="POST" class="inline">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="inline-flex items-center px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" title="Delete" onclick="return confirm('Are you sure you want to permanently delete this client?')">
+            <i class="fas fa-trash"></i>
+        </flux:button>
+    </form>
+</div>

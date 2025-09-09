@@ -1,0 +1,159 @@
+@props([
+    'items',
+    'columns' => [],
+    'routePrefix' => '',
+    'actions' => true,
+    'checkboxes' => false,
+    'emptyMessage' => 'No records found.'
+])
+
+<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                    @if($checkboxes)
+                        <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-400 select-all-checkbox">
+                        </th>
+                    @endif
+                    
+                    @foreach($columns as $key => $column)
+                        <th class="px-6 py-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            @if(is_array($column))
+                                {{ $column['label'] }}
+                            @else
+                                {{ $column }}
+                            @endif
+                        </th>
+                    @endforeach
+                    
+                    @if($actions)
+                        <th class="px-6 py-6 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    @endif
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @forelse($items as $item)
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        @if($checkboxes)
+                            <td class="px-6 py-6 whitespace-nowrap">
+                                <input type="checkbox" name="selected_ids[]" value="{{ $item->id }}" 
+                                       class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 dark:text-blue-400 flex flex-wrap -mx-4-checkbox">
+                            </td>
+                        @endif
+                        
+                        @foreach($columns as $key => $column)
+                            <td class="px-6 py-6 whitespace-nowrap">
+                                @if(is_array($column))
+                                    @if(isset($column['component']))
+                                        <x-dynamic-component :component="$column['component']" :item="$item" :key="$key" />
+                                    @elseif(isset($column['callback']))
+                                        {!! call_user_func($column['callback'], $item) !!}
+                                    @else
+                                        {{ data_get($item, $key) }}
+                                    @endif
+                                @else
+                                    <span class="text-sm text-gray-900 dark:text-gray-100">
+                                        {{ data_get($item, $key) }}
+                                    </span>
+                                @endif
+                            </td>
+                        @endforeach
+                        
+                        @if($actions)
+                            <td class="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end space-x-2">
+                                    @if($routePrefix)
+                                        <a href="{{ route($routePrefix . '.show', $item) }}" 
+                                           class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors duration-150">
+                                            View
+                                        </a>
+                                        <a href="{{ route($routePrefix . '.edit', $item) }}" 
+                                           class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300 transition-colors duration-150">
+                                            Edit
+                                        </a>
+                                        <form method="POST" action="{{ route($routePrefix . '.destroy', $item) }}" 
+                                              class="inline" onsubmit="return handleDelete(event, this)">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" 
+                                                    class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors duration-150">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
+                                    
+                                    {{ $actions ?? '' }}
+                                </div>
+                            </td>
+                        @endif
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="{{ count($columns) + ($checkboxes ? 1 : 0) + ($actions ? 1 : 0) }}" 
+                            class="px-6 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            {{ $emptyMessage }}
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    
+    @if($items->hasPages())
+        <div class="px-6 py-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            {{ $items->links() }}
+        </div>
+    @endif
+</div>
+
+@if($checkboxes)
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.querySelector('.select-all-checkbox');
+            const rowCheckboxes = document.querySelectorAll('.flex flex-wrap-checkbox');
+            
+            selectAllCheckbox?.addEventListener('change', function() {
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+            
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+                    
+                    selectAllCheckbox.checked = allChecked;
+                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                });
+            });
+        });
+
+        // Enhanced delete confirmation with custom modal
+        window.handleDelete = async function(event, form) {
+            event.preventDefault();
+            
+            const confirmed = await confirmAction(
+                'Are you sure you want to delete this item? This action cannot be undone.',
+                {
+                    title: 'Confirm Deletion',
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel',
+                    type: 'error'
+                }
+            );
+            
+            if (confirmed) {
+                form.submit();
+            }
+            
+            return false;
+        };
+    </script>
+    @endpush
+@endif

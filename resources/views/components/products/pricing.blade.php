@@ -1,0 +1,137 @@
+@props([])
+
+<x-forms.section 
+    title="Pricing Configuration" 
+    description="Set pricing and billing details"
+    :icon="'<svg class=\'w-5 h-5 text-green-600\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'></path></svg>'">
+    
+    <!-- Base Price and Cost -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Base Price <span class="text-red-500">*</span>
+            </label>
+            <div class="flex">
+                <select name="currency_code" 
+                        class="flex-shrink-0 inline-flex items-center px-6 py-2 border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 text-sm rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="USD" selected>USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CAD">CAD</option>
+                </select>
+                <input type="number" 
+                       name="base_price" 
+                       x-model="basePrice"
+                       class="flex-1 px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm transition-colors duration-200"
+                       step="0.01" 
+                       min="0" 
+                       placeholder="0.00"
+                       required>
+            </div>
+            @error('base_price')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+        
+        <x-forms.input 
+            name="cost" 
+            label="Cost"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            help="Your cost for this product/service"
+            x-model="cost" />
+            
+        <x-forms.select 
+            name="pricing_model" 
+            label="Pricing Model" 
+            :required="true"
+            x-model="pricingModel">
+            <option value="fixed" selected>Fixed Price</option>
+            <option value="tiered">Tiered Pricing</option>
+            <option value="volume">Volume Discount</option>
+            <option value="usage">Usage Based</option>
+            <option value="value">Value Based</option>
+            <option value="custom">Custom</option>
+        </x-forms.select>
+    </div>
+    
+    <!-- Billing Configuration -->
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h4 class="text-md font-medium text-gray-900 dark:text-white mb-6">Billing Configuration</h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <x-forms.select 
+                name="billing_model" 
+                label="Billing Model" 
+                :required="true"
+                x-model="billingModel">
+                <option value="one_time" selected>One Time</option>
+                <option value="subscription">Subscription</option>
+                <option value="usage_based">Usage Based</option>
+                <option value="hybrid">Hybrid</option>
+            </x-forms.select>
+            
+            <x-forms.select 
+                name="billing_cycle" 
+                label="Billing Cycle" 
+                :required="true"
+                x-model="billingCycle">
+                <option value="one_time" selected>One Time</option>
+                <option value="hourly">Hourly</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="semi_annually">Semi-Annually</option>
+                <option value="annually">Annually</option>
+            </x-forms.select>
+            
+            <x-forms.input 
+                name="billing_interval" 
+                label="Billing Interval"
+                type="number"
+                min="1"
+                :value="old('billing_interval', 1)"
+                help="Every X billing cycles"
+                x-model="billingInterval" />
+        </div>
+    </div>
+    
+    <!-- Tax Settings -->
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h4 class="text-md font-medium text-gray-900 dark:text-white mb-6">Tax & Discount Settings</h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <x-forms.checkbox 
+                    name="is_taxable" 
+                    label="Taxable"
+                    :checked="true"
+                    x-model="isTaxable" />
+                    
+                <x-forms.checkbox 
+                    name="tax_inclusive" 
+                    label="Tax Inclusive Pricing"
+                    help="Price includes tax"
+                    x-model="taxInclusive" />
+            </div>
+            
+            <div class="space-y-4">
+                <x-forms.checkbox 
+                    name="allow_discounts" 
+                    label="Allow Discounts"
+                    :checked="true"
+                    x-model="allowDiscounts" />
+                    
+                <x-forms.checkbox 
+                    name="requires_approval" 
+                    label="Requires Approval"
+                    help="Manager approval needed for orders"
+                    x-model="requiresApproval" />
+            </div>
+        </div>
+    </div>
+    
+</x-forms.section>

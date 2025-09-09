@@ -1,0 +1,1305 @@
+@extends('layouts.app')
+
+@section('title', 'Create IT Documentation')
+
+@section('content')
+<div class="space-y-6" x-data="documentationForm()">
+    <!-- Page Header -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Create IT Documentation</h1>
+                    <p class="mt-1 text-sm text-gray-500">Comprehensive technical documentation and procedures</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <!-- Documentation Completeness -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500">Completion:</span>
+                        <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="`width: ${completionPercentage}%`"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700" x-text="`${completionPercentage}%`"></span>
+                    </div>
+                    <a href="{{ route('clients.it-documentation.index') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form action="{{ route('clients.it-documentation.store') }}" method="POST" enctype="multipart/form-data" @submit="handleSubmit">
+        @csrf
+        
+        <!-- Tab Navigation -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex overflow-x-auto" aria-label="Tabs">
+                    <button type="button" @click="activeTab = 'general'" 
+                            :class="activeTab === 'general' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>General Information</span>
+                            <span v-if="tabValidation.general === false" class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'technical'" 
+                            :class="activeTab === 'technical' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span>Technical Configuration</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'procedures'" 
+                            :class="activeTab === 'procedures' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            <span>Procedures & Workflows</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'network'" 
+                            :class="activeTab === 'network' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                            </svg>
+                            <span>Network Infrastructure</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'compliance'" 
+                            :class="activeTab === 'compliance' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <span>Compliance & Security</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'resources'" 
+                            :class="activeTab === 'resources' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Resources & Attachments</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'testing'" 
+                            :class="activeTab === 'testing' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Testing & Validation</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'automation'" 
+                            :class="activeTab === 'automation' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                            </svg>
+                            <span>Automation & Integration</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'monitoring'" 
+                            :class="activeTab === 'monitoring' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <span>Monitoring & Metrics</span>
+                        </div>
+                    </button>
+
+                    <button type="button" @click="activeTab = 'history'" 
+                            :class="activeTab === 'history' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors duration-200">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>History & Versioning</span>
+                        </div>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Tab 1: General Information -->
+                <div x-show="activeTab === 'general'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Client and Category -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="client_id" class="block text-sm font-medium text-gray-700">Client *</label>
+                                <select name="client_id" id="client_id" required x-model="formData.client_id"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('client_id') border-red-500 @enderror">
+                                    <option value="">Select a client</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ old('client_id', $selectedClientId) == $client->id ? 'selected' : '' }}>
+                                            {{ $client->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('client_id')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="it_category" class="block text-sm font-medium text-gray-700">IT Category *</label>
+                                <select name="it_category" id="it_category" required x-model="formData.it_category"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('it_category') border-red-500 @enderror">
+                                    <option value="">Select a category</option>
+                                    @foreach($categories as $key => $category)
+                                        <option value="{{ $key }}" {{ old('it_category') == $key ? 'selected' : '' }}>
+                                            {{ $category }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('it_category')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Documentation Name -->
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Documentation Name *</label>
+                            <input type="text" name="name" id="name" required x-model="formData.name"
+                                   value="{{ old('name') }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('name') border-red-500 @enderror">
+                            @error('name')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Description with Rich Text Editor -->
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <div class="mt-1">
+                                <textarea name="description" id="description" rows="8" x-model="formData.description"
+                                          class="shadow-sm block w-full sm:text-sm border-gray-300 rounded-md @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">Provide a detailed description of this documentation</p>
+                            @error('description')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Documentation Status and Dates -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                                <select name="status" id="status" x-model="formData.status"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="draft">Draft</option>
+                                    <option value="review">Under Review</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="deprecated">Deprecated</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="effective_date" class="block text-sm font-medium text-gray-700">Effective Date</label>
+                                <input type="date" name="effective_date" id="effective_date" x-model="formData.effective_date"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+
+                            <div>
+                                <label for="expiry_date" class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                                <input type="date" name="expiry_date" id="expiry_date" x-model="formData.expiry_date"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Template Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Use Template (Optional)</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <button type="button" @click="loadTemplate('disaster-recovery')"
+                                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                    </svg>
+                                    <span class="text-xs">Disaster Recovery</span>
+                                </button>
+                                <button type="button" @click="loadTemplate('backup-restore')"
+                                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    <span class="text-xs">Backup & Restore</span>
+                                </button>
+                                <button type="button" @click="loadTemplate('incident-response')"
+                                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    <span class="text-xs">Incident Response</span>
+                                </button>
+                                <button type="button" @click="loadTemplate('deployment')"
+                                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <span class="text-xs">Deployment</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Technical Configuration -->
+                <div x-show="activeTab === 'technical'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Network Configuration -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Network Configuration</h3>
+                            
+                            <!-- IP Addresses -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">IP Addresses</label>
+                                <div class="space-y-2">
+                                    <template x-for="(ip, index) in ipAddresses" :key="index">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="text" 
+                                                   :name="`ip_addresses[${index}][address]`"
+                                                   x-model="ip.address"
+                                                   placeholder="192.168.1.1"
+                                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="text" 
+                                                   :name="`ip_addresses[${index}][description]`"
+                                                   x-model="ip.description"
+                                                   placeholder="Description"
+                                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <button type="button" @click="removeIpAddress(index)" class="text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <button type="button" @click="addIpAddress()" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Add IP Address
+                                </button>
+                            </div>
+
+                            <!-- Port Configurations -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Port Configurations</label>
+                                <div class="space-y-2">
+                                    <template x-for="(port, index) in ports" :key="index">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="text" 
+                                                   :name="`ports[${index}][number]`"
+                                                   x-model="port.number"
+                                                   placeholder="Port (e.g., 443)"
+                                                   class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <select :name="`ports[${index}][protocol]`"
+                                                    x-model="port.protocol"
+                                                    class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                                <option value="TCP">TCP</option>
+                                                <option value="UDP">UDP</option>
+                                            </select>
+                                            <input type="text" 
+                                                   :name="`ports[${index}][service]`"
+                                                   x-model="port.service"
+                                                   placeholder="Service"
+                                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <button type="button" @click="removePort(index)" class="text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <button type="button" @click="addPort()" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Add Port
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Software & Services -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Software & Services</h3>
+                            
+                            <!-- Software Versions -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Software Versions</label>
+                                <div class="space-y-2">
+                                    <template x-for="(software, index) in softwareVersions" :key="index">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="text" 
+                                                   :name="`software_versions[${index}][name]`"
+                                                   x-model="software.name"
+                                                   placeholder="Software Name"
+                                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="text" 
+                                                   :name="`software_versions[${index}][version]`"
+                                                   x-model="software.version"
+                                                   placeholder="Version"
+                                                   class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="date" 
+                                                   :name="`software_versions[${index}][eol_date]`"
+                                                   x-model="software.eol_date"
+                                                   placeholder="EOL Date"
+                                                   class="w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <button type="button" @click="removeSoftware(index)" class="text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <button type="button" @click="addSoftware()" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Add Software
+                                </button>
+                            </div>
+
+                            <!-- API Endpoints -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">API Endpoints</label>
+                                <div class="space-y-2">
+                                    <template x-for="(api, index) in apiEndpoints" :key="index">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="text" 
+                                                   :name="`api_endpoints[${index}][url]`"
+                                                   x-model="api.url"
+                                                   placeholder="API URL"
+                                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <select :name="`api_endpoints[${index}][method]`"
+                                                    x-model="api.method"
+                                                    class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                                <option value="GET">GET</option>
+                                                <option value="POST">POST</option>
+                                                <option value="PUT">PUT</option>
+                                                <option value="DELETE">DELETE</option>
+                                            </select>
+                                            <input type="text" 
+                                                   :name="`api_endpoints[${index}][description]`"
+                                                   x-model="api.description"
+                                                   placeholder="Description"
+                                                   class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <button type="button" @click="removeApiEndpoint(index)" class="text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <button type="button" @click="addApiEndpoint()" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Add API Endpoint
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Procedures & Workflows -->
+                <div x-show="activeTab === 'procedures'" x-transition>
+                    <div class="space-y-6">
+                        <!-- View Mode Toggle -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">Procedure Steps</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-500">View Mode:</span>
+                                <button type="button" 
+                                        @click="procedureViewMode = 'text'" 
+                                        :class="procedureViewMode === 'text' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700'"
+                                        class="px-3 py-1 text-sm font-medium rounded-l-md border border-gray-300">
+                                    Text
+                                </button>
+                                <button type="button" 
+                                        @click="procedureViewMode = 'visual'" 
+                                        :class="procedureViewMode === 'visual' ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700'"
+                                        class="px-3 py-1 text-sm font-medium rounded-r-md border border-gray-300">
+                                    Visual
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Text View -->
+                        <div x-show="procedureViewMode === 'text'" class="space-y-4">
+                            <template x-for="(step, index) in procedureSteps" :key="index">
+                                <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm" x-text="index + 1"></span>
+                                            <select :name="`procedure_steps[${index}][type]`"
+                                                    x-model="step.type"
+                                                    class="text-sm border-gray-300 rounded-md">
+                                                <option value="manual">Manual</option>
+                                                <option value="automated">Automated</option>
+                                                <option value="decision">Decision</option>
+                                                <option value="parallel">Parallel</option>
+                                                <option value="checkpoint">Checkpoint</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" @click="removeProcedureStep(index)" class="text-red-600 hover:text-red-800">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        <input type="text" 
+                                               :name="`procedure_steps[${index}][title]`"
+                                               x-model="step.title"
+                                               placeholder="Step Title"
+                                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        
+                                        <textarea :name="`procedure_steps[${index}][description]`"
+                                                  x-model="step.description"
+                                                  rows="3"
+                                                  placeholder="Detailed description"
+                                                  class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                        
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Time Estimate</label>
+                                                <input type="text" 
+                                                       :name="`procedure_steps[${index}][time_estimate]`"
+                                                       x-model="step.time_estimate"
+                                                       placeholder="e.g., 15 minutes"
+                                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Responsible Role</label>
+                                                <input type="text" 
+                                                       :name="`procedure_steps[${index}][responsible]`"
+                                                       x-model="step.responsible"
+                                                       placeholder="e.g., System Admin"
+                                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500">Risk Level</label>
+                                                <select :name="`procedure_steps[${index}][risk_level]`"
+                                                        x-model="step.risk_level"
+                                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                                    <option value="low">Low</option>
+                                                    <option value="medium">Medium</option>
+                                                    <option value="high">High</option>
+                                                    <option value="critical">Critical</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Command/Script Section -->
+                                        <div x-show="step.type === 'automated' || step.type === 'manual'">
+                                            <label class="block text-xs text-gray-500 mb-1">Commands/Scripts</label>
+                                            <textarea :name="`procedure_steps[${index}][commands]`"
+                                                      x-model="step.commands"
+                                                      rows="4"
+                                                      placeholder="Enter commands or scripts"
+                                                      class="block w-full border-gray-300 rounded-md shadow-sm font-mono text-sm bg-gray-50"></textarea>
+                                        </div>
+                                        
+                                        <!-- Success Criteria -->
+                                        <div>
+                                            <label class="block text-xs text-gray-500 mb-1">Success Criteria</label>
+                                            <input type="text" 
+                                                   :name="`procedure_steps[${index}][success_criteria]`"
+                                                   x-model="step.success_criteria"
+                                                   placeholder="What indicates this step was successful?"
+                                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        </div>
+                                        
+                                        <input type="hidden" :name="`procedure_steps[${index}][order]`" :value="index + 1">
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <button type="button" @click="addProcedureStep()" 
+                                    class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                                <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Add Procedure Step
+                            </button>
+                        </div>
+
+                        <!-- Visual View -->
+                        <div x-show="procedureViewMode === 'visual'">
+                            <div id="procedure-diagram" class="border border-gray-300 rounded-lg bg-gray-50" style="height: 600px;"></div>
+                            <input type="hidden" name="procedure_diagram" id="procedure_diagram_data">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Network Infrastructure -->
+                <div x-show="activeTab === 'network'" x-transition>
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">Network Infrastructure Diagram</h3>
+                            <button type="button" onclick="importNetworkDiagram()" 
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                Import
+                            </button>
+                        </div>
+                        <div id="network-diagram" class="border border-gray-300 rounded-lg bg-gray-50" style="height: 600px;"></div>
+                        <input type="hidden" name="network_diagram" id="network_diagram_data">
+                        <p class="text-sm text-gray-500">Use the toolbar to add network components. Drag to connect elements. Click to edit properties.</p>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Compliance & Security -->
+                <div x-show="activeTab === 'compliance'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Access Control -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Access Control</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="access_level" class="block text-sm font-medium text-gray-700">Access Level *</label>
+                                    <select name="access_level" id="access_level" required 
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('access_level') border-red-500 @enderror">
+                                        @foreach($accessLevels as $key => $level)
+                                            <option value="{{ $key }}" {{ old('access_level', 'confidential') == $key ? 'selected' : '' }}>
+                                                {{ $level }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('access_level')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="review_schedule" class="block text-sm font-medium text-gray-700">Review Schedule *</label>
+                                    <select name="review_schedule" id="review_schedule" required 
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('review_schedule') border-red-500 @enderror">
+                                        @foreach($reviewSchedules as $key => $schedule)
+                                            <option value="{{ $key }}" {{ old('review_schedule', 'annually') == $key ? 'selected' : '' }}>
+                                                {{ $schedule }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('review_schedule')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compliance Requirements -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Compliance Requirements</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="compliance_requirements[]" value="gdpr" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">GDPR</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="compliance_requirements[]" value="hipaa" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">HIPAA</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="compliance_requirements[]" value="soc2" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">SOC 2</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="compliance_requirements[]" value="pci-dss" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">PCI-DSS</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="compliance_requirements[]" value="iso27001" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">ISO 27001</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="compliance_requirements[]" value="nist" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">NIST</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Security Classification -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Security Classification</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="data_classification" class="block text-sm font-medium text-gray-700">Data Classification</label>
+                                    <select name="data_classification" id="data_classification"
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="public">Public</option>
+                                        <option value="internal">Internal Use Only</option>
+                                        <option value="confidential">Confidential</option>
+                                        <option value="restricted">Restricted</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="encryption_required" class="flex items-center">
+                                        <input type="checkbox" name="encryption_required" id="encryption_required" 
+                                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                        <span class="ml-2 text-sm text-gray-700">Encryption Required</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 6: Resources & Attachments -->
+                <div x-show="activeTab === 'resources'" x-transition>
+                    <div class="space-y-6">
+                        <!-- File Attachments -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">File Attachments</h3>
+                            <div>
+                                <label for="files" class="block text-sm font-medium text-gray-700">Attach Files</label>
+                                <input type="file" name="files[]" id="files" multiple
+                                       accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.zip,.xlsx,.xls,.pptx,.ppt"
+                                       class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                <p class="mt-2 text-sm text-gray-500">Max file size: 50MB each. Allowed formats: PDF, DOC, DOCX, TXT, images, ZIP, Excel, PowerPoint</p>
+                            </div>
+                        </div>
+
+                        <!-- External Resources -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">External Resources</h3>
+                            <div class="space-y-2">
+                                <template x-for="(resource, index) in externalResources" :key="index">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" 
+                                               :name="`external_resources[${index}][title]`"
+                                               x-model="resource.title"
+                                               placeholder="Resource Title"
+                                               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <input type="url" 
+                                               :name="`external_resources[${index}][url]`"
+                                               x-model="resource.url"
+                                               placeholder="URL"
+                                               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <button type="button" @click="removeExternalResource(index)" class="text-red-600 hover:text-red-800">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <button type="button" @click="addExternalResource()" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Add External Resource
+                            </button>
+                        </div>
+
+                        <!-- Related Documentation -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Related Documentation</h3>
+                            <select name="related_entities[]" multiple
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    style="height: 120px;">
+                                @if(isset($relatedDocuments))
+                                    @foreach($relatedDocuments as $doc)
+                                        <option value="{{ $doc->id }}">{{ $doc->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <p class="mt-2 text-sm text-gray-500">Hold Ctrl/Cmd to select multiple documents</p>
+                        </div>
+
+                        <!-- Tags -->
+                        <div>
+                            <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+                            <input type="text" name="tags" id="tags"
+                                   value="{{ old('tags') }}"
+                                   placeholder="Enter tags separated by commas"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('tags') border-red-500 @enderror">
+                            <p class="mt-1 text-sm text-gray-500">Separate multiple tags with commas (e.g., network, security, backup)</p>
+                            @error('tags')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 7: Testing & Validation -->
+                <div x-show="activeTab === 'testing'" x-transition>
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-medium text-gray-900">Testing & Validation Procedures</h3>
+                        
+                        <!-- Test Cases -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">Test Cases</h4>
+                            <div class="space-y-3">
+                                <template x-for="(test, index) in testCases" :key="index">
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <span class="text-sm font-medium text-gray-900" x-text="`Test Case ${index + 1}`"></span>
+                                            <button type="button" @click="removeTestCase(index)" class="text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <input type="text" 
+                                                   :name="`test_cases[${index}][name]`"
+                                                   x-model="test.name"
+                                                   placeholder="Test Name"
+                                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <textarea :name="`test_cases[${index}][steps]`"
+                                                      x-model="test.steps"
+                                                      rows="2"
+                                                      placeholder="Test Steps"
+                                                      class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                            <input type="text" 
+                                                   :name="`test_cases[${index}][expected_result]`"
+                                                   x-model="test.expected_result"
+                                                   placeholder="Expected Result"
+                                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            <button type="button" @click="addTestCase()" class="mt-3 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Add Test Case
+                            </button>
+                        </div>
+
+                        <!-- Validation Checklist -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">Validation Checklist</h4>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="validation_checklist[]" value="functionality_verified" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Functionality verified</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="validation_checklist[]" value="security_tested" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Security tested</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="validation_checklist[]" value="performance_benchmarked" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Performance benchmarked</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="validation_checklist[]" value="failover_tested" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Failover tested</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="validation_checklist[]" value="documentation_complete" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Documentation complete</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 8: Automation & Integration -->
+                <div x-show="activeTab === 'automation'" x-transition>
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-medium text-gray-900">Automation & Integration</h3>
+                        
+                        <!-- Automation Scripts -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">Automation Scripts</h4>
+                            <div class="space-y-3">
+                                <template x-for="(script, index) in automationScripts" :key="index">
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <input type="text" 
+                                                   :name="`automation_scripts[${index}][name]`"
+                                                   x-model="script.name"
+                                                   placeholder="Script Name"
+                                                   class="flex-1 mr-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <select :name="`automation_scripts[${index}][type]`"
+                                                    x-model="script.type"
+                                                    class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                                <option value="bash">Bash</option>
+                                                <option value="powershell">PowerShell</option>
+                                                <option value="python">Python</option>
+                                                <option value="ansible">Ansible</option>
+                                                <option value="terraform">Terraform</option>
+                                            </select>
+                                            <button type="button" @click="removeAutomationScript(index)" class="ml-2 text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <textarea :name="`automation_scripts[${index}][content]`"
+                                                  x-model="script.content"
+                                                  rows="6"
+                                                  placeholder="Script Content"
+                                                  class="block w-full border-gray-300 rounded-md shadow-sm font-mono text-sm bg-gray-50"></textarea>
+                                    </div>
+                                </template>
+                            </div>
+                            <button type="button" @click="addAutomationScript()" class="mt-3 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Add Script
+                            </button>
+                        </div>
+
+                        <!-- Integration Settings -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">Integration Settings</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="integrations[]" value="rmm" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">RMM Integration</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="integrations[]" value="ticketing" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Ticketing System</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="integrations[]" value="monitoring" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Monitoring Platform</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="integrations[]" value="cmdb" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">CMDB</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 9: Monitoring & Metrics -->
+                <div x-show="activeTab === 'monitoring'" x-transition>
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-medium text-gray-900">Monitoring & Metrics</h3>
+                        
+                        <!-- SLA Requirements -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">SLA Requirements</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="uptime_requirement" class="block text-sm font-medium text-gray-700">Uptime Requirement (%)</label>
+                                    <input type="number" name="uptime_requirement" id="uptime_requirement" 
+                                           min="0" max="100" step="0.01" placeholder="99.99"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="rto" class="block text-sm font-medium text-gray-700">RTO (Recovery Time Objective)</label>
+                                    <input type="text" name="rto" id="rto" placeholder="e.g., 4 hours"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="rpo" class="block text-sm font-medium text-gray-700">RPO (Recovery Point Objective)</label>
+                                    <input type="text" name="rpo" id="rpo" placeholder="e.g., 1 hour"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Metrics -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">Performance Metrics</h4>
+                            <div class="space-y-2">
+                                <template x-for="(metric, index) in performanceMetrics" :key="index">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" 
+                                               :name="`performance_metrics[${index}][name]`"
+                                               x-model="metric.name"
+                                               placeholder="Metric Name"
+                                               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <input type="text" 
+                                               :name="`performance_metrics[${index}][threshold]`"
+                                               x-model="metric.threshold"
+                                               placeholder="Threshold"
+                                               class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <select :name="`performance_metrics[${index}][unit]`"
+                                                x-model="metric.unit"
+                                                class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <option value="ms">ms</option>
+                                            <option value="seconds">seconds</option>
+                                            <option value="percent">%</option>
+                                            <option value="count">count</option>
+                                            <option value="gb">GB</option>
+                                        </select>
+                                        <button type="button" @click="removePerformanceMetric(index)" class="text-red-600 hover:text-red-800">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <button type="button" @click="addPerformanceMetric()" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Add Metric
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 10: History & Versioning -->
+                <div x-show="activeTab === 'history'" x-transition>
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-medium text-gray-900">History & Versioning</h3>
+                        
+                        <!-- Version Information -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="version" class="block text-sm font-medium text-gray-700">Version</label>
+                                <input type="text" name="version" id="version" value="1.0" 
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="change_summary" class="block text-sm font-medium text-gray-700">Change Summary</label>
+                                <input type="text" name="change_summary" id="change_summary" placeholder="Brief description of changes"
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Change Log -->
+                        <div>
+                            <label for="change_log" class="block text-sm font-medium text-gray-700">Detailed Change Log</label>
+                            <textarea name="change_log" id="change_log" rows="4" 
+                                      placeholder="Describe what has been added, modified, or removed in this version"
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                        </div>
+
+                        <!-- Review History -->
+                        <div>
+                            <h4 class="text-base font-medium text-gray-700 mb-3">Review Requirements</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="requires_technical_review" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Requires Technical Review</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="requires_management_approval" 
+                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Requires Management Approval</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="bg-white shadow rounded-lg mt-6">
+            <div class="px-4 py-3 sm:px-6 flex justify-between">
+                <div class="flex space-x-3">
+                    <button type="button" @click="saveDraft()" 
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"/>
+                        </svg>
+                        Save as Draft
+                    </button>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ route('clients.it-documentation.index') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Create Documentation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function documentationForm() {
+    return {
+        activeTab: 'general',
+        procedureViewMode: 'text',
+        formData: {
+            client_id: '',
+            it_category: '',
+            name: '',
+            description: '',
+            status: 'draft',
+            effective_date: '',
+            expiry_date: ''
+        },
+        ipAddresses: [],
+        ports: [],
+        softwareVersions: [],
+        apiEndpoints: [],
+        procedureSteps: [],
+        externalResources: [],
+        testCases: [],
+        automationScripts: [],
+        performanceMetrics: [],
+        
+        get completionPercentage() {
+            let completed = 0;
+            let total = 10;
+            
+            if (this.formData.client_id) completed++;
+            if (this.formData.it_category) completed++;
+            if (this.formData.name) completed++;
+            if (this.formData.description) completed++;
+            if (this.ipAddresses.length > 0) completed++;
+            if (this.softwareVersions.length > 0) completed++;
+            if (this.procedureSteps.length > 0) completed++;
+            if (this.testCases.length > 0) completed++;
+            if (this.automationScripts.length > 0) completed++;
+            if (this.performanceMetrics.length > 0) completed++;
+            
+            return Math.round((completed / total) * 100);
+        },
+        
+        addIpAddress() {
+            this.ipAddresses.push({ address: '', description: '' });
+        },
+        
+        removeIpAddress(index) {
+            this.ipAddresses.splice(index, 1);
+        },
+        
+        addPort() {
+            this.ports.push({ number: '', protocol: 'TCP', service: '' });
+        },
+        
+        removePort(index) {
+            this.ports.splice(index, 1);
+        },
+        
+        addSoftware() {
+            this.softwareVersions.push({ name: '', version: '', eol_date: '' });
+        },
+        
+        removeSoftware(index) {
+            this.softwareVersions.splice(index, 1);
+        },
+        
+        addApiEndpoint() {
+            this.apiEndpoints.push({ url: '', method: 'GET', description: '' });
+        },
+        
+        removeApiEndpoint(index) {
+            this.apiEndpoints.splice(index, 1);
+        },
+        
+        addProcedureStep() {
+            this.procedureSteps.push({
+                type: 'manual',
+                title: '',
+                description: '',
+                time_estimate: '',
+                responsible: '',
+                risk_level: 'low',
+                commands: '',
+                success_criteria: ''
+            });
+        },
+        
+        removeProcedureStep(index) {
+            this.procedureSteps.splice(index, 1);
+        },
+        
+        addExternalResource() {
+            this.externalResources.push({ title: '', url: '' });
+        },
+        
+        removeExternalResource(index) {
+            this.externalResources.splice(index, 1);
+        },
+        
+        addTestCase() {
+            this.testCases.push({ name: '', steps: '', expected_result: '' });
+        },
+        
+        removeTestCase(index) {
+            this.testCases.splice(index, 1);
+        },
+        
+        addAutomationScript() {
+            this.automationScripts.push({ name: '', type: 'bash', content: '' });
+        },
+        
+        removeAutomationScript(index) {
+            this.automationScripts.splice(index, 1);
+        },
+        
+        addPerformanceMetric() {
+            this.performanceMetrics.push({ name: '', threshold: '', unit: 'ms' });
+        },
+        
+        removePerformanceMetric(index) {
+            this.performanceMetrics.splice(index, 1);
+        },
+        
+        loadTemplate(templateType) {
+            // Load predefined templates based on type
+            switch(templateType) {
+                case 'disaster-recovery':
+                    this.formData.name = 'Disaster Recovery Plan';
+                    this.formData.description = 'Comprehensive disaster recovery procedures for critical systems';
+                    this.procedureSteps = [
+                        { type: 'checkpoint', title: 'Assess Situation', description: 'Evaluate the extent of the disaster', time_estimate: '30 minutes', responsible: 'IT Manager', risk_level: 'high', commands: '', success_criteria: 'Full assessment completed' },
+                        { type: 'manual', title: 'Activate DR Team', description: 'Contact and assemble disaster recovery team', time_estimate: '15 minutes', responsible: 'IT Manager', risk_level: 'medium', commands: '', success_criteria: 'Team assembled' },
+                        { type: 'automated', title: 'Initiate Failover', description: 'Execute automated failover procedures', time_estimate: '45 minutes', responsible: 'System Admin', risk_level: 'high', commands: 'bash /scripts/dr-failover.sh', success_criteria: 'Systems running on DR site' }
+                    ];
+                    break;
+                // Add more templates as needed
+            }
+        },
+        
+        saveDraft() {
+            // Save as draft functionality
+            document.querySelector('input[name="status"]').value = 'draft';
+            document.querySelector('form').submit();
+        },
+        
+        handleSubmit(event) {
+            // Collect diagram data before submission
+            if (window.networkDiagram) {
+                document.getElementById('network_diagram_data').value = JSON.stringify(window.networkDiagram.getDiagramData());
+            }
+            if (window.procedureDiagram) {
+                document.getElementById('procedure_diagram_data').value = JSON.stringify(window.procedureDiagram.getDiagramData());
+            }
+        }
+    };
+}
+</script>
+
+@push('styles')
+<style>
+    .joint-paper {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .diagram-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    #properties-panel {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    /* Tab transitions */
+    [x-cloak] { display: none !important; }
+</style>
+@endpush
+
+@push('scripts')
+@vite(['resources/js/it-documentation-diagram.js'])
+<script type="module">
+    window.networkDiagram = null;
+    window.procedureDiagram = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize network diagram
+        if (window.ITDocumentationDiagram) {
+            window.networkDiagram = new window.ITDocumentationDiagram('network-diagram');
+        }
+        
+        // Initialize procedure diagram when that tab is activated
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('documentationForm', documentationForm);
+        });
+    });
+    
+    // Import network diagram function
+    window.importNetworkDiagram = function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const jsonData = JSON.parse(event.target.result);
+                        if (window.networkDiagram) {
+                            window.networkDiagram.importDiagram(jsonData);
+                        }
+                    } catch (error) {
+                        alert('Invalid JSON file format');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        };
+        input.click();
+    };
+</script>
+@endpush
+@endsection

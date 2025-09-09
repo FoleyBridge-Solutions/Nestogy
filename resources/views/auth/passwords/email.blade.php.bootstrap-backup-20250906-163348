@@ -1,0 +1,102 @@
+@extends('layouts.guest')
+
+@section('title', 'Reset Password - Nestogy ERP')
+
+@section('content')
+<div class="min-h-screen flex">
+    <!-- Left side - Branding -->
+    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 items-center justify-center">
+        <div class="text-center text-white px-8">
+            <div class="mb-8">
+                <img src="{{ asset('static-assets/img/branding/nestogy-logo-white.png') }}" alt="Nestogy" class="mx-auto" style="max-width: 200px;">
+            </div>
+            <h2 class="text-3xl font-bold mb-4">Password Recovery</h2>
+            <p class="text-xl mb-8">We'll help you get back into your account securely</p>
+            <div class="text-center">
+                <i class="fas fa-shield-alt text-6xl mb-4 opacity-75"></i>
+                <p class="text-sm">Your security is our priority</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right side - Reset Form -->
+    <div class="flex-1 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900">
+        <div class="w-full max-w-md">
+            <!-- Mobile Logo -->
+            <div class="text-center mb-8 lg:hidden">
+                <img src="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" alt="Nestogy" class="mx-auto" style="max-width: 150px;">
+            </div>
+
+            <flux:card>
+                <flux:card.body class="p-8">
+                    <h3 class="text-2xl font-bold text-center mb-2 text-gray-800 dark:text-gray-200">Reset Password</h3>
+                    
+                    <p class="text-gray-600 dark:text-gray-400 text-center mb-6">
+                        Enter your email address and we'll send you a link to reset your password.
+                    </p>
+
+                    @if (session('status'))
+                        <flux:alert variant="success" class="mb-4">
+                            <flux:alert.icon icon="check-circle" />
+                            <flux:alert.content>{{ session('status') }}</flux:alert.content>
+                        </flux:alert>
+                    @endif
+
+                    @if ($errors->any())
+                        <flux:alert variant="danger" class="mb-4">
+                            <flux:alert.content>
+                                <ul class="mb-0 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </flux:alert.content>
+                        </flux:alert>
+                    @endif
+
+                    <form method="POST" action="{{ route('auth.password.email') }}">
+                        @csrf
+
+                        <!-- Email -->
+                        <flux:field class="mb-6">
+                            <flux:label for="email">
+                                <i class="fas fa-envelope mr-1"></i>Email Address
+                            </flux:label>
+                            <flux:input 
+                                type="email"
+                                id="email" 
+                                name="email" 
+                                value="{{ old('email') }}" 
+                                required 
+                                autocomplete="email" 
+                                autofocus
+                                placeholder="Enter your email address"
+                                :error="$errors->has('email')" />
+                            <flux:error for="email" />
+                        </flux:field>
+
+                        <!-- Submit Button -->
+                        <flux:button type="submit" variant="primary" class="w-full mb-4" size="lg">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Reset Link
+                        </flux:button>
+
+                        <!-- Back to Login -->
+                        <div class="text-center">
+                            <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                <i class="fas fa-arrow-left mr-1"></i>Back to Login
+                            </a>
+                        </div>
+                    </form>
+                </flux:card.body>
+            </flux:card>
+
+            <!-- Footer -->
+            <div class="text-center mt-8">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                    &copy; {{ date('Y') }} Nestogy ERP. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

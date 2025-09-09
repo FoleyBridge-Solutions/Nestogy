@@ -1,0 +1,339 @@
+@extends('layouts.app')
+
+@section('title', 'Suspicious Login Attempts')
+
+@section('content')
+<div class="container mx-auto-fluid">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Suspicious Login Attempts</h1>
+            <p class="text-gray-600 dark:text-gray-400">Monitor and manage potentially malicious login attempts</p>
+        </div>
+        <a href="{{ route('security.dashboard.index') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden shadow mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header py-6">
+            <h6 class="m-0 font-bold text-blue-600 dark:text-blue-400">Filters</h6>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+            <form method="GET" action="{{ route('security.dashboard.suspicious-logins') }}">
+                <div class="flex flex-wrap -mx-4">
+                    <div class="flex-1 px-6-md-3">
+                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <select class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="status" name="status">
+                            <option value="all" {{ $filters['status'] === 'all' ? 'selected' : '' }}>All Status</option>
+                            <option value="pending" {{ $filters['status'] === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved" {{ $filters['status'] === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="denied" {{ $filters['status'] === 'denied' ? 'selected' : '' }}>Denied</option>
+                            <option value="expired" {{ $filters['status'] === 'expired' ? 'selected' : '' }}>Expired</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 px-6-md-3">
+                        <label for="risk_level" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Risk Level</label>
+                        <select class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="risk_level" name="risk_level">
+                            <option value="all" {{ $filters['risk_level'] === 'all' ? 'selected' : '' }}>All Risk Levels</option>
+                            <option value="low" {{ $filters['risk_level'] === 'low' ? 'selected' : '' }}>Low (0-39)</option>
+                            <option value="medium" {{ $filters['risk_level'] === 'medium' ? 'selected' : '' }}>Medium (40-59)</option>
+                            <option value="high" {{ $filters['risk_level'] === 'high' ? 'selected' : '' }}>High (60-79)</option>
+                            <option value="critical" {{ $filters['risk_level'] === 'critical' ? 'selected' : '' }}>Critical (80-100)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 px-6-md-3">
+                        <label for="days" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Range</label>
+                        <select class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="days" name="days">
+                            <option value="7" {{ $filters['days'] == 7 ? 'selected' : '' }}>Last 7 days</option>
+                            <option value="30" {{ $filters['days'] == 30 ? 'selected' : '' }}>Last 30 days</option>
+                            <option value="90" {{ $filters['days'] == 90 ? 'selected' : '' }}>Last 90 days</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 px-6-md-3 flex items-end">
+                        <button type="submit" class="btn px-6 py-2 font-medium rounded-md transition-colors-primary mr-2">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <a href="{{ route('security.dashboard.suspicious-logins') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden shadow mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header py-6">
+            <h6 class="m-0 font-bold text-blue-600 dark:text-blue-400">
+                Login Attempts ({{ $attempts->total() }} total)
+            </h6>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+            @if($attempts->count() > 0)
+                <div class="min-w-full divide-y divide-gray-200 dark:divide-gray-700-responsive">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 min-w-full divide-y divide-gray-200 dark:divide-gray-700-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>IP Address</th>
+                                <th>Location</th>
+                                <th>Device</th>
+                                <th>Risk Score</th>
+                                <th>Detection Reasons</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($attempts as $attempt)
+                            <tr>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="mr-4">
+                                            <i class="fas fa-user-circle fa-2x text-gray-600 dark:text-gray-400"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ $attempt->user->name ?? 'Unknown User' }}</h6>
+                                            <small class="text-gray-600 dark:text-gray-400">{{ $attempt->user->email ?? 'N/A' }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code>{{ $attempt->ip_address }}</code>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ $attempt->getLocationString() }}</strong>
+                                        @if($attempt->location_data && isset($attempt->location_data['isp']))
+                                            <br><small class="text-gray-600 dark:text-gray-400">{{ $attempt->location_data['isp'] }}</small>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <small>{{ $attempt->getDeviceString() }}</small>
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-{{ $attempt->getRiskLevelColor() }} mr-2">
+                                            {{ $attempt->risk_score }}
+                                        </span>
+                                        <span class="text-gray-600 dark:text-gray-400">{{ $attempt->getRiskLevelString() }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small>{{ $attempt->getDetectionReasonsString() }}</small>
+                                </td>
+                                <td>
+                                    @php
+                                        $statusColors = [
+                                            'pending' => 'warning',
+                                            'approved' => 'success',
+                                            'denied' => 'danger',
+                                            'expired' => 'secondary',
+                                        ];
+                                    @endphp
+                                    <span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-{{ $statusColors[$attempt->status] ?? 'secondary' }}">
+                                        {{ ucfirst($attempt->status) }}
+                                    </span>
+                                    @if($attempt->status === 'pending' && $attempt->isExpired())
+                                        <br><small class="text-red-600 dark:text-red-400">Expired</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div>
+                                        {{ $attempt->created_at->format('M j, Y') }}
+                                        <br><small class="text-gray-600 dark:text-gray-400">{{ $attempt->created_at->format('g:i A') }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class=" px-6 py-2 font-medium rounded-md transition-colors-group-sm">
+                                        @if($attempt->status === 'pending' && !$attempt->isExpired())
+                                            <a href="{{ $attempt->getApprovalUrl() }}" 
+                                               class="btn border border-green-600 text-green-600 hover:bg-green-50 px-6 py-2 font-medium rounded-md transition-colors-sm"
+                                               target="_blank">
+                                                <i class="fas fa-check"></i> Approve
+                                            </a>
+                                            <a href="{{ $attempt->getDenialUrl() }}" 
+                                               class="btn border border-red-600 text-red-600 hover:bg-red-50 px-6 py-2 font-medium rounded-md transition-colors-sm"
+                                               target="_blank">
+                                                <i class="fas fa-times"></i> Deny
+                                            </a>
+                                        @endif
+                                        <flux:button variant="ghost" color="sky" class="px-6 py-2 font-medium rounded-md transition-colors-sm" onclick="showAttemptDetails({{ json_encode($attempt) }})">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </flux:button>
+                                        @if($attempt->status !== 'denied')
+                                            <button class="btn border border-red-600 text-red-600 hover:bg-red-50 px-6 py-2 font-medium rounded-md transition-colors-sm" 
+                                                    onclick="blockIpAddress('{{ $attempt->ip_address }}')">
+                                                <i class="fas fa-ban"></i> Block IP
+                                            </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-center">
+                    {{ $attempts->withQueryString()->links() }}
+                </div>
+            @else
+                <div class="text-center py-8">
+                    <i class="fas fa-shield-alt fa-4x text-green-600 dark:text-green-400 mb-6"></i>
+                    <h4>No Suspicious Login Attempts</h4>
+                    <p class="text-gray-600 dark:text-gray-400">No suspicious login attempts found matching your criteria.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Attempt Details Modal -->
+<div class="fixed inset-0 z-50 overflow-y-auto fade" id="attemptDetailsModal" tabindex="-1">
+    <div class="flex items-center justify-center min-h-screen fixed inset-0 z-50 overflow-y-auto-lg">
+        <div class="fixed inset-0 z-50 overflow-y-auto-content">
+            <div class="fixed inset-0 z-50 overflow-y-auto-header">
+                <h5 class="fixed inset-0 z-50 overflow-y-auto-title">Login Attempt Details</h5>
+                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors-close" ></button>
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-body">
+                <div id="attemptDetailsContent"></div>
+            </div>
+            <div class="fixed inset-0 z-50 overflow-y-auto-footer">
+                <button type="button" class="btn px-6 py-2 font-medium rounded-md transition-colors-secondary" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Block IP Modal -->
+<div class="fixed inset-0 z-50 overflow-y-auto fade" id="blockIpModal" tabindex="-1">
+    <div class="fixed inset-0 z-50 overflow-y-auto-dialog">
+        <div class="fixed inset-0 z-50 overflow-y-auto-content">
+            <div class="fixed inset-0 z-50 overflow-y-auto-header">
+                <h5 class="fixed inset-0 z-50 overflow-y-auto-title">Block IP Address</h5>
+                <button type="button" class="px-6 py-2 font-medium rounded-md transition-colors-close" ></button>
+            </div>
+            <form action="{{ route('security.dashboard.block-ip') }}" method="POST">
+                @csrf
+                <div class="fixed inset-0 z-50 overflow-y-auto-body">
+                    <div class="mb-6">
+                        <label for="ip_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP Address</label>
+                        <input type="text" class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="ip_address" name="ip_address" readonly>
+                    </div>
+                    <div class="mb-6">
+                        <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason for blocking</label>
+                        <textarea class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="reason" name="reason" rows="3" 
+                                  placeholder="Describe why this IP should be blocked..." required></textarea>
+                    </div>
+                </div>
+                <div class="fixed inset-0 z-50 overflow-y-auto-footer">
+                    <button type="button" class="btn px-6 py-2 font-medium rounded-md transition-colors-secondary" >Cancel</button>
+                    <button type="submit" class="btn px-6 py-2 font-medium rounded-md transition-colors-danger">Block IP</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+function showAttemptDetails(attempt) {
+    const content = `
+        <div class="flex flex-wrap -mx-4">
+            <div class="flex-1 px-6-md-6">
+                <h6 class="text-blue-600 dark:text-blue-400">User Information</h6>
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 min-w-full divide-y divide-gray-200 dark:divide-gray-700-sm">
+                    <tr><td><strong>Name:</strong></td><td>${attempt.user?.name || 'Unknown'}</td></tr>
+                    <tr><td><strong>Email:</strong></td><td>${attempt.user?.email || 'N/A'}</td></tr>
+                    <tr><td><strong>IP Address:</strong></td><td><code>${attempt.ip_address}</code></td></tr>
+                    <tr><td><strong>User Agent:</strong></td><td><small>${attempt.user_agent || 'N/A'}</small></td></tr>
+                </table>
+
+                <h6 class="text-blue-600 dark:text-blue-400 mt-6">Location Data</h6>
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 min-w-full divide-y divide-gray-200 dark:divide-gray-700-sm">
+                    <tr><td><strong>Country:</strong></td><td>${attempt.location_data?.country || 'Unknown'}</td></tr>
+                    <tr><td><strong>Region:</strong></td><td>${attempt.location_data?.region || 'Unknown'}</td></tr>
+                    <tr><td><strong>City:</strong></td><td>${attempt.location_data?.city || 'Unknown'}</td></tr>
+                    <tr><td><strong>ISP:</strong></td><td>${attempt.location_data?.isp || 'Unknown'}</td></tr>
+                    <tr><td><strong>Timezone:</strong></td><td>${attempt.location_data?.timezone || 'Unknown'}</td></tr>
+                </table>
+            </div>
+            <div class="flex-1 px-6-md-6">
+                <h6 class="text-blue-600 dark:text-blue-400">Risk Analysis</h6>
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 min-w-full divide-y divide-gray-200 dark:divide-gray-700-sm">
+                    <tr><td><strong>Risk Score:</strong></td><td><span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-${getRiskColor(attempt.risk_score)}">${attempt.risk_score}/100</span></td></tr>
+                    <tr><td><strong>Status:</strong></td><td><span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-${getStatusColor(attempt.status)}">${attempt.status}</span></td></tr>
+                    <tr><td><strong>Created:</strong></td><td>${new Date(attempt.created_at).toLocaleString()}</td></tr>
+                    <tr><td><strong>Expires:</strong></td><td>${new Date(attempt.expires_at).toLocaleString()}</td></tr>
+                </table>
+
+                <h6 class="text-blue-600 dark:text-blue-400 mt-6">Detection Reasons</h6>
+                <ul class="list-unstyled">
+                    ${attempt.detection_reasons ? attempt.detection_reasons.map(reason => `
+                        <li><i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 mr-2"></i>${formatReason(reason)}</li>
+                    `).join('') : '<li class="text-gray-600 dark:text-gray-400">No specific reasons recorded</li>'}
+                </ul>
+
+                ${attempt.device_fingerprint ? `
+                    <h6 class="text-blue-600 dark:text-blue-400 mt-6">Device Information</h6>
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 min-w-full divide-y divide-gray-200 dark:divide-gray-700-sm">
+                        <tr><td><strong>Browser:</strong></td><td>${attempt.device_fingerprint.browser || 'Unknown'}</td></tr>
+                        <tr><td><strong>OS:</strong></td><td>${attempt.device_fingerprint.os || 'Unknown'}</td></tr>
+                        <tr><td><strong>Device Type:</strong></td><td>${attempt.device_fingerprint.device_type || 'Unknown'}</td></tr>
+                    </table>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('attemptDetailsContent').innerHTML = content;
+    new bootstrap.Modal(document.getElementById('attemptDetailsModal')).show();
+}
+
+function blockIpAddress(ipAddress) {
+    document.getElementById('ip_address').value = ipAddress;
+    document.getElementById('reason').value = `Blocked due to suspicious login activity from ${ipAddress}`;
+    new bootstrap.Modal(document.getElementById('blockIpModal')).show();
+}
+
+function getRiskColor(score) {
+    if (score >= 80) return 'danger';
+    if (score >= 60) return 'warning';
+    if (score >= 40) return 'info';
+    return 'success';
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'pending': 'warning',
+        'approved': 'success',
+        'denied': 'danger',
+        'expired': 'secondary'
+    };
+    return colors[status] || 'secondary';
+}
+
+function formatReason(reason) {
+    const reasons = {
+        'new_country': 'Login from new country',
+        'new_region': 'Login from new region',
+        'vpn_detected': 'VPN connection detected',
+        'proxy_detected': 'Proxy connection detected',
+        'tor_detected': 'Tor connection detected',
+        'suspicious_isp': 'Suspicious internet provider',
+        'high_risk_country': 'High-risk country',
+        'impossible_travel': 'Impossible travel time',
+        'new_device': 'New device/browser'
+    };
+    return reasons[reason] || reason.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+</script>
+@endpush

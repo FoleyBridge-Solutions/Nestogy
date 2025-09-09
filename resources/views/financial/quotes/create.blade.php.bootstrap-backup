@@ -1,0 +1,923 @@
+@extends('layouts.app')
+
+@section('title', 'Create Quote')
+
+@push('styles')
+<style>
+[x-cloak] { display: none !important; }
+.step-indicator { transition: all 0.3s ease; }
+.price-display { font-family: 'Courier New', monospace; }
+.item-row:hover { background-color: rgba(0,123,255,0.1); }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid px-4 py-4" x-data="quoteBuilder()" x-init="init()" x-cloak @products-selected.window="syncSelectedItems($event.detail)">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Create Quote</h1>
+            <p class="text-muted mb-0">
+                @if($copyData && $copyFromQuote)
+                    Copying quote <strong>#{{ $copyFromQuote->getFullNumber() }}</strong> - you can modify any details before saving
+                @else
+                    Create a new quote for your client
+                @endif
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            @if($copyData && $copyFromQuote)
+                <a href="{{ route('financial.quotes.show', $copyFromQuote) }}" class="btn btn-outline-info">
+                    <i class="fas fa-eye me-2"></i>View Original
+                </a>
+            @endif
+            <a href="{{ route('financial.quotes.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Quotes
+            </a>
+        </div>
+    </div>
+
+    @if($copyData && $copyFromQuote)
+    <!-- Copy Notice -->
+    <div class="alert alert-info d-flex align-items-center mb-4">
+        <i class="fas fa-copy me-3"></i>
+        <div>
+            <strong>Copying Quote #{{ $copyFromQuote->getFullNumber() }}</strong><br>
+            <small>All data has been pre-filled from the original quote. You can modify any details before saving the new quote.</small>
+        </div>
+    </div>
+    @endif
+
+    <!-- Progress Steps -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center step-indicator" 
+                         :class="currentStep >= 1 ? 'text-primary' : 'text-muted'">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                             :class="currentStep >= 1 ? 'bg-primary text-white' : 'bg-light'"
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-info-circle" x-show="currentStep >= 1"></i>
+                            <span x-show="currentStep < 1">1</span>
+                        </div>
+                        <span class="fw-semibold">Details</span>
+                    </div>
+                    
+                    <i class="fas fa-chevron-right text-muted"></i>
+                    
+                    <div class="d-flex align-items-center step-indicator"
+                         :class="currentStep >= 2 ? 'text-primary' : 'text-muted'">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                             :class="currentStep >= 2 ? 'bg-primary text-white' : 'bg-light'"
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-shopping-cart" x-show="currentStep >= 2"></i>
+                            <span x-show="currentStep < 2">2</span>
+                        </div>
+                        <span class="fw-semibold">Items</span>
+                    </div>
+                    
+                    <i class="fas fa-chevron-right text-muted"></i>
+                    
+                    <div class="d-flex align-items-center step-indicator"
+                         :class="currentStep >= 3 ? 'text-primary' : 'text-muted'">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                             :class="currentStep >= 3 ? 'bg-primary text-white' : 'bg-light'"
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-check" x-show="currentStep >= 3"></i>
+                            <span x-show="currentStep < 3">3</span>
+                        </div>
+                        <span class="fw-semibold">Review</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <div x-show="saving" class="text-muted small">
+                        <i class="fas fa-spinner fa-spin"></i> Saving...
+                    </div>
+                    <div x-show="!saving && lastSaved" class="text-success small">
+                        <i class="fas fa-check-circle"></i> Saved
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="card border-0 shadow-sm">
+        <form @submit.prevent="submitQuote()">
+            
+            <!-- Step 1: Quote Details -->
+            <div x-show="currentStep === 1">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Quote Details</h5>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Client Selection -->
+                        <div class="col-md-6">
+                            <label for="client_id" class="form-label">
+                                Client <span class="text-danger">*</span>
+                            </label>
+                            <select id="client_id" 
+                                    class="form-select" 
+                                    x-model="quote.client_id"
+                                    @change="handleClientChange()"
+                                    :class="errors.client_id ? 'is-invalid' : ''">
+                                <option value="">Select a client...</option>
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}"
+                                            {{ ($selectedClient && $selectedClient->id == $client->id) ? 'selected' : '' }}>
+                                        {{ $client->name }}@if($client->company_name) ({{ $client->company_name }})@endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback" x-text="errors.client_id"></div>
+                        </div>
+                        
+                        <!-- Category Selection -->
+                        <div class="col-md-6">
+                            <label for="category_id" class="form-label">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            <select id="category_id" 
+                                    class="form-select" 
+                                    x-model="quote.category_id"
+                                    :class="errors.category_id ? 'is-invalid' : ''">
+                                <option value="">Select a category...</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="invalid-feedback" x-text="errors.category_id"></div>
+                        </div>
+                        
+                        <!-- Date Fields -->
+                        <div class="col-md-4">
+                            <label for="quote_date" class="form-label">Quote Date</label>
+                            <input type="date" 
+                                   id="quote_date" 
+                                   class="form-control" 
+                                   x-model="quote.date">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="expire_date" class="form-label">Valid Until</label>
+                            <input type="date" 
+                                   id="expire_date" 
+                                   class="form-control" 
+                                   x-model="quote.expire_date"
+                                   :class="errors.expire_date ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" x-text="errors.expire_date"></div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="currency_code" class="form-label">Currency</label>
+                            <select id="currency_code" 
+                                    class="form-select" 
+                                    x-model="quote.currency_code">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label for="scope" class="form-label">Description</label>
+                            <textarea id="scope" 
+                                      class="form-control" 
+                                      rows="3" 
+                                      x-model="quote.scope"
+                                      placeholder="Brief description of the quote..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Items -->
+            <div x-show="currentStep === 2">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Quote Items</h5>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Product Selection -->
+                        <div class="col-lg-8">
+                            <!-- Quick Add Item -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Add Item Quickly</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <input type="text" 
+                                                   x-model="newItem.name"
+                                                   class="form-control" 
+                                                   placeholder="Item name"
+                                                   @keydown.enter="addQuickItem()">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="number" 
+                                                   x-model="newItem.quantity"
+                                                   class="form-control" 
+                                                   placeholder="Qty"
+                                                   min="1" 
+                                                   step="1">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" 
+                                                   x-model="newItem.price"
+                                                   class="form-control" 
+                                                   placeholder="Price"
+                                                   min="0" 
+                                                   step="0.01">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" 
+                                                    @click="addQuickItem()"
+                                                    class="btn btn-primary w-100">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Product Selector Component -->
+                            <x-product-selector />
+                            
+                            <!-- Selected Items List -->
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6>Selected Items (<span x-text="items.length"></span>)</h6>
+                                    <button type="button" 
+                                            @click="clearAllItems()"
+                                            class="btn btn-sm btn-outline-danger"
+                                            x-show="items.length > 0">
+                                        <i class="fas fa-trash"></i> Clear All
+                                    </button>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th width="80">Qty</th>
+                                                <th width="100">Price</th>
+                                                <th width="100">Subtotal</th>
+                                                <th width="60"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="(item, index) in items" :key="item.id">
+                                                <tr class="item-row">
+                                                    <td>
+                                                        <input type="text" 
+                                                               x-model="item.name"
+                                                               @input="updatePricing()"
+                                                               class="form-control form-control-sm border-0">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" 
+                                                               x-model="item.quantity"
+                                                               @input="updatePricing()"
+                                                               class="form-control form-control-sm text-center"
+                                                               min="1" 
+                                                               step="1">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" 
+                                                               x-model="item.price"
+                                                               @input="updatePricing()"
+                                                               class="form-control form-control-sm text-end"
+                                                               min="0" 
+                                                               step="0.01">
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="fw-semibold" x-text="formatCurrency(item.quantity * item.price)"></span>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" 
+                                                                @click="removeItem(index)"
+                                                                class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                            
+                                            <tr x-show="items.length === 0">
+                                                <td colspan="5" class="text-center text-muted py-4">
+                                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                                    <div>No items added yet</div>
+                                                    <div class="small">Add your first item to get started</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing Summary -->
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Pricing Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span x-text="formatCurrency(pricing.subtotal)"></span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Discount</label>
+                                        <div class="input-group">
+                                            <input type="number" 
+                                                   x-model="quote.discount_amount"
+                                                   @input="updatePricing()"
+                                                   class="form-control" 
+                                                   min="0" 
+                                                   step="0.01">
+                                            <select x-model="quote.discount_type" 
+                                                    @change="updatePricing()"
+                                                    class="form-select" 
+                                                    style="max-width: 100px;">
+                                                <option value="fixed">$</option>
+                                                <option value="percentage">%</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div x-show="pricing.discount > 0" class="d-flex justify-content-between mb-2 text-success">
+                                        <span>Discount:</span>
+                                        <span x-text="'-' + formatCurrency(pricing.discount)"></span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tax:</span>
+                                        <span x-text="formatCurrency(pricing.tax)"></span>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <strong x-text="formatCurrency(pricing.total)"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Review -->
+            <div x-show="currentStep === 3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-check me-2"></i>Review & Submit</h5>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <!-- Quote Summary -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Quote Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-3">Client:</dt>
+                                        <dd class="col-sm-9" x-text="getSelectedClientName()"></dd>
+                                        
+                                        <dt class="col-sm-3">Items:</dt>
+                                        <dd class="col-sm-9" x-text="`${items.length} items`"></dd>
+                                        
+                                        <dt class="col-sm-3">Total:</dt>
+                                        <dd class="col-sm-9" x-text="formatCurrency(pricing.total)"></dd>
+                                        
+                                        <dt class="col-sm-3">Valid Until:</dt>
+                                        <dd class="col-sm-9" x-text="quote.expire_date || 'No expiration'"></dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            <!-- Additional Notes -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="note" class="form-label">Internal Notes</label>
+                                    <textarea id="note" 
+                                              class="form-control" 
+                                              rows="3" 
+                                              x-model="quote.note"
+                                              placeholder="Internal notes (optional)..."></textarea>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="terms_conditions" class="form-label">Terms & Conditions</label>
+                                    <textarea id="terms_conditions" 
+                                              class="form-control" 
+                                              rows="3" 
+                                              x-model="quote.terms_conditions"
+                                              placeholder="Terms and conditions (optional)..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <!-- Final Pricing -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Final Pricing</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span x-text="formatCurrency(pricing.subtotal)"></span>
+                                    </div>
+                                    
+                                    <div x-show="pricing.discount > 0" class="d-flex justify-content-between mb-2 text-success">
+                                        <span>Discount:</span>
+                                        <span x-text="'-' + formatCurrency(pricing.discount)"></span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tax:</span>
+                                        <span x-text="formatCurrency(pricing.tax)"></span>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <strong>Total:</strong>
+                                        <strong class="price-display" x-text="formatCurrency(pricing.total)"></strong>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="button" 
+                                                @click="saveAsDraft()"
+                                                class="btn btn-outline-secondary"
+                                                :disabled="saving">
+                                            <i class="fas fa-save"></i> Save as Draft
+                                        </button>
+                                        
+                                        <button type="submit" 
+                                                class="btn btn-success"
+                                                :disabled="saving || !isValid()">
+                                            <i class="fas fa-check"></i>
+                                            <span x-show="!saving">Create Quote</span>
+                                            <span x-show="saving">Creating...</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Footer -->
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between">
+                    <button type="button" 
+                            class="btn btn-outline-secondary" 
+                            @click="prevStep()" 
+                            :disabled="currentStep === 1">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="button" 
+                                class="btn btn-outline-primary" 
+                                @click="saveAsDraft()"
+                                :disabled="saving">
+                            <i class="fas fa-save"></i> Save Draft
+                        </button>
+                        
+                        <button type="button" 
+                                class="btn btn-primary" 
+                                @click="nextStep()" 
+                                x-show="currentStep < 3"
+                                :disabled="!canProceed()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                        
+                        <button type="submit" 
+                                class="btn btn-success" 
+                                x-show="currentStep === 3"
+                                :disabled="saving || !isValid()">
+                            <i class="fas fa-check"></i>
+                            <span x-show="!saving">Create Quote</span>
+                            <span x-show="saving">Creating...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function quoteBuilder() {
+    return {
+        // Core state
+        currentStep: 1,
+        saving: false,
+        lastSaved: null,
+        errors: {},
+        
+        // Quote data
+        quote: {
+            client_id: '',
+            category_id: '',
+            date: new Date().toISOString().split('T')[0],
+            expire_date: '',
+            currency_code: 'USD',
+            scope: '',
+            discount_amount: 0,
+            discount_type: 'fixed',
+            note: '',
+            terms_conditions: ''
+        },
+        
+        // Items
+        items: [],
+        newItem: {
+            name: '',
+            quantity: 1,
+            price: 0
+        },
+        
+        // Pricing
+        pricing: {
+            subtotal: 0,
+            discount: 0,
+            tax: 0,
+            total: 0
+        },
+        
+        // Client data
+        clients: {!! json_encode($clients->map(function($client) {
+            return [
+                'id' => $client->id,
+                'name' => $client->name,
+                'company_name' => $client->company_name,
+                'display_name' => $client->name . ($client->company_name ? ' (' . $client->company_name . ')' : '')
+            ];
+        })) !!},
+        
+        init() {
+            // Handle copy data if present
+            @if($copyData)
+                this.loadCopyData({!! json_encode($copyData) !!});
+            @else
+                // Set default expire date (30 days from now)
+                const expireDate = new Date();
+                expireDate.setDate(expireDate.getDate() + 30);
+                this.quote.expire_date = expireDate.toISOString().split('T')[0];
+                
+                // Pre-select client if provided (from query parameter or session)
+                @if(request('client_id') || $selectedClient)
+                    this.quote.client_id = '{{ request('client_id') ?: ($selectedClient ? $selectedClient->id : '') }}';
+                    this.handleClientChange();
+                @endif
+            @endif
+            
+            // Initial pricing calculation
+            this.updatePricing();
+        },
+        
+        // Copy data loading
+        loadCopyData(copyData) {
+            console.log('Loading copy data:', copyData);
+            
+            // Load quote data
+            Object.keys(this.quote).forEach(key => {
+                if (copyData[key] !== undefined) {
+                    this.quote[key] = copyData[key];
+                }
+            });
+            
+            // Load items data
+            if (copyData.items && Array.isArray(copyData.items)) {
+                this.items = copyData.items.map((item, index) => ({
+                    id: Date.now() + index, // Generate temporary ID for the form
+                    product_id: item.product_id || null,
+                    service_id: item.service_id || null,
+                    bundle_id: item.bundle_id || null,
+                    name: item.name || '',
+                    description: item.description || '',
+                    quantity: parseFloat(item.quantity) || 1,
+                    price: parseFloat(item.price) || 0,
+                    discount: parseFloat(item.discount) || 0,
+                    category_id: item.category_id || null,
+                    service_type: item.service_type || 'general',
+                    service_data: item.service_data || null,
+                    
+                    // Preserve original item type for proper categorization
+                    type: this.determineItemType(item),
+                    
+                    // Calculate totals
+                    subtotal: parseFloat(item.original_subtotal) || 0,
+                    tax: parseFloat(item.original_tax) || 0,
+                    total: parseFloat(item.original_total) || 0
+                }));
+                
+                // Recalculate pricing for all copied items
+                this.items.forEach(item => this.calculateItemTotals(item));
+            }
+            
+            // Handle client selection if it was copied
+            if (this.quote.client_id) {
+                this.handleClientChange();
+            }
+            
+            // Show copy notification
+            if (copyData.copy_from_quote_number) {
+                this.showNotification('Quote copied from ' + copyData.copy_from_quote_number + '. You can modify any details before saving.', 'info');
+            }
+            
+            // After loading the items, we need to inform the product selector component
+            // about the copied items so they appear in the correct tabs
+            this.$nextTick(() => {
+                this.syncCopiedItemsWithProductSelector();
+            });
+        },
+        
+        // Sync copied items with the product selector component
+        syncCopiedItemsWithProductSelector() {
+            // Prepare items in the format expected by the product selector
+            const selectedItems = this.items.map(item => ({
+                id: item.product_id || item.service_id || item.bundle_id || item.id,
+                type: item.type || 'product',
+                name: item.name,
+                sku: item.sku || '',
+                quantity: item.quantity,
+                base_price: item.price,
+                unit_price: item.price,
+                subtotal: item.subtotal || (item.quantity * item.price),
+                billing_model: item.billing_model || 'one_time',
+                billing_cycle: item.billing_cycle || 'monthly',
+                service_type: item.service_type || 'general',
+                service_data: item.service_data,
+                category_id: item.category_id,
+                product_id: item.product_id,
+                service_id: item.service_id,
+                bundle_id: item.bundle_id,
+                description: item.description || ''
+            }));
+            
+            // Dispatch event to notify the product selector component
+            // This will make the items appear as "selected" in the appropriate tabs
+            window.dispatchEvent(new CustomEvent('sync-copied-items', {
+                detail: {
+                    items: selectedItems,
+                    total: selectedItems.reduce((sum, item) => sum + (item.subtotal || 0), 0)
+                }
+            }));
+        },
+        
+        // Determine item type based on the copied item data
+        determineItemType(item) {
+            if (item.service_id) {
+                return 'service';
+            } else if (item.bundle_id) {
+                return 'bundle';
+            } else if (item.product_id) {
+                return 'product';
+            } else {
+                // For manually added items, determine by service_type or category
+                if (item.service_type && item.service_type !== 'general') {
+                    return 'service';
+                }
+                return 'product'; // Default to product for generic items
+            }
+        },
+        
+        // Navigation
+        nextStep() {
+            if (this.canProceed()) {
+                this.currentStep++;
+            }
+        },
+        
+        prevStep() {
+            if (this.currentStep > 1) {
+                this.currentStep--;
+            }
+        },
+        
+        canProceed() {
+            switch (this.currentStep) {
+                case 1:
+                    return this.quote.client_id && this.quote.category_id;
+                case 2:
+                    return this.items.length > 0;
+                default:
+                    return true;
+            }
+        },
+        
+        isValid() {
+            return this.quote.client_id && 
+                   this.quote.category_id && 
+                   this.items.length > 0 &&
+                   this.items.every(item => item.name && item.quantity > 0 && item.price >= 0);
+        },
+        
+        // Client handling
+        handleClientChange() {
+            this.errors.client_id = '';
+            // Could load client-specific data here
+        },
+        
+        getSelectedClientName() {
+            const client = this.clients.find(c => c.id == this.quote.client_id);
+            return client ? client.display_name : 'No client selected';
+        },
+        
+        // Sync items from product selector
+        syncSelectedItems(eventData) {
+            if (eventData && eventData.items) {
+                // Clear existing items and add new ones
+                this.items = eventData.items.map(item => ({
+                    id: item.id || Date.now() + Math.random(),
+                    name: item.name || '',
+                    quantity: item.quantity || 1,
+                    price: item.unit_price || item.price || 0,
+                    type: item.type || 'product',
+                    sku: item.sku || '',
+                    description: item.description || ''
+                }));
+                
+                // Update pricing with new items
+                this.updatePricing();
+            }
+        },
+        
+        // Item management
+        addQuickItem() {
+            if (!this.newItem.name.trim()) return;
+            
+            const item = {
+                id: Date.now(),
+                name: this.newItem.name,
+                quantity: this.newItem.quantity || 1,
+                price: this.newItem.price || 0
+            };
+            
+            this.items.push(item);
+            this.updatePricing();
+            
+            // Reset form
+            this.newItem = { name: '', quantity: 1, price: 0 };
+        },
+        
+        removeItem(index) {
+            this.items.splice(index, 1);
+            this.updatePricing();
+        },
+        
+        clearAllItems() {
+            if (confirm('Are you sure you want to remove all items?')) {
+                this.items = [];
+                this.updatePricing();
+            }
+        },
+        
+        // Pricing calculations
+        updatePricing() {
+            // Calculate subtotal
+            this.pricing.subtotal = this.items.reduce((sum, item) => {
+                return sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0));
+            }, 0);
+            
+            // Calculate discount
+            if (this.quote.discount_type === 'percentage') {
+                this.pricing.discount = this.pricing.subtotal * (parseFloat(this.quote.discount_amount || 0) / 100);
+            } else {
+                this.pricing.discount = parseFloat(this.quote.discount_amount || 0);
+            }
+            
+            // Calculate tax (10% for demo)
+            const afterDiscount = this.pricing.subtotal - this.pricing.discount;
+            this.pricing.tax = afterDiscount * 0.10;
+            
+            // Calculate total
+            this.pricing.total = this.pricing.subtotal - this.pricing.discount + this.pricing.tax;
+        },
+        
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: this.quote.currency_code || 'USD'
+            }).format(amount || 0);
+        },
+        
+        // Save functions
+        async saveAsDraft() {
+            await this.saveQuote('Draft');
+        },
+        
+        async submitQuote() {
+            if (!this.isValid()) {
+                alert('Please fix validation errors before submitting');
+                return;
+            }
+            
+            await this.saveQuote('Sent');
+        },
+        
+        async saveQuote(status = 'Draft') {
+            this.saving = true;
+            this.errors = {};
+            
+            try {
+                // Debug: Log original items before cleaning
+                console.log('Original items before cleaning:', JSON.stringify(this.items, null, 2));
+                console.log('Quote object before spread:', JSON.stringify(this.quote, null, 2));
+
+                // Clean up items to ensure proper field names
+                const cleanItems = this.items.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    description: item.description || '',
+                    quantity: item.quantity || 1,
+                    price: item.price || item.unit_price || 0, // Ensure price field
+                    type: item.type || 'product',
+                    sku: item.sku || ''
+                    // Explicitly exclude unit_price
+                }));
+
+                console.log('Clean items after mapping:', JSON.stringify(cleanItems, null, 2));
+
+                // Remove any items from quote object to avoid conflicts
+                const { items: quoteItems, ...quoteWithoutItems } = this.quote;
+
+                const data = {
+                    ...quoteWithoutItems,
+                    items: cleanItems,
+                    pricing: this.pricing,
+                    status: status
+                };
+                
+                // Debug: Log the exact data being sent
+                console.log('Final quote data being submitted:', JSON.stringify(data, null, 2));
+                
+                const response = await fetch('{{ route("financial.quotes.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.lastSaved = new Date();
+                    
+                    if (status === 'Sent') {
+                        // Redirect to quote view
+                        window.location.href = `/financial/quotes/${result.data.id}`;
+                    } else {
+                        // Show success message for draft
+                        this.$dispatch('notification', {
+                            type: 'success',
+                            message: 'Quote saved as draft successfully'
+                        });
+                    }
+                } else {
+                    // Handle validation errors
+                    console.error('Validation failed:', result);
+                    if (result.errors) {
+                        this.errors = result.errors;
+                        console.error('Validation errors:', result.errors);
+                    } else {
+                        console.error('Server error:', result.message);
+                        alert(result.message || 'An error occurred while saving the quote');
+                    }
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('An error occurred while saving the quote');
+            } finally {
+                this.saving = false;
+            }
+        }
+    };
+}
+</script>
+@endpush
+@endsection

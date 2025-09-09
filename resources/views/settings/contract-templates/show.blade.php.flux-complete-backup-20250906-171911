@@ -1,0 +1,234 @@
+@extends('layouts.settings')
+
+@section('title', $template->name . ' - Contract Templates - Settings - Nestogy')
+
+@section('settings-title', $template->name)
+@section('settings-description', 'View contract template details')
+
+@section('settings-content')
+<x-crud-layout :title="$template->name" :breadcrumbs="[
+    ['label' => 'Settings', 'url' => route('settings.index')],
+    ['label' => 'Contract Templates', 'url' => route('settings.contract-templates.index')],
+    ['label' => $template->name, 'url' => route('settings.contract-templates.show', $template)]
+]">
+    <x-slot name="actions">
+        @can('update', $template)
+            <a href="{{ route('settings.contract-templates.edit', $template) }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit
+            </a>
+        @endcan
+
+        @can('create', App\Domains\Contract\Models\ContractTemplate::class)
+            <form method="POST" action="{{ route('settings.contract-templates.duplicate', $template) }}" class="inline">
+                @csrf
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    Duplicate
+                </button>
+            </form>
+        @endcan
+
+        @can('update', $template)
+            <form method="POST" action="{{ route('settings.contract-templates.toggle-default', $template) }}" class="inline">
+                @csrf
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                    @if($template->is_default)
+                        Remove Default
+                    @else
+                        Set as Default
+                    @endif
+                </button>
+            </form>
+        @endcan
+    </x-slot>
+
+    <!-- Template Overview -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Template Overview</h3>
+        </div>
+        <div class="px-6 py-4">
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Template Type</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        {{ ucfirst(str_replace('_', ' ', $template->template_type)) }}
+                    </dd>
+                </div>
+                
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                    <dd class="mt-1">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            @if($template->status === 'active') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                            @elseif($template->status === 'draft') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                            @else bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 @endif">
+                            {{ ucfirst($template->status) }}
+                        </span>
+                        @if($template->is_default)
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                Default
+                            </span>
+                        @endif
+                    </dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Version</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $template->version }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Category</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $template->category ?? 'N/A' }}</dd>
+                </div>
+
+                @if($template->description)
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $template->description }}</dd>
+                </div>
+                @endif
+            </dl>
+        </div>
+    </div>
+
+    <!-- Usage Statistics -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Usage Statistics</h3>
+        </div>
+        <div class="px-6 py-4">
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Usage</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+                        {{ number_format($statistics['usage_count']) }}
+                    </dd>
+                </div>
+                
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Contracts Created</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+                        {{ number_format($statistics['contracts_created']) }}
+                    </dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Contracts</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+                        {{ number_format($statistics['active_contracts']) }}
+                    </dd>
+                </div>
+
+                @if($statistics['success_rate'])
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Success Rate</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+                        {{ $statistics['success_rate'] }}%
+                    </dd>
+                </div>
+                @endif
+
+                @if($statistics['last_used'])
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Used</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        {{ $statistics['last_used'] }}
+                    </dd>
+                </div>
+                @endif
+            </dl>
+        </div>
+    </div>
+
+    <!-- Billing Configuration -->
+    @if($template->billing_model || $template->default_per_asset_rate || $template->default_per_contact_rate)
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Billing Configuration</h3>
+        </div>
+        <div class="px-6 py-4">
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                @if($template->billing_model)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Billing Model</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        {{ ucfirst(str_replace('_', ' ', $template->billing_model)) }}
+                    </dd>
+                </div>
+                @endif
+
+                @if($template->default_per_asset_rate)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Per Asset Rate</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        ${{ number_format($template->default_per_asset_rate, 2) }}
+                    </dd>
+                </div>
+                @endif
+
+                @if($template->default_per_contact_rate)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Per Contact Rate</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                        ${{ number_format($template->default_per_contact_rate, 2) }}
+                    </dd>
+                </div>
+                @endif
+
+                @if($template->requires_approval)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Approval Required</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">Yes</dd>
+                </div>
+                @endif
+            </dl>
+        </div>
+    </div>
+    @endif
+
+    <!-- Validation Errors -->
+    @if(!empty($validationErrors))
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-lg">
+        <div class="px-6 py-4 border-b border-red-200 dark:border-red-900">
+            <h3 class="text-lg font-medium text-red-800 dark:text-red-200">Validation Issues</h3>
+        </div>
+        <div class="px-6 py-4">
+            <ul class="list-disc list-inside space-y-2 text-sm text-red-700 dark:text-red-300">
+                @foreach($validationErrors as $error)
+                    <li>{{ is_array($error) ? implode(', ', $error) : $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+    @endif
+
+    <!-- Clauses Management -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Template Clauses</h3>
+                <a href="{{ route('settings.template-clauses', $template) }}" 
+                   class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                    Manage Clauses
+                </a>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                This template has {{ $template->clauses_count ?? 0 }} clause(s) associated with it.
+            </p>
+        </div>
+    </div>
+
+</x-crud-layout>
+@endsection

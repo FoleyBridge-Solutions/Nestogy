@@ -1,0 +1,1090 @@
+@props(['activeDomain' => null, 'activeItem' => null, 'mobile' => false])
+
+@php($mobile = $mobile ?? false)
+@php
+$sidebarConfig = [
+    'clients' => [
+        'title' => 'Client Management',
+        'items' => [
+            // PRIMARY ENTRY POINT
+            [
+                'name' => 'Client Details',
+                'route' => 'clients.show',
+                'icon' => 'chart-pie',
+                'key' => 'details',
+                'params' => ['client' => 'current'],
+                'description' => 'Central hub with client health, alerts, and quick actions'
+            ],
+
+            // IMMEDIATE ACTIONS SECTION
+            [
+                'type' => 'section',
+                'title' => 'IMMEDIATE ACTIONS',
+                'priority' => true,
+                'color' => 'red'
+            ],
+            [
+                'name' => 'Open Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'exclamation-triangle',
+                'key' => 'open-tickets',
+                'params' => ['client_id' => 'current', 'status' => 'open'],
+                'badge_type' => 'urgent',
+                'show_if' => 'has_open_tickets'
+            ],
+            [
+                'name' => 'Pending Items',
+                'route' => 'clients.show',
+                'icon' => 'clock',
+                'key' => 'pending',
+                'params' => ['client' => 'current', 'section' => 'pending'],
+                'badge_type' => 'warning',
+                'show_if' => 'has_pending_items'
+            ],
+
+            // CLIENT COMMUNICATION SECTION
+            [
+                'type' => 'section',
+                'title' => 'COMMUNICATION'
+            ],
+            [
+                'name' => 'Contacts',
+                'route' => 'clients.contacts.index',
+                'icon' => 'users',
+                'key' => 'contacts',
+                'params' => ['client' => 'current']
+            ],
+            [
+                'name' => 'Locations',
+                'route' => 'clients.locations.index',
+                'icon' => 'map-pin',
+                'key' => 'locations',
+                'params' => ['client' => 'current']
+            ],
+            [
+                'name' => 'Communication Log',
+                'route' => 'clients.show',
+                'icon' => 'chat-bubble-left-right',
+                'key' => 'communication',
+                'params' => ['client' => 'current', 'section' => 'communication']
+            ],
+
+            // SERVICE MANAGEMENT SECTION
+            [
+                'type' => 'section',
+                'title' => 'SERVICE MANAGEMENT'
+            ],
+            [
+                'name' => 'Support Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'ticket',
+                'key' => 'tickets',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Assets & Equipment',
+                'route' => 'assets.index',
+                'icon' => 'computer-desktop',
+                'key' => 'assets',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Projects',
+                'route' => 'projects.index',
+                'icon' => 'folder',
+                'key' => 'projects',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Service Plans',
+                'route' => 'clients.show',
+                'icon' => 'cog-6-tooth',
+                'key' => 'services',
+                'params' => ['client' => 'current', 'section' => 'services']
+            ],
+
+            // FINANCIAL & BILLING SECTION
+            [
+                'type' => 'section',
+                'title' => 'BILLING & FINANCE'
+            ],
+            [
+                'name' => 'Contracts',
+                'route' => 'financial.contracts.index',
+                'icon' => 'document-check',
+                'key' => 'contracts',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Quotes',
+                'route' => 'financial.quotes.index',
+                'icon' => 'document',
+                'key' => 'quotes',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Invoices',
+                'route' => 'financial.invoices.index',
+                'icon' => 'document-text',
+                'key' => 'invoices',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Payments',
+                'route' => 'financial.payments.index',
+                'icon' => 'credit-card',
+                'key' => 'payments',
+                'params' => ['client_id' => 'current']
+            ],
+            [
+                'name' => 'Financial Summary',
+                'route' => 'clients.show',
+                'icon' => 'currency-dollar',
+                'key' => 'financial',
+                'params' => ['client' => 'current', 'section' => 'financial']
+            ],
+
+            // DOCUMENTATION SECTION (COLLAPSED BY DEFAULT)
+            [
+                'type' => 'section',
+                'title' => 'DOCUMENTATION',
+                'collapsible' => true,
+                'default_collapsed' => true
+            ],
+            [
+                'name' => 'Client Files',
+                'route' => 'clients.files.index',
+                'icon' => 'folder',
+                'key' => 'files',
+                'params' => ['client' => 'current'],
+                'parent_section' => 'documentation'
+            ],
+            [
+                'name' => 'Documents',
+                'route' => 'clients.documents.index',
+                'icon' => 'document-duplicate',
+                'key' => 'documents',
+                'params' => ['client' => 'current'],
+                'parent_section' => 'documentation'
+            ],
+            [
+                'name' => 'Configuration',
+                'route' => 'clients.show',
+                'icon' => 'cog',
+                'key' => 'configuration',
+                'params' => ['client' => 'current', 'section' => 'configuration'],
+                'parent_section' => 'documentation'
+            ]
+        ]
+    ],
+    'tickets' => [
+        'title' => 'Ticket Management',
+        'items' => [
+            [
+                'name' => 'Overview',
+                'route' => 'tickets.index',
+                'icon' => 'home',
+                'key' => 'overview'
+            ],
+            [
+                'name' => 'All Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'ticket',
+                'key' => 'index'
+            ],
+            [
+                'name' => 'Create Ticket',
+                'route' => 'tickets.create',
+                'icon' => 'plus',
+                'key' => 'create'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'MY WORK'
+            ],
+            [
+                'name' => 'My Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'user',
+                'key' => 'my-tickets',
+                'params' => ['filter' => 'my']
+            ],
+            [
+                'name' => 'Assigned to Me',
+                'route' => 'tickets.index',
+                'icon' => 'user-circle',
+                'key' => 'assigned',
+                'params' => ['assignee' => 'me']
+            ],
+            [
+                'name' => 'Watching',
+                'route' => 'tickets.index',
+                'icon' => 'eye',
+                'key' => 'watching',
+                'params' => ['filter' => 'watching']
+            ],
+            [
+                'type' => 'section',
+                'title' => 'STATUS VIEWS'
+            ],
+            [
+                'name' => 'Open Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'exclamation-circle',
+                'key' => 'open',
+                'params' => ['status' => 'open']
+            ],
+            [
+                'name' => 'In Progress',
+                'route' => 'tickets.index',
+                'icon' => 'arrow-right',
+                'key' => 'in-progress',
+                'params' => ['status' => 'in-progress']
+            ],
+            [
+                'name' => 'Waiting for Response',
+                'route' => 'tickets.index',
+                'icon' => 'clock',
+                'key' => 'waiting',
+                'params' => ['status' => 'waiting']
+            ],
+            [
+                'name' => 'Closed Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'check-circle',
+                'key' => 'closed',
+                'params' => ['status' => 'closed']
+            ],
+            [
+                'type' => 'section',
+                'title' => 'SCHEDULING'
+            ],
+            [
+                'name' => 'Scheduled Tickets',
+                'route' => 'tickets.index',
+                'icon' => 'calendar',
+                'key' => 'scheduled',
+                'params' => ['filter' => 'scheduled']
+            ],
+            [
+                'name' => 'Calendar View',
+                'route' => 'tickets.calendar.index',
+                'icon' => 'calendar-days',
+                'key' => 'calendar'
+            ],
+            [
+                'name' => 'Time Tracking',
+                'route' => 'tickets.time-tracking.index',
+                'icon' => 'clock',
+                'key' => 'time-tracking'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'MANAGEMENT'
+            ],
+            [
+                'name' => 'Priority Queue',
+                'route' => 'tickets.priority-queue.index',
+                'icon' => 'fire',
+                'key' => 'priority-queue'
+            ],
+            [
+                'name' => 'Recurring Tickets',
+                'route' => 'tickets.recurring.index',
+                'icon' => 'arrow-path',
+                'key' => 'recurring'
+            ],
+            [
+                'name' => 'Templates',
+                'route' => 'tickets.templates.index',
+                'icon' => 'document-duplicate',
+                'key' => 'templates'
+            ],
+            [
+                'name' => 'Workflows',
+                'route' => 'tickets.workflows.index',
+                'icon' => 'cog-6-tooth',
+                'key' => 'workflows'
+            ],
+            [
+                'name' => 'Assignments',
+                'route' => 'tickets.assignments.index',
+                'icon' => 'user-group',
+                'key' => 'assignments'
+            ],
+            [
+                'name' => 'Export Tickets',
+                'route' => 'tickets.export.csv',
+                'icon' => 'arrow-up-tray',
+                'key' => 'export'
+            ]
+        ]
+    ],
+    'assets' => [
+        'title' => 'Asset Management',
+        'items' => [
+            [
+                'name' => 'Overview',
+                'route' => 'assets.index',
+                'icon' => 'home',
+                'key' => 'overview'
+            ],
+            [
+                'name' => 'All Assets',
+                'route' => 'assets.index',
+                'icon' => 'computer-desktop',
+                'key' => 'index'
+            ],
+            [
+                'name' => 'Add New Asset',
+                'route' => 'assets.create',
+                'icon' => 'plus',
+                'key' => 'create'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'ASSET CATEGORIES'
+            ],
+            [
+                'name' => 'Hardware',
+                'route' => 'assets.index',
+                'icon' => 'computer-desktop',
+                'key' => 'hardware',
+                'params' => ['category' => 'hardware']
+            ],
+            [
+                'name' => 'Software',
+                'route' => 'assets.index',
+                'icon' => 'code-bracket',
+                'key' => 'software',
+                'params' => ['category' => 'software']
+            ],
+            [
+                'name' => 'Licenses',
+                'route' => 'assets.index',
+                'icon' => 'key',
+                'key' => 'licenses',
+                'params' => ['category' => 'licenses']
+            ],
+            [
+                'name' => 'Mobile Devices',
+                'route' => 'assets.index',
+                'icon' => 'device-phone-mobile',
+                'key' => 'mobile',
+                'params' => ['category' => 'mobile']
+            ],
+            [
+                'type' => 'section',
+                'title' => 'MANAGEMENT'
+            ],
+            [
+                'name' => 'Check In/Out',
+                'route' => 'assets.checkinout',
+                'icon' => 'arrow-right-circle',
+                'key' => 'checkinout'
+            ],
+            [
+                'name' => 'Maintenance',
+                'route' => 'assets.maintenance.index',
+                'icon' => 'wrench-screwdriver',
+                'key' => 'maintenance'
+            ],
+            [
+                'name' => 'Warranties',
+                'route' => 'assets.warranties.index',
+                'icon' => 'shield-check',
+                'key' => 'warranties'
+            ],
+            [
+                'name' => 'Depreciation',
+                'route' => 'assets.depreciation.index',
+                'icon' => 'chart-line',
+                'key' => 'depreciation'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'TOOLS'
+            ],
+            [
+                'name' => 'QR Code Generator',
+                'route' => 'assets.index',
+                'icon' => 'qr-code',
+                'key' => 'qr-codes',
+                'params' => ['view' => 'qr']
+            ],
+            [
+                'name' => 'Print Labels',
+                'route' => 'assets.index',
+                'icon' => 'printer',
+                'key' => 'labels',
+                'params' => ['view' => 'labels']
+            ],
+            [
+                'name' => 'Bulk Actions',
+                'route' => 'assets.bulk',
+                'icon' => 'squares-plus',
+                'key' => 'bulk'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'DATA MANAGEMENT'
+            ],
+            [
+                'name' => 'Import Assets',
+                'route' => 'assets.import.form',
+                'icon' => 'arrow-down-tray',
+                'key' => 'import'
+            ],
+            [
+                'name' => 'Export Assets',
+                'route' => 'assets.export',
+                'icon' => 'arrow-up-tray',
+                'key' => 'export'
+            ],
+            [
+                'name' => 'Download Template',
+                'route' => 'assets.template.download',
+                'icon' => 'document-arrow-down',
+                'key' => 'template'
+            ],
+            [
+                'name' => 'Reports',
+                'route' => 'reports.assets',
+                'icon' => 'chart-bar',
+                'key' => 'reports'
+            ]
+        ]
+    ],
+    'financial' => [
+        'title' => 'Financial Management',
+        'items' => [
+            [
+                'type' => 'section',
+                'title' => 'Contracts'
+            ],
+            [
+                'name' => 'All Contracts',
+                'route' => 'financial.contracts.index',
+                'icon' => 'document-check',
+                'key' => 'contracts'
+            ],
+            [
+                'name' => 'Create Contract',
+                'route' => 'financial.contracts.create',
+                'icon' => 'plus',
+                'key' => 'create-contract'
+            ],
+            [
+                'name' => 'Expiring Soon',
+                'route' => 'financial.contracts.expiring',
+                'icon' => 'clock',
+                'key' => 'expiring-contracts'
+            ],
+            [
+                'name' => 'Contract Templates',
+                'route' => 'financial.contracts.templates.index',
+                'icon' => 'document-duplicate',
+                'key' => 'contract-templates'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Quotes'
+            ],
+            [
+                'name' => 'All Quotes',
+                'route' => 'financial.quotes.index',
+                'icon' => 'document',
+                'key' => 'quotes'
+            ],
+            [
+                'name' => 'Create Quote',
+                'route' => 'financial.quotes.create',
+                'icon' => 'plus',
+                'key' => 'create-quote'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Invoicing'
+            ],
+            [
+                'name' => 'All Invoices',
+                'route' => 'financial.invoices.index',
+                'icon' => 'document-text',
+                'key' => 'invoices'
+            ],
+            [
+                'name' => 'Create Invoice',
+                'route' => 'financial.invoices.create',
+                'icon' => 'plus',
+                'key' => 'create-invoice'
+            ],
+            [
+                'name' => 'Export Invoices',
+                'route' => 'financial.invoices.export.csv',
+                'icon' => 'arrow-up-tray',
+                'key' => 'export-invoices'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Payments'
+            ],
+            [
+                'name' => 'All Payments',
+                'route' => 'financial.payments.index',
+                'icon' => 'credit-card',
+                'key' => 'payments'
+            ],
+            [
+                'name' => 'Record Payment',
+                'route' => 'financial.payments.create',
+                'icon' => 'plus-circle',
+                'key' => 'create-payment'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Expenses'
+            ],
+            [
+                'name' => 'All Expenses',
+                'route' => 'financial.expenses.index',
+                'icon' => 'receipt-percent',
+                'key' => 'expenses'
+            ],
+            [
+                'name' => 'Add Expense',
+                'route' => 'financial.expenses.create',
+                'icon' => 'plus',
+                'key' => 'create-expense'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Products & Services'
+            ],
+            [
+                'name' => 'All Products',
+                'route' => 'products.index',
+                'icon' => 'cube',
+                'key' => 'products'
+            ],
+            [
+                'name' => 'Add Product',
+                'route' => 'products.create',
+                'icon' => 'plus',
+                'key' => 'create-product'
+            ],
+            [
+                'name' => 'All Services',
+                'route' => 'services.index',
+                'icon' => 'cog-6-tooth',
+                'key' => 'services'
+            ],
+            [
+                'name' => 'Add Service',
+                'route' => 'services.create',
+                'icon' => 'plus',
+                'key' => 'create-service'
+            ]
+        ]
+    ],
+    'projects' => [
+        'title' => 'Project Management',
+        'items' => [
+            [
+                'name' => 'All Projects',
+                'route' => 'projects.index',
+                'icon' => 'folder',
+                'key' => 'index'
+            ],
+            [
+                'name' => 'Create Project',
+                'route' => 'projects.create',
+                'icon' => 'plus',
+                'key' => 'create'
+            ],
+            [
+                'type' => 'divider'
+            ],
+            [
+                'name' => 'Active Projects',
+                'route' => 'projects.index',
+                'icon' => 'play',
+                'key' => 'active',
+                'params' => ['status' => 'active']
+            ],
+            [
+                'name' => 'Completed Projects',
+                'route' => 'projects.index',
+                'icon' => 'check-circle',
+                'key' => 'completed',
+                'params' => ['status' => 'completed']
+            ],
+            [
+                'type' => 'divider'
+            ],
+            [
+                'name' => 'Project Timeline',
+                'route' => 'projects.index',
+                'icon' => 'calendar-days',
+                'key' => 'timeline',
+                'params' => ['view' => 'timeline']
+            ]
+        ]
+    ],
+    'reports' => [
+        'title' => 'Reports & Analytics',
+        'items' => [
+            [
+                'name' => 'Reports Overview',
+                'route' => 'reports.index',
+                'icon' => 'chart-bar',
+                'key' => 'index'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Financial Reports'
+            ],
+            [
+                'name' => 'Financial Overview',
+                'route' => 'reports.financial',
+                'icon' => 'currency-dollar',
+                'key' => 'financial'
+            ],
+            [
+                'name' => 'Invoice Reports',
+                'route' => 'reports.financial',
+                'icon' => 'document-text',
+                'key' => 'invoices',
+                'params' => ['type' => 'invoices']
+            ],
+            [
+                'name' => 'Payment Reports',
+                'route' => 'reports.financial',
+                'icon' => 'credit-card',
+                'key' => 'payments',
+                'params' => ['type' => 'payments']
+            ],
+            [
+                'type' => 'section',
+                'title' => 'Operational Reports'
+            ],
+            [
+                'name' => 'Ticket Reports',
+                'route' => 'reports.tickets',
+                'icon' => 'ticket',
+                'key' => 'tickets'
+            ],
+            [
+                'name' => 'Asset Reports',
+                'route' => 'reports.assets',
+                'icon' => 'computer-desktop',
+                'key' => 'assets'
+            ],
+            [
+                'name' => 'Client Reports',
+                'route' => 'reports.clients',
+                'icon' => 'users',
+                'key' => 'clients'
+            ],
+            [
+                'name' => 'Project Reports',
+                'route' => 'reports.projects',
+                'icon' => 'folder',
+                'key' => 'projects'
+            ],
+            [
+                'name' => 'User Reports',
+                'route' => 'reports.users',
+                'icon' => 'user-group',
+                'key' => 'users'
+            ]
+        ]
+    ],
+    'products' => [
+        'title' => 'Product Management',
+        'items' => [
+            [
+                'name' => 'Overview',
+                'route' => 'products.index',
+                'icon' => 'home',
+                'key' => 'overview'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'PRODUCTS'
+            ],
+            [
+                'name' => 'All Products',
+                'route' => 'products.index',
+                'icon' => 'cube',
+                'key' => 'products'
+            ],
+            [
+                'name' => 'Add Product',
+                'route' => 'products.create',
+                'icon' => 'plus',
+                'key' => 'create-product'
+            ],
+            [
+                'name' => 'Import Products',
+                'route' => 'products.import',
+                'icon' => 'arrow-down-tray',
+                'key' => 'import-products'
+            ],
+            [
+                'name' => 'Export Products',
+                'route' => 'products.export',
+                'icon' => 'arrow-up-tray',
+                'key' => 'export-products'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'BUNDLES'
+            ],
+            [
+                'name' => 'Product Bundles',
+                'route' => 'bundles.index',
+                'icon' => 'gift',
+                'key' => 'bundles'
+            ],
+            [
+                'name' => 'Create Bundle',
+                'route' => 'bundles.create',
+                'icon' => 'plus-circle',
+                'key' => 'create-bundle'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'PRICING'
+            ],
+            [
+                'name' => 'Pricing Rules',
+                'route' => 'pricing-rules.index',
+                'icon' => 'calculator',
+                'key' => 'pricing-rules'
+            ],
+            [
+                'name' => 'Create Rule',
+                'route' => 'pricing-rules.create',
+                'icon' => 'plus',
+                'key' => 'create-pricing-rule'
+            ],
+            [
+                'type' => 'section',
+                'title' => 'CATEGORIES'
+            ],
+            [
+                'name' => 'Active Products',
+                'route' => 'products.index',
+                'icon' => 'check-circle',
+                'key' => 'active-products',
+                'params' => ['is_active' => '1']
+            ],
+            [
+                'name' => 'Services',
+                'route' => 'products.index',
+                'icon' => 'wrench-screwdriver',
+                'key' => 'services',
+                'params' => ['type' => 'service']
+            ],
+            [
+                'name' => 'Physical Products',
+                'route' => 'products.index',
+                'icon' => 'cube',
+                'key' => 'physical-products',
+                'params' => ['type' => 'product']
+            ],
+            [
+                'name' => 'Subscription Items',
+                'route' => 'products.index',
+                'icon' => 'arrow-path',
+                'key' => 'subscription-products',
+                'params' => ['billing_model' => 'subscription']
+            ],
+            [
+                'type' => 'section',
+                'title' => 'INVENTORY',
+                'collapsible' => true,
+                'default_collapsed' => true
+            ],
+            [
+                'name' => 'Low Stock Items',
+                'route' => 'products.index',
+                'icon' => 'exclamation-triangle',
+                'key' => 'low-stock',
+                'params' => ['stock_status' => 'low'],
+                'parent_section' => 'inventory'
+            ],
+            [
+                'name' => 'Out of Stock',
+                'route' => 'products.index',
+                'icon' => 'x-circle',
+                'key' => 'out-of-stock',
+                'params' => ['stock_status' => 'out'],
+                'parent_section' => 'inventory'
+            ]
+        ]
+    ]
+];
+@endphp
+
+@php
+$currentSidebar = $sidebarConfig[$activeDomain] ?? null;
+@endphp
+
+@if($currentSidebar)
+<div class="{{ $mobile ? 'w-full' : '' }}">
+    
+    <!-- Sidebar Header -->
+    <div class="px-6 py-6 border-b border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 dark:from-zinc-800 dark:via-zinc-900 dark:to-zinc-800">
+        <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse flex-shrink-0"></div>
+            <flux:heading size="sm" class="text-zinc-800 dark:text-zinc-200 truncate">
+                {{ $currentSidebar['title'] }}
+            </flux:heading>
+        </div>
+    </div>
+
+    <!-- Navigation List -->
+    <flux:navlist variant="outline" class="flex-1 overflow-y-auto p-2 space-y-1">
+        @foreach($currentSidebar['items'] as $item)
+            @if(($item['type'] ?? null) === 'divider')
+                <flux:separator variant="subtle" class="my-3" />
+            
+            @elseif(($item['type'] ?? null) === 'section')
+                @php
+                $isCollapsible = ($item['collapsible'] ?? false);
+                $isDefaultCollapsed = ($item['default_collapsed'] ?? false);
+                $sectionId = \Illuminate\Support\Str::slug($item['title']);
+                $isPriority = ($item['priority'] ?? false);
+                @endphp
+                
+                <div class="px-6 py-2 mb-2 {{ $isPriority ? 'bg-gradient-to-r from-red-50 to-red-50/30 dark:from-red-900/20 dark:to-red-900/10 border-l-4 border-red-400 dark:border-red-500 rounded-r-lg' : '' }}"
+                     @if($isCollapsible)
+                     x-data="{ 
+                         collapsed: {{ $isDefaultCollapsed ? 'true' : 'false' }},
+                         init() {
+                             const saved = localStorage.getItem('sidebar_{{ $sectionId }}_collapsed');
+                             if (saved !== null) this.collapsed = saved === '1';
+                         }
+                     }"
+                     @endif>
+                    
+                    <flux:heading size="xs" class="text-xs font-bold uppercase tracking-wider {{ $isPriority ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400' }}">
+                        @if($isCollapsible)
+                            <button @click="collapsed = !collapsed; localStorage.setItem('sidebar_{{ $sectionId }}_collapsed', collapsed ? '1' : '0')"
+                                    class="flex items-center w-full text-left hover:opacity-80 transition-opacity">
+                                <span x-show="!collapsed">▼</span>
+                                <span x-show="collapsed">▶</span>
+                                <span class="ml-1">{{ $item['title'] }}</span>
+                            </button>
+                        @else
+                            {{ $item['title'] }}
+                        @endif
+                    </flux:heading>
+                    
+                    @if($isCollapsible)
+                        <!-- Collapsible items container -->
+                        <div x-show="!collapsed" 
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="mt-2 space-y-1">
+                    @endif
+                </div>
+            @else
+                @php
+                $isActive = $activeItem === $item['key'];
+                $routeParams = $item['params'] ?? [];
+                $selectedClient = \App\Services\NavigationService::getSelectedClient();
+                $parentSection = $item['parent_section'] ?? null;
+                
+                // Conditional display logic
+                $shouldDisplay = true;
+                if (isset($item['show_if'])) {
+                    $condition = $item['show_if'];
+                    $shouldDisplay = false;
+                    
+                    if ($selectedClient) {
+                        switch ($condition) {
+                            case 'has_open_tickets':
+                                $shouldDisplay = $selectedClient->tickets()->whereIn('status', ['open', 'in-progress'])->exists();
+                                break;
+                            case 'has_pending_items':
+                                $shouldDisplay = $selectedClient->invoices()->where('status', 'overdue')->exists() ||
+                                               $selectedClient->invoices()->where('status', 'draft')->exists();
+                                break;
+                            case 'has_assets':
+                                $shouldDisplay = $selectedClient->assets()->count() > 0;
+                                break;
+                        }
+                    }
+                }
+                
+                if (!$shouldDisplay) continue;
+                
+                // Handle dynamic parameters
+                if (isset($routeParams['client']) && $routeParams['client'] === 'current') {
+                    if ($selectedClient) {
+                        $routeParams['client'] = $selectedClient->id;
+                    } else {
+                        continue;
+                    }
+                }
+                
+                if (isset($routeParams['client_id']) && $routeParams['client_id'] === 'current') {
+                    if ($selectedClient) {
+                        $routeParams['client_id'] = $selectedClient->id;
+                    } else {
+                        continue;
+                    }
+                }
+                
+                // Badge logic
+                $badgeCount = 0;
+                $badgeType = $item['badge_type'] ?? 'info';
+                
+                if ($selectedClient) {
+                    switch ($item['key']) {
+                        case 'open-tickets':
+                            $badgeCount = $selectedClient->tickets()->whereIn('status', ['open', 'in-progress'])->count();
+                            break;
+                        case 'pending':
+                            $badgeCount = $selectedClient->invoices()->where('status', 'overdue')->count() +
+                                         $selectedClient->invoices()->where('status', 'draft')->count();
+                            break;
+                        case 'contacts':
+                            $badgeCount = $selectedClient->contacts()->count();
+                            break;
+                        case 'locations':
+                            $badgeCount = $selectedClient->locations()->count();
+                            break;
+                        case 'tickets':
+                            $badgeCount = $selectedClient->tickets()->whereIn('status', ['open', 'in-progress'])->count();
+                            break;
+                        case 'assets':
+                            $badgeCount = $selectedClient->assets()->count();
+                            break;
+                        case 'invoices':
+                            $badgeCount = $selectedClient->invoices()->whereIn('status', ['draft', 'sent'])->count();
+                            break;
+                    }
+                }
+                
+                $badgeVariant = match($badgeType) {
+                    'urgent' => 'red',
+                    'warning' => 'amber',
+                    default => 'zinc'
+                };
+                @endphp
+                
+                @if($parentSection)
+                    <!-- This item belongs to a collapsible section - rendered within the section's container -->
+                @else
+                    <flux:navlist.item 
+                        href="{{ route($item['route'], $routeParams) }}" 
+                        :current="$isActive"
+                        @if(isset($item['icon'])) icon="{{ $item['icon'] }}" @endif
+                        @if($badgeCount > 0) 
+                            badge="{{ $badgeCount > 99 ? '99+' : $badgeCount }}"
+                        @endif
+                        @if($item['description'] ?? false) 
+                            title="{{ $item['description'] }}" 
+                        @endif
+                        class="group"
+                    >
+                        {{ $item['name'] }}
+                    </flux:navlist.item>
+                @endif
+            
+            @if($isCollapsible && ($item['type'] ?? null) === 'section')
+                        </div>
+                    </div>
+            @endif
+        @endforeach
+    </flux:navlist>
+
+    <!-- Footer -->
+    <div class="border-t border-zinc-200 dark:border-zinc-700 p-6">
+        <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full"></div>
+                <span class="font-medium">{{ ucfirst($activeDomain) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Collapsible Section Styles -->
+<style>
+/* Prevent flash of unstyled content */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Collapsible items for parent sections */
+.collapsible-items {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Priority section styling */
+.priority-section {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+</style>
+
+<!-- Alpine.js Component for Sidebar -->
+<script>
+function fluxSidebarContent(isMobile = false) {
+    return {
+        isMobile: isMobile,
+        
+        init() {
+            // Initialize collapsible sections with proper parent-child relationships
+            this.$nextTick(() => {
+                this.initializeCollapsibleItems();
+            });
+        },
+        
+        initializeCollapsibleItems() {
+            // Handle items that belong to collapsible sections
+            @foreach($currentSidebar['items'] as $item)
+                @if(($item['parent_section'] ?? false))
+                    @php
+                    $parentSectionSlug = \Illuminate\Support\Str::slug($item['parent_section']);
+                    $itemKey = $item['key'];
+                    @endphp
+                    
+                    // Find the parent section and append this item to its collapsible container
+                    const parentSection{{ $loop->index }} = document.querySelector('[x-data*="sidebar_{{ $parentSectionSlug }}_collapsed"]');
+                    if (parentSection{{ $loop->index }}) {
+                        const collapsibleContainer = parentSection{{ $loop->index }}.querySelector('.collapsible-items, [x-show="!collapsed"]');
+                        if (collapsibleContainer) {
+                            // Create the nav item for this collapsible item
+                            const navItem = document.createElement('flux:navlist.item');
+                            navItem.setAttribute('href', '{{ isset($item['route']) ? route($item['route'], $item['params'] ?? []) : '#' }}');
+                            navItem.setAttribute(':current', '{{ $activeItem === $item['key'] ? "true" : "false" }}');
+                            navItem.className = 'group ml-4';
+                            navItem.innerHTML = `
+                                @if(isset($item['icon']))
+                                    <flux:icon.{{ str_replace(['_', '-'], ['-', '-'], $item['icon']) }} class="w-4 h-4" />
+                                @else
+                                    <div class="w-1 h-1 bg-current rounded-full"></div>
+                                @endif
+                                {{ $item['name'] }}
+                            `;
+                            collapsibleContainer.appendChild(navItem);
+                        }
+                    }
+                @endif
+            @endforeach
+        }
+    };
+}
+</script>
+
+@endif

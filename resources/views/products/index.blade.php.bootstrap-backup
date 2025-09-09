@@ -1,0 +1,345 @@
+@extends('layouts.app')
+
+@section('title', 'Products')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Products</h1>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('products.import') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-upload"></i> Import
+                    </a>
+                    <a href="{{ route('products.export') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-download"></i> Export
+                    </a>
+                    <a href="{{ route('products.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Product
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('products.index') }}" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                value="{{ request('search') }}" placeholder="Name, SKU, or description">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="category_id" class="form-label">Category</label>
+                            <select class="form-select" id="category_id" name="category_id">
+                                <option value="">All Categories</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" 
+                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type" name="type">
+                                <option value="">All Products</option>
+                                <option value="product" {{ request('type') === 'product' ? 'selected' : '' }}>Product</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="billing_model" class="form-label">Billing Model</label>
+                            <select class="form-select" id="billing_model" name="billing_model">
+                                <option value="">All Models</option>
+                                <option value="one_time" {{ request('billing_model') === 'one_time' ? 'selected' : '' }}>One Time</option>
+                                <option value="subscription" {{ request('billing_model') === 'subscription' ? 'selected' : '' }}>Subscription</option>
+                                <option value="usage_based" {{ request('billing_model') === 'usage_based' ? 'selected' : '' }}>Usage Based</option>
+                                <option value="hybrid" {{ request('billing_model') === 'hybrid' ? 'selected' : '' }}>Hybrid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="is_active" class="form-label">Status</label>
+                            <select class="form-select" id="is_active" name="is_active">
+                                <option value="">All Status</option>
+                                <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="card mb-4" id="bulk-actions" style="display: none;">
+                <div class="card-body">
+                    <form method="POST" action="{{ route('products.bulk-update') }}" id="bulk-form">
+                        @csrf
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="bulk-action" class="form-label">Bulk Action</label>
+                                <select class="form-select" id="bulk-action" name="action" required>
+                                    <option value="">Select Action</option>
+                                    <option value="activate">Activate</option>
+                                    <option value="deactivate">Deactivate</option>
+                                    <option value="update_category">Update Category</option>
+                                    <option value="delete">Delete</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="category-select" style="display: none;">
+                                <label for="bulk-category" class="form-label">New Category</label>
+                                <select class="form-select" id="bulk-category" name="category_id">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-warning" id="bulk-submit">Apply</button>
+                                <button type="button" class="btn btn-secondary ms-2" onclick="clearBulkSelection()">Clear</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="select-all" class="form-check-input">
+                                    </th>
+                                    <th>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}" 
+                                           class="text-decoration-none">
+                                            Name
+                                            @if(request('sort_by') === 'name')
+                                                <i class="fas fa-sort-{{ request('sort_order') === 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th>SKU</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'base_price', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}" 
+                                           class="text-decoration-none">
+                                            Price
+                                            @if(request('sort_by') === 'base_price')
+                                                <i class="fas fa-sort-{{ request('sort_order') === 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th>Billing Model</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($products as $product)
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="product_ids[]" value="{{ $product->id }}" 
+                                                class="form-check-input product-checkbox">
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @if($product->image_url)
+                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
+                                                        class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                                @endif
+                                                <div>
+                                                    <a href="{{ route('products.show', $product) }}" class="fw-medium text-decoration-none">
+                                                        {{ $product->name }}
+                                                    </a>
+                                                    @if($product->is_featured)
+                                                        <span class="badge bg-warning text-dark ms-1">Featured</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <code>{{ $product->sku }}</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $product->type === 'product' ? 'primary' : 'info' }}">
+                                                {{ ucfirst($product->type) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $product->category?->name ?? 'Uncategorized' }}</td>
+                                        <td>
+                                            <strong>{{ $product->currency_code }} {{ number_format($product->base_price, 2) }}</strong>
+                                            @if($product->pricing_model !== 'fixed')
+                                                <br><small class="text-muted">{{ ucfirst($product->pricing_model) }} pricing</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $product->billing_model === 'one_time' ? 'secondary' : 'success' }}">
+                                                {{ str_replace('_', ' ', ucfirst($product->billing_model)) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($product->track_inventory)
+                                                @php
+                                                    $available = $product->current_stock - $product->reserved_stock;
+                                                    $stockClass = $available <= 0 ? 'danger' : ($available <= $product->min_stock_level ? 'warning' : 'success');
+                                                @endphp
+                                                <span class="badge bg-{{ $stockClass }}">{{ $available }}</span>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $product->is_active ? 'success' : 'secondary' }}">
+                                                {{ $product->is_active ? 'Active' : 'Inactive' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="POST" action="{{ route('products.duplicate', $product) }}" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-info" title="Duplicate">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="10" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fas fa-box-open fa-3x mb-3"></i>
+                                                <p>No products found.</p>
+                                                <a href="{{ route('products.create') }}" class="btn btn-primary">Create your first product</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if($products->hasPages())
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $products->links() }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('select-all');
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    const bulkActions = document.getElementById('bulk-actions');
+    const bulkForm = document.getElementById('bulk-form');
+    const bulkActionSelect = document.getElementById('bulk-action');
+    const categorySelect = document.getElementById('category-select');
+
+    // Select all functionality
+    selectAll.addEventListener('change', function() {
+        productCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkActions();
+    });
+
+    // Individual checkbox change
+    productCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllState();
+            updateBulkActions();
+        });
+    });
+
+    // Bulk action type change
+    bulkActionSelect.addEventListener('change', function() {
+        if (this.value === 'update_category') {
+            categorySelect.style.display = 'block';
+        } else {
+            categorySelect.style.display = 'none';
+        }
+    });
+
+    // Bulk form submission
+    bulkForm.addEventListener('submit', function(e) {
+        const selectedProducts = getSelectedProducts();
+        if (selectedProducts.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one product.');
+            return;
+        }
+
+        const action = bulkActionSelect.value;
+        if (action === 'delete') {
+            if (!confirm('Are you sure you want to delete the selected products? This action cannot be undone.')) {
+                e.preventDefault();
+                return;
+            }
+        }
+
+        // Add selected product IDs to form
+        selectedProducts.forEach(productId => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'product_ids[]';
+            input.value = productId;
+            this.appendChild(input);
+        });
+    });
+
+    function updateSelectAllState() {
+        const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
+        const totalCount = productCheckboxes.length;
+        
+        selectAll.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+        selectAll.checked = checkedCount === totalCount && totalCount > 0;
+    }
+
+    function updateBulkActions() {
+        const selectedCount = getSelectedProducts().length;
+        if (selectedCount > 0) {
+            bulkActions.style.display = 'block';
+        } else {
+            bulkActions.style.display = 'none';
+        }
+    }
+
+    function getSelectedProducts() {
+        return Array.from(document.querySelectorAll('.product-checkbox:checked')).map(checkbox => checkbox.value);
+    }
+
+    window.clearBulkSelection = function() {
+        productCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        updateBulkActions();
+    };
+});
+</script>
+@endpush
+@endsection

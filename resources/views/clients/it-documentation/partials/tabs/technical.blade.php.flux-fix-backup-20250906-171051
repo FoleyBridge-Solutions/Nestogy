@@ -1,0 +1,150 @@
+<div class="space-y-6">
+    <!-- IP Addresses -->
+    <div>
+        <div class="flex justify-between items-center mb-2">
+            <label class="block text-sm font-medium text-gray-700">IP Addresses</flux:label>
+            <button type="button" @click="addIpAddress()" class="text-sm text-blue-600 hover:text-blue-800">+ Add IP Address</flux:button>
+        </div>
+        <div class="space-y-2">
+            <template x-for="(ip, index) in ipAddresses" :key="index">
+                <div class="flex gap-2">
+                    <input type="text" x-model="ip.address" placeholder="IP Address (e.g., 192.168.1.1)"
+                           :name="`ip_addresses[${index}][address]`"
+                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <input type="text" x-model="ip.description" placeholder="Description"
+                           :name="`ip_addresses[${index}][description]`"
+                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <button type="button" @click="removeIpAddress(index)" class="text-red-600 hover:text-red-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </flux:button>
+                </div>
+            </template>
+            <div x-show="ipAddresses.length === 0" class="text-sm text-gray-500 italic">No IP addresses added yet</div>
+        </div>
+    </div>
+
+    <!-- Ports -->
+    <div>
+        <div class="flex justify-between items-center mb-2">
+            <label class="block text-sm font-medium text-gray-700">Ports & Services</flux:label>
+            <button type="button" @click="addPort()" class="text-sm text-blue-600 hover:text-blue-800">+ Add Port</flux:button>
+        </div>
+        <div class="space-y-2">
+            <template x-for="(port, index) in ports" :key="index">
+                <div class="flex gap-2">
+                    <input type="text" x-model="port.number" placeholder="Port"
+                           :name="`ports[${index}][number]`"
+                           class="w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <select x-model="port.protocol" :name="`ports[${index}][protocol]`"
+                            class="w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="TCP">TCP</option>
+                        <option value="UDP">UDP</option>
+                    </flux:select>
+                    <input type="text" x-model="port.service" placeholder="Service (e.g., HTTP, SSH)"
+                           :name="`ports[${index}][service]`"
+                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <button type="button" @click="removePort(index)" class="text-red-600 hover:text-red-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </flux:button>
+                </div>
+            </template>
+            <div x-show="ports.length === 0" class="text-sm text-gray-500 italic">No ports configured yet</div>
+        </div>
+    </div>
+
+    <!-- Software Versions -->
+    <div>
+        <div class="flex justify-between items-center mb-2">
+            <label class="block text-sm font-medium text-gray-700">Software & Versions</flux:label>
+            <button type="button" @click="addSoftwareVersion()" class="text-sm text-blue-600 hover:text-blue-800">+ Add Software</flux:button>
+        </div>
+        <div class="space-y-2">
+            <template x-for="(software, index) in softwareVersions" :key="index">
+                <div class="flex gap-2">
+                    <input type="text" x-model="software.name" placeholder="Software Name"
+                           :name="`software_versions[${index}][name]`"
+                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <input type="text" x-model="software.version" placeholder="Version"
+                           :name="`software_versions[${index}][version]`"
+                           class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <input type="text" x-model="software.vendor" placeholder="Vendor"
+                           :name="`software_versions[${index}][vendor]`"
+                           class="w-40 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <button type="button" @click="removeSoftwareVersion(index)" class="text-red-600 hover:text-red-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </flux:button>
+                </div>
+            </template>
+            <div x-show="softwareVersions.length === 0" class="text-sm text-gray-500 italic">No software versions documented yet</div>
+        </div>
+    </div>
+
+    <!-- API Endpoints -->
+    <div>
+        <div class="flex justify-between items-center mb-2">
+            <label class="block text-sm font-medium text-gray-700">API Endpoints</flux:label>
+            <button type="button" @click="addApiEndpoint()" class="text-sm text-blue-600 hover:text-blue-800">+ Add Endpoint</flux:button>
+        </div>
+        <div class="space-y-2">
+            <template x-for="(endpoint, index) in apiEndpoints" :key="index">
+                <div class="flex gap-2">
+                    <select x-model="endpoint.method" :name="`api_endpoints[${index}][method]`"
+                            class="w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="PATCH">PATCH</option>
+                    </flux:select>
+                    <input type="text" x-model="endpoint.url" placeholder="Endpoint URL"
+                           :name="`api_endpoints[${index}][url]`"
+                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <input type="text" x-model="endpoint.description" placeholder="Description"
+                           :name="`api_endpoints[${index}][description]`"
+                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <button type="button" @click="removeApiEndpoint(index)" class="text-red-600 hover:text-red-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </flux:button>
+                </div>
+            </template>
+            <div x-show="apiEndpoints.length === 0" class="text-sm text-gray-500 italic">No API endpoints configured yet</div>
+        </div>
+    </div>
+
+    <!-- Environment Variables -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Environment Variables</flux:label>
+        <textarea name="environment_variables" rows="4" placeholder="KEY=value (one per line)"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></flux:textarea>
+        <p class="mt-1 text-xs text-gray-500">Enter environment variables in KEY=value format, one per line</p>
+    </div>
+
+    <!-- SSL Certificates -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">SSL Certificates</flux:label>
+        <textarea name="ssl_certificates" rows="3" placeholder="List SSL certificates and expiry dates"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></flux:textarea>
+    </div>
+
+    <!-- DNS Entries -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">DNS Entries</flux:label>
+        <textarea name="dns_entries" rows="3" placeholder="A records, CNAME records, MX records, etc."
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></flux:textarea>
+    </div>
+
+    <!-- Firewall Rules -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Firewall Rules</flux:label>
+        <textarea name="firewall_rules" rows="4" placeholder="Document firewall rules and policies"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></flux:textarea>
+    </div>
+</div>

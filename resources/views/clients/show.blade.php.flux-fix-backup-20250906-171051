@@ -1,0 +1,312 @@
+@extends('layouts.app')
+
+@section('title', $client->name . ' - Client Details')
+
+@section('content')
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-6 py-8 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        @if($client->avatar)
+                            <img class="h-16 w-16 rounded-full object-cover" src="{{ Storage::url($client->avatar) }}" alt="{{ $client->name }}">
+                        @else
+                            <div class="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+                                <span class="text-xl font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">{{ substr($client->name, 0, 2) }}</span>
+                            </div>
+                        @endif
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">{{ $client->name }}</h1>
+                        <div class="flex items-center space-x-4 mt-1">
+                            @if($client->company_name)
+                                <p class="text-sm text-gray-500">{{ $client->company_name }}</p>
+                            @endif
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $client->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $client->is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200">
+                                {{ ucfirst($client->type ?? 'individual') }}
+                            </span>
+                            @if($client->lead)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Lead
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Customer
+                                </span>
+                            @endif
+                        </div>
+                        @if($client->tags->count() > 0)
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                @foreach($client->tags as $tag)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        {{ $tag->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    @if($client->lead)
+                        <form action="{{ route('clients.convert', $client) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Convert to Customer
+                            </flux:button>
+                        </form>
+                    @endif
+                    <a href="{{ route('clients.edit', $client) }}" class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Edit {{ $client->lead ? 'Lead' : 'Client' }}
+                    </a>
+                    <a href="{{ $client->lead ? route('clients.leads') : route('clients.index') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to {{ $client->lead ? 'Leads' : 'Clients' }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Open Tickets</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white dark:text-white">{{ $client->tickets()->where('status', 'open')->count() }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Invoices</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white dark:text-white">{{ $client->invoices()->count() }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white dark:text-white">${{ number_format($client->invoices()->sum('amount') ?? 0, 2) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Assets</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white dark:text-white">{{ $client->assets()->count() }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">IT Docs</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white dark:text-white">
+                                @php
+                                    $itDocCount = \App\Domains\Client\Models\ClientITDocumentation::where('client_id', $client->id)
+                                        ->where('company_id', auth()->user()->company_id)
+                                        ->count();
+                                @endphp
+                                {{ $itDocCount }}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Overview -->
+    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg">
+        <div class="p-6">
+            <!-- Overview Content -->
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <!-- Contact Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-6">Contact Information</h3>
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Email</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">
+                                    <a href="mailto:{{ $client->email }}" class="text-blue-600 hover:text-blue-800">{{ $client->email }}</a>
+                                </dd>
+                            </div>
+                            @if($client->phone)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Phone</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">
+                                    <a href="tel:{{ $client->phone }}" class="text-blue-600 hover:text-blue-800">{{ $client->phone }}</a>
+                                </dd>
+                            </div>
+                            @endif
+                            @if($client->website)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Website</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">
+                                    <a href="{{ $client->website }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ $client->website }}</a>
+                                </dd>
+                            </div>
+                            @endif
+                            @if($client->tax_id_number)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Tax ID</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->tax_id_number }}</dd>
+                            </div>
+                            @endif
+                            @if($client->referral)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Referral Source</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->referral }}</dd>
+                            </div>
+                            @endif
+                        </dl>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-6">Address</h3>
+                        @if($client->address || $client->city || $client->state || $client->zip_code || $client->country)
+                        <div class="text-sm text-gray-900 dark:text-white dark:text-white">
+                            @if($client->address)
+                                <div>{{ $client->address }}</div>
+                            @endif
+                            @if($client->city || $client->state || $client->zip_code)
+                                <div>
+                                    {{ $client->city }}{{ $client->city && ($client->state || $client->zip_code) ? ', ' : '' }}
+                                    {{ $client->state }} {{ $client->zip_code }}
+                                </div>
+                            @endif
+                            @if($client->country)
+                                <div>{{ $client->country }}</div>
+                            @endif
+                        </div>
+                        @else
+                        <p class="text-sm text-gray-500">No address information available</p>
+                        @endif
+                    </div>
+
+                    <!-- Billing Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-6">Billing Information</h3>
+                        <dl class="space-y-3">
+                            @if($client->rate)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Default Rate</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">${{ number_format($client->rate, 2) }}/hour</dd>
+                            </div>
+                            @endif
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Currency</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->currency_code ?? 'USD' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Payment Terms</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">Net {{ $client->net_terms ?? 30 }} days</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-6">Additional Information</h3>
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Client Since</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->created_at->format('F j, Y') }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->updated_at->format('F j, Y g:i A') }}</dd>
+                            </div>
+                            @if($client->accessed_at)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Last Accessed</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->accessed_at->format('F j, Y g:i A') }}</dd>
+                            </div>
+                            @endif
+                            @if($client->created_by)
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Created By</dt>
+                                <dd class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $client->creator->name ?? 'Unknown' }}</dd>
+                            </div>
+                            @endif
+                        </dl>
+                        @if($client->notes)
+                        <div class="mt-6">
+                            <dt class="text-sm font-medium text-gray-500 mb-2">Notes</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white dark:text-white bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 p-6 rounded-md">{{ $client->notes }}</dd>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+

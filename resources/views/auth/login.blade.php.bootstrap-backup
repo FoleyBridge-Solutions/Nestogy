@@ -1,0 +1,257 @@
+@extends('layouts.guest')
+
+@section('title', 'Login - Nestogy ERP')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row min-vh-100">
+        <!-- Left side - Branding -->
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary">
+            <div class="text-center text-white">
+                <div class="mb-4">
+                    <img src="{{ asset('assets/img/branding/nestogy-logo-white.png') }}" alt="Nestogy" class="img-fluid" style="max-width: 200px;">
+                </div>
+                <h2 class="fw-bold mb-3">Welcome to Nestogy ERP</h2>
+                <p class="lead mb-4">Streamline your business operations with our comprehensive ERP solution</p>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <p class="small">Client Management</p>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-ticket-alt fa-2x mb-2"></i>
+                        <p class="small">Ticket System</p>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <p class="small">Financial Reports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side - Login Form -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center">
+            <div class="w-100" style="max-width: 400px;">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <!-- Mobile Logo -->
+                        <div class="text-center mb-4 d-lg-none">
+                            <img src="{{ asset('assets/img/branding/nestogy-logo.png') }}" alt="Nestogy" class="img-fluid" style="max-width: 150px;">
+                        </div>
+
+                        <h3 class="card-title text-center mb-4 fw-bold">Sign In</h3>
+
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        @if (session('status'))
+                            <div class="alert alert-success">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('login') }}">
+                            @csrf
+
+                            <!-- Company Selection -->
+                            <div class="mb-3">
+                                <label for="company_id" class="form-label">
+                                    <i class="fas fa-building me-1"></i>Company
+                                </label>
+                                <select class="form-select @error('company_id') is-invalid @enderror" 
+                                        id="company_id" name="company_id" required>
+                                    <option value="">Select Company</option>
+                                    @foreach($companies as $company)
+                                        <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                            {{ $company->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('company_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Email Address
+                                </label>
+                                <input type="email" 
+                                       class="form-control @error('email') is-invalid @enderror" 
+                                       id="email" 
+                                       name="email" 
+                                       value="{{ old('email') }}" 
+                                       required 
+                                       autocomplete="email" 
+                                       autofocus
+                                       placeholder="Enter your email">
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Password -->
+                            <div class="mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>Password
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control @error('password') is-invalid @enderror" 
+                                           id="password" 
+                                           name="password" 
+                                           required 
+                                           autocomplete="current-password"
+                                           placeholder="Enter your password">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Remember Me -->
+                            @if(!isset($settings) || $settings->remember_me_enabled)
+                            <div class="mb-3 form-check">
+                                <input type="hidden" name="remember" value="0">
+                                <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="remember">
+                                    Remember me for 30 days
+                                </label>
+                            </div>
+                            @endif
+
+                            <!-- Submit Button -->
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                                </button>
+                            </div>
+
+                            <!-- Forgot Password Link -->
+                            <div class="text-center">
+                                @if (Route::has('password.request'))
+                                    <a href="{{ route('password.request') }}" class="text-decoration-none">
+                                        <i class="fas fa-key me-1"></i>Forgot your password?
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-4">
+                    <p class="text-muted small">
+                        &copy; {{ date('Y') }} Nestogy ERP. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    // Auto-focus first empty field
+    const companySelect = document.getElementById('company_id');
+    const emailInput = document.getElementById('email');
+    
+    if (companySelect && !companySelect.value) {
+        companySelect.focus();
+    } else if (emailInput && !emailInput.value) {
+        emailInput.focus();
+    }
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+.bg-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline-secondary {
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+}
+
+.input-group .form-control {
+    border-radius: 8px 0 0 8px;
+}
+
+.form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.min-vh-100 {
+    min-height: 100vh;
+}
+
+@media (max-width: 991.98px) {
+    .card-body {
+        padding: 2rem !important;
+    }
+}
+</style>
+@endpush
+@endsection

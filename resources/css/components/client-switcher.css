@@ -1,0 +1,94 @@
+/* Client Switcher Component Styles */
+
+/* Dropdown animations */
+.client-switcher-dropdown [data-flux-popover] {
+    @apply transition-all duration-300 ease-out;
+    transform: translateY(-8px) scale(0.95);
+    opacity: 0;
+}
+
+.client-switcher-dropdown[data-flux-dropdown-open] [data-flux-popover] {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* Smooth item hover animations */
+.client-switcher-dropdown .group {
+    @apply transition-all duration-150 ease-out;
+}
+
+.client-switcher-dropdown .group:hover {
+    @apply scale-[1.02];
+}
+
+/* Keyboard shortcut hints */
+.keyboard-hint {
+    @apply inline-flex items-center justify-center w-5 h-5 text-xs font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded border transition-colors duration-200;
+}
+
+/* Improved hover states */
+.client-item:hover .favorite-btn {
+    @apply opacity-100;
+}
+
+.favorite-btn {
+    @apply opacity-0 transition-opacity duration-200;
+}
+
+/* Focus states for accessibility */
+.client-item:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* Star animation */
+.favorite-star {
+    @apply transition-all duration-200 ease-out;
+}
+
+.favorite-star.filled {
+    @apply text-yellow-500 scale-110;
+}
+
+/* Loading shimmer effect */
+.loading-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Staggered animation for client list items */
+.client-list-item {
+    @apply transition-all duration-200 ease-out;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.client-list-item:nth-child(1) { animation-delay: 0ms; }
+.client-list-item:nth-child(2) { animation-delay: 50ms; }
+.client-list-item:nth-child(3) { animation-delay: 100ms; }
+.client-list-item:nth-child(4) { animation-delay: 150ms; }
+.client-list-item:nth-child(5) { animation-delay: 200ms; }
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes slideInUp {
+    0% {
+        transform: translateY(8px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Enhance search input animation */
+.client-search-input {
+    @apply transition-all duration-200 ease-out;
+}
+
+.client-search-input:focus {
+    @apply ring-2 ring-blue-500 ring-offset-1 scale-[1.01];
+}

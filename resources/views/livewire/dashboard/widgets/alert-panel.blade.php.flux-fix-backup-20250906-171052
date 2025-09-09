@@ -1,0 +1,227 @@
+<flux:card class="h-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <flux:heading size="lg" class="flex items-center gap-2">
+                <flux:icon.bell class="size-5 text-red-500" />
+                Alerts & Notifications
+                @if($alerts->where('severity', 'critical')->count() > 0)
+                    <flux:badge color="red" size="sm">
+                        {{ $alerts->where('severity', 'critical')->count() }}
+                    </flux:badge>
+                @endif
+            </flux:heading>
+            <flux:text size="sm" class="text-zinc-500 mt-1">
+                Important system alerts and notifications
+            </flux:text>
+        </div>
+        
+        <!-- Filter Dropdown -->
+        <flux:dropdown position="bottom" align="end">
+            <flux:button variant="ghost" size="sm">
+                <flux:icon.funnel class="size-4" />
+                {{ ucfirst($filter) }}
+            </flux:button>
+            
+            <flux:menu>
+                <flux:menu.item wire:click="$set('filter', 'all')">All Alerts</flux:menu.item>
+                <flux:menu.item wire:click="$set('filter', 'critical')">Critical</flux:menu.item>
+                <flux:menu.item wire:click="$set('filter', 'high')">High</flux:menu.item>
+                <flux:menu.item wire:click="$set('filter', 'medium')">Medium</flux:menu.item>
+            </flux:menu>
+        </flux:dropdown>
+    </div>
+    
+    <!-- Alerts List -->
+    @if($alerts->isNotEmpty())
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+            @foreach($alerts as $alert)
+                <div class="group relative p-3 rounded-lg border transition-all
+                    @switch($alert['severity'])
+                        @case('critical')
+                            border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/20
+                            @break
+                        @case('high')
+                            border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-900/20
+                            @break
+                        @case('medium')
+                            border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-900/20
+                            @break
+                        @default
+                            border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20
+                    @endswitch
+                " wire:key="alert-{{ $alert['id'] }}">
+                    
+                    <div class="flex items-start gap-3">
+                        <!-- Icon -->
+                        <div class="flex-shrink-0 p-1.5 rounded-full
+                            @switch($alert['severity'])
+                                @case('critical')
+                                    bg-red-100 dark:bg-red-900/30
+                                    @break
+                                @case('high')
+                                    bg-orange-100 dark:bg-orange-900/30
+                                    @break
+                                @case('medium')
+                                    bg-yellow-100 dark:bg-yellow-900/30
+                                    @break
+                                @default
+                                    bg-blue-100 dark:bg-blue-900/30
+                            @endswitch
+                        ">
+                            @php
+                                $iconColorClass = match($alert['severity']) {
+                                    'critical' => 'text-red-600 dark:text-red-400',
+                                    'high' => 'text-orange-600 dark:text-orange-400',
+                                    'medium' => 'text-yellow-600 dark:text-yellow-400',
+                                    default => 'text-blue-600 dark:text-blue-400'
+                                };
+                            @endphp
+                            
+                            @switch($alert['icon'])
+                                @case('exclamation-triangle')
+                                    <flux:icon.exclamation-triangle class="size-4 {{ $iconColorClass }}" />
+                                    @break
+                                @case('currency-dollar')
+                                    <flux:icon.currency-dollar class="size-4 {{ $iconColorClass }}" />
+                                    @break
+                                @case('user-minus')
+                                    <flux:icon.user-minus class="size-4 {{ $iconColorClass }}" />
+                                    @break
+                                @case('server')
+                                    <flux:icon.server class="size-4 {{ $iconColorClass }}" />
+                                    @break
+                                @case('shield-exclamation')
+                                    <flux:icon.shield-exclamation class="size-4 {{ $iconColorClass }}" />
+                                    @break
+                                @default
+                                    <flux:icon.information-circle class="size-4 {{ $iconColorClass }}" />
+                            @endswitch
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <!-- Title and Severity -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <flux:text class="font-medium">{{ $alert['title'] }}</flux:text>
+                                    <flux:badge size="xs" 
+                                        color="{{ match($alert['severity']) {
+                                            'critical' => 'red',
+                                            'high' => 'orange', 
+                                            'medium' => 'yellow',
+                                            default => 'blue'
+                                        } }}"
+                                        class="ml-2"
+                                    >
+                                        {{ ucfirst($alert['severity']) }}
+                                    </flux:badge>
+                                </div>
+                                
+                                <!-- Timestamp -->
+                                <flux:text size="xs" class="text-zinc-500 whitespace-nowrap">
+                                    {{ $alert['created_at']->diffForHumans() }}
+                                </flux:text>
+                            </div>
+                            
+                            <!-- Message -->
+                            <flux:text size="sm" class="text-zinc-700 dark:text-zinc-300 mt-1">
+                                {{ $alert['message'] }}
+                            </flux:text>
+                            
+                            <!-- Details -->
+                            @if($alert['details'])
+                                <flux:text size="xs" class="text-zinc-500 mt-1">
+                                    {{ $alert['details'] }}
+                                </flux:text>
+                            @endif
+                            
+                            <!-- Actions -->
+                            <div class="flex items-center gap-2 mt-2">
+                                @if($alert['action_url'])
+                                    <a href="{{ $alert['action_url'] }}" 
+                                       class="text-xs font-medium hover:underline
+                                           @switch($alert['severity'])
+                                               @case('critical')
+                                                   text-red-600 dark:text-red-400
+                                                   @break
+                                               @case('high')
+                                                   text-orange-600 dark:text-orange-400
+                                                   @break
+                                               @case('medium')
+                                                   text-yellow-600 dark:text-yellow-400
+                                                   @break
+                                               @default
+                                                   text-blue-600 dark:text-blue-400
+                                           @endswitch
+                                       ">
+                                        {{ $alert['action_text'] }}
+                                    </a>
+                                @endif
+                                
+                                @if($alert['dismissible'])
+                                    <button wire:click="dismissAlert('{{ $alert['id'] }}')" 
+                                            class="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium">
+                                        Dismiss
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <!-- Dismiss Button -->
+                        @if($alert['dismissible'])
+                            <button wire:click="dismissAlert('{{ $alert['id'] }}')" 
+                                    class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded">
+                                <flux:icon.x-mark class="size-3 text-zinc-500" />
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        
+        <!-- Load More -->
+        @if($alerts->count() >= $limit)
+            <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                <flux:button variant="ghost" size="sm" class="w-full" wire:click="loadMore">
+                    <flux:icon.arrow-down class="size-4" />
+                    Load More Alerts
+                </flux:button>
+            </div>
+        @endif
+        
+        <!-- Summary -->
+        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+            <div class="flex items-center justify-between text-xs text-zinc-500">
+                <span>{{ $alerts->count() }} alerts shown</span>
+                <div class="flex items-center gap-4">
+                    <span class="text-red-600">{{ $alerts->where('severity', 'critical')->count() }} Critical</span>
+                    <span class="text-orange-600">{{ $alerts->where('severity', 'high')->count() }} High</span>
+                    <span class="text-yellow-600">{{ $alerts->where('severity', 'medium')->count() }} Medium</span>
+                </div>
+            </div>
+        </div>
+    @else
+        <!-- Empty State -->
+        <div class="flex items-center justify-center h-32">
+            <div class="text-center">
+                @if($loading)
+                    <flux:icon.arrow-path class="size-8 animate-spin text-zinc-400 mx-auto mb-2" />
+                    <flux:text class="text-zinc-500">Loading alerts...</flux:text>
+                @else
+                    <flux:icon.check-circle class="size-8 text-green-500 mx-auto mb-2" />
+                    <flux:text class="text-zinc-500">No alerts at this time</flux:text>
+                    <flux:text size="xs" class="text-zinc-400 mt-1">Everything looks good!</flux:text>
+                @endif
+            </div>
+        </div>
+    @endif
+    
+    <!-- Loading Overlay -->
+    <div wire:loading wire:target="loadAlerts,setFilter" class="absolute inset-0 bg-white/70 dark:bg-zinc-900/70 flex items-center justify-center rounded-lg">
+        <div class="flex items-center gap-2 bg-white dark:bg-zinc-800 px-4 py-2 rounded-lg shadow-lg">
+            <flux:icon.arrow-path class="size-5 animate-spin text-red-500" />
+            <flux:text>Loading alerts...</flux:text>
+        </div>
+    </div>
+</flux:card>

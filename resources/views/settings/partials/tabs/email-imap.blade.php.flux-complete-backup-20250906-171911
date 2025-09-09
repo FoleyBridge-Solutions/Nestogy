@@ -1,0 +1,298 @@
+<div class="p-6">
+    <div class="space-y-6">
+        <!-- IMAP Configuration Section -->
+        <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">IMAP Server Configuration</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Enable IMAP -->
+                <div class="col-span-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                               id="imap_enabled"
+                               name="imap_enabled"
+                               value="1"
+                               {{ old('imap_enabled', $settings['imap_enabled'] ?? false) ? 'checked' : '' }}
+                               class="h-4 w-4 text-blue-600-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="imap_enabled" class="ml-3 block text-sm font-medium text-gray-700">
+                            Enable IMAP Email Monitoring
+                        </label>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Monitor email accounts for incoming tickets and correspondence</p>
+                </div>
+
+                <!-- IMAP Server Host -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="imap_host" class="block text-sm font-medium text-gray-700 mb-1">
+                        IMAP Host
+                    </label>
+                    <input type="text" 
+                           id="imap_host"
+                           name="imap_host"
+                           value="{{ old('imap_host', $settings['imap_host'] ?? '') }}"
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                           placeholder="imap.yourdomain.com">
+                </div>
+
+                <!-- IMAP Port -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="imap_port" class="block text-sm font-medium text-gray-700 mb-1">
+                        IMAP Port
+                    </label>
+                    <select id="imap_port"
+                            name="imap_port"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                        <option value="143" {{ old('imap_port', $settings['imap_port'] ?? '993') == '143' ? 'selected' : '' }}>143 (Standard)</option>
+                        <option value="993" {{ old('imap_port', $settings['imap_port'] ?? '993') == '993' ? 'selected' : '' }}>993 (SSL/TLS)</option>
+                    </select>
+                </div>
+
+                <!-- IMAP Security -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="imap_encryption" class="block text-sm font-medium text-gray-700 mb-1">
+                        Encryption
+                    </label>
+                    <select id="imap_encryption"
+                            name="imap_encryption"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                        <option value="" {{ old('imap_encryption', $settings['imap_encryption'] ?? 'ssl') == '' ? 'selected' : '' }}>None</option>
+                        <option value="tls" {{ old('imap_encryption', $settings['imap_encryption'] ?? 'ssl') == 'tls' ? 'selected' : '' }}>TLS/STARTTLS</option>
+                        <option value="ssl" {{ old('imap_encryption', $settings['imap_encryption'] ?? 'ssl') == 'ssl' ? 'selected' : '' }}>SSL</option>
+                    </select>
+                </div>
+
+                <!-- IMAP Username -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="imap_username" class="block text-sm font-medium text-gray-700 mb-1">
+                        Username
+                    </label>
+                    <input type="text" 
+                           id="imap_username"
+                           name="imap_username"
+                           value="{{ old('imap_username', $settings['imap_username'] ?? '') }}"
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                           placeholder="support@yourdomain.com">
+                </div>
+
+                <!-- IMAP Password -->
+                <div class="col-span-2">
+                    <label for="imap_password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="imap_password"
+                               name="imap_password"
+                               value="{{ old('imap_password', $settings['imap_password'] ? '••••••••' : '') }}"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm pr-10"
+                               placeholder="Enter IMAP password">
+                        <button type="button" 
+                                onclick="togglePassword('imap_password')"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Processing Settings -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Email Processing</h3>
+            <div class="space-y-6">
+                <!-- Folder Configuration -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="imap_inbox_folder" class="block text-sm font-medium text-gray-700 mb-1">
+                            Inbox Folder
+                        </label>
+                        <input type="text" 
+                               id="imap_inbox_folder"
+                               name="imap_inbox_folder"
+                               value="{{ old('imap_inbox_folder', $settings['imap_inbox_folder'] ?? 'INBOX') }}"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                               placeholder="INBOX">
+                    </div>
+
+                    <div>
+                        <label for="imap_processed_folder" class="block text-sm font-medium text-gray-700 mb-1">
+                            Processed Folder
+                        </label>
+                        <input type="text" 
+                               id="imap_processed_folder"
+                               name="imap_processed_folder"
+                               value="{{ old('imap_processed_folder', $settings['imap_processed_folder'] ?? 'Processed') }}"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                               placeholder="Processed">
+                    </div>
+                </div>
+
+                <!-- Processing Options -->
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                               id="imap_create_tickets"
+                               name="imap_create_tickets"
+                               value="1"
+                               {{ old('imap_create_tickets', $settings['imap_create_tickets'] ?? true) ? 'checked' : '' }}
+                               class="h-4 w-4 text-blue-600-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="imap_create_tickets" class="ml-3 block text-sm font-medium text-gray-700">
+                            Automatically Create Tickets from Emails
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                               id="imap_move_processed"
+                               name="imap_move_processed"
+                               value="1"
+                               {{ old('imap_move_processed', $settings['imap_move_processed'] ?? true) ? 'checked' : '' }}
+                               class="h-4 w-4 text-blue-600 dark:text-blue-400-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="imap_move_processed" class="ml-3 block text-sm font-medium text-gray-700">
+                            Move Processed Emails to Processed Folder
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                               id="imap_mark_read"
+                               name="imap_mark_read"
+                               value="1"
+                               {{ old('imap_mark_read', $settings['imap_mark_read'] ?? true) ? 'checked' : '' }}
+                               class="h-4 w-4 text-blue-600 dark:text-blue-400-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="imap_mark_read" class="ml-3 block text-sm font-medium text-gray-700">
+                            Mark Processed Emails as Read
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                               id="imap_process_attachments"
+                               name="imap_process_attachments"
+                               value="1"
+                               {{ old('imap_process_attachments', $settings['imap_process_attachments'] ?? true) ? 'checked' : '' }}
+                               class="h-4 w-4 text-blue-600 dark:text-blue-400-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="imap_process_attachments" class="ml-3 block text-sm font-medium text-gray-700">
+                            Process Email Attachments
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Email Rules -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="imap_default_client" class="block text-sm font-medium text-gray-700 mb-1">
+                            Default Client (No Match)
+                        </label>
+                        <select id="imap_default_client"
+                                name="imap_default_client"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                            <option value="">Create New Client</option>
+                            @foreach($clients ?? [] as $client)
+                                <option value="{{ $client->id }}" {{ old('imap_default_client', $settings['imap_default_client'] ?? '') == $client->id ? 'selected' : '' }}>
+                                    {{ $client->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="imap_check_interval" class="block text-sm font-medium text-gray-700 mb-1">
+                            Check Interval (minutes)
+                        </label>
+                        <select id="imap_check_interval"
+                                name="imap_check_interval"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
+                            <option value="1" {{ old('imap_check_interval', $settings['imap_check_interval'] ?? '5') == '1' ? 'selected' : '' }}>1 minute</option>
+                            <option value="5" {{ old('imap_check_interval', $settings['imap_check_interval'] ?? '5') == '5' ? 'selected' : '' }}>5 minutes</option>
+                            <option value="10" {{ old('imap_check_interval', $settings['imap_check_interval'] ?? '5') == '10' ? 'selected' : '' }}>10 minutes</option>
+                            <option value="15" {{ old('imap_check_interval', $settings['imap_check_interval'] ?? '5') == '15' ? 'selected' : '' }}>15 minutes</option>
+                            <option value="30" {{ old('imap_check_interval', $settings['imap_check_interval'] ?? '5') == '30' ? 'selected' : '' }}>30 minutes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject Line Processing -->
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Subject Line Processing</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="imap_subject_prefix" class="block text-sm font-medium text-gray-700 mb-1">
+                        Required Subject Prefix (Optional)
+                    </label>
+                    <input type="text" 
+                           id="imap_subject_prefix"
+                           name="imap_subject_prefix"
+                           value="{{ old('imap_subject_prefix', $settings['imap_subject_prefix'] ?? '') }}"
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                           placeholder="[SUPPORT]">
+                    <p class="mt-1 text-sm text-gray-500">Only process emails with this prefix in the subject line</p>
+                </div>
+
+                <div>
+                    <label for="imap_ignore_patterns" class="block text-sm font-medium text-gray-700 mb-1">
+                        Ignore Patterns (One per line)
+                    </label>
+                    <textarea id="imap_ignore_patterns"
+                              name="imap_ignore_patterns"
+                              rows="3"
+                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                              placeholder="Out of office&#10;Auto-reply&#10;Delivery Status">{{ old('imap_ignore_patterns', $settings['imap_ignore_patterns'] ?? '') }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500">Emails containing these patterns in the subject will be ignored</p>
+                </div>
+
+                <!-- Test Connection -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900">Test IMAP Connection</h4>
+                            <p class="text-sm text-gray-600">Verify your IMAP settings and check for new emails</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button type="button" 
+                                    onclick="testImapConnection()"
+                                    class="px-4 py-2 bg-gray-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                Test Connection
+                            </button>
+                            <button type="button" 
+                                    onclick="processEmails()"
+                                    class="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Process Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+        <button type="submit" 
+                class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Save IMAP Settings
+        </button>
+    </div>
+</div>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
+    field.setAttribute('type', type);
+}
+
+function testImapConnection() {
+    console.log('Testing IMAP connection...');
+    alert('IMAP connection test would be implemented here');
+}
+
+function processEmails() {
+    console.log('Processing emails now...');
+    alert('Manual email processing would be implemented here');
+}
+</script>

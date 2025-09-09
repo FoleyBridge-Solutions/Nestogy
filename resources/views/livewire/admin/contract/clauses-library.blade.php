@@ -1,0 +1,290 @@
+<div>
+    <div class="w-full">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <flux:heading size="xl">Contract Clauses Library</flux:heading>
+                <flux:text class="text-gray-600 dark:text-gray-400">Manage reusable contract clauses and legal terms</flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:button variant="ghost" icon="arrow-up-tray" wire:click="$dispatch('import-clauses')">
+                    Import Clauses
+                </flux:button>
+                <flux:button variant="primary" icon="plus" wire:click="openModal">
+                    Add Clause
+                </flux:button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar Filters -->
+            <div class="lg:col-span-12-span-1 space-y-4">
+                <!-- Filter Card -->
+                <flux:card>
+                    <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
+                        <flux:heading size="md">Filter Clauses</flux:heading>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <flux:field>
+                            <flux:label>Category</flux:label>
+                            <flux:select wire:model.live="categoryFilter">
+                                <flux:select.option value="">All Categories</flux:select.option>
+                                @foreach($categories as $key => $category)
+                                    <flux:select.option value="{{ $key }}">{{ $category['name'] }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Type</flux:label>
+                            <flux:select wire:model.live="typeFilter">
+                                <flux:select.option value="">All Types</flux:select.option>
+                                <flux:select.option value="standard">Standard</flux:select.option>
+                                <flux:select.option value="legal">Legal</flux:select.option>
+                                <flux:select.option value="compliance">Compliance</flux:select.option>
+                                <flux:select.option value="custom">Custom</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Review Status</flux:label>
+                            <flux:select wire:model.live="reviewFilter">
+                                <flux:select.option value="">All Statuses</flux:select.option>
+                                <flux:select.option value="approved">Approved</flux:select.option>
+                                <flux:select.option value="pending">Pending Review</flux:select.option>
+                                <flux:select.option value="rejected">Rejected</flux:select.option>
+                            </flux:select>
+                        </flux:field>
+
+                        <flux:checkbox wire:model.live="requiredOnly">
+                            Required Only
+                        </flux:checkbox>
+                    </div>
+                </flux:card>
+
+                <!-- Quick Actions Card -->
+                <flux:card>
+                    <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
+                        <flux:heading size="md">Quick Actions</flux:heading>
+                    </div>
+                    <div class="p-6 space-y-2">
+                        <flux:button variant="ghost" icon="server" class="w-full justify-start" wire:click="createMSPClauses">
+                            Create MSP Clauses
+                        </flux:button>
+                        <flux:button variant="ghost" icon="scale" class="w-full justify-start" wire:click="createLegalClauses">
+                            Create Legal Boilerplate
+                        </flux:button>
+                        <flux:button variant="ghost" icon="shield-check" class="w-full justify-start" wire:click="createComplianceClauses">
+                            Create Compliance Terms
+                        </flux:button>
+                        <flux:button variant="ghost" icon="sparkles" class="w-full justify-start" wire:click="importStandardLibrary">
+                            Import Standard Library
+                        </flux:button>
+                    </div>
+                </flux:card>
+
+                <!-- Statistics Card -->
+                <flux:card>
+                    <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
+                        <flux:heading size="md">Library Statistics</flux:heading>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600">{{ $stats['total'] }}</div>
+                                <div class="text-sm text-gray-500">Total</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-green-600">{{ $stats['approved'] }}</div>
+                                <div class="text-sm text-gray-500">Approved</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-yellow-600">{{ $stats['pending'] }}</div>
+                                <div class="text-sm text-gray-500">Pending</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-red-600">{{ $stats['required'] }}</div>
+                                <div class="text-sm text-gray-500">Required</div>
+                            </div>
+                        </div>
+                    </div>
+                </flux:card>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-12-span-3">
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <flux:input 
+                        type="search" 
+                        wire:model.live.debounce.300ms="search" 
+                        placeholder="Search clauses..."
+                        icon="magnifying-glass"
+                    />
+                </div>
+
+                <!-- Clauses List -->
+                <div class="space-y-3">
+                    @forelse($clauses as $clause)
+                        <flux:card>
+                            <div class="p-6">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <flux:heading size="md">{{ $clause->title }}</flux:heading>
+                                            @if($clause->is_required)
+                                                <flux:badge variant="danger" size="sm">Required</flux:badge>
+                                            @endif
+                                            <flux:badge 
+                                                variant="{{ $clause->review_status === 'approved' ? 'success' : ($clause->review_status === 'pending' ? 'warning' : 'danger') }}"
+                                                size="sm"
+                                            >
+                                                {{ ucfirst($clause->review_status) }}
+                                            </flux:badge>
+                                            <flux:badge variant="subtle" size="sm">{{ ucfirst($clause->type) }}</flux:badge>
+                                        </div>
+                                        
+                                        <flux:text class="text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                                            {{ Str::limit($clause->content, 200) }}
+                                        </flux:text>
+                                        
+                                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                                            <span class="flex items-center gap-1">
+                                                <flux:icon name="{{ $categories[$clause->category]['icon'] ?? 'folder' }}" class="w-4 h-4" />
+                                                {{ $categories[$clause->category]['name'] ?? ucfirst($clause->category) }}
+                                            </span>
+                                            @if($clause->tags && count($clause->tags) > 0)
+                                                <span class="flex items-center gap-1">
+                                                    <flux:icon name="tag" class="w-4 h-4" />
+                                                    {{ implode(', ', $clause->tags) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    <flux:button.group>
+                                        <flux:button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            icon="{{ $clause->review_status === 'approved' ? 'x-mark' : 'check' }}"
+                                            wire:click="toggleApproval({{ $clause->id }})"
+                                            title="{{ $clause->review_status === 'approved' ? 'Revoke Approval' : 'Approve' }}"
+                                        />
+                                        <flux:button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            icon="pencil"
+                                            wire:click="openModal({{ $clause->id }})"
+                                        />
+                                        <flux:button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            icon="trash"
+                                            wire:click="deleteClause({{ $clause->id }})"
+                                            wire:confirm="Are you sure you want to delete this clause?"
+                                        />
+                                    </flux:button.group>
+                                </div>
+                            </div>
+                        </flux:card>
+                    @empty
+                        <flux:card>
+                            <div class="p-6">
+                                <div class="text-center py-8">
+                                    <flux:icon name="document-text" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                    <flux:heading size="lg" class="text-gray-500 mb-2">No Clauses Found</flux:heading>
+                                    <flux:text class="text-gray-400 mb-4">
+                                        @if($search || $categoryFilter || $typeFilter || $reviewFilter || $requiredOnly)
+                                            No clauses match your current filters.
+                                        @else
+                                            Get started by adding clauses or importing the standard library.
+                                        @endif
+                                    </flux:text>
+                                    @if(!($search || $categoryFilter || $typeFilter || $reviewFilter || $requiredOnly))
+                                        <flux:button variant="primary" icon="sparkles" wire:click="importStandardLibrary">
+                                            Import Standard Library
+                                        </flux:button>
+                                    @endif
+                                </div>
+                            </div>
+                        </flux:card>
+                    @endforelse
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-4">
+                    {{ $clauses->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Clause Modal -->
+    <flux:modal wire:model="showModal" name="clause-modal" class="max-w-4xl">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ $editingClause ? 'Edit' : 'Add' }} Clause</flux:heading>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Title</flux:label>
+                        <flux:input wire:model="title" />
+                        <flux:error name="title" />
+                    </flux:field>
+                    
+                    <flux:field>
+                        <flux:label>Category</flux:label>
+                        <flux:select wire:model="category">
+                            <flux:select.option value="">Select Category</flux:select.option>
+                            @foreach($categories as $key => $cat)
+                                <flux:select.option value="{{ $key }}">{{ $cat['name'] }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <flux:error name="category" />
+                    </flux:field>
+                </div>
+                
+                <flux:field>
+                    <flux:label>Content</flux:label>
+                    <flux:textarea wire:model="content" rows="6" />
+                    <flux:error name="content" />
+                </flux:field>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Type</flux:label>
+                        <flux:select wire:model="type">
+                            <flux:select.option value="standard">Standard</flux:select.option>
+                            <flux:select.option value="legal">Legal</flux:select.option>
+                            <flux:select.option value="compliance">Compliance</flux:select.option>
+                            <flux:select.option value="custom">Custom</flux:select.option>
+                        </flux:select>
+                        <flux:error name="type" />
+                    </flux:field>
+                    
+                    <flux:field>
+                        <flux:label>Review Status</flux:label>
+                        <flux:select wire:model="review_status">
+                            <flux:select.option value="pending">Pending Review</flux:select.option>
+                            <flux:select.option value="approved">Approved</flux:select.option>
+                            <flux:select.option value="rejected">Rejected</flux:select.option>
+                        </flux:select>
+                    </flux:field>
+                </div>
+                
+                <flux:checkbox wire:model="is_required">
+                    This clause is required in all contracts
+                </flux:checkbox>
+            </div>
+            
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:button variant="ghost" wire:click="closeModal">Cancel</flux:button>
+                <flux:button variant="primary" wire:click="save">
+                    {{ $editingClause ? 'Update' : 'Create' }} Clause
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+</div>

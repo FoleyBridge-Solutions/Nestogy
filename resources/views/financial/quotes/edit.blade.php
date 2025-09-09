@@ -1,0 +1,17 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Quote #' . $quote->getFullNumber())
+
+@section('content')
+<div class="container mx-auto mx-auto">
+    <!-- Livewire Quote Wizard for Editing -->
+    @livewire('financial.quote-wizard', ['quote' => $quote])
+    
+    <!-- Legacy form implementation (hidden by default) -->
+    <div style="display: none;">
+        <!-- This section is preserved for rollback purposes if needed -->
+        <!-- The old form implementation can be restored by removing the style="display: none;" -->
+    </div>
+</div>
+
+@endsection

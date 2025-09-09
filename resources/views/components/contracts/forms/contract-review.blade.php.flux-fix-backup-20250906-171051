@@ -1,0 +1,189 @@
+<!-- UPDATED VERSION WITH TYPEOF CHECKS -->
+<div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Contract Review & Finalization</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Review all contract details before creation</p>
+    </div>
+
+    <div class="space-y-6">
+        <!-- Contract Details Summary -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Contract Details</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Title:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="form.title || 'Not specified'"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Type:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="form.contract_type || 'Not specified'"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Start Date:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="form.start_date || 'Not specified'"></span>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Currency:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="form.currency_code || 'USD'"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Payment Terms:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="form.payment_terms || 'Net 30 days'"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Template:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="selectedTemplate?.name || 'Custom'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Summary -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+            <h4 class="text-lg font-medium text-blue-900 dark:text-blue-100 mb-6">Contract Schedules Summary</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">A</div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">Infrastructure & SLA</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Coverage rules configured</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">B</div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">Pricing & Fees</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Billing model configured</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">C</div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">Additional Terms</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Custom terms defined</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asset Assignment Summary -->
+        <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Asset Assignment Summary</h4>
+            <div class="text-center py-6">
+                <div class="text-3xl font-bold" 
+                     :class="(typeof getAvailableAssetCount === 'function' && getAvailableAssetCount() > 0) ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'"
+                     x-text="typeof getAvailableAssetCount === 'function' ? getAvailableAssetCount() : 0"></div>
+                <div class="text-sm text-gray-500 dark:text-gray-400" 
+                     x-text="slaTerms.auto_assign_new_assets ? 
+                            (typeof getAvailableAssetCount === 'function' && getAvailableAssetCount() === 1 ? 'Asset will be assigned automatically' : 'Assets will be assigned automatically') : 
+                            'No auto-assignment configured'"></div>
+                <div class="mt-6">
+                    <span x-show="slaTerms.auto_assign_new_assets" 
+                          class="inline-flex items-center px-6 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
+                        Auto-assignment enabled
+                    </span>
+                    <span x-show="!slaTerms.auto_assign_new_assets" 
+                          class="inline-flex items-center px-6 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                        Manual assignment
+                    </span>
+                </div>
+                
+                <!-- Asset Type Breakdown -->
+                <div x-show="typeof getAvailableAssetCount === 'function' && getAvailableAssetCount() > 0 && slaTerms.auto_assign_new_assets" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">Available by type:</div>
+                    <div class="flex justify-center gap-4 text-xs">
+                        <template x-for="assetType in infrastructureSchedule.supportedAssetTypes" :key="assetType">
+                            <div class="text-center">
+                                <div class="font-medium text-gray-900 dark:text-white" x-text="getAssetCountByType(assetType)"></div>
+                                <div class="text-gray-500 dark:text-gray-400" x-text="assetType.replace('_', ' ')"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Individual Asset Listing -->
+                <div x-show="typeof getAssetsForSchedule === 'function' && getAssetsForSchedule().length > 0" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between mb-6">
+                        <h5 class="text-sm font-medium text-gray-900 dark:text-white">Assets to be Assigned</h5>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Schedule A - Infrastructure Coverage</span>
+                    </div>
+                    
+                    <div class="space-y-4 max-h-64 overflow-y-auto">
+                        <template x-for="(assets, type) in (typeof getAssetsByType === 'function' ? getAssetsByType() : {})" :key="type">
+                            <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-6">
+                                <div class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                                    <span x-text="type.replace('_', ' ')"></span>
+                                    <span class="ml-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs" x-text="assets.length"></span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    <template x-for="asset in assets" :key="asset.id">
+                                        <div class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-md p-2 text-xs">
+                                            <div class="flex items-center space-x-2 min-w-0 flex-1">
+                                                <!-- Asset Status Indicator -->
+                                                <div class="flex-shrink-0">
+                                                    <div :class="asset.status === 'active' ? 'bg-green-400' : 'bg-yellow-400'" 
+                                                         class="w-2 h-2 rounded-full"></div>
+                                                </div>
+                                                
+                                                <!-- Asset Details -->
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="font-medium text-gray-900 dark:text-white truncate" x-text="asset.name"></div>
+                                                    <div class="text-gray-500 dark:text-gray-400 text-xs">
+                                                        <span x-text="asset.make && asset.model ? asset.make + ' ' + asset.model : (asset.ip || 'No IP')"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Assignment Badge -->
+                                            <div class="flex-shrink-0 ml-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                                    Auto-assign
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+                        <span x-text="typeof getAssetsForSchedule === 'function' ? getAssetsForSchedule().length : 0"></span> assets will be automatically assigned to this contract upon creation
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Actions -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Contract Creation Options</h4>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">Contract Status</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Initial status for the contract</div>
+                    </div>
+                    <select class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-white">
+                        <option value="draft">Draft</option>
+                        <option value="pending_review">Pending Review</option>
+                        <option value="pending_signature">Pending Signature</option>
+                    </flux:select>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">Generate PDF</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Create PDF version of the contract</div>
+                    </div>
+                    <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">Send for Signature</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Send contract to client for digital signature</div>
+                    </div>
+                    <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,422 @@
+@extends('layouts.app')
+
+@section('title', $client->name . ' - Dashboard')
+
+@section('content')
+<div class="w-full px-6">
+    <!-- Client Header -->
+    <div class="flex flex-wrap -mx-4 mb-6">
+        <div class="flex-1 px-6-12">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="h3 mb-2">{{ $client->name }}</h1>
+                    <div class="text-gray-600 dark:text-gray-400 dark:text-gray-400">
+                        <span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-{{ $dashboardData['overview']['status'] === 'active' ? 'success' : 'secondary' }}">
+                            {{ ucfirst($dashboardData['overview']['status']) }}
+                        </span>
+                        <span class="ml-3">Client since {{ $client->created_at->format('M Y') }}</span>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn px-4 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-outline-secondary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </flux:button>
+                    <div class="dropdown inline-block ml-2">
+                        <button class="btn px-4 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-outline-primary dropdown-toggle" x-data="{ open: false }" @click="open = !open">
+                            <i class="fas fa-download"></i> Export
+                        </flux:button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('clients.dashboard.export', ['client' => $client, 'format' => 'pdf']) }}">PDF</a></li>
+                            <li><a class="dropdown-item" href="{{ route('clients.dashboard.export', ['client' => $client, 'format' => 'excel']) }}">Excel</a></li>
+                            <li><a class="dropdown-item" href="{{ route('clients.dashboard.export', ['client' => $client, 'format' => 'csv']) }}">CSV</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="flex flex-wrap -mx-4 mb-6">
+        <!-- Financial Card -->
+        <div class="flex-1 px-4-lg-3 md:w-1/2 px-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden h-100">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h6 class="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-subtitle text-gray-600 dark:text-gray-400 dark:text-gray-400">Total Revenue</h6>
+                        <i class="fas fa-dollar-sign text-green-600"></i>
+                    </div>
+                    <h3 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-2">${{ number_format($dashboardData['financial']['total_revenue'], 2) }}</h3>
+                    <div class="small">
+                        <span class="text-green-600">MRR: ${{ number_format($dashboardData['financial']['mrr'], 2) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets Card -->
+        <div class="flex-1 px-4-lg-3 md:w-1/2 px-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden h-100">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-subtitle text-gray-600 dark:text-gray-400">Open Tickets</h6>
+                        <i class="fas fa-ticket-alt text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                    <h3 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-2">{{ $dashboardData['tickets']['open'] }}</h3>
+                    <div class="small">
+                        <span class="text-gray-600 dark:text-gray-400">Total: {{ $dashboardData['tickets']['total'] }}</span>
+                        <span class="ml-2">SLA: {{ $dashboardData['tickets']['sla_compliance'] }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assets Card -->
+        <div class="lg:w-1/4 px-4 flex-1 px-6-md-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden h-100">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <div class="flex justify-between items-center mb-2">
+                        <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-subtitle text-gray-600 dark:text-gray-400">Active Assets</h6>
+                        <i class="fas fa-server text-cyan-600 dark:text-cyan-400"></i>
+                    </div>
+                    <h3 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-2">{{ $dashboardData['assets']['active_assets'] }}</h3>
+                    <div class="small">
+                        <span class="text-gray-600 dark:text-gray-400">Total: {{ $dashboardData['assets']['total_assets'] }}</span>
+                        @if($dashboardData['assets']['maintenance_due'] > 0)
+                            <span class="ml-2 text-yellow-600 dark:text-yellow-400">{{ $dashboardData['assets']['maintenance_due'] }} due</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Card -->
+        <div class="lg:w-1/4 px-4 flex-1 px-6-md-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden h-100">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <div class="flex justify-between items-center mb-2">
+                        <h6 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-subtitle text-gray-600 dark:text-gray-400">Active Projects</h6>
+                        <i class="fas fa-project-diagram text-blue-600"></i>
+                    </div>
+                    <h3 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-2">{{ $dashboardData['projects']['active_projects'] }}</h3>
+                    <div class="small">
+                        <span class="text-gray-600 dark:text-gray-400">Completion: {{ $dashboardData['projects']['completion_rate'] }}%</span>
+                        @if($dashboardData['projects']['overdue_projects'] > 0)
+                            <span class="ml-2 text-red-600">{{ $dashboardData['projects']['overdue_projects'] }} overdue</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="flex flex-wrap -mx-4">
+        <!-- Left Column -->
+        <div class="flex-1 px-6-lg-8">
+            <!-- Recent Activity -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="px-6 py-6 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Recent Activity</h5>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <div class="timeline">
+                        @foreach($dashboardData['recent_activity'] as $activity)
+                        <div class="timeline-item">
+                            <div class="timeline-marker @if($activity['type'] === 'ticket') bg-warning @elseif($activity['type'] === 'invoice') bg-info @elseif($activity['type'] === 'payment') bg-success @else bg-gray-600 @endif">
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">{{ $activity['description'] }}</h6>
+                                <small class="text-gray-600 dark:text-gray-400">
+                                    {{ \Carbon\Carbon::parse($activity['date'])->diffForHumans() }}
+                                    @if(isset($activity['amount']))
+                                        <span class="ml-2">${{ number_format($activity['amount'], 2) }}</span>
+                                    @endif
+                                    @if(isset($activity['status']))
+                                        <span class="badge badge-sm inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-{{ $activity['status'] === 'completed' ? 'success' : 'warning' }} ml-2">
+                                            {{ $activity['status'] }}
+                                        </span>
+                                    @endif
+                                </small>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Overview Chart -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="px-6 py-6 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Financial Overview</h5>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <canvas id="revenueChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Tickets -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header flex justify-between items-center">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Recent Tickets</h5>
+                    <a href="{{ route('tickets.index') }}" class="btn px-4 py-1 text-sm px-6 py-2 font-medium rounded-md transition-colors-outline-primary">View All</a>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <div class="min-w-full divide-y divide-gray-200-responsive">
+                        <table class="min-w-full divide-y divide-gray-200 [&>tbody>tr:hover]:bg-gray-100 dark:bg-gray-800 dark:bg-gray-800">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($dashboardData['tickets']['recent_tickets'] as $ticket)
+                                <tr>
+                                    <td>#{{ $ticket->id }}</td>
+                                    <td>
+                                        <a href="{{ route('tickets.show', $ticket) }}">
+                                            {{ Str::limit($ticket->subject, 40) }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-{{ $ticket->status === 'open' ? 'warning' : ($ticket->status === 'closed' ? 'success' : 'info') }}">
+                                            {{ $ticket->status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium-{{ $ticket->priority === 'high' ? 'danger' : ($ticket->priority === 'medium' ? 'warning' : 'secondary') }}">
+                                            {{ $ticket->priority }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $ticket->created_at->format('M d, Y') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="flex-1 px-6-lg-4">
+            <!-- Client Information -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Client Information</h5>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <dl class="flex flex-wrap -mx-4 mb-0">
+                        <dt class="flex-1 px-6-sm-5">Primary Contact:</dt>
+                        <dd class="flex-1 px-6-sm-7">
+                            @if($dashboardData['overview']['primary_contact'])
+                                {{ $dashboardData['overview']['primary_contact']->name }}
+                                <br><small class="text-gray-600 dark:text-gray-400">{{ $dashboardData['overview']['primary_contact']->email }}</small>
+                            @else
+                                <span class="text-gray-600 dark:text-gray-400">Not set</span>
+                            @endif
+                        </dd>
+
+                        <dt class="flex-1 px-6-sm-5">Total Contacts:</dt>
+                        <dd class="flex-1 px-6-sm-7">{{ $dashboardData['overview']['total_contacts'] }}</dd>
+
+                        <dt class="flex-1 px-6-sm-5">Locations:</dt>
+                        <dd class="flex-1 px-6-sm-7">{{ $dashboardData['overview']['total_locations'] }}</dd>
+
+                        <dt class="flex-1 px-6-sm-5">Outstanding:</dt>
+                        <dd class="flex-1 px-6-sm-7">
+                            <span class="{{ $dashboardData['financial']['outstanding_balance'] > 0 ? 'text-red-600' : 'text-green-600 dark:text-green-400' }}">
+                                ${{ number_format($dashboardData['financial']['outstanding_balance'], 2) }}
+                            </span>
+                        </dd>
+
+                        <dt class="flex-1 px-6-sm-5">Credit Status:</dt>
+                        <dd class="flex-1 px-6-sm-7">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Good Standing</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Expiring Items -->
+            @if(count($dashboardData['expiring_items']) > 0)
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header bg-warning text-dark">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Expiring Soon
+                    </h5>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700 divide-y divide-gray-200 dark:divide-gray-700-flush">
+                        @foreach($dashboardData['expiring_items'] as $type => $items)
+                            @foreach($items as $item)
+                            <div class="divide-y divide-gray-200 dark:divide-gray-700-item px-0">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ $item->name ?? $item->domain_name ?? 'Item' }}</h6>
+                                        <small class="text-gray-600 dark:text-gray-400">{{ ucfirst($type) }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-red-600 dark:text-red-400">
+                                            {{ \Carbon\Carbon::parse($item->expiry_date ?? $item->warranty_expiry)->format('M d, Y') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Upcoming Events -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Upcoming Events</h5>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    @if($dashboardData['upcoming_events']->count() > 0)
+                        <div class="divide-y divide-gray-200 dark:divide-gray-700 divide-y divide-gray-200 dark:divide-gray-700-flush">
+                            @foreach($dashboardData['upcoming_events'] as $event)
+                            <div class="divide-y divide-gray-200 dark:divide-gray-700-item px-0">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ $event->title ?? $event->name }}</h6>
+                                        <small class="text-gray-600 dark:text-gray-400">
+                                            {{ \Carbon\Carbon::parse($event->start_date ?? $event->due_date)->format('M d, Y') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-gray-600 dark:text-gray-400 mb-0">No upcoming events</p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-header">
+                    <h5 class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
+                    <div class="grid gap-2">
+                        <a href="{{ route('tickets.create') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
+                            <i class="fas fa-ticket-alt"></i> Create Ticket
+                        </a>
+                        <a href="{{ route('invoices.create') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-success">
+                            <i class="fas fa-file-invoice"></i> Create Invoice
+                        </a>
+                        <a href="{{ route('projects.create') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-info">
+                            <i class="fas fa-project-diagram"></i> New Project
+                        </a>
+                        <a href="{{ route('assets.create') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
+                            <i class="fas fa-server"></i> Add Asset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('styles')
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+.timeline-item:not(:last-child):before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 20px;
+    height: calc(100% - 20px);
+    width: 2px;
+    background: #e9ecef;
+}
+.timeline-marker {
+    position: absolute;
+    left: -25px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Revenue Chart
+const ctx = document.getElementById('revenueChart').getContext('2d');
+const revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Revenue',
+            data: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 32000, 38000, 35000, 40000],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Refresh Dashboard Function
+function refreshDashboard() {
+    fetch('{{ route("clients.dashboard.refresh", $client) }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Show success message
+        alert(data.message);
+        // Reload page to show fresh data
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to refresh dashboard');
+    });
+}
+</script>
+@endpush
+
+@endsection

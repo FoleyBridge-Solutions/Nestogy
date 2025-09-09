@@ -1,0 +1,115 @@
+@props([
+    'filters' => [],
+    'action' => '',
+    'method' => 'GET',
+    'showButton' => true,
+    'resetRoute' => ''
+])
+
+<div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+    <form action="{{ $action }}" method="{{ $method }}" class="space-y-4">
+        @if($method !== 'GET')
+            @csrf
+        @endif
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            @foreach($filters as $filter)
+                <div class="{{ $filter['width'] ?? 'flex-1 px-6-span-1' }}">
+                    <label for="{{ $filter['name'] }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ $filter['label'] }}
+                    </flux:label>
+                    
+                    @switch($filter['type'] ?? 'text')
+                        @case('text')
+                        @case('search')
+                            <input type="{{ $filter['type'] }}" 
+                                   id="{{ $filter['name'] }}" 
+                                   name="{{ $filter['name'] }}"
+                                   value="{{ request($filter['name']) }}"
+                                   placeholder="{{ $filter['placeholder'] ?? '' }}"
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            @break
+                            
+                        @case('select')
+                            <select id="{{ $filter['name'] }}" 
+                                    name="{{ $filter['name'] }}"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <option value="">{{ $filter['placeholder'] ?? 'All' }}</option>
+                                @foreach($filter['options'] ?? [] as $value => $label)
+                                    <option value="{{ $value }}" 
+                                            @if(request($filter['name']) == $value) selected @endif>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </flux:select>
+                            @break
+                            
+                        @case('date')
+                            <input type="date" 
+                                   id="{{ $filter['name'] }}" 
+                                   name="{{ $filter['name'] }}"
+                                   value="{{ request($filter['name']) }}"
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            @break
+                            
+                        @case('checkbox')
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                       id="{{ $filter['name'] }}" 
+                                       name="{{ $filter['name'] }}"
+                                       value="{{ $filter['value'] ?? '1' }}"
+                                       @if(request($filter['name'])) checked @endif
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <label for="{{ $filter['name'] }}" class="ml-2 text-sm text-gray-600">
+                                    {{ $filter['description'] ?? $filter['label'] }}
+                                </flux:label>
+                            </div>
+                            @break
+                            
+                        @default
+                            <input type="text" 
+                                   id="{{ $filter['name'] }}" 
+                                   name="{{ $filter['name'] }}"
+                                   value="{{ request($filter['name']) }}"
+                                   placeholder="{{ $filter['placeholder'] ?? '' }}"
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                    @endswitch
+                </div>
+            @endforeach
+        </div>
+        
+        @if($showButton || $resetRoute)
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                @if($resetRoute)
+                    <a href="{{ $resetRoute }}" 
+                       class="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150">
+                        Clear Filters
+                    </a>
+                @endif
+                
+                @if($showButton)
+                    <button type="submit" 
+                            class="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150">
+                        Apply Filters
+                    </flux:button>
+                @endif
+            </div>
+        @endif
+        
+        {{ $slot }}
+    </form>
+</div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit on filter change (optional)
+        const autoSubmitFilters = document.querySelectorAll('[data-auto-submit]');
+        autoSubmitFilters.forEach(filter => {
+            filter.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+    });
+</script>
+@endpush
