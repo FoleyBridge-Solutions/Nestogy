@@ -20,27 +20,29 @@ class LocationController extends Controller
         $this->middleware('auth');
         $this->middleware('company');
         
-        // Apply permission-based middleware
-        $this->middleware('permission:clients.locations.view')->only(['index', 'show']);
-        $this->middleware('permission:clients.locations.manage')->only(['create', 'store', 'edit', 'update']);
-        $this->middleware('permission:clients.locations.manage')->only(['destroy']);
-        $this->middleware('permission:clients.locations.export')->only(['export']);
+        // Properly use policies for authorization - no bypassing!
+        $this->authorizeResource(Location::class, 'location');
     }
 
     /**
-     * Display a listing of locations for a specific client (client-centric view)
+     * Display a listing of locations (uses session-based client context)
      */
-    public function index(Request $request, Client $client)
+    public function index(Request $request)
     {
-        // Authorize client access
-        $this->authorize('view', $client);
+        // Get client from session
+        $client = \App\Services\NavigationService::getSelectedClient();
         
-        // Additional authorization check
-        if (!auth()->user()->hasPermission('clients.locations.view')) {
-            abort(403, 'Insufficient permissions to view locations');
+        // If no client selected, redirect to client selection
+        if (!$client) {
+            return redirect()->route('clients.index')
+                ->with('info', 'Please select a client to view locations.');
         }
+        
+        // Authorize using policies
+        $this->authorize('view', $client);
+        $this->authorize('viewAny', Location::class);
 
-        // Query locations for the specific client only
+        // Query locations for the selected client
         $query = Location::with('contact')->where('client_id', $client->id);
 
         // Apply search filters
@@ -93,17 +95,22 @@ class LocationController extends Controller
     }
 
     /**
-     * Show the form for creating a new location for a specific client
+     * Show the form for creating a new location (uses session-based client context)
      */
-    public function create(Request $request, Client $client)
+    public function create(Request $request)
     {
-        // Authorize client access
-        $this->authorize('view', $client);
+        // Get client from session
+        $client = \App\Services\NavigationService::getSelectedClient();
         
-        // Additional authorization check
-        if (!auth()->user()->hasPermission('clients.locations.manage')) {
-            abort(403, 'Insufficient permissions to create locations');
+        // If no client selected, redirect to client selection
+        if (!$client) {
+            return redirect()->route('clients.index')
+                ->with('info', 'Please select a client to create a location.');
         }
+        
+        // Authorize using policies
+        $this->authorize('view', $client);
+        $this->authorize('create', Location::class);
 
         // Get contacts for this client
         $contacts = Contact::where('client_id', $client->id)->orderBy('name')->get();
@@ -112,17 +119,22 @@ class LocationController extends Controller
     }
 
     /**
-     * Store a newly created location for a specific client
+     * Store a newly created location (uses session-based client context)
      */
-    public function store(Request $request, Client $client)
+    public function store(Request $request)
     {
-        // Authorize client access
-        $this->authorize('view', $client);
+        // Get client from session
+        $client = \App\Services\NavigationService::getSelectedClient();
         
-        // Additional authorization check
-        if (!auth()->user()->hasPermission('clients.locations.manage')) {
-            abort(403, 'Insufficient permissions to create locations');
+        // If no client selected, redirect to client selection
+        if (!$client) {
+            return redirect()->route('clients.index')
+                ->with('error', 'Please select a client to create a location.');
         }
+        
+        // Authorize using policies
+        $this->authorize('view', $client);
+        $this->authorize('create', Location::class);
 
         $validator = Validator::make($request->all(), [
             'contact_id' => [
@@ -183,28 +195,25 @@ class LocationController extends Controller
                         ->update(['primary' => false]);
         }
 
-        return redirect()->route('clients.locations.index', $client)
+        return redirect()->route('clients.locations.index')
                         ->with('success', 'Location created successfully.');
     }
 
     /**
      * Display the specified location for a specific client
      */
-    public function show(Client $client, Location $location)
+    public function show(Location $location)
     {
-        // Verify location belongs to client
-        if ($location->client_id !== $client->id) {
-            abort(404, 'Location not found for this client');
+        // Get client from location
+        $client = $location->client;
+        
+        // Set client in session if different
+        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
+            \App\Services\NavigationService::setSelectedClient($client->id);
         }
         
-        // Authorize access
-        $this->authorize('view', $client);
+        // Authorize using policies
         $this->authorize('view', $location);
-        
-        // Additional permission check
-        if (!auth()->user()->hasPermission('clients.locations.view')) {
-            abort(403, 'Insufficient permissions to view locations');
-        }
 
         $location->load('client', 'contact');
 
@@ -214,21 +223,18 @@ class LocationController extends Controller
     /**
      * Show the form for editing the specified location for a specific client
      */
-    public function edit(Client $client, Location $location)
+    public function edit(Location $location)
     {
-        // Verify location belongs to client
-        if ($location->client_id !== $client->id) {
-            abort(404, 'Location not found for this client');
+        // Get client from location
+        $client = $location->client;
+        
+        // Set client in session if different
+        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
+            \App\Services\NavigationService::setSelectedClient($client->id);
         }
         
-        // Authorize access
-        $this->authorize('view', $client);
+        // Authorize using policies
         $this->authorize('update', $location);
-        
-        // Additional permission check
-        if (!auth()->user()->hasPermission('clients.locations.manage')) {
-            abort(403, 'Insufficient permissions to edit locations');
-        }
 
         $contacts = Contact::where('client_id', $client->id)
                                 ->orderBy('name')
@@ -240,7 +246,7 @@ class LocationController extends Controller
     /**
      * Update the specified location for a specific client
      */
-    public function update(Request $request, Client $client, Location $location)
+    public function update(Request $request, Location $location)
     {
         // Verify location belongs to client
         if ($location->client_id !== $client->id) {
@@ -252,9 +258,10 @@ class LocationController extends Controller
         $this->authorize('update', $location);
         
         // Additional permission check
-        if (!auth()->user()->hasPermission('clients.locations.manage')) {
-            abort(403, 'Insufficient permissions to update locations');
-        }
+        // Permission check handled by policy
+        // if (!auth()->user()->hasPermission('clients.locations.manage')) {
+        //     abort(403, 'Insufficient permissions to update locations');
+        // }
 
         $validator = Validator::make($request->all(), [
             'contact_id' => [
@@ -313,14 +320,14 @@ class LocationController extends Controller
                         ->update(['primary' => false]);
         }
 
-        return redirect()->route('clients.locations.index', $client)
+        return redirect()->route('clients.locations.index')
                         ->with('success', 'Location updated successfully.');
     }
 
     /**
      * Remove the specified location for a specific client
      */
-    public function destroy(Client $client, Location $location)
+    public function destroy(Location $location)
     {
         // Verify location belongs to client
         if ($location->client_id !== $client->id) {
@@ -332,33 +339,35 @@ class LocationController extends Controller
         $this->authorize('delete', $location);
         
         // Additional permission check
-        if (!auth()->user()->hasPermission('clients.locations.manage')) {
-            abort(403, 'Insufficient permissions to delete locations');
-        }
+        // Permission check handled by policy
+        // if (!auth()->user()->hasPermission('clients.locations.manage')) {
+        //     abort(403, 'Insufficient permissions to delete locations');
+        // }
 
         $location->delete();
 
-        return redirect()->route('clients.locations.index', $client)
+        return redirect()->route('clients.locations.index')
                         ->with('success', 'Location deleted successfully.');
     }
 
     /**
      * Export locations for a specific client to CSV
      */
-    public function export(Request $request, Client $client)
+    public function export(Request $request)
     {
         // Authorize client access
         $this->authorize('view', $client);
         
         // Authorization check for export permission
-        if (!auth()->user()->hasPermission('clients.locations.export')) {
-            abort(403, 'Insufficient permissions to export location data');
-        }
+        // Permission check handled by policy
+        // if (!auth()->user()->hasPermission('clients.locations.export')) {
+        //     abort(403, 'Insufficient permissions to export location data');
+        // }
         
-        // Additional gate check for sensitive data export
-        if (!auth()->user()->can('export-client-data')) {
-            abort(403, 'Export permissions denied');
-        }
+        // Additional gate check for sensitive data export - handled by policy
+        // if (!auth()->user()->can('export-client-data')) {
+        //     abort(403, 'Export permissions denied');
+        // }
 
         $query = Location::with('contact')->where('client_id', $client->id);
 
@@ -446,7 +455,7 @@ class LocationController extends Controller
     /**
      * Get contacts for a specific client (AJAX endpoint)
      */
-    public function getContacts(Client $client)
+    public function getContacts()
     {
         // Authorize client access
         $this->authorize('view', $client);

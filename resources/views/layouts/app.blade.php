@@ -99,7 +99,9 @@
                         class="hidden dark:flex" />
             
             <!-- Mobile Toggle -->
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
+            @if($sidebarContext ?? $activeDomain ?? null)
+                <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
+            @endif
             
             <!-- Main Navigation - App name serves as primary dashboard link -->
             
@@ -188,9 +190,15 @@
         </flux:navbar>
     </flux:header>
 
-    <!-- Mobile Sidebar for domain navigation -->
-    <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900">
-        @if($activeDomain ?? null)
+    <!-- Mobile Sidebar for navigation -->
+    @php
+        // Map old domain variable to new sidebar context for backward compatibility
+        $sidebarContext = $activeDomain ?? $sidebarContext ?? null;
+        $activeSection = $activeItem ?? $activeSection ?? null;
+    @endphp
+    
+    @if($sidebarContext)
+        <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
@@ -201,27 +209,27 @@
                         name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
                         class="px-2 py-2 hidden dark:flex" />
             
-            <x-flux-domain-sidebar
-                :active-domain="$activeDomain"
-                :active-item="$activeItem ?? null"
+            <x-flux-sidebar
+                :sidebar-context="$sidebarContext"
+                :active-section="$activeSection"
                 :mobile="true"
             />
-        @endif
-    </flux:sidebar>
+        </flux:sidebar>
+    @endif
 
-    <!-- Desktop Sidebar (only render when there's domain content) -->
-    @if($activeDomain ?? null)
+    <!-- Desktop Sidebar (only render when there's sidebar content) -->
+    @if($sidebarContext)
         <flux:sidebar collapsible sticky class="hidden lg:block bg-white dark:bg-zinc-900">
-            <x-flux-domain-sidebar
-                :active-domain="$activeDomain"
-                :active-item="$activeItem ?? null"
+            <x-flux-sidebar
+                :sidebar-context="$sidebarContext"
+                :active-section="$activeSection"
                 :mobile="false"
             />
         </flux:sidebar>
     @endif
 
     <!-- Flux Main Content Area -->
-    <flux:main class="!p-0">
+    <flux:main class="{{ !($sidebarContext ?? $activeDomain ?? null) ? 'ml-0' : '' }}">
         <!-- Sticky Breadcrumbs Container -->
         @if(!empty($breadcrumbs))
             <div class="sticky top-0 z-40">
@@ -278,7 +286,9 @@
         @endif
 
         <!-- Page Content -->
-        @yield('content')
+        <div class="p-4 lg:p-6">
+            @yield('content')
+        </div>
     </flux:main>
 
     <!-- Additional Scripts -->
@@ -295,6 +305,67 @@
     
     <!-- Alpine.js removed - using Flux/Livewire components -->
     <script>
+        // Global notification listener for Livewire components
+        window.addEventListener('notify', event => {
+            console.log('Notification received:', event.detail);
+            const detail = event.detail;
+            const type = detail.type || detail[0]?.type || 'info';
+            const message = detail.message || detail[0]?.message || 'Notification';
+            
+            // Create a toast notification
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                type === 'warning' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+            }`;
+            
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        ${type === 'success' ? 
+                            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' :
+                          type === 'error' ?
+                            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>' :
+                            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+                        }
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">${message}</p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-current opacity-50 hover:opacity-75">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 5000);
+        });
+
+        // Print invoice listener
+        window.addEventListener('print-invoice', event => {
+            const { url } = event.detail;
+            // Open PDF in new tab - browser will handle PDF viewing and user can print from there
+            window.open(url, '_blank');
+        });
 
         // Theme handling for Flux UI
         document.addEventListener('DOMContentLoaded', function() {

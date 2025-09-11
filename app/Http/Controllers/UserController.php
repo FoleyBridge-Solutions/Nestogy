@@ -38,8 +38,10 @@ class UserController extends Controller
 
         // Apply filters
         if ($request->filled('role')) {
-            $query->whereHas('userSetting', function ($q) use ($request) {
-                $q->where('role', $request->get('role'));
+            // Filter by Bouncer role name instead of legacy integer role
+            $roleName = $request->get('role');
+            $query->whereHas('roles', function ($q) use ($roleName) {
+                $q->where('name', $roleName);
             });
         }
 
@@ -65,6 +67,73 @@ class UserController extends Controller
     }
 
     /**
+     * Export users to CSV
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('viewAny', User::class);
+        
+        $user = Auth::user();
+        $query = User::query();
+
+        // Company filtering for non-super-admins
+        if (!$user->canAccessCrossTenant()) {
+            $query->where('company_id', $user->company_id);
+        }
+
+        // Apply search filter if provided
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            $status = $request->get('status');
+            if ($status === 'active') {
+                $query->whereNull('archived_at');
+            } elseif ($status === 'archived') {
+                $query->whereNotNull('archived_at');
+            }
+        }
+
+        $users = $query->with('company')->orderBy('name')->get();
+
+        // Generate CSV
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="users-' . date('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function() use ($users) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV headers
+            fputcsv($file, ['Name', 'Email', 'Company', 'Role', 'Status', 'Created At']);
+            
+            // CSV data
+            foreach ($users as $user) {
+                $role = $this->roleService->getUserRole($user);
+                fputcsv($file, [
+                    $user->name,
+                    $user->email,
+                    $user->company->name ?? 'N/A',
+                    $role['display_name'] ?? 'User',
+                    $user->archived_at ? 'Archived' : 'Active',
+                    $user->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Show the form for creating a new user
      */
     public function create()
@@ -82,9 +151,8 @@ class UserController extends Controller
         }
 
         // Get available roles based on current user's permissions
-        $currentUserRole = $this->roleService->getUserRole($user);
-        $canAssignSuperAdmin = $currentUserRole['legacy_id'] >= 4; // Only super admins can assign super admin
-        $availableRoles = $this->roleService->getAvailableRoles($canAssignSuperAdmin);
+        // Get all Bouncer roles and filter based on hierarchy
+        $availableRoles = $this->getAvailableRolesForUser($user);
         
         return view('users.create', compact('companies', 'availableRoles'));
     }
@@ -181,9 +249,7 @@ class UserController extends Controller
         
         // Get available roles based on current user's permissions
         $currentUser = Auth::user();
-        $currentUserRole = $this->roleService->getUserRole($currentUser);
-        $canAssignSuperAdmin = $currentUserRole['legacy_id'] >= 4; // Only super admins can assign super admin
-        $availableRoles = $this->roleService->getAvailableRoles($canAssignSuperAdmin);
+        $availableRoles = $this->getAvailableRolesForUser($currentUser);
         
         return view('users.edit', compact('user', 'availableRoles'));
     }
@@ -896,5 +962,56 @@ class UserController extends Controller
 
             return back()->with('error', 'Failed to delete account');
         }
+    }
+    
+    /**
+     * Get available roles based on user's permission level
+     */
+    private function getAvailableRolesForUser($user)
+    {
+        // Define role hierarchy
+        $roleHierarchy = [
+            'super-admin' => 4,
+            'admin' => 3,
+            'technician' => 2,
+            'accountant' => 2,
+            'sales-representative' => 2,
+            'marketing-specialist' => 2,
+            'user' => 1,
+            'client-user' => 1,
+        ];
+        
+        // Get all Bouncer roles
+        $allRoles = \Silber\Bouncer\BouncerFacade::role()->get();
+        
+        // Determine the user's highest role level
+        $userRoleLevel = 1;
+        if ($user->isA('super-admin')) {
+            $userRoleLevel = 4;
+        } elseif ($user->isA('admin')) {
+            $userRoleLevel = 3;
+        } elseif ($user->isA('technician') || $user->isA('accountant') || 
+                  $user->isA('sales-representative') || $user->isA('marketing-specialist')) {
+            $userRoleLevel = 2;
+        }
+        
+        // Filter roles and format for dropdown
+        $availableRoles = [];
+        foreach ($allRoles as $role) {
+            $roleLevel = $roleHierarchy[$role->name] ?? 1;
+            
+            // Only include roles at or below user's level
+            // Exclude super-admin unless user is super-admin
+            if ($role->name === 'super-admin' && $userRoleLevel < 4) {
+                continue;
+            }
+            
+            if ($roleLevel <= $userRoleLevel) {
+                // Use role ID as key and title/name as value
+                $availableRoles[$role->id] = $role->title ?: ucwords(str_replace('-', ' ', $role->name));
+            }
+        }
+        
+        return $availableRoles;
     }
 }

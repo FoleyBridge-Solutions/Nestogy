@@ -401,7 +401,7 @@ class Invoice extends Model
      */
     public function getTotalPaid(): float
     {
-        return $this->payments()->sum('amount');
+        return round($this->payments()->sum('amount'), 2);
     }
 
     /**
@@ -409,7 +409,7 @@ class Invoice extends Model
      */
     public function getBalance(): float
     {
-        return $this->amount - $this->getTotalPaid();
+        return round($this->amount - $this->getTotalPaid(), 2);
     }
 
     /**
@@ -425,7 +425,7 @@ class Invoice extends Model
      */
     public function getSubtotal(): float
     {
-        return $this->items()->sum('subtotal');
+        return round($this->items()->sum('subtotal'), 2);
     }
 
     /**
@@ -433,7 +433,7 @@ class Invoice extends Model
      */
     public function getTotalTax(): float
     {
-        return $this->items()->sum('tax');
+        return round($this->items()->sum('tax'), 2);
     }
 
     /**

@@ -290,7 +290,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', "Invoice #{$invoice->number} updated successfully");
 
         } catch (\Exception $e) {
@@ -346,7 +346,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', 'Item added successfully');
 
         } catch (\Exception $e) {
@@ -395,7 +395,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', 'Item updated successfully');
 
         } catch (\Exception $e) {
@@ -434,7 +434,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', 'Item deleted successfully');
 
         } catch (\Exception $e) {
@@ -480,7 +480,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', 'Payment added successfully');
 
         } catch (\Exception $e) {
@@ -526,7 +526,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', "Invoice status updated to {$newStatus}");
 
         } catch (\Exception $e) {
@@ -568,7 +568,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', 'Invoice sent successfully');
 
         } catch (\Exception $e) {
@@ -601,7 +601,11 @@ class InvoiceController extends Controller
 
             return $this->pdfService->download(
                 view: 'pdf.invoice',
-                data: ['invoice' => $invoice],
+                data: [
+                    'invoice' => $invoice,
+                    'client' => $invoice->client,
+                    'items' => $invoice->items,
+                ],
                 filename: $filename,
                 options: ['template' => 'invoice']
             );
@@ -646,7 +650,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $newInvoice)
+                ->route('financial.invoices.show', $newInvoice)
                 ->with('success', "Invoice copied as #{$newInvoice->number}");
 
         } catch (\Exception $e) {
@@ -686,7 +690,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.index')
+                ->route('financial.invoices.index')
                 ->with('success', "Invoice #{$invoiceNumber} deleted successfully");
 
         } catch (\Exception $e) {
@@ -952,7 +956,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', "Invoice #{$invoice->number} generated from contract successfully");
 
         } catch (\Exception $e) {
@@ -1017,7 +1021,7 @@ class InvoiceController extends Controller
             }
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('financial.invoices.show', $invoice)
                 ->with('success', 'Invoice linked to contract successfully');
 
         } catch (\Exception $e) {

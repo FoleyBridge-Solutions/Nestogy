@@ -82,124 +82,133 @@
             
             <!-- Assets Table -->
             <flux:table>
-                <flux:table.head>
-                    <flux:table.flex flex-wrap>
-                        <flux:table.heading>Asset Tag</flux:table.heading>
-                        <flux:table.heading>Name</flux:table.heading>
-                        <flux:table.heading>Type</flux:table.heading>
-                        <flux:table.heading>Client</flux:table.heading>
-                        <flux:table.heading>Location</flux:table.heading>
-                        <flux:table.heading>Assigned To</flux:table.heading>
-                        <flux:table.heading>Status</flux:table.heading>
-                        <flux:table.heading>Actions</flux:table.heading>
-                    </flux:table.flex flex-wrap>
-                </flux:table.head>
-                <flux:table.body>
+                <flux:table.columns>
+                    <flux:table.column>Asset Info</flux:table.column>
+                    <flux:table.column>Type</flux:table.column>
+                    <flux:table.column>Client</flux:table.column>
+                    <flux:table.column>Location</flux:table.column>
+                    <flux:table.column>Status</flux:table.column>
+                    <flux:table.column class="w-1"></flux:table.column>
+                </flux:table.columns>
+                <flux:table.rows>
                     @forelse($assets as $asset)
-                        <flux:table.flex flex-wrap wire:key="asset-{{ $asset->id }}">
-                            <flux:table.cell>
-                                <a href="{{ route('assets.show', $asset) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                                    {{ $asset->asset_tag }}
-                                </a>
-                            </flux:table.cell>
+                        <flux:table.row wire:key="asset-{{ $asset->id }}">
                             <flux:table.cell>
                                 <div>
-                                    <div class="font-medium">{{ $asset->name }}</div>
-                                    @if($asset->manufacturer || $asset->model)
-                                        <div class="text-sm text-gray-500">
-                                            {{ $asset->manufacturer }} {{ $asset->model }}
-                                        </div>
-                                    @endif
+                                    <flux:link href="{{ route('assets.show', $asset) }}" class="font-medium">
+                                        {{ $asset->name }}
+                                    </flux:link>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        @if($asset->serial)
+                                            <flux:text size="sm" class="text-gray-500">S/N: {{ $asset->serial }}</flux:text>
+                                        @endif
+                                        @if($asset->make || $asset->model)
+                                            <flux:text size="sm" class="text-gray-500">
+                                                {{ $asset->make }} {{ $asset->model }}
+                                            </flux:text>
+                                        @endif
+                                    </div>
                                 </div>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge variant="subtle">{{ $asset->type }}</flux:badge>
+                                <flux:badge color="zinc" size="sm">{{ $asset->type }}</flux:badge>
                             </flux:table.cell>
                             <flux:table.cell>
                                 @if($asset->client)
-                                    <a href="{{ route('clients.show', $asset->client) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                                    <flux:link href="{{ route('clients.show', $asset->client) }}">
                                         {{ $asset->client->name }}
-                                    </a>
+                                    </flux:link>
                                 @else
-                                    <span class="text-gray-400">-</span>
+                                    <flux:text class="text-gray-400">-</flux:text>
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
                                 @if($asset->location)
                                     {{ $asset->location->name }}
                                 @else
-                                    <span class="text-gray-400">-</span>
+                                    <flux:text class="text-gray-400">-</flux:text>
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                @if($asset->assignedUser)
-                                    {{ $asset->assignedUser->name }}
-                                @else
-                                    <span class="text-gray-400">Unassigned</span>
-                                @endif
-                            </flux:table.cell>
-                            <flux:table.cell>
-                                <flux:badge 
-                                    variant="{{ $asset->status === 'Active' ? 'success' : ($asset->status === 'Maintenance' ? 'warning' : 'danger') }}"
-                                >
+                                @php
+                                    $statusColors = [
+                                        'Ready To Deploy' => 'blue',
+                                        'Deployed' => 'green',
+                                        'Archived' => 'zinc',
+                                        'Broken - Pending Repair' => 'orange',
+                                        'Broken - Not Repairable' => 'red',
+                                        'Out for Repair' => 'yellow',
+                                        'Lost/Stolen' => 'red',
+                                        'Unknown' => 'zinc'
+                                    ];
+                                    $statusColor = $statusColors[$asset->status] ?? 'zinc';
+                                @endphp
+                                <flux:badge color="{{ $statusColor }}" size="sm">
                                     {{ $asset->status }}
                                 </flux:badge>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:dropdown>
-                                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" />
-                                    <flux:menu>
-                                        <flux:menu.item icon="eye" href="{{ route('assets.show', $asset) }}">
-                                            View
-                                        </flux:menu.item>
-                                        <flux:menu.item icon="pencil" href="{{ route('assets.edit', $asset) }}">
-                                            Edit
-                                        </flux:menu.item>
-                                        @if($asset->status !== 'Active')
-                                            <flux:menu.item icon="arrows-right-left" href="{{ route('assets.checkinout', ['asset' => $asset, 'action' => 'checkout']) }}">
-                                                Check Out
+                                <div class="flex items-center justify-end gap-1">
+                                    <flux:button href="{{ route('assets.show', $asset) }}" 
+                                                size="sm" 
+                                                variant="ghost" 
+                                                icon="eye"
+                                                inset="top bottom" />
+                                    <flux:button href="{{ route('assets.edit', $asset) }}" 
+                                                size="sm" 
+                                                variant="ghost" 
+                                                icon="pencil"
+                                                inset="top bottom" />
+                                    <flux:dropdown align="end">
+                                        <flux:button size="sm" variant="ghost" icon="ellipsis-vertical" inset="top bottom" />
+                                        <flux:menu>
+                                            @if($asset->status !== 'Deployed')
+                                                <flux:menu.item icon="arrow-right-circle" href="{{ route('assets.checkinout', ['asset' => $asset, 'action' => 'checkout']) }}">
+                                                    Check Out
+                                                </flux:menu.item>
+                                            @else
+                                                <flux:menu.item icon="arrow-left-circle" href="{{ route('assets.checkinout', ['asset' => $asset, 'action' => 'checkin']) }}">
+                                                    Check In
+                                                </flux:menu.item>
+                                            @endif
+                                            <flux:menu.separator />
+                                            <flux:menu.item 
+                                                icon="trash" 
+                                                wire:click="deleteAsset({{ $asset->id }})"
+                                                wire:confirm="Are you sure you want to delete this asset?"
+                                                variant="danger">
+                                                Delete
                                             </flux:menu.item>
-                                        @else
-                                            <flux:menu.item icon="arrows-right-left" href="{{ route('assets.checkinout', ['asset' => $asset, 'action' => 'checkin']) }}">
-                                                Check In
-                                            </flux:menu.item>
-                                        @endif
-                                        <flux:menu.separator />
-                                        <flux:menu.item 
-                                            icon="trash" 
-                                            wire:click="deleteAsset({{ $asset->id }})"
-                                            wire:confirm="Are you sure you want to delete this asset?"
-                                            class="text-red-600"
-                                        >
-                                            Delete
-                                        </flux:menu.item>
-                                    </flux:menu>
-                                </flux:dropdown>
+                                        </flux:menu>
+                                    </flux:dropdown>
+                                </div>
                             </flux:table.cell>
-                        </flux:table.flex flex-wrap>
+                        </flux:table.row>
                     @empty
-                        <flux:table.flex flex-wrap>
-                            <flux:table.cell colspan="8">
-                                <div class="text-center py-8">
-                                    <flux:icon name="computer-desktop" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <flux:heading size="lg" class="text-gray-500 mb-2">No Assets Found</flux:heading>
-                                    <flux:text class="text-gray-400 mb-4">
+                        <flux:table.row>
+                            <flux:table.cell colspan="6">
+                                <div class="text-center py-12">
+                                    <flux:icon name="computer-desktop" variant="outline" class="mx-auto h-12 w-12 text-gray-400" />
+                                    <flux:heading size="lg" class="mt-2">No Assets Found</flux:heading>
+                                    <flux:text class="mt-1">
                                         @if($search || $clientId || $type || $status || $locationId)
                                             No assets match your current filters.
                                         @else
                                             Get started by adding your first asset.
                                         @endif
                                     </flux:text>
-                                    @if(!($search || $clientId || $type || $status || $locationId))
-                                        <flux:button variant="primary" icon="plus" href="{{ route('assets.create') }}">
-                                            Add First Asset
-                                        </flux:button>
-                                    @endif
+                                    <div class="mt-6">
+                                        @if(!($search || $clientId || $type || $status || $locationId))
+                                            <flux:button variant="primary" icon="plus" href="{{ route('assets.create') }}">
+                                                Add First Asset
+                                            </flux:button>
+                                        @endif
+                                    </div>
                                 </div>
                             </flux:table.cell>
-                        </flux:table.flex flex-wrap>
+                        </flux:table.row>
                     @endforelse
-                </flux:table.body>
+                </flux:table.rows>
             </flux:table>
             
             <!-- Pagination -->

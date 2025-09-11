@@ -56,39 +56,60 @@
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-        .items-table th,
-        .items-table td {
+            margin: 30px 0;
             border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
         }
         .items-table th {
-            background-color: #f8f9fa;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 10px;
+            text-align: left;
             font-weight: bold;
-            color: #007bff;
+            border-bottom: 2px solid #0056b3;
+        }
+        .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
         }
         .items-table .text-right {
             text-align: right;
+        }
+        .items-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .items-table tbody tr:hover {
+            background-color: #f5f5f5;
         }
         .totals-section {
             float: right;
             width: 300px;
             margin-top: 20px;
+            clear: both;
         }
         .totals-table {
             width: 100%;
             border-collapse: collapse;
+            border: 1px solid #ddd;
         }
         .totals-table td {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
         }
-        .totals-table .total-flex flex-wrap {
+        .totals-table td:first-child {
+            font-weight: 600;
+        }
+        .totals-table td:last-child {
+            text-align: right;
+        }
+        .totals-table .total-row {
             font-weight: bold;
             font-size: 14px;
             background-color: #f8f9fa;
+        }
+        .totals-table .total-row td {
+            font-weight: bold;
+            border-top: 2px solid #007bff;
         }
         .footer {
             clear: both;
@@ -152,7 +173,7 @@
         </div>
     </div>
 
-    <table class="items-min-w-full divide-y divide-gray-200">
+    <table class="items-table">
         <thead>
             <tr>
                 <th>Description</th>
@@ -165,40 +186,40 @@
             @foreach($items ?? [] as $item)
             <tr>
                 <td>
-                    <strong>{{ $item['description'] ?? 'N/A' }}</strong>
-                    @if($item['details'] ?? false)
-                        <br><small>{{ $item['details'] }}</small>
+                    <strong>{{ $item->description ?? 'N/A' }}</strong>
+                    @if($item->details ?? false)
+                        <br><small>{{ $item->details }}</small>
                     @endif
                 </td>
-                <td class="text-right">{{ $item['quantity'] ?? 1 }}</td>
-                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($item['rate'] ?? 0, 2) }}</td>
-                <td class="text-right">{{ $currency ?? '$' }}{{ number_format(($item['quantity'] ?? 1) * ($item['rate'] ?? 0), 2) }}</td>
+                <td class="text-right">{{ $item->quantity ?? 1 }}</td>
+                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($item->price ?? 0, 2) }}</td>
+                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($item->total ?? $item->subtotal ?? 0, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
     <div class="totals-section">
-        <table class="totals-min-w-full divide-y divide-gray-200">
+        <table class="totals-table">
             <tr>
                 <td>Subtotal:</td>
-                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice['subtotal'] ?? 0, 2) }}</td>
+                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($items->sum('subtotal') ?? 0, 2) }}</td>
             </tr>
-            @if(($invoice['discount'] ?? 0) > 0)
+            @if(($invoice->discount_amount ?? 0) > 0)
             <tr>
                 <td>Discount:</td>
-                <td class="text-right">-{{ $currency ?? '$' }}{{ number_format($invoice['discount'], 2) }}</td>
+                <td class="text-right">-{{ $currency ?? '$' }}{{ number_format($invoice->discount_amount, 2) }}</td>
             </tr>
             @endif
-            @if(($invoice['tax_amount'] ?? 0) > 0)
+            @if(($items->sum('tax') ?? 0) > 0)
             <tr>
-                <td>Tax ({{ $invoice['tax_rate'] ?? $tax_rate ?? 0 }}%):</td>
-                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice['tax_amount'], 2) }}</td>
+                <td>Tax:</td>
+                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($items->sum('tax'), 2) }}</td>
             </tr>
             @endif
-            <tr class="total-flex flex-wrap -mx-4">
+            <tr class="total-row">
                 <td>Total:</td>
-                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice['total'] ?? 0, 2) }}</td>
+                <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice->amount ?? 0, 2) }}</td>
             </tr>
         </table>
     </div>

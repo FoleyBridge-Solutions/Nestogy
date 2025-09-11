@@ -574,8 +574,18 @@ class NavigationService
 
     /**
      * Get the current active domain based on the route
+     * This now also serves as the sidebar context for the new extensible sidebar
      */
     public static function getActiveDomain(): ?string
+    {
+        return static::getSidebarContext();
+    }
+    
+    /**
+     * Get the current sidebar context based on the route
+     * This replaces getActiveDomain for the new sidebar system
+     */
+    public static function getSidebarContext(): ?string
     {
         $currentRouteName = Route::currentRouteName();
 
@@ -585,6 +595,11 @@ class NavigationService
 
         // Special case: Hide sidebar on clients.index when no client is selected
         if ($currentRouteName === 'clients.index' && !static::getSelectedClient()) {
+            return null;
+        }
+        
+        // Hide sidebar on client create/edit routes
+        if (in_array($currentRouteName, ['clients.create', 'clients.store'])) {
             return null;
         }
 
@@ -853,7 +868,7 @@ class NavigationService
         if ($pageTitle && !empty($pageTitle)) {
             // Check if this is a different title than what we already have
             $lastBreadcrumb = end($breadcrumbs);
-            if ($pageTitle !== $lastBreadcrumb['name']) {
+            if ($lastBreadcrumb === false || $pageTitle !== $lastBreadcrumb['name']) {
                 $breadcrumbs[] = [
                     'name' => $pageTitle,
                     'active' => true,
@@ -1039,6 +1054,34 @@ class NavigationService
         // This method can be extended to return domain-specific statistics
         // For now, returning empty array - can be implemented as needed
         return [];
+    }
+    
+    /**
+     * Register a sidebar section dynamically
+     * This allows modules to add their own sidebar sections
+     * 
+     * @param string $context The sidebar context (e.g., 'main', 'settings')
+     * @param string $key Unique key for the section
+     * @param array $section Section configuration
+     */
+    public static function registerSidebarSection(string $context, string $key, array $section): void
+    {
+        if (app()->bound(\App\Services\SidebarConfigProvider::class)) {
+            app(\App\Services\SidebarConfigProvider::class)->registerSection($context, $key, $section);
+        }
+    }
+    
+    /**
+     * Register multiple sidebar sections at once
+     * 
+     * @param string $context The sidebar context
+     * @param array $sections Array of sections with keys
+     */
+    public static function registerSidebarSections(string $context, array $sections): void
+    {
+        foreach ($sections as $key => $section) {
+            static::registerSidebarSection($context, $key, $section);
+        }
     }
 
     /**

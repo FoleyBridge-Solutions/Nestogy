@@ -9,6 +9,38 @@ use Illuminate\Auth\Access\Response;
 class ClientPolicy
 {
     /**
+     * Perform pre-authorization checks.
+     * Admins and Super Admins get automatic access to all clients in their company.
+     */
+    public function before(User $user, string $ability, ?Client $client = null): ?bool
+    {
+        // Super admins have all permissions
+        if ($user->isA('super-admin')) {
+            return true;
+        }
+        
+        // Admins have full access to all clients in their company
+        if ($user->isA('admin')) {
+            return true;
+        }
+        
+        // For technicians - check if they have any client restrictions
+        if ($user->isA('technician') && $client) {
+            // If technician has NO client assignments, they can access all clients
+            if ($user->assignedClients()->count() === 0) {
+                return null; // Fall through to permission checks
+            }
+            
+            // If technician has client assignments, only allow access to assigned clients
+            if (!$user->isAssignedToClient($client->id)) {
+                return false; // Explicitly deny access to non-assigned clients
+            }
+        }
+        
+        return null; // Fall through to specific permission checks
+    }
+    
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
@@ -21,7 +53,12 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        return $user->can('clients.view') && $this->sameCompany($user, $client);
+        // Check for wildcard permission first
+        if ($user->can('clients.*') || $user->can('clients.view')) {
+            return $this->sameCompany($user, $client);
+        }
+        
+        return false;
     }
 
     /**

@@ -9,6 +9,7 @@ use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Webklex\PHPIMAP\ClientManager;
 use App\Contracts\Services\EmailServiceInterface;
+use App\Contracts\Services\PdfServiceInterface;
 use App\Services\EmailService;
 use App\Services\ImapService;
 
@@ -26,7 +27,7 @@ class EmailServiceProvider extends ServiceProvider
 
         // Register Email Service
         $this->app->singleton(EmailServiceInterface::class, function ($app) {
-            return new EmailService($app['mailer']);
+            return new EmailService($app['mailer'], $app[PdfServiceInterface::class]);
         });
         
         // Also bind the concrete class for backward compatibility

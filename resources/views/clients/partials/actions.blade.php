@@ -1,5 +1,5 @@
 <div class=" px-6 py-2 font-medium rounded-md transition-colors-group-sm" role="group">
-    <a href="{{ route('clients.show', $client) }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-info" title="View">
+    <a href="{{ route('clients.index') }}" class="btn px-6 py-2 font-medium rounded-md transition-colors-info" title="View">
         <i class="fas fa-eye"></i>
     </a>
     <a href="{{ route('clients.edit', $client) }}" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="Edit">

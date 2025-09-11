@@ -35,7 +35,10 @@ class RoleController extends Controller
         $user = Auth::user();
         
         // Get all Bouncer roles
-        $roles = Bouncer::role()->with(['abilities'])->get();
+        $allRoles = Bouncer::role()->with(['abilities'])->get();
+        
+        // Filter roles based on user's role hierarchy
+        $roles = $this->filterRolesByHierarchy($allRoles, $user);
         
         // Get role statistics for current company
         $roleStats = $this->roleService->getRoleStats($user->company_id);
@@ -170,9 +173,15 @@ class RoleController extends Controller
 
         $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
         
-        // Prevent editing system-critical roles
-        if (in_array($role->name, ['super-admin', 'admin'])) {
-            return back()->with('error', 'System roles cannot be edited');
+        // Check role hierarchy - users can't edit roles above their level
+        $user = Auth::user();
+        if (!$this->canManageRole($user, $role)) {
+            return back()->with('error', 'You do not have permission to edit this role');
+        }
+        
+        // Prevent editing certain system-critical roles
+        if (in_array($role->name, ['super-admin']) && !$user->isA('super-admin')) {
+            return back()->with('error', 'Only Super Administrators can edit the Super Admin role');
         }
 
         $abilitiesByCategory = $this->getAbilitiesByCategory();
@@ -190,9 +199,15 @@ class RoleController extends Controller
 
         $role = Bouncer::role()->where('name', $roleName)->firstOrFail();
 
-        // Prevent editing system-critical roles
-        if (in_array($role->name, ['super-admin', 'admin'])) {
-            return back()->with('error', 'System roles cannot be edited');
+        // Check role hierarchy - users can't edit roles above their level
+        $user = Auth::user();
+        if (!$this->canManageRole($user, $role)) {
+            return back()->with('error', 'You do not have permission to edit this role');
+        }
+        
+        // Prevent editing certain system-critical roles
+        if (in_array($role->name, ['super-admin']) && !$user->isA('super-admin')) {
+            return back()->with('error', 'Only Super Administrators can edit the Super Admin role');
         }
 
         $request->validate([
@@ -276,8 +291,14 @@ class RoleController extends Controller
 
         $role = Bouncer::role()->where('name', $roleName)->firstOrFail();
 
+        // Check role hierarchy - users can't delete roles above their level
+        $user = Auth::user();
+        if (!$this->canManageRole($user, $role)) {
+            return back()->with('error', 'You do not have permission to delete this role');
+        }
+
         // Prevent deleting system-critical roles
-        if (in_array($role->name, ['super-admin', 'admin', 'tech', 'accountant'])) {
+        if (in_array($role->name, ['super-admin', 'admin', 'technician', 'accountant'])) {
             return back()->with('error', 'System roles cannot be deleted');
         }
 
@@ -475,6 +496,108 @@ class RoleController extends Controller
                 ->withInput()
                 ->with('error', 'Failed to apply role template: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Check if a user can manage a specific role based on hierarchy
+     */
+    private function canManageRole($user, $role): bool
+    {
+        // Define role hierarchy levels
+        $roleHierarchy = [
+            'super-admin' => 4,
+            'admin' => 3,
+            'technician' => 2,
+            'accountant' => 2,
+            'sales-representative' => 2,
+            'marketing-specialist' => 2,
+            'user' => 1,
+            'client-user' => 1,
+        ];
+        
+        // Get user's role level
+        $userRoleLevel = 1;
+        if ($user->isA('super-admin')) {
+            $userRoleLevel = 4;
+        } elseif ($user->isA('admin')) {
+            $userRoleLevel = 3;
+        } elseif ($user->isA('technician') || $user->isA('accountant') || 
+                  $user->isA('sales-representative') || $user->isA('marketing-specialist')) {
+            $userRoleLevel = 2;
+        }
+        
+        // Get target role level
+        $targetRoleLevel = $roleHierarchy[$role->name] ?? 1;
+        
+        // Super Admins can manage all roles
+        if ($userRoleLevel === 4) {
+            return true;
+        }
+        
+        // Users can only manage roles at or below their level, excluding super-admin
+        return $role->name !== 'super-admin' && $targetRoleLevel <= $userRoleLevel;
+    }
+
+    /**
+     * Filter roles based on user's role hierarchy
+     * Super Admins see all roles
+     * Admins see Admin role and below
+     * Regular users only see User role
+     */
+    private function filterRolesByHierarchy($roles, $user)
+    {
+        // Define role hierarchy levels
+        $roleHierarchy = [
+            'super-admin' => 4,
+            'admin' => 3,
+            'technician' => 2,
+            'accountant' => 2,
+            'sales-representative' => 2,
+            'marketing-specialist' => 2,
+            'user' => 1,
+            'client-user' => 1,
+        ];
+        
+        // Determine the user's highest role level
+        $userRoleLevel = 1; // Default to lowest level
+        $userRoleName = null;
+        
+        // Check if user has super-admin role
+        if ($user->isA('super-admin')) {
+            $userRoleLevel = 4;
+            $userRoleName = 'super-admin';
+        } elseif ($user->isA('admin')) {
+            $userRoleLevel = 3;
+            $userRoleName = 'admin';
+        } elseif ($user->isA('technician') || $user->isA('accountant') || 
+                  $user->isA('sales-representative') || $user->isA('marketing-specialist')) {
+            $userRoleLevel = 2;
+            // Find which specific role they have
+            foreach (['technician', 'accountant', 'sales-representative', 'marketing-specialist'] as $role) {
+                if ($user->isA($role)) {
+                    $userRoleName = $role;
+                    break;
+                }
+            }
+        } else {
+            $userRoleLevel = 1;
+            $userRoleName = 'user';
+        }
+        
+        // Filter roles based on hierarchy
+        return $roles->filter(function ($role) use ($roleHierarchy, $userRoleLevel) {
+            // Get the level of the current role
+            $roleLevel = $roleHierarchy[$role->name] ?? 1;
+            
+            // Only show roles at or below the user's level
+            // Exception: Super Admins can see all roles
+            if ($userRoleLevel === 4) {
+                return true; // Super Admin sees everything
+            }
+            
+            // For non-super admins, hide the super-admin role and only show roles at or below their level
+            return $role->name !== 'super-admin' && $roleLevel <= $userRoleLevel;
+        })->values(); // Reset array keys
     }
 
     /**

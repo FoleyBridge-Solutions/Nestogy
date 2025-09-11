@@ -3,220 +3,236 @@
 @section('title', $client->name . ' - Contacts')
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Client Context Header -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg mb-6">
-            <div class="px-6 py-8 sm:px-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                                <span class="text-sm font-medium text-white">{{ substr($client->name, 0, 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="ml-4">
-                            <h2 class="text-lg font-medium text-blue-900">{{ $client->name }}</h2>
-                            <p class="text-sm text-blue-700">Managing contacts for this client</p>
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-                        <a href="{{ route('clients.show', $client) }}" class="text-sm text-blue-600 hover:text-blue-800">Back to Client Dashboard</a>
-                        <a href="{{ route('clients.switch') }}" class="text-sm text-blue-600 hover:text-blue-800">Switch Client</a>
-                    </div>
+<div class="container-fluid">
+    <!-- Client Context Card -->
+    <flux:card class="mb-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <flux:avatar size="lg" class="bg-blue-500">
+                    {{ substr($client->name, 0, 2) }}
+                </flux:avatar>
+                <div>
+                    <flux:heading size="lg">{{ $client->name }}</flux:heading>
+                    <flux:text>Managing contacts for this client</flux:text>
                 </div>
             </div>
+            <div class="flex gap-2">
+                 <flux:button variant="ghost" href="{{ route('clients.index') }}">
+                     Back to Dashboard
+                 </flux:button>
+                <flux:button variant="subtle" href="{{ route('clients.switch') }}">
+                    Switch Client
+                </flux:button>
+            </div>
         </div>
+    </flux:card>
 
-        <!-- Header -->
-        <div class="bg-white shadow rounded-lg mb-6">
-            <div class="px-6 py-8 sm:px-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Contacts</h3>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage contacts for {{ $client->name }}.</p>
-                    </div>
-                    <div class="flex space-x-3">
-                        <a href="{{ route('clients.contacts.export', [$client] + request()->query()) }}"
-                           class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Export CSV
-                        </a>
-                        <a href="{{ route('clients.contacts.create', $client) }}"
-                           class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Add Contact
-                        </a>
-                    </div>
+    <!-- Header Card -->
+    <flux:card class="mb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <flux:heading>Contacts</flux:heading>
+                <flux:text>Manage contacts for {{ $client->name }}</flux:text>
+            </div>
+            <div class="flex gap-2">
+                <flux:button 
+                    variant="subtle" 
+                    icon="arrow-down-tray"
+                    href="{{ route('clients.contacts.export', request()->query()) }}"
+                >
+                    Export CSV
+                </flux:button>
+                <flux:button 
+                    variant="primary" 
+                    icon="plus"
+                    href="{{ route('clients.contacts.create') }}"
+                >
+                    Add Contact
+                </flux:button>
+            </div>
+        </div>
+    </flux:card>
+
+    <!-- Filters Card -->
+    <flux:card class="mb-4">
+        <form method="GET" action="{{ route('clients.contacts.index') }}">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <flux:input 
+                    name="search" 
+                    placeholder="Search contacts..." 
+                    icon="magnifying-glass"
+                    value="{{ request('search') }}"
+                />
+                
+                <flux:select name="type" placeholder="All Types" value="{{ request('type') }}">
+                    <flux:select.option value="">All Types</flux:select.option>
+                    <flux:select.option value="primary">Primary Contacts</flux:select.option>
+                    <flux:select.option value="billing">Billing Contacts</flux:select.option>
+                    <flux:select.option value="technical">Technical Contacts</flux:select.option>
+                    <flux:select.option value="important">Important Contacts</flux:select.option>
+                </flux:select>
+                
+                <div class="flex gap-2">
+                    <flux:button type="submit" variant="primary">
+                        Apply Filters
+                    </flux:button>
+                    @if(request()->hasAny(['search', 'type']))
+                        <flux:button 
+                            variant="ghost" 
+                            href="{{ route('clients.contacts.index') }}"
+                        >
+                            Clear
+                        </flux:button>
+                    @endif
                 </div>
             </div>
-        </div>
+        </form>
+    </flux:card>
 
-        <!-- Filters -->
-        <div class="bg-white shadow rounded-lg mb-6">
-            <div class="px-6 py-8 sm:px-6">
-                <form method="GET" action="{{ route('clients.contacts.index', $client) }}" class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <!-- Search -->
-                        <div>
-                            <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
-                            <input type="text"
-                                   name="search"
-                                   id="search"
-                                   value="{{ request('search') }}"
-                                   placeholder="Name, email, phone, title, department..."
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-
-                        <!-- Contact Type -->
-                        <div>
-                            <label for="type" class="block text-sm font-medium text-gray-700">Contact Type</label>
-                            <select name="type"
-                                    id="type"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">All Types</option>
-                                <option value="primary" {{ request('type') === 'primary' ? 'selected' : '' }}>Primary</option>
-                                <option value="billing" {{ request('type') === 'billing' ? 'selected' : '' }}>Billing</option>
-                                <option value="technical" {{ request('type') === 'technical' ? 'selected' : '' }}>Technical</option>
-                                <option value="important" {{ request('type') === 'important' ? 'selected' : '' }}>Important</option>
-                            </select>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex items-end space-x-3">
-                            <button type="submit"
-                                    class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Filter
-                            </button>
-                            <a href="{{ route('clients.contacts.index', $client) }}"
-                               class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Clear
-                            </a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Contacts Table -->
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-8 sm:px-6 border-b border-gray-200">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
-                    Contacts 
-                    <span class="text-sm text-gray-500">({{ $contacts->total() }} total)</span>
-                </h3>
-            </div>
+    <!-- Contacts Table -->
+    <flux:card>
+        @if($contacts->count() > 0)
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>Name</flux:table.column>
+                    <flux:table.column>Contact Info</flux:table.column>
+                    <flux:table.column>Role</flux:table.column>
+                    <flux:table.column>Type</flux:table.column>
+                    <flux:table.column>Portal Access</flux:table.column>
+                    <flux:table.column class="w-20"></flux:table.column>
+                </flux:table.columns>
+                <flux:table.rows>
+                    @foreach($contacts as $contact)
+                        <flux:table.row>
+                            <flux:table.cell>
+                                <div class="flex items-center gap-2">
+                                    <flux:avatar size="sm">
+                                        {{ substr($contact->name, 0, 1) }}
+                                    </flux:avatar>
+                                    <div>
+                                        <div class="font-medium">{{ $contact->name }}</div>
+                                        @if($contact->title)
+                                            <flux:text size="sm">{{ $contact->title }}</flux:text>
+                                        @endif
+                                    </div>
+                                </div>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <div class="space-y-1">
+                                    @if($contact->email)
+                                        <div class="flex items-center gap-1">
+                                            <flux:icon.envelope variant="micro" class="text-zinc-400" />
+                                            <flux:link href="mailto:{{ $contact->email }}" class="text-sm">
+                                                {{ $contact->email }}
+                                            </flux:link>
+                                        </div>
+                                    @endif
+                                    @if($contact->phone)
+                                        <div class="flex items-center gap-1">
+                                            <flux:icon.phone variant="micro" class="text-zinc-400" />
+                                            <flux:text size="sm">{{ $contact->phone }}</flux:text>
+                                        </div>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                {{ $contact->role ?? '-' }}
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <div class="flex flex-wrap gap-1">
+                                    @if($contact->primary)
+                                        <flux:badge color="blue" size="sm">Primary</flux:badge>
+                                    @endif
+                                    @if($contact->billing)
+                                        <flux:badge color="green" size="sm">Billing</flux:badge>
+                                    @endif
+                                    @if($contact->technical)
+                                        <flux:badge color="purple" size="sm">Technical</flux:badge>
+                                    @endif
+                                    @if($contact->important)
+                                        <flux:badge color="amber" size="sm">Important</flux:badge>
+                                    @endif
+                                    @if(!$contact->primary && !$contact->billing && !$contact->technical && !$contact->important)
+                                        <flux:badge color="zinc" size="sm">General</flux:badge>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @if($contact->has_portal_access)
+                                    <flux:badge color="green" size="sm">
+                                        <flux:icon.check variant="micro" />
+                                        Active
+                                    </flux:badge>
+                                @else
+                                    <flux:badge color="zinc" size="sm">No Access</flux:badge>
+                                @endif
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:dropdown align="end">
+                                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" />
+                                    <flux:menu>
+                                        <flux:menu.item 
+                                            icon="eye"
+                                            href="{{ route('clients.contacts.show', $contact) }}"
+                                        >
+                                            View
+                                        </flux:menu.item>
+                                        <flux:menu.item 
+                                            icon="pencil"
+                                            href="{{ route('clients.contacts.edit', $contact) }}"
+                                        >
+                                            Edit
+                                        </flux:menu.item>
+                                        <flux:separator />
+                                        <form method="POST" action="{{ route('clients.contacts.destroy', $contact) }}" 
+                                              onsubmit="return confirm('Are you sure you want to delete this contact?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <flux:menu.item 
+                                                icon="trash"
+                                                type="submit"
+                                                variant="danger"
+                                            >
+                                                Delete
+                                            </flux:menu.item>
+                                        </form>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
             
-            @if($contacts->count() > 0)
-                <div class="overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Info</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                                <th scope="col-span-12" class="relative px-6 py-6"><span class="sr-only">Actions</span></th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($contacts as $contact)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10">
-                                                <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                    <span class="text-sm font-medium text-indigo-800">
-                                                        {{ strtoupper(substr($contact->name, 0, 2)) }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900">{{ $contact->name }}</div>
-                                                @if($contact->title)
-                                                    <div class="text-sm text-gray-500">{{ $contact->title }}</div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">
-                                            @if($contact->email)
-                                                <div>{{ $contact->email }}</div>
-                                            @endif
-                                            @if($contact->display_phone)
-                                                <div class="text-gray-500">{{ $contact->display_phone }}</div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach($contact->type_labels as $type)
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                    @if($type === 'Primary') bg-blue-100 text-blue-800
-                                                    @elseif($type === 'Billing') bg-green-100 text-green-800
-                                                    @elseif($type === 'Technical') bg-purple-100 text-purple-800
-                                                    @elseif($type === 'Important') bg-red-100 text-red-800
-                                                    @else bg-gray-100 text-gray-800
-                                                    @endif">
-                                                    {{ $type }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $contact->department ?? '-' }}
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            <a href="{{ route('clients.contacts.show', [$client, $contact]) }}"
-                                               class="text-indigo-600 hover:text-indigo-900">View</a>
-                                            <a href="{{ route('clients.contacts.edit', [$client, $contact]) }}"
-                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            <form method="POST"
-                                                  action="{{ route('clients.contacts.destroy', [$client, $contact]) }}"
-                                                  class="inline"
-                                                  onsubmit="return confirm('Are you sure you want to delete this contact?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        class="text-red-600 hover:text-red-900">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="bg-white px-6 py-6 border-t border-gray-200 sm:px-6">
+            @if($contacts->hasPages())
+                <div class="mt-4">
                     {{ $contacts->links() }}
                 </div>
-            @else
-                <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No contacts found</h3>
-                    <p class="mt-1 text-sm text-gray-500">Get started by adding a new contact.</p>
-                    <div class="mt-6">
-                        <a href="{{ route('clients.contacts.create', $client) }}"
-                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Add Contact
-                        </a>
-                    </div>
-                </div>
             @endif
-        </div>
-    </div>
+        @else
+            <div class="text-center py-12">
+                <flux:icon.user-group class="mx-auto h-12 w-12 text-zinc-400" />
+                <flux:heading size="lg" class="mt-4">No contacts found</flux:heading>
+                <flux:text class="mt-2">
+                    @if(request()->hasAny(['search', 'type']))
+                        No contacts match your filters. Try adjusting your search criteria.
+                    @else
+                        Get started by adding your first contact for {{ $client->name }}.
+                    @endif
+                </flux:text>
+                <div class="mt-6">
+                    @if(request()->hasAny(['search', 'type']))
+                        <flux:button variant="subtle" href="{{ route('clients.contacts.index') }}">
+                            Clear Filters
+                        </flux:button>
+                    @else
+                        <flux:button variant="primary" icon="plus" href="{{ route('clients.contacts.create') }}">
+                            Add First Contact
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </flux:card>
 </div>
 @endsection

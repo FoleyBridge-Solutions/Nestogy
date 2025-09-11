@@ -3,78 +3,69 @@
 @section('title', 'Create Ticket')
 
 @section('content')
-<div class="w-full px-6 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
+<div class="container-fluid">
+    <!-- Header -->
+    <flux:card class="mb-4">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create New Ticket</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Submit a support request for your client
-                </p>
+                <flux:heading>Create New Ticket</flux:heading>
+                <flux:text>Submit a support request for your client</flux:text>
             </div>
-            <a href="{{ route('tickets.index') }}" 
-               class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
+            <flux:button href="{{ route('tickets.index') }}" 
+                        variant="ghost"
+                        icon="arrow-left">
                 Back to Tickets
-            </a>
+            </flux:button>
         </div>
-    </div>
+    </flux:card>
 
     <form action="{{ route('tickets.store') }}" method="POST" x-data="ticketCreateForm()">
         @csrf
         
-        <div class="flex flex-flex-1 px-6 lg:flex-flex flex-wrap -mx-4 gap-8">
-            <!-- Basic Ticket Information (takes ~70% of width) -->
-            <div class="lg:flex-1" style="flex: 0 0 70%;">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Basic Ticket Information (takes 2 columns on large screens) -->
+            <div class="lg:col-span-2">
                 <x-tickets.basic-info 
                     :selectedClient="old('client_id', session('selected_client_id')) ? \App\Models\Client::where('company_id', auth()->user()->company_id)->find(old('client_id', session('selected_client_id'))) : null" />
             </div>
             
-            <!-- Additional Information (takes ~30% of width) -->
-            <div class="lg:flex-none" style="flex: 0 0 30%;">
+            <!-- Additional Information (takes 1 column on large screens) -->
+            <div class="lg:col-span-1">
                 <x-tickets.additional-info />
             </div>
         </div>
         
         <!-- Form Actions -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-900/5 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            All ticket information will be saved automatically
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <a href="{{ route('tickets.index') }}" 
-                               class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                Cancel
-                            </a>
-                            <button type="submit" 
-                                    x-bind:disabled="!isFormValid || submitting"
-                                    x-bind:class="isFormValid && !submitting ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'bg-gray-400 cursor-not-allowed'"
-                                    class="inline-flex items-center px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200">
-                                <svg x-show="submitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <svg x-show="!submitting" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                <span x-show="!submitting">Create Ticket</span>
-                                <span x-show="submitting">Creating...</span>
-                            </button>
-                        </div>
-                    </div>
+        <flux:card class="mt-4">
+            <div class="flex items-center justify-between">
+                <flux:text size="sm" class="flex items-center gap-1">
+                    <flux:icon name="information-circle" variant="mini" />
+                    All ticket information will be saved automatically
+                </flux:text>
+                <div class="flex gap-2">
+                    <flux:button href="{{ route('tickets.index') }}" 
+                                variant="ghost"
+                                icon="x-mark">
+                        Cancel
+                    </flux:button>
+                    <flux:button type="submit" 
+                                variant="primary"
+                                icon="plus"
+                                x-bind:disabled="!isFormValid || submitting"
+                                x-show="!submitting">
+                        Create Ticket
+                    </flux:button>
+                    <flux:button type="button" 
+                                variant="primary"
+                                disabled
+                                x-show="submitting"
+                                x-cloak>
+                        <flux:icon name="arrow-path" class="animate-spin" />
+                        Creating...
+                    </flux:button>
                 </div>
             </div>
-        </div>
+        </flux:card>
     </form>
 </div>
 @endsection

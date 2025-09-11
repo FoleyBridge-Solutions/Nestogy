@@ -8,6 +8,7 @@ use App\Models\TaxCategory;
 use App\Models\VoIPTaxRate;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
+use App\Services\TaxEngine\TaxServiceFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -69,22 +70,101 @@ class VoIPTaxService
         if ($this->companyId === null) {
             throw new \InvalidArgumentException('Company ID must be set before calculating taxes. Use setCompanyId() method.');
         }
-        
+
         $this->validateCalculationParams($params);
 
         $cacheKey = $this->generateCacheKey($params);
-        
+
         if ($this->config['enable_caching'] && Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
 
-        $result = $this->performTaxCalculation($params);
+        // Use TaxJar for sales tax calculation
+        $result = $this->calculateWithTaxJar($params);
 
         if ($this->config['enable_caching']) {
             Cache::put($cacheKey, $result, $this->config['cache_ttl']);
         }
 
         return $result;
+    }
+
+    /**
+     * Calculate taxes using TaxJar service
+     */
+    protected function calculateWithTaxJar(array $params): array
+    {
+        try {
+            $taxService = TaxServiceFactory::getService('US', $this->companyId);
+
+            if (!$taxService) {
+                Log::warning('VoIPTaxService: No tax service available, using fallback', [
+                    'company_id' => $this->companyId
+                ]);
+                return $this->getFallbackCalculation($params);
+            }
+
+            $taxResult = $taxService->calculateTaxes($params);
+
+            // Add VoIP-specific metadata
+            $taxResult['service_type'] = $params['service_type'] ?? 'voip';
+            $taxResult['calculation_method'] = 'taxjar_api';
+
+            Log::info('VoIPTaxService: Tax calculation completed with TaxJar', [
+                'company_id' => $this->companyId,
+                'base_amount' => $params['amount'],
+                'total_tax' => $taxResult['total_tax_amount'],
+                'service_type' => $params['service_type'] ?? 'voip'
+            ]);
+
+            return $taxResult;
+
+        } catch (\Exception $e) {
+            Log::error('VoIPTaxService: TaxJar calculation failed, using fallback', [
+                'company_id' => $this->companyId,
+                'error' => $e->getMessage(),
+                'params' => $params
+            ]);
+
+            return $this->getFallbackCalculation($params);
+        }
+    }
+
+    /**
+     * Fallback calculation when TaxJar fails
+     */
+    protected function getFallbackCalculation(array $params): array
+    {
+        $baseAmount = $params['amount'];
+        $fallbackRate = 8.25; // Default combined rate
+        $totalTax = $baseAmount * ($fallbackRate / 100);
+
+        return [
+            'base_amount' => $baseAmount,
+            'total_tax_amount' => round($totalTax, 2),
+            'tax_breakdown' => [
+                [
+                    'tax_name' => 'Combined Sales Tax (Fallback)',
+                    'tax_type' => 'combined_sales_tax',
+                    'rate_type' => 'percentage',
+                    'rate' => $fallbackRate,
+                    'base_amount' => $baseAmount,
+                    'tax_amount' => round($totalTax, 2),
+                    'authority' => 'Fallback Calculation',
+                    'jurisdiction' => 'Unknown',
+                ]
+            ],
+            'jurisdictions' => [],
+            'final_amount' => round($baseAmount + $totalTax, 2),
+            'calculation_date' => now()->toISOString(),
+            'service_type' => $params['service_type'] ?? 'voip',
+            'federal_taxes' => [],
+            'state_taxes' => [],
+            'local_taxes' => [],
+            'exemptions_applied' => [],
+            'fallback_used' => true,
+            'calculation_method' => 'fallback',
+        ];
     }
 
     /**

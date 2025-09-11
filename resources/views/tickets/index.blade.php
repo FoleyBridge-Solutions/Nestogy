@@ -1,326 +1,418 @@
 @extends('layouts.app')
 
-@section('title', 'Tickets')
+@section('title', 'Support Tickets')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg mb-6">
-            <div class="px-6 py-8 sm:px-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white dark:text-white">Tickets</h3>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage support tickets and service requests.</p>
-                    </div>
-                    <div class="flex space-x-3">
-                        <a href="{{ route('tickets.export.csv', request()->query()) }}" 
-                           class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Export CSV
-                        </a>
-                        <a href="{{ route('tickets.create') }}" 
-                           class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            New Ticket
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg mb-6">
-            <div class="px-6 py-8 sm:px-6">
-                <form method="GET" action="{{ route('tickets.index') }}" class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                        <!-- Search -->
-                        <div>
-                            <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Search</label>
-                            <input type="text" 
-                                   name="search" 
-                                   id="search" 
-                                   value="{{ request('search') }}"
-                                   placeholder="Ticket #, subject, description..."
-                                   class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-
-                        <!-- Status -->
-                        <div>
-                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Status</label>
-                            <select name="status" 
-                                    id="status" 
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">All Statuses</option>
-                                @foreach($filterOptions['statuses'] as $status)
-                                    <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>
-                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Priority -->
-                        <div>
-                            <label for="priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Priority</label>
-                            <select name="priority" 
-                                    id="priority" 
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">All Priorities</option>
-                                @foreach($filterOptions['priorities'] as $priority)
-                                    <option value="{{ $priority }}" {{ request('priority') === $priority ? 'selected' : '' }}>
-                                        {{ $priority }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Client Filter (Hidden when specific client is selected) -->
-                        @php $selectedClient = \App\Services\NavigationService::getSelectedClient(); @endphp
-                        @if(!$selectedClient)
-                        <div>
-                            <label for="client_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client</label>
-                            <select name="client_id" 
-                                    id="client_id" 
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">All Clients</option>
-                                @foreach($filterOptions['clients'] as $client)
-                                    <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
-                                        {{ $client->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @else
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client</label>
-                            <div class="mt-1 block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 sm:text-sm">
-                                {{ $selectedClient->name }}
-                            </div>
-                        </div>
-                        @endif
-
-                        <!-- Actions -->
-                        <div class="flex items-end space-x-3">
-                            <button type="submit" 
-                                    class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Filter
-                            </button>
-                            <a href="{{ route('tickets.index') }}" 
-                               class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Clear
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Quick Filter Buttons -->
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{{ route('tickets.index', ['unassigned' => '1'] + request()->query()) }}" 
-                           class="inline-flex items-center px-6 py-1.5 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 {{ request('unassigned') ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : '' }}">
-                            Unassigned
-                        </a>
-                        <a href="{{ route('tickets.index', ['overdue' => '1'] + request()->query()) }}" 
-                           class="inline-flex items-center px-6 py-1.5 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 {{ request('overdue') ? 'bg-red-50 border-red-300 text-red-700' : '' }}">
-                            Overdue
-                        </a>
-                        <a href="{{ route('tickets.index', ['watching' => '1'] + request()->query()) }}" 
-                           class="inline-flex items-center px-6 py-1.5 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 {{ request('watching') ? 'bg-yellow-50 border-yellow-300 text-yellow-700' : '' }}">
-                            Watching
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Tickets Table -->
-        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg">
-            <div class="px-6 py-8 sm:px-6 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white dark:text-white">
-                    Tickets 
-                    <span class="text-sm text-gray-500">({{ $tickets->total() }} total)</span>
-                </h3>
+<div class="container-fluid">
+    <!-- Page Header -->
+    <flux:card class="mb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <flux:heading>Support Tickets</flux:heading>
+                <flux:text>Manage customer support requests and service tickets</flux:text>
             </div>
             
-            @if($tickets->count() > 0)
-                <div class="overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
-                            <tr>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
-                                <th scope="col-span-12" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-                                <th scope="col-span-12" class="relative px-6 py-6"><span class="sr-only">Actions</span></th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 dark:bg-gray-800 divide-y divide-gray-200">
-                            @foreach($tickets as $ticket)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div>
-                                            <div class="flex items-center">
-                                                <span class="text-sm font-medium text-gray-900 dark:text-white dark:text-white">#{{ $ticket->ticket_number }}</span>
-                                                @if($ticket->priorityQueue)
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                        Priority Queue
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <div class="text-sm text-gray-900 dark:text-white dark:text-white mt-1">{{ $ticket->subject }}</div>
-                                            @if($ticket->tags)
-                                                <div class="flex flex-wrap gap-1 mt-2">
-                                                    @foreach($ticket->tags as $tag)
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                            {{ $tag }}
-                                                        </span>
-                                                    @endforeach
-                                                </div>
+            <div class="flex gap-2">
+                <flux:button href="{{ route('tickets.export.csv', request()->query()) }}" 
+                            variant="subtle" 
+                            icon="arrow-down-tray">
+                    Export CSV
+                </flux:button>
+                <flux:button href="{{ route('tickets.create') }}" 
+                            variant="primary" 
+                            icon="plus">
+                    New Ticket
+                </flux:button>
+            </div>
+        </div>
+    </flux:card>
+    <!-- Filters Card -->
+    <flux:card class="mb-4">
+        <form method="GET" action="{{ route('tickets.index') }}">
+            <div class="space-y-4">
+                    <!-- Main Filters Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- Search -->
+                        <flux:input 
+                            name="search" 
+                            placeholder="Search tickets..."
+                            icon="magnifying-glass"
+                            value="{{ request('search') }}"
+                        />
+
+                        <!-- Status -->
+                        <flux:select name="status" placeholder="All Statuses" value="{{ request('status') }}">
+                            <flux:select.option value="">All Statuses</flux:select.option>
+                            @foreach($filterOptions['statuses'] as $status)
+                                <flux:select.option value="{{ $status }}">
+                                    {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        <!-- Priority -->
+                        <flux:select name="priority" placeholder="All Priorities" value="{{ request('priority') }}">
+                            <flux:select.option value="">All Priorities</flux:select.option>
+                            @foreach($filterOptions['priorities'] as $priority)
+                                <flux:select.option value="{{ $priority }}">
+                                    {{ $priority }}
+                                </flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        <!-- Client Filter -->
+                        @php $selectedClient = \App\Services\NavigationService::getSelectedClient(); @endphp
+                        @if(!$selectedClient)
+                            <flux:select name="client_id" placeholder="All Clients" value="{{ request('client_id') }}">
+                                <flux:select.option value="">All Clients</flux:select.option>
+                                @foreach($filterOptions['clients'] as $client)
+                                    <flux:select.option value="{{ $client->id }}">
+                                        {{ $client->name }}
+                                    </flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        @else
+                            <flux:input 
+                                value="{{ $selectedClient->name }}" 
+                                disabled 
+                                icon="building-office"
+                            />
+                        @endif
+
+                        <!-- Filter Actions -->
+                        <div class="flex gap-2">
+                            <flux:button type="submit" variant="primary">
+                                Filter
+                            </flux:button>
+                            @if(request()->hasAny(['search', 'status', 'priority', 'client_id', 'unassigned', 'overdue', 'watching']))
+                                <flux:button href="{{ route('tickets.index') }}" variant="ghost">
+                                    Clear
+                                </flux:button>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Quick Filters -->
+                    <flux:separator />
+                    <div class="flex flex-wrap gap-2">
+                        <flux:badge 
+                            href="{{ route('tickets.index', ['unassigned' => '1'] + request()->except('unassigned')) }}"
+                            color="{{ request('unassigned') ? 'blue' : 'zinc' }}"
+                            size="lg"
+                        >
+                            Unassigned
+                        </flux:badge>
+                        
+                        <flux:badge 
+                            href="{{ route('tickets.index', ['overdue' => '1'] + request()->except('overdue')) }}"
+                            color="{{ request('overdue') ? 'red' : 'zinc' }}"
+                            size="lg"
+                        >
+                            Overdue
+                        </flux:badge>
+                        
+                        <flux:badge 
+                            href="{{ route('tickets.index', ['watching' => '1'] + request()->except('watching')) }}"
+                            color="{{ request('watching') ? 'yellow' : 'zinc' }}"
+                            size="lg"
+                        >
+                            Watching
+                        </flux:badge>
+
+                        <flux:badge 
+                            href="{{ route('tickets.index', ['status' => 'new'] + request()->except('status')) }}"
+                            color="{{ request('status') === 'new' ? 'blue' : 'zinc' }}"
+                            size="lg"
+                        >
+                            New
+                        </flux:badge>
+
+                        <flux:badge 
+                            href="{{ route('tickets.index', ['status' => 'open'] + request()->except('status')) }}"
+                            color="{{ request('status') === 'open' ? 'yellow' : 'zinc' }}"
+                            size="lg"
+                        >
+                            Open
+                        </flux:badge>
+
+                        <flux:badge 
+                            href="{{ route('tickets.index', ['priority' => 'Critical'] + request()->except('priority')) }}"
+                            color="{{ request('priority') === 'Critical' ? 'red' : 'zinc' }}"
+                            size="lg"
+                        >
+                            Critical
+                        </flux:badge>
+                    </div>
+            </div>
+        </form>
+    </flux:card>
+
+    <!-- Tickets Table -->
+    <flux:card>
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>Ticket</flux:table.column>
+                    <flux:table.column>Client</flux:table.column>
+                    <flux:table.column>Status</flux:table.column>
+                    <flux:table.column>Priority</flux:table.column>
+                    <flux:table.column>Assignee</flux:table.column>
+                    <flux:table.column>Updated</flux:table.column>
+                    <flux:table.column></flux:table.column>
+                </flux:table.columns>
+
+                <flux:table.rows>
+                    @forelse($tickets as $ticket)
+                        <flux:table.row>
+                            <!-- Ticket Info -->
+                            <flux:table.cell>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <flux:link href="{{ route('tickets.show', $ticket) }}" class="font-semibold">
+                                            #{{ $ticket->ticket_number }}
+                                        </flux:link>
+                                        @if($ticket->priorityQueue)
+                                            <flux:badge color="red" size="sm">Priority Queue</flux:badge>
+                                        @endif
+                                    </div>
+                                    <div class="text-sm text-zinc-600 dark:text-zinc-400">
+                                        {{ Str::limit($ticket->subject, 60) }}
+                                    </div>
+                                    @if($ticket->tags && count($ticket->tags) > 0)
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach(array_slice($ticket->tags, 0, 3) as $tag)
+                                                <flux:badge size="sm" color="blue">{{ $tag }}</flux:badge>
+                                            @endforeach
+                                            @if(count($ticket->tags) > 3)
+                                                <flux:badge size="sm" color="zinc">+{{ count($ticket->tags) - 3 }}</flux:badge>
                                             @endif
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $ticket->client->name }}</div>
-                                        @if($ticket->contact)
-                                            <div class="text-sm text-gray-500">{{ $ticket->contact->name }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            @if($ticket->status === 'new') bg-blue-100 text-blue-800
-                                            @elseif($ticket->status === 'open') bg-yellow-100 text-yellow-800
-                                            @elseif($ticket->status === 'in_progress') bg-purple-100 text-purple-800
-                                            @elseif($ticket->status === 'pending') bg-orange-100 text-orange-800
-                                            @elseif($ticket->status === 'resolved') bg-green-100 text-green-800
-                                            @elseif($ticket->status === 'closed') bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200
-                                            @else bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200
-                                            @endif">
-                                            {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            @if($ticket->priority === 'Critical') bg-red-100 text-red-800
-                                            @elseif($ticket->priority === 'High') bg-orange-100 text-orange-800
-                                            @elseif($ticket->priority === 'Medium') bg-yellow-100 text-yellow-800
-                                            @elseif($ticket->priority === 'Low') bg-green-100 text-green-800
-                                            @else bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-800 dark:text-gray-200 dark:text-gray-200
-                                            @endif">
-                                            {{ $ticket->priority }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 dark:text-white dark:text-white">
-                                        @if($ticket->assignee)
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-8 w-8">
-                                                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                        <span class="text-xs font-medium text-indigo-800">
-                                                            {{ strtoupper(substr($ticket->assignee->name, 0, 2)) }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="ml-2">
-                                                    <div class="text-sm text-gray-900 dark:text-white dark:text-white">{{ $ticket->assignee->name }}</div>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <span class="text-gray-500 italic">Unassigned</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-500">
-                                        <div>{{ $ticket->updated_at->format('M j, Y') }}</div>
-                                        <div>{{ $ticket->updated_at->format('g:i A') }}</div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex items-center justify-end space-x-2">
-                                            <a href="{{ route('tickets.show', $ticket) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900">View</a>
-                                            <a href="{{ route('tickets.edit', $ticket) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            <div class="relative inline-block text-left">
-                                                <button type="button" 
-                                                        class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400 focus:outline-none"
-                                                        onclick="toggleDropdown('dropdown-{{ $ticket->id }}')">
-                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                                    </svg>
-                                                </button>
-                                                <div id="dropdown-{{ $ticket->id }}" 
-                                                     class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
-                                                    <div class="py-1">
-                                                        @if($ticket->assignee !== auth()->user())
-                                                            <a href="{{ route('tickets.assignments.assign', $ticket) }}" 
-                                                               class="block px-6 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800">Assign to Me</a>
-                                                        @endif
-                                                        <a href="{{ route('tickets.assignments.watchers.add', $ticket) }}" 
-                                                           class="block px-6 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800">Watch Ticket</a>
-                                                        <a href="{{ route('tickets.time-tracking.create', ['ticket_id' => $ticket->id]) }}" 
-                                                           class="block px-6 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:bg-gray-800">Log Time</a>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
+
+                            <!-- Client -->
+                            <flux:table.cell>
+                                <div>
+                                    <div class="font-medium">{{ $ticket->client->name }}</div>
+                                    @if($ticket->contact)
+                                        <div class="text-sm text-zinc-600 dark:text-zinc-400">
+                                            {{ $ticket->contact->name }}
                                         </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
 
-                <!-- Pagination -->
-                <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 px-6 py-6 border-t border-gray-200 dark:border-gray-700 dark:border-gray-700 sm:px-6">
-                    {{ $tickets->appends(request()->query())->links() }}
-                </div>
-            @else
-                <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white dark:text-white">No tickets found</h3>
-                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new support ticket.</p>
-                    <div class="mt-6">
-                        <a href="{{ route('tickets.create') }}" 
-                           class="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            New Ticket
-                        </a>
+                            <!-- Status -->
+                            <flux:table.cell>
+                                @php
+                                    $statusColors = [
+                                        'new' => 'blue',
+                                        'open' => 'yellow',
+                                        'in_progress' => 'purple',
+                                        'pending' => 'orange',
+                                        'resolved' => 'green',
+                                        'closed' => 'zinc',
+                                    ];
+                                    $statusColor = $statusColors[$ticket->status] ?? 'zinc';
+                                @endphp
+                                <flux:badge color="{{ $statusColor }}">
+                                    {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                </flux:badge>
+                            </flux:table.cell>
+
+                            <!-- Priority -->
+                            <flux:table.cell>
+                                @php
+                                    $priorityColors = [
+                                        'Critical' => 'red',
+                                        'High' => 'orange',
+                                        'Medium' => 'yellow',
+                                        'Low' => 'green',
+                                    ];
+                                    $priorityColor = $priorityColors[$ticket->priority] ?? 'zinc';
+                                @endphp
+                                <flux:badge color="{{ $priorityColor }}" variant="outline">
+                                    {{ $ticket->priority }}
+                                </flux:badge>
+                            </flux:table.cell>
+
+                            <!-- Assignee -->
+                            <flux:table.cell>
+                                @if($ticket->assignee)
+                                    <div class="flex items-center gap-2">
+                                        <flux:avatar size="xs">
+                                            {{ strtoupper(substr($ticket->assignee->name, 0, 2)) }}
+                                        </flux:avatar>
+                                        <span class="text-sm">{{ $ticket->assignee->name }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-zinc-500 italic text-sm">Unassigned</span>
+                                @endif
+                            </flux:table.cell>
+
+                            <!-- Updated -->
+                            <flux:table.cell>
+                                <div class="text-sm">
+                                    <div>{{ $ticket->updated_at->format('M j, Y') }}</div>
+                                    <div class="text-zinc-600 dark:text-zinc-400">
+                                        {{ $ticket->updated_at->format('g:i A') }}
+                                    </div>
+                                </div>
+                            </flux:table.cell>
+
+                            <!-- Actions -->
+                            <flux:table.cell>
+                                <div class="flex items-center justify-end gap-1">
+                                    <flux:button href="{{ route('tickets.show', $ticket) }}" size="sm" variant="ghost" icon="eye" />
+                                    <flux:button href="{{ route('tickets.edit', $ticket) }}" size="sm" variant="ghost" icon="pencil" />
+                                    
+                                    <flux:dropdown align="end">
+                                        <flux:button size="sm" variant="ghost" icon="ellipsis-vertical" />
+                                        
+                                        <flux:menu>
+                                            @if(!$ticket->assignee || $ticket->assignee->id !== auth()->id())
+                                                <flux:menu.item 
+                                                    href="{{ route('tickets.assignments.assign', $ticket) }}"
+                                                    icon="user-plus"
+                                                >
+                                                    Assign to Me
+                                                </flux:menu.item>
+                                            @endif
+                                            
+                                            <flux:menu.item 
+                                                href="{{ route('tickets.assignments.watchers.add', $ticket) }}"
+                                                icon="eye"
+                                            >
+                                                Watch Ticket
+                                            </flux:menu.item>
+                                            
+                                            <flux:menu.item 
+                                                href="{{ route('tickets.time-tracking.create', ['ticket_id' => $ticket->id]) }}"
+                                                icon="clock"
+                                            >
+                                                Log Time
+                                            </flux:menu.item>
+                                            
+                                            <flux:menu.separator />
+                                            
+                                            <flux:menu.item 
+                                                href="{{ route('tickets.show', $ticket) }}#comments"
+                                                icon="chat-bubble-left-right"
+                                            >
+                                                Add Comment
+                                            </flux:menu.item>
+                                            
+                                            @if($ticket->status !== 'closed')
+                                                <flux:menu.item 
+                                                    href="{{ route('tickets.status.update', ['ticket' => $ticket, 'status' => 'closed']) }}"
+                                                    icon="x-circle"
+                                                    variant="danger"
+                                                >
+                                                    Close Ticket
+                                                </flux:menu.item>
+                                            @endif
+                                        </flux:menu>
+                                    </flux:dropdown>
+                                </div>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @empty
+                        <flux:table.row>
+                            <flux:table.cell colspan="7">
+                                <div class="text-center py-12">
+                                    <svg class="mx-auto size-12 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                    <flux:heading size="lg" class="mt-4">No tickets found</flux:heading>
+                                    <flux:text class="mt-2">
+                                        @if(request()->hasAny(['search', 'status', 'priority', 'client_id']))
+                                            Try adjusting your filters or search criteria
+                                        @else
+                                            Get started by creating your first support ticket
+                                        @endif
+                                    </flux:text>
+                                    <div class="mt-6">
+                                        @if(request()->hasAny(['search', 'status', 'priority', 'client_id']))
+                                            <flux:button href="{{ route('tickets.index') }}" variant="primary">
+                                                Clear Filters
+                                            </flux:button>
+                                        @else
+                                            <flux:button href="{{ route('tickets.create') }}" variant="primary" icon="plus">
+                                                Create First Ticket
+                                            </flux:button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforelse
+                </flux:table.rows>
+            </flux:table>
+
+        @if($tickets->hasPages())
+            <div class="mt-6">
+                {{ $tickets->appends(request()->query())->links() }}
+            </div>
+        @endif
+    </flux:card>
+
+    <!-- Stats Cards -->
+    @if($tickets->count() > 0)
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+            <flux:card class="p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <flux:text class="text-zinc-600 dark:text-zinc-400">Total Tickets</flux:text>
+                        <flux:heading size="xl">{{ $tickets->total() }}</flux:heading>
                     </div>
+                    <svg class="size-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                    </svg>
                 </div>
-            @endif
-        </div>
+            </flux:card>
+
+            <flux:card class="p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <flux:text class="text-zinc-600 dark:text-zinc-400">Open Tickets</flux:text>
+                        <flux:heading size="xl">
+                            {{ $tickets->filter(fn($t) => in_array($t->status, ['new', 'open', 'in_progress']))->count() }}
+                        </flux:heading>
+                    </div>
+                    <svg class="size-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+            </flux:card>
+
+            <flux:card class="p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <flux:text class="text-zinc-600 dark:text-zinc-400">Critical</flux:text>
+                        <flux:heading size="xl">
+                            {{ $tickets->where('priority', 'Critical')->count() }}
+                        </flux:heading>
+                    </div>
+                    <svg class="size-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-.834-1.962-.834-2.732 0L3.732 16c-.77.834.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </flux:card>
+
+            <flux:card class="p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <flux:text class="text-zinc-600 dark:text-zinc-400">Unassigned</flux:text>
+                        <flux:heading size="xl">
+                            {{ $tickets->whereNull('assigned_to')->count() }}
+                        </flux:heading>
+                    </div>
+                    <svg class="size-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                    </svg>
+                </div>
+            </flux:card>
     </div>
+    @endif
 </div>
-
-<script>
-function toggleDropdown(id) {
-    const dropdown = document.getElementById(id);
-    const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
-    
-    // Hide all other dropdowns
-    allDropdowns.forEach(d => {
-        if (d.id !== id) {
-            d.classList.add('hidden');
-        }
-    });
-    
-    // Toggle current dropdown
-    dropdown.classList.toggle('hidden');
-}
-
-// Hide dropdowns when clicking outside
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('[onclick^="toggleDropdown"]')) {
-        document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
-            d.classList.add('hidden');
-        });
-    }
-});
-</script>
 @endsection

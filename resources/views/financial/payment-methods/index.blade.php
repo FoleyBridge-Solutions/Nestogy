@@ -18,7 +18,7 @@
         <flux:card.header>
             <flux:card.title>Payment Methods Overview</flux:card.title>
         </flux:card.header>
-        <flux:card.body>
+        
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <flux:stat>
                     <flux:stat.label>Total Methods</flux:stat.label>
@@ -44,7 +44,7 @@
                     <flux:stat.description>Most recent payment</flux:stat.description>
                 </flux:stat>
             </div>
-        </flux:card.body>
+        
     </flux:card>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -52,7 +52,7 @@
             <flux:card.header>
                 <flux:card.title>Credit Cards</flux:card.title>
             </flux:card.header>
-            <flux:card.body>
+            
                 <div class="space-y-4">
                     @forelse($creditCards ?? [] as $card)
                     <div class="flex items-center justify-between p-4 border rounded-lg">
@@ -93,14 +93,14 @@
                     </div>
                     @endforelse
                 </div>
-            </flux:card.body>
+            
         </flux:card>
 
         <flux:card>
             <flux:card.header>
                 <flux:card.title>Bank Accounts</flux:card.title>
             </flux:card.header>
-            <flux:card.body>
+            
                 <div class="space-y-4">
                     @forelse($bankAccounts ?? [] as $account)
                     <div class="flex items-center justify-between p-4 border rounded-lg">
@@ -144,7 +144,7 @@
                     </div>
                     @endforelse
                 </div>
-            </flux:card.body>
+            
         </flux:card>
     </div>
 
@@ -152,7 +152,7 @@
         <flux:card.header>
             <flux:card.title>Other Payment Methods</flux:card.title>
         </flux:card.header>
-        <flux:card.body>
+        
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="p-4 border rounded-lg">
                     <div class="flex items-center justify-between mb-2">
@@ -193,7 +193,7 @@
                     </div>
                 </div>
             </div>
-        </flux:card.body>
+        
     </flux:card>
 </flux:main>
 @endsection

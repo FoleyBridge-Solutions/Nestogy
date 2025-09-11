@@ -24,11 +24,12 @@ class AuthServiceProvider extends ServiceProvider
         // Domain model policies
         \App\Models\Client::class => \App\Policies\ClientPolicy::class,
         \App\Models\Contact::class => \App\Policies\ContactPolicy::class,
+        \App\Models\Location::class => \App\Policies\LocationPolicy::class,
         \App\Models\Ticket::class => \App\Policies\TicketPolicy::class,
         \App\Models\Asset::class => \App\Policies\AssetPolicy::class,
         \App\Models\User::class => \App\Policies\UserPolicy::class,
         \App\Models\Role::class => \App\Policies\RolePolicy::class,
-        \App\Models\Project::class => \App\Policies\ProjectPolicy::class,
+        \App\Domains\Project\Models\Project::class => \App\Policies\ProjectPolicy::class,
         \App\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
         \App\Models\Quote::class => \App\Policies\QuotePolicy::class,
         \App\Models\Recurring::class => \App\Policies\RecurringPolicy::class,

@@ -17,7 +17,7 @@ $sidebarConfig = [
                         'route' => 'clients.show',
                         'icon' => 'chart-pie',
                         'key' => 'details',
-                        'params' => ['client' => 'current'],
+                        'params' => [],
                         'description' => 'Central hub with client health and quick actions'
                     ]
                 ]
@@ -59,14 +59,14 @@ $sidebarConfig = [
                         'route' => 'clients.contacts.index',
                         'icon' => 'users',
                         'key' => 'contacts',
-                        'params' => ['client' => 'current']
+                        'params' => []
                     ],
                     [
                         'name' => 'Locations',
                         'route' => 'clients.locations.index',
                         'icon' => 'map-pin',
                         'key' => 'locations',
-                        'params' => ['client' => 'current']
+                        'params' => []
                     ],
                     [
                         'name' => 'Communication Log',
@@ -133,13 +133,13 @@ $sidebarConfig = [
                         'key' => 'invoices',
                         'params' => ['client_id' => 'current']
                     ],
-                    [
-                        'name' => 'Payments',
-                        'route' => 'financial.payments.index',
-                        'icon' => 'credit-card',
-                        'key' => 'payments',
-                        'params' => ['client_id' => 'current']
-                    ]
+                    // [
+                    //     'name' => 'Payments',
+                    //     'route' => 'financial.payments.index',
+                    //     'icon' => 'credit-card',
+                    //     'key' => 'payments',
+                    //     'params' => ['client_id' => 'current']
+                    // ]
                 ]
             ]
         ]
@@ -370,19 +370,19 @@ $sidebarConfig = [
                 'expandable' => true,
                 'default_expanded' => false,
                 'items' => [
-                    [
-                        'name' => 'All Payments',
-                        'route' => 'financial.payments.index',
-                        'icon' => 'credit-card',
-                        'key' => 'payments',
-                        'badge_type' => 'success'
-                    ],
-                    [
-                        'name' => 'Record Payment',
-                        'route' => 'financial.payments.create',
-                        'icon' => 'plus-circle',
-                        'key' => 'record-payment'
-                    ],
+                    // [
+                    //     'name' => 'All Payments',
+                    //     'route' => 'financial.payments.index',
+                    //     'icon' => 'credit-card',
+                    //     'key' => 'payments',
+                    //     'badge_type' => 'success'
+                    // ],
+                    // [
+                    //     'name' => 'Record Payment',
+                    //     'route' => 'financial.payments.create',
+                    //     'icon' => 'plus-circle',
+                    //     'key' => 'record-payment'
+                    // ],
                     [
                         'name' => 'Payment Methods',
                         'route' => 'financial.payment-methods.index',
@@ -1002,11 +1002,10 @@ $selectedClient = \App\Services\NavigationService::getSelectedClient();
 @php
 // Use component helper methods
 $resolveContextualParams = function($params, $selectedClient) {
+    // For session-based routing, we don't need to pass client IDs
     $resolvedParams = [];
     foreach ($params as $key => $value) {
-        if ($value === 'current' && $selectedClient) {
-            $resolvedParams[$key] = $selectedClient->id;
-        } else {
+        if ($key !== 'client' && $value !== 'current') {
             $resolvedParams[$key] = $value;
         }
     }

@@ -11,6 +11,7 @@ use App\Domains\Ticket\Services\TimeTrackingService;
 use App\Domains\Ticket\Services\WorkTypeClassificationService;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Traits\UsesSelectedClient;
+use App\Traits\FiltersClientsByAssignment;
 use App\Models\Client;
 use App\Models\User;
 use Carbon\Carbon;
@@ -30,14 +31,21 @@ use Illuminate\Validation\Rule;
  */
 class TicketController extends Controller
 {
-    use UsesSelectedClient;
+    use UsesSelectedClient, FiltersClientsByAssignment;
 
     /**
      * Display a listing of tickets
      */
     public function index(Request $request)
     {
-        $query = Ticket::where('company_id', auth()->user()->company_id);
+        // Start with base query
+        $query = Ticket::query();
+        
+        // Apply client-based filtering for technicians
+        $query = $this->applyClientFilter($query, 'client_id');
+        
+        // Also ensure company scope
+        $query->where('company_id', auth()->user()->company_id);
 
         // Apply search filters
         if ($search = $request->get('search')) {

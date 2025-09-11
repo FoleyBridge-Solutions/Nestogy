@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Project;
+use App\Domains\Project\Models\Project;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -13,7 +13,7 @@ class ProjectPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('projects.view');
+        return $user->can('projects.view') || $user->can('projects.*');
     }
 
     /**
@@ -21,7 +21,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        if (!$user->can('projects.view')) {
+        if (!$user->can('projects.view') && !$user->can('projects.*')) {
             return false;
         }
 
@@ -41,7 +41,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can view all projects
-        return $user->can('projects.manage');
+        return $user->can('projects.manage') || $user->can('projects.*');
     }
 
     /**
@@ -49,7 +49,7 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('projects.create');
+        return $user->can('projects.create') || $user->can('projects.*');
     }
 
     /**
@@ -57,7 +57,7 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        if (!$user->can('projects.edit')) {
+        if (!$user->can('projects.edit') && !$user->can('projects.*')) {
             return false;
         }
 
@@ -71,7 +71,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can edit all projects
-        return $user->can('projects.manage');
+        return $this->hasProjectPermission($user, 'projects.manage');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        if (!$user->can('projects.delete')) {
+        if (!$user->can('projects.delete') && !$user->can('projects.*')) {
             return false;
         }
 
@@ -93,7 +93,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can delete all projects
-        return $user->can('projects.manage');
+        return $this->hasProjectPermission($user, 'projects.manage');
     }
 
     /**
@@ -101,7 +101,7 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project): bool
     {
-        return $user->can('projects.manage') && $this->sameCompany($user, $project);
+        return $this->hasProjectPermission($user, 'projects.manage') && $this->sameCompany($user, $project);
     }
 
     /**
@@ -109,7 +109,7 @@ class ProjectPolicy
      */
     public function forceDelete(User $user, Project $project): bool
     {
-        return $user->can('projects.manage') && $this->sameCompany($user, $project);
+        return $this->hasProjectPermission($user, 'projects.manage') && $this->sameCompany($user, $project);
     }
 
     /**
@@ -117,7 +117,7 @@ class ProjectPolicy
      */
     public function export(User $user): bool
     {
-        return $user->can('projects.export');
+        return $this->hasProjectPermission($user, 'projects.export');
     }
 
     // Task-related permissions
@@ -297,6 +297,15 @@ class ProjectPolicy
     private function sameCompany(User $user, Project $project): bool
     {
         return $user->company_id === $project->company_id;
+    }
+    
+    /**
+     * Check if user has a specific project permission or wildcard.
+     */
+    private function hasProjectPermission(User $user, string $permission): bool
+    {
+        // Check for specific permission or wildcard
+        return $user->can($permission) || $user->can('projects.*');
     }
 
     /**

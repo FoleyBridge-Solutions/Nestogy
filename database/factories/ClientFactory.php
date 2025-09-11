@@ -26,24 +26,20 @@ class ClientFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'name' => $this->faker->company(),
+            'company_name' => $this->faker->company() . ' Inc.',
             'email' => $this->faker->unique()->companyEmail(),
             'phone' => $this->faker->phoneNumber(),
             'website' => $this->faker->optional()->url(),
             'address' => $this->faker->streetAddress(),
             'city' => $this->faker->city(),
             'state' => $this->faker->stateAbbr(),
-            'zip' => $this->faker->postcode(),
+            'zip_code' => $this->faker->postcode(),
             'country' => 'United States',
-            'status' => $this->faker->randomElement(['active', 'inactive', 'prospect']),
+            'status' => $this->faker->randomElement(['active', 'inactive', 'suspended']),
             'notes' => $this->faker->optional()->paragraph(),
-            'tax_id' => $this->faker->optional()->numerify('##-#######'),
-            'billing_address' => $this->faker->optional()->streetAddress(),
-            'billing_city' => $this->faker->optional()->city(),
-            'billing_state' => $this->faker->optional()->stateAbbr(),
-            'billing_zip' => $this->faker->optional()->postcode(),
-            'billing_country' => $this->faker->optional()->country(),
-            'payment_terms' => $this->faker->randomElement([15, 30, 45, 60]),
-            'credit_limit' => $this->faker->optional()->randomFloat(2, 1000, 50000),
+            'hourly_rate' => $this->faker->randomElement([125, 150, 175, 200, 225]),
+            'billing_contact' => $this->faker->name,
+            'technical_contact' => $this->faker->name,
             'created_at' => now(),
             'updated_at' => now(),
         ];
@@ -75,45 +71,14 @@ class ClientFactory extends Factory
     public function prospect(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'prospect',
+            'status' => 'inactive',
+            'lead' => true,
         ]);
     }
 
-    /**
-     * Set specific payment terms.
-     */
-    public function paymentTerms(int $days): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'payment_terms' => $days,
-        ]);
-    }
 
-    /**
-     * Set a credit limit.
-     */
-    public function withCreditLimit(float $limit): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'credit_limit' => $limit,
-        ]);
-    }
 
-    /**
-     * Create a client with billing address same as main address.
-     */
-    public function withSameBillingAddress(): static
-    {
-        return $this->state(function (array $attributes) {
-            return [
-                'billing_address' => $attributes['address'],
-                'billing_city' => $attributes['city'],
-                'billing_state' => $attributes['state'],
-                'billing_zip' => $attributes['zip'],
-                'billing_country' => $attributes['country'],
-            ];
-        });
-    }
+
 
     /**
      * Create a client for a specific company.

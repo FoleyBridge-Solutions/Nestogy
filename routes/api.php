@@ -284,18 +284,18 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::post('{invoice}/send-email', [App\Http\Controllers\Api\InvoicesController::class, 'sendEmail'])->name('send-email');
         });
         
-        // Payment API
-        Route::prefix('payments')->name('payments.')->group(function () {
-            Route::get('/', [App\Http\Controllers\PaymentController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\PaymentController::class, 'store'])->name('store');
-            Route::get('{payment}', [App\Http\Controllers\PaymentController::class, 'show'])->name('show');
-            Route::put('{payment}', [App\Http\Controllers\PaymentController::class, 'update'])->name('update');
-            Route::delete('{payment}', [App\Http\Controllers\PaymentController::class, 'destroy'])->name('destroy');
+        // Payment API - Commented out until PaymentController is implemented
+        // Route::prefix('payments')->name('payments.')->group(function () {
+        //     Route::get('/', [App\Http\Controllers\PaymentController::class, 'index'])->name('index');
+        //     Route::post('/', [App\Http\Controllers\PaymentController::class, 'store'])->name('store');
+        //     Route::get('{payment}', [App\Http\Controllers\PaymentController::class, 'show'])->name('show');
+        //     Route::put('{payment}', [App\Http\Controllers\PaymentController::class, 'update'])->name('update');
+        //     Route::delete('{payment}', [App\Http\Controllers\PaymentController::class, 'destroy'])->name('destroy');
             
-            // Payment Actions
-            Route::post('{payment}/refund', [App\Http\Controllers\PaymentController::class, 'refund'])->name('refund');
-            Route::get('recent', [App\Http\Controllers\PaymentController::class, 'recent'])->name('recent');
-        });
+        //     // Payment Actions
+        //     Route::post('{payment}/refund', [App\Http\Controllers\PaymentController::class, 'refund'])->name('refund');
+        //     Route::get('recent', [App\Http\Controllers\PaymentController::class, 'recent'])->name('recent');
+        // });
         
         // Expense API
         Route::prefix('expenses')->name('expenses.')->group(function () {

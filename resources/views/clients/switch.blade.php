@@ -59,7 +59,7 @@
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <a href="{{ route('clients.show', $currentClient) }}" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                        <a href="{{ route('clients.index') }}" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
                             View Dashboard
                         </a>
                         <span class="inline-flex items-center px-6 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md">

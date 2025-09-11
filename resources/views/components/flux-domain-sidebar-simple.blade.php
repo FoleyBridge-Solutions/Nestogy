@@ -467,6 +467,14 @@ $getBadgeCount = function($badgeType, $selectedClient) {
                                     if (!Route::has($item['route'])) {
                                         continue;
                                     }
+                                    
+                                    // Skip client-specific routes when no client is selected
+                                    $hasClientParam = isset($item['params']) && 
+                                        (isset($item['params']['client']) || isset($item['params']['client_id']));
+                                    if ($hasClientParam && !$selectedClient) {
+                                        continue;
+                                    }
+                                    
                                     $isActive = $activeItem === $item['key'];
                                     $routeParams = $resolveParams($item['params'] ?? [], $selectedClient);
                                     $badgeCount = isset($item['badge']) ? $getBadgeCount($item['badge'], $selectedClient) : null;
@@ -502,6 +510,14 @@ $getBadgeCount = function($badgeType, $selectedClient) {
                                     if (!Route::has($item['route'])) {
                                         continue;
                                     }
+                                    
+                                    // Skip client-specific routes when no client is selected
+                                    $hasClientParam = isset($item['params']) && 
+                                        (isset($item['params']['client']) || isset($item['params']['client_id']));
+                                    if ($hasClientParam && !$selectedClient) {
+                                        continue;
+                                    }
+                                    
                                     $isActive = $activeItem === $item['key'];
                                     $routeParams = $resolveParams($item['params'] ?? [], $selectedClient);
                                     $badgeCount = isset($item['badge']) ? $getBadgeCount($item['badge'], $selectedClient) : null;

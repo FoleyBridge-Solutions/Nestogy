@@ -18,7 +18,7 @@
         <flux:card.header>
             <flux:card.title>Upcoming Billing</flux:card.title>
         </flux:card.header>
-        <flux:card.body>
+        
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <flux:stat>
                     <flux:stat.label>Due Today</flux:stat.label>
@@ -44,7 +44,7 @@
                     <flux:stat.description>MRR</flux:stat.description>
                 </flux:stat>
             </div>
-        </flux:card.body>
+        
     </flux:card>
 
     <flux:card>
@@ -67,7 +67,7 @@
                 </flux:select>
             </flux:card.actions>
         </flux:card.header>
-        <flux:card.body>
+        
             <flux:table>
                 <flux:table.header>
                     <flux:table.row>
@@ -126,7 +126,7 @@
                     @endforelse
                 </flux:table.body>
             </flux:table>
-        </flux:card.body>
+        
     </flux:card>
 </flux:main>
 @endsection

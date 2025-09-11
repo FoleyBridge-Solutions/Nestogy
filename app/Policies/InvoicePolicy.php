@@ -13,7 +13,7 @@ class InvoicePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('financial.invoices.view');
+        return $user->hasPermission('financial.invoices.view');
     }
 
     /**
@@ -22,7 +22,7 @@ class InvoicePolicy
     public function view(User $user, Invoice $invoice): bool
     {
         // User can view if they have permission and invoice belongs to their company
-        return $user->can('financial.invoices.view') 
+        return $user->hasPermission('financial.invoices.view') 
             && $invoice->company_id === $user->company_id;
     }
 
@@ -31,7 +31,7 @@ class InvoicePolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('financial.invoices.manage');
+        return $user->hasPermission('financial.invoices.manage');
     }
 
     /**
@@ -40,7 +40,7 @@ class InvoicePolicy
     public function update(User $user, Invoice $invoice): bool
     {
         // User can update if they have permission and invoice belongs to their company
-        return $user->can('financial.invoices.manage')
+        return $user->hasPermission('financial.invoices.manage')
             && $invoice->company_id === $user->company_id;
     }
 
@@ -50,7 +50,7 @@ class InvoicePolicy
     public function delete(User $user, Invoice $invoice): bool
     {
         // User can delete if they have permission and invoice belongs to their company
-        return $user->can('financial.invoices.manage')
+        return $user->hasPermission('financial.invoices.manage')
             && $invoice->company_id === $user->company_id;
     }
 
@@ -59,7 +59,7 @@ class InvoicePolicy
      */
     public function restore(User $user, Invoice $invoice): bool
     {
-        return $user->can('financial.invoices.manage')
+        return $user->hasPermission('financial.invoices.manage')
             && $invoice->company_id === $user->company_id;
     }
 
@@ -68,7 +68,7 @@ class InvoicePolicy
      */
     public function forceDelete(User $user, Invoice $invoice): bool
     {
-        return $user->can('financial.invoices.manage')
+        return $user->hasPermission('financial.invoices.manage')
             && $invoice->company_id === $user->company_id
             && $user->isAdmin();
     }
@@ -78,7 +78,7 @@ class InvoicePolicy
      */
     public function send(User $user, Invoice $invoice): bool
     {
-        return $user->can('financial.invoices.manage')
+        return $user->hasPermission('financial.invoices.manage')
             && $invoice->company_id === $user->company_id;
     }
 
@@ -87,6 +87,6 @@ class InvoicePolicy
      */
     public function export(User $user): bool
     {
-        return $user->can('financial.invoices.export');
+        return $user->hasPermission('financial.invoices.export');
     }
 }

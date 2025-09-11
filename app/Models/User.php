@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Silber\Bouncer\Database\HasRolesAndAbilities;
+use App\Traits\HasEnhancedPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,7 +38,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRolesAndAbilities;
+    use HasFactory, Notifiable, SoftDeletes, HasRolesAndAbilities, HasEnhancedPermissions;
 
     /**
      * The table associated with the model.
@@ -110,6 +111,75 @@ class User extends Authenticatable
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+    
+    /**
+     * Get the clients assigned to this user (for technicians).
+     */
+    public function assignedClients(): BelongsToMany
+    {
+        return $this->belongsToMany(Client::class, 'user_clients')
+            ->withPivot(['access_level', 'is_primary', 'assigned_at', 'expires_at', 'notes'])
+            ->withTimestamps()
+            ->whereNull('user_clients.expires_at')
+            ->orWhere('user_clients.expires_at', '>', now());
+    }
+    
+    /**
+     * Get all clients this user can access (assigned or via permissions).
+     */
+    public function accessibleClients()
+    {
+        // Super admins and admins can access all clients in their company
+        if ($this->isA('super-admin') || $this->isA('admin')) {
+            return Client::where('company_id', $this->company_id);
+        }
+        
+        // Other users only see assigned clients
+        return $this->assignedClients();
+    }
+    
+    /**
+     * Check if user is assigned to a specific client.
+     */
+    public function isAssignedToClient($clientId): bool
+    {
+        // Super admins and admins have access to all clients
+        if ($this->isA('super-admin') || $this->isA('admin')) {
+            return Client::where('id', $clientId)
+                ->where('company_id', $this->company_id)
+                ->exists();
+        }
+        
+        // Check if user is assigned to the client
+        return $this->assignedClients()
+            ->where('clients.id', $clientId)
+            ->exists();
+    }
+    
+    /**
+     * Get user's access level for a specific client.
+     */
+    public function getClientAccessLevel($clientId): ?string
+    {
+        // Super admins have admin access to all clients
+        if ($this->isA('super-admin')) {
+            return 'admin';
+        }
+        
+        // Admins have manage access to all clients in their company
+        if ($this->isA('admin')) {
+            return Client::where('id', $clientId)
+                ->where('company_id', $this->company_id)
+                ->exists() ? 'manage' : null;
+        }
+        
+        // Get specific assignment access level
+        $assignment = $this->assignedClients()
+            ->where('clients.id', $clientId)
+            ->first();
+            
+        return $assignment ? $assignment->pivot->access_level : null;
     }
 
     /**
@@ -340,7 +410,7 @@ class User extends Authenticatable
     }
     
     /**
-     * Bouncer-compatible permission checking (backward compatibility).
+     * Enhanced permission checking with wildcard support.
      */
     public function hasPermission(string $ability, ?int $companyId = null): bool
     {
@@ -349,8 +419,8 @@ class User extends Authenticatable
             return \Bouncer::scope()->to($companyId)->can($this, $ability);
         }
         
-        // Use Laravel's built-in can() method which works with Bouncer
-        return $this->can($ability);
+        // Use the enhanced permission service that supports wildcards
+        return app(\App\Services\PermissionService::class)->userHasPermission($this, $ability);
     }
     
     /**

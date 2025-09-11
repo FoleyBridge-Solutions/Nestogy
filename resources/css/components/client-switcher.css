@@ -17,9 +17,10 @@
     @apply transition-all duration-150 ease-out;
 }
 
+/* Removed scale transform to prevent spacing issues
 .client-switcher-dropdown .group:hover {
     @apply scale-[1.02];
-}
+} */
 
 /* Keyboard shortcut hints */
 .keyboard-hint {
@@ -56,11 +57,11 @@
     animation: shimmer 1.5s infinite;
 }
 
-/* Staggered animation for client list items */
+/* Staggered animation for client list items - disabled to check spacing
 .client-list-item {
     @apply transition-all duration-200 ease-out;
     animation: slideInUp 0.3s ease-out;
-}
+} */
 
 .client-list-item:nth-child(1) { animation-delay: 0ms; }
 .client-list-item:nth-child(2) { animation-delay: 50ms; }

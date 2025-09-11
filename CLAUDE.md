@@ -60,11 +60,22 @@ php artisan optimize:clear   # Clear all caches
 
 ### Queue Management
 ```bash
-php artisan queue:listen     # Process queue jobs
+php artisan queue:work --queue=emails,default  # Process email and default queues
+php artisan queue:listen     # Process queue jobs (development)
 php artisan queue:work       # Process queue jobs (production)
 php artisan queue:failed     # List failed jobs
 php artisan queue:retry all  # Retry all failed jobs
+php artisan queue:status     # Show queue status and job counts
+./scripts/start-queue-worker.sh  # Start dedicated queue worker script
 ```
+
+#### Email Queue System
+The application uses a robust email queue system for non-blocking email delivery:
+- **Queued Emails**: Invoice emails are queued to the `emails` queue for background processing
+- **Immediate Feedback**: Users see instant confirmation when emails are queued
+- **PDF Attachments**: Generated on-demand during email processing
+- **Automatic Retries**: Failed jobs can be retried with `php artisan queue:retry all`
+- **Logging**: All email sending is logged for debugging and confirmation
 
 ## Architecture
 

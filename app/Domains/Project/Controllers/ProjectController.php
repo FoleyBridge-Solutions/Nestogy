@@ -7,6 +7,8 @@ use App\Domains\Project\Models\Project;
 use App\Domains\Project\Models\ProjectTemplate;
 use App\Domains\Project\Models\ProjectMember;
 use App\Domains\Project\Models\ProjectMilestone;
+use App\Domains\Project\Services\ProjectService;
+use App\Domains\Project\Repositories\ProjectRepository;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -18,6 +20,11 @@ use Carbon\Carbon;
 
 class ProjectController extends Controller
 {
+    public function __construct(
+        protected ProjectService $projectService,
+        protected ProjectRepository $projectRepository
+    ) {}
+
     /**
      * Display a listing of projects with advanced filtering
      */
@@ -77,17 +84,17 @@ class ProjectController extends Controller
         if ($dateRange = $request->get('date_range')) {
             switch ($dateRange) {
                 case 'this_week':
-                    $query->whereBetween('due_date', [now()->startOfWeek(), now()->endOfWeek()]);
+                    $query->whereBetween('due', [now()->startOfWeek(), now()->endOfWeek()]);
                     break;
                 case 'this_month':
-                    $query->whereBetween('due_date', [now()->startOfMonth(), now()->endOfMonth()]);
+                    $query->whereBetween('due', [now()->startOfMonth(), now()->endOfMonth()]);
                     break;
                 case 'this_quarter':
-                    $query->whereBetween('due_date', [now()->startOfQuarter(), now()->endOfQuarter()]);
+                    $query->whereBetween('due', [now()->startOfQuarter(), now()->endOfQuarter()]);
                     break;
                 case 'custom':
                     if ($request->get('start_date') && $request->get('end_date')) {
-                        $query->whereBetween('due_date', [$request->get('start_date'), $request->get('end_date')]);
+                        $query->whereBetween('due', [$request->get('start_date'), $request->get('end_date')]);
                     }
                     break;
             }
@@ -97,7 +104,7 @@ class ProjectController extends Controller
         $sortBy = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
         
-        if (in_array($sortBy, ['name', 'status', 'priority', 'due_date', 'created_at', 'progress_percentage'])) {
+        if (in_array($sortBy, ['name', 'status', 'priority', 'due', 'created_at', 'progress_percentage'])) {
             $query->orderBy($sortBy, $sortDirection);
         }
 
@@ -123,7 +130,7 @@ class ProjectController extends Controller
 
         $members = User::where('company_id', auth()->user()->company_id)
                       ->whereHas('projectMembers', function($q) {
-                          $q->where('is_active', true);
+                          $q->whereNull('left_at');
                       })
                       ->distinct()
                       ->orderBy('name')
@@ -150,7 +157,7 @@ class ProjectController extends Controller
                 'id' => $project->id,
                 'name' => $project->name,
                 'start_date' => $project->start_date?->format('Y-m-d'),
-                'due_date' => $project->due_date?->format('Y-m-d'),
+                'due_date' => $project->due?->format('Y-m-d'),
                 'progress' => $project->getCalculatedProgress(),
                 'status' => $project->status,
                 'health' => $project->getHealthStatus(),
@@ -293,56 +300,10 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
-        $project->load([
-            'client',
-            'manager',
-            'members.user',
-            'tasks.assignedUser',
-            'milestones',
-            'timeEntries.user',
-        ]);
+        // Load the project with necessary relationships
+        $project = $this->projectRepository->getProjectWithRelations($project->id);
 
-        // Get project statistics
-        $statistics = $project->getStatistics();
-
-        // Get recent activities (tasks, comments, time entries)
-        $recentTasks = $project->tasks()
-            ->with('assignedUser')
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        $recentMilestones = $project->milestones()
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        // Get project health status
-        $healthStatus = $project->getHealthStatus();
-
-        // Get upcoming deadlines
-        $upcomingDeadlines = collect()
-            ->merge($project->tasks()->dueSoon(7)->get())
-            ->merge($project->milestones()->dueSoon(7)->get())
-            ->sortBy('due_date');
-
-        // Get project timeline data for mini chart
-        $timelineData = [
-            'start_date' => $project->start_date?->format('Y-m-d'),
-            'due_date' => $project->due_date?->format('Y-m-d'),
-            'progress' => $project->getCalculatedProgress(),
-            'expected_progress' => $project->getExpectedProgress(),
-        ];
-
-        return view('projects.show', compact(
-            'project',
-            'statistics',
-            'recentTasks',
-            'recentMilestones',
-            'healthStatus',
-            'upcomingDeadlines',
-            'timelineData'
-        ));
+        return view('projects.show', compact('project'));
     }
 
     /**
@@ -620,7 +581,7 @@ class ProjectController extends Controller
                     $project->client?->name ?? 'N/A',
                     $project->manager?->name ?? 'N/A',
                     $project->start_date?->format('Y-m-d') ?? 'N/A',
-                    $project->due_date?->format('Y-m-d') ?? 'N/A',
+                    $project->due?->format('Y-m-d') ?? 'N/A',
                     $project->getCalculatedProgress() . '%',
                     $project->budget ? ($project->budget_currency ?? 'USD') . ' ' . number_format($project->budget, 2) : 'N/A',
                     $project->actual_cost ? ($project->budget_currency ?? 'USD') . ' ' . number_format($project->actual_cost, 2) : 'N/A',
@@ -656,7 +617,7 @@ class ProjectController extends Controller
                     'status' => $project->getStatusLabel(),
                     'client' => $project->client?->name,
                     'progress' => $project->getCalculatedProgress(),
-                    'due_date' => $project->due_date?->format('Y-m-d'),
+                    'due_date' => $project->due?->format('Y-m-d'),
                     'health' => $project->getHealthStatus(),
                 ];
             });

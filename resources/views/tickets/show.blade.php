@@ -4,13 +4,6 @@
 
 @section('content')
 <div class="w-full max-w-7xl mx-auto">
-    <!-- Header with Breadcrumbs -->
-    <flux:breadcrumbs class="mb-6">
-        <flux:breadcrumbs.item href="{{ route('clients.index') }}">{{ $ticket->client->name ?? 'Clients' }}</flux:breadcrumbs.item>
-        <flux:breadcrumbs.item href="{{ route('tickets.index') }}">Tickets</flux:breadcrumbs.item>
-        <flux:breadcrumbs.item>Ticket Details</flux:breadcrumbs.item>
-    </flux:breadcrumbs>
-
     <!-- Ticket Header -->
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -49,6 +42,53 @@
                         Edit
                     </flux:button>
                 @endcan
+
+                <!-- Quick Actions Dropdown -->
+                @if(!$ticket->isClosed())
+                    <flux:dropdown>
+                        <flux:button variant="ghost" size="sm" icon-trailing="chevron-down">
+                            Quick Actions
+                        </flux:button>
+                        
+                        <flux:menu>
+                            @can('assign', $ticket)
+                                <flux:menu.item icon="user-plus" flux:modal.open="assign-technician">
+                                    Assign Technician
+                                </flux:menu.item>
+                            @endcan
+                            
+                            @can('updatePriority', $ticket)
+                                <flux:menu.item icon="flag">
+                                    Change Priority
+                                </flux:menu.item>
+                            @endcan
+                            
+                            @can('schedule', $ticket)
+                                <flux:menu.item icon="calendar">
+                                    Schedule Work
+                                </flux:menu.item>
+                            @endcan
+                            
+                            <flux:menu.separator />
+                            
+                            <flux:menu.item icon="printer" onclick="window.print()">
+                                Print Ticket
+                            </flux:menu.item>
+                            
+                            @can('merge', $ticket)
+                                <flux:menu.item icon="arrows-pointing-in">
+                                    Merge with Another Ticket
+                                </flux:menu.item>
+                            @endcan
+                            
+                            @can('clone', $ticket)
+                                <flux:menu.item icon="document-duplicate">
+                                    Clone Ticket
+                                </flux:menu.item>
+                            @endcan
+                        </flux:menu>
+                    </flux:dropdown>
+                @endif
             </div>
         </div>
     </div>
@@ -244,7 +284,12 @@
                     <flux:heading size="sm" class="mb-4">Quick Actions</flux:heading>
                     <div class="space-y-2">
                         @can('assign', $ticket)
-                            <flux:button variant="ghost" size="sm" class="w-full justify-start">
+                            <flux:button 
+                                variant="ghost" 
+                                size="sm" 
+                                class="w-full justify-start"
+                                flux:modal.open="assign-technician"
+                            >
                                 <flux:icon name="user-plus" variant="mini" />
                                 Assign Technician
                             </flux:button>
@@ -458,6 +503,9 @@
     </form>
 </flux:modal>
 @endcan
+
+<!-- Include Assignment Modal -->
+@include('tickets.assign-modal', ['ticket' => $ticket])
 
 @endsection
     

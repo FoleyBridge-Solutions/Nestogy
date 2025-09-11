@@ -174,20 +174,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dynamic clients route - show list or specific client dashboard based on query/session
     Route::get('clients', [\App\Domains\Client\Controllers\ClientController::class, 'dynamicIndex'])->name('clients.index');
     
-    // Backward compatibility route for clients.show - redirect to dynamic route
-    Route::get('clients/{client}', function(Client $client) {
-        return redirect()->route('clients.index', ['client' => $client->id]);
-    })->name('clients.show');
-    
+    // Resource routes - register create/edit/store/update/destroy routes BEFORE the show route
     Route::resource('clients', \App\Domains\Client\Controllers\ClientController::class)->except(['index', 'show']);
-    Route::get('clients/switch', [\App\Domains\Client\Controllers\ClientController::class, 'switch'])->name('clients.switch');
-    Route::prefix('clients/{client}')->name('clients.')->group(function () {
+    
+    // Client-specific routes (using session-based client context) - MUST come BEFORE the {client} route
+    Route::prefix('clients')->name('clients.')->group(function () {
+        Route::get('switch', [\App\Domains\Client\Controllers\ClientController::class, 'switch'])->name('switch');
         Route::match(['get', 'post'], 'tags', [\App\Domains\Client\Controllers\ClientController::class, 'tags'])->name('tags');
         Route::patch('notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes');
         Route::post('archive', [\App\Domains\Client\Controllers\ClientController::class, 'archive'])->name('archive');
         Route::post('restore', [\App\Domains\Client\Controllers\ClientController::class, 'restore'])->name('restore');
+        
+        // Contacts routes (using session-based client context)
+        Route::get('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');
+        Route::get('contacts/create', [\App\Domains\Client\Controllers\ContactController::class, 'create'])->name('contacts.create');
+        Route::post('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
         Route::get('contacts/export', [\App\Domains\Client\Controllers\ContactController::class, 'export'])->name('contacts.export');
-        Route::resource('contacts', \App\Domains\Client\Controllers\ContactController::class);
+        Route::get('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'show'])->name('contacts.show');
+        Route::get('contacts/{contact}/edit', [\App\Domains\Client\Controllers\ContactController::class, 'edit'])->name('contacts.edit');
+        Route::put('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
+        Route::delete('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
         
         // Contact API routes for modal functionality
         Route::prefix('contacts/{contact}')->name('contacts.')->group(function () {
@@ -196,20 +202,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('permissions', [\App\Domains\Client\Controllers\ContactController::class, 'updatePermissions'])->name('permissions.update');
             Route::post('lock', [\App\Domains\Client\Controllers\ContactController::class, 'lockAccount'])->name('lock');
             Route::post('unlock', [\App\Domains\Client\Controllers\ContactController::class, 'unlockAccount'])->name('unlock');
-            Route::post('reset-failed-attempts', [\App\Domains\Client\Controllers\ContactController::class, 'resetFailedAttempts'])->name('reset-failed-attempts');
         });
+        // Locations routes (using session-based client context)
         Route::get('locations/export', [\App\Domains\Client\Controllers\LocationController::class, 'export'])->name('locations.export');
         Route::resource('locations', \App\Domains\Client\Controllers\LocationController::class);
-         Route::resource('files', \App\Domains\Client\Controllers\FileController::class);
-         Route::resource('documents', \App\Domains\Client\Controllers\DocumentController::class);
-         Route::resource('vendors', \App\Domains\Client\Controllers\VendorController::class);
-         Route::resource('licenses', \App\Domains\Client\Controllers\LicenseController::class);
-         Route::resource('credentials', \App\Domains\Client\Controllers\CredentialController::class);
-         Route::resource('domains', \App\Domains\Client\Controllers\DomainController::class);
-         Route::resource('services', \App\Domains\Client\Controllers\ServiceController::class);
+        Route::resource('files', \App\Domains\Client\Controllers\FileController::class);
+        Route::resource('documents', \App\Domains\Client\Controllers\DocumentController::class);
+        Route::resource('vendors', \App\Domains\Client\Controllers\VendorController::class);
+        Route::resource('licenses', \App\Domains\Client\Controllers\LicenseController::class);
+        Route::resource('credentials', \App\Domains\Client\Controllers\CredentialController::class);
+        Route::resource('domains', \App\Domains\Client\Controllers\DomainController::class);
+        Route::resource('services', \App\Domains\Client\Controllers\ServiceController::class);
 
-         // Asset routes for specific client
-         Route::get('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientIndex'])->name('assets.index');
+        // Asset routes (using session-based client context)
+        Route::get('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientIndex'])->name('assets.index');
         Route::get('assets/create', [\App\Domains\Asset\Controllers\AssetController::class, 'clientCreate'])->name('assets.create');
         Route::post('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientStore'])->name('assets.store');
         Route::get('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientShow'])->name('assets.show');
@@ -217,9 +223,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientUpdate'])->name('assets.update');
         Route::delete('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientDestroy'])->name('assets.destroy');
         
-        // IT Documentation routes for specific client
+        // IT Documentation routes (using session-based client context)
         Route::get('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'clientIndex'])->name('it-documentation.client-index');
     });
+    
+    // Client show route - display specific client dashboard
+    // This MUST come AFTER all other client routes to avoid catching specific routes like /clients/contacts
+    Route::get('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('clients.show');
     
     // IT Documentation routes (global)
     Route::prefix('it-documentation')->name('clients.it-documentation.')->group(function () {
@@ -332,8 +342,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
     // Project routes
-    Route::resource('projects', \App\Domains\Project\Controllers\ProjectController::class);
+    Route::resource('projects', \App\Domains\Project\Controllers\ProjectController::class)->except(['show']);
     Route::prefix('projects')->name('projects.')->group(function () {
+        Route::get('{project}', [\App\Domains\Project\Controllers\ProjectController::class, 'show'])->name('show');
         Route::resource('{project}/tasks', \App\Domains\Project\Controllers\TaskController::class);
     });
     
@@ -401,6 +412,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/preferences', [\App\Http\Controllers\UserController::class, 'updatePreferences'])->name('preferences.update');
         Route::delete('/account', [\App\Http\Controllers\UserController::class, 'destroyAccount'])->name('account.destroy');
         Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\UserController::class, 'export'])->name('export.csv');
         Route::get('/create', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\UserController::class, 'store'])->name('store');
         Route::get('/{user}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
@@ -448,12 +460,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\RoleController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
+            Route::post('/apply-template', [\App\Http\Controllers\RoleController::class, 'applyTemplate'])->name('apply-template');
+            Route::post('/{role}/duplicate', [\App\Http\Controllers\RoleController::class, 'duplicate'])->name('duplicate');
             Route::get('/{role}', [\App\Http\Controllers\RoleController::class, 'show'])->name('show');
             Route::get('/{role}/edit', [\App\Http\Controllers\RoleController::class, 'edit'])->name('edit');
             Route::put('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
             Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
-            Route::post('/{role}/duplicate', [\App\Http\Controllers\RoleController::class, 'duplicate'])->name('duplicate');
-            Route::post('/apply-template', [\App\Http\Controllers\RoleController::class, 'applyTemplate'])->name('apply-template');
+        });
+        
+        // Permissions Management
+        Route::prefix('permissions')->name('permissions.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\PermissionController::class, 'index'])->name('index');
+            Route::get('/matrix', [\App\Http\Controllers\PermissionController::class, 'matrix'])->name('matrix');
+            Route::post('/matrix', [\App\Http\Controllers\PermissionController::class, 'updateMatrix'])->name('matrix.update');
+            Route::get('/user/{user}', [\App\Http\Controllers\PermissionController::class, 'userPermissions'])->name('user');
+            Route::put('/user/{user}', [\App\Http\Controllers\PermissionController::class, 'updateUserPermissions'])->name('user.update');
+            Route::post('/bulk-assign', [\App\Http\Controllers\PermissionController::class, 'bulkAssign'])->name('bulk-assign');
+            Route::get('/export', [\App\Http\Controllers\PermissionController::class, 'export'])->name('export');
+            Route::post('/import', [\App\Http\Controllers\PermissionController::class, 'import'])->name('import');
         });
         
         // Ticketing & Service Desk Settings
@@ -751,7 +775,8 @@ Route::middleware(['auth', 'verified'])->prefix('financial')->name('financial.')
     });
 
     // Invoice routes
-    Route::resource('invoices', InvoiceController::class);
+    Route::resource('invoices', InvoiceController::class)->except(['show']);
+    Route::get('invoices/{invoice}', \App\Livewire\Financial\InvoiceShow::class)->name('invoices.show');
     Route::get('invoices/overdue', [InvoiceController::class, 'overdue'])->name('invoices.overdue');
     Route::get('invoices/draft', [InvoiceController::class, 'draft'])->name('invoices.draft');
     Route::get('invoices/sent', [InvoiceController::class, 'sent'])->name('invoices.sent');
@@ -839,7 +864,7 @@ Route::middleware(['auth', 'verified'])->prefix('financial')->name('financial.')
     });
 
     // Payment routes
-    Route::resource('payments', \App\Http\Controllers\PaymentController::class);
+    // Route::resource('payments', \App\Http\Controllers\PaymentController::class);
 
     // Expense routes
     Route::resource('expenses', \App\Http\Controllers\ExpenseController::class);
@@ -873,7 +898,7 @@ Route::middleware(['auth', 'verified'])->prefix('financial')->name('financial.')
     });
     
     // Payments Routes
-    Route::resource('payments', PaymentController::class);
+    // Route::resource('payments', PaymentController::class);
     
     // Collections Routes
     Route::prefix('collections')->name('collections.')->group(function () {
@@ -1364,3 +1389,4 @@ Route::prefix('client-portal')->name('client.')->group(function () {
         Route::post('notifications/{notification}/read', [\App\Domains\Client\Controllers\ClientPortalController::class, 'markNotificationAsRead'])->name('notifications.read');
     });
 });
+require __DIR__.'/test.php';

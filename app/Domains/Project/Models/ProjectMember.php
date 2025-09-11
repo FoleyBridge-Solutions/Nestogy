@@ -1,11 +1,10 @@
 <?php
 
-namespace Foleybridge\Nestogy\Domains\Project\Models;
+namespace App\Domains\Project\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 /**
@@ -29,11 +28,11 @@ use Carbon\Carbon;
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
  */
 class ProjectMember extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+use \App\Traits\BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -342,7 +341,7 @@ class ProjectMember extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true)->whereNull('left_at');
+        return $query->whereNull('left_at');
     }
 
     /**

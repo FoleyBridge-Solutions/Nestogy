@@ -101,7 +101,13 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 @php
-                                    $userCount = $roleStats[array_search($role->name, array_column($roleStats->toArray(), 'bouncer_role'))]['count'] ?? 0;
+                                    $userCount = 0;
+                                    foreach ($roleStats as $stat) {
+                                        if ($stat['bouncer_role'] === $role->name) {
+                                            $userCount = $stat['count'];
+                                            break;
+                                        }
+                                    }
                                 @endphp
                                 <span class="text-sm text-gray-500 dark:text-gray-400">
                                     {{ $userCount }} {{ Str::plural('user', $userCount) }}

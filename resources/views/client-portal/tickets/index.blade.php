@@ -27,7 +27,7 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <flux:card>
-            <flux:card.body class="py-6">
+            
                 <div class="flex items-center">
                     <div class="flex-1 mr-2">
                         <div class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-1">
@@ -41,11 +41,11 @@
                         <i class="fas fa-clipboard-list fa-2x text-gray-300 dark:text-gray-600"></i>
                     </div>
                 </div>
-            </flux:card.body>
+            
         </flux:card>
 
         <flux:card>
-            <flux:card.body class="py-6">
+            
                 <div class="flex items-center">
                     <div class="flex-1 mr-2">
                         <div class="text-xs font-bold text-red-600 dark:text-red-400 uppercase mb-1">
@@ -59,11 +59,11 @@
                         <i class="fas fa-ticket-alt fa-2x text-gray-300 dark:text-gray-600"></i>
                     </div>
                 </div>
-            </flux:card.body>
+            
         </flux:card>
 
         <flux:card>
-            <flux:card.body class="py-6">
+            
                 <div class="flex items-center">
                     <div class="flex-1 mr-2">
                         <div class="text-xs font-bold text-green-600 dark:text-green-400 uppercase mb-1">
@@ -77,11 +77,11 @@
                         <i class="fas fa-check-circle fa-2x text-gray-300 dark:text-gray-600"></i>
                     </div>
                 </div>
-            </flux:card.body>
+            
         </flux:card>
 
         <flux:card>
-            <flux:card.body class="py-6">
+            
                 <div class="flex items-center">
                     <div class="flex-1 mr-2">
                         <div class="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase mb-1">
@@ -95,13 +95,13 @@
                         <i class="fas fa-clock fa-2x text-gray-300 dark:text-gray-600"></i>
                     </div>
                 </div>
-            </flux:card.body>
+            
         </flux:card>
     </div>
 
     <!-- Filters -->
     <flux:card class="mb-6">
-        <flux:card.body>
+        
             <form method="GET" action="{{ route('client.tickets') }}" class="flex flex-wrap gap-4">
                 <div class="flex-1 min-w-[200px]">
                     <flux:input 
@@ -136,12 +136,12 @@
                     </flux:button>
                 </div>
             </form>
-        </flux:card.body>
+        
     </flux:card>
 
     <!-- Tickets Table -->
     <flux:card>
-        <flux:card.body class="p-0">
+        
             @if($tickets->isEmpty())
                 <div class="text-center py-12">
                     <i class="fas fa-ticket-alt text-6xl text-gray-300 dark:text-gray-600 mb-6"></i>
@@ -239,7 +239,7 @@
                     {{ $tickets->links() }}
                 </div>
             @endif
-        </flux:card.body>
+        
     </flux:card>
 </div>
 @endsection

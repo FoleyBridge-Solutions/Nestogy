@@ -27,8 +27,7 @@
                 <img src="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" alt="Nestogy" class="mx-auto" style="max-width: 150px;">
             </div>
 
-            <flux:card>
-                <flux:card.body class="p-8">
+            <flux:card class="p-8">
                     <h3 class="text-2xl font-bold text-center mb-2 text-gray-800 dark:text-gray-200">Reset Password</h3>
                     
                     <p class="text-gray-600 dark:text-gray-400 text-center mb-6">
@@ -86,7 +85,6 @@
                             </a>
                         </div>
                     </form>
-                </flux:card.body>
             </flux:card>
 
             <!-- Footer -->

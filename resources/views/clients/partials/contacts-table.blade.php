@@ -11,7 +11,7 @@
             @foreach($contacts as $contact)
                 <flux:table.row 
                     class="hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
-                    onclick="window.location.href='{{ route('clients.contacts.edit', [$contact->client_id, $contact]) }}'">
+                    onclick="window.location.href='{{ route('clients.contacts.edit', $contact) }}'">
                     <flux:table.cell>
                         {{ $contact->name }}
                         @if($contact->primary)
@@ -24,7 +24,7 @@
                     <flux:table.cell>{{ $contact->phone ?? 'N/A' }}</flux:table.cell>
                     <flux:table.cell>{{ $contact->role ?? 'Contact' }}</flux:table.cell>
                     <flux:table.cell>
-                        <flux:button variant="ghost" size="sm" onclick="event.stopPropagation(); window.location.href='{{ route('clients.contacts.edit', [$contact->client_id, $contact]) }}'">
+                        <flux:button variant="ghost" size="sm" onclick="event.stopPropagation(); window.location.href='{{ route('clients.contacts.edit', $contact) }}'">
                             Edit
                         </flux:button>
                     </flux:table.cell>

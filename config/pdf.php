@@ -83,6 +83,18 @@ return [
     */
 
     'templates' => [
+        'default' => [
+            'view' => 'pdf.default',
+            'paper' => 'a4',
+            'orientation' => 'portrait',
+            'margins' => [
+                'top' => 20,
+                'right' => 20,
+                'bottom' => 20,
+                'left' => 20,
+            ],
+        ],
+
         'invoice' => [
             'view' => 'pdf.invoice',
             'paper' => 'a4',

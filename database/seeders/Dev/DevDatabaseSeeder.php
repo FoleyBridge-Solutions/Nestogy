@@ -22,7 +22,6 @@ class DevDatabaseSeeder extends Seeder
         $this->command->info('Starting Nestogy Development Database Seeding...');
         $this->command->newLine();
 
-        // Begin database transaction for safety
         DB::beginTransaction();
 
         try {
@@ -33,31 +32,36 @@ class DevDatabaseSeeder extends Seeder
             $this->callWithProgressBar('Users', UserSeeder::class);
             $this->callWithProgressBar('Categories', CategorySeeder::class);
             $this->callWithProgressBar('Vendors', VendorSeeder::class);
-            $this->callWithProgressBar('Clients', ClientSeeder::class);
-            $this->callWithProgressBar('Locations', LocationSeeder::class);
-            $this->callWithProgressBar('Contacts', ContactSeeder::class);
-            $this->callWithProgressBar('Networks', NetworkSeeder::class);
-            $this->callWithProgressBar('Tax Configuration', TaxSeeder::class);
-
-            // Operational seeders (Agent 2 - will be added later)
-            if (class_exists(AssetSeeder::class)) {
-                $this->callWithProgressBar('Assets', AssetSeeder::class);
-            }
-            if (class_exists(AssetWarrantySeeder::class)) {
-                $this->callWithProgressBar('Asset Warranties', AssetWarrantySeeder::class);
-            }
-            if (class_exists(ContractTemplateSeeder::class)) {
-                $this->callWithProgressBar('Contract Templates', ContractTemplateSeeder::class);
-            }
+            
+            // SLA must be before Clients as clients reference SLAs
             if (class_exists(SLASeeder::class)) {
                 $this->callWithProgressBar('SLA Levels', SLASeeder::class);
             }
-            if (class_exists(ContractSeeder::class)) {
-                $this->callWithProgressBar('Contracts', ContractSeeder::class);
+            
+            $this->callWithProgressBar('Clients', ClientSeeder::class);
+            $this->callWithProgressBar('Locations', LocationSeeder::class);
+            $this->callWithProgressBar('Contacts', ContactSeeder::class);
+            // $this->callWithProgressBar('Networks', NetworkSeeder::class); // Not created yet
+            // $this->callWithProgressBar('Tax Configuration', TaxSeeder::class); // Not created yet
+
+            // Operational seeders
+            if (class_exists(AssetSeeder::class)) {
+                $this->callWithProgressBar('Assets', AssetSeeder::class);
             }
-            if (class_exists(ContractScheduleSeeder::class)) {
-                $this->callWithProgressBar('Contract Schedules', ContractScheduleSeeder::class);
-            }
+            // if (class_exists(AssetWarrantySeeder::class)) {
+            //     $this->callWithProgressBar('Asset Warranties', AssetWarrantySeeder::class);
+            // }
+            // if (class_exists(ContractTemplateSeeder::class)) {
+            //     $this->callWithProgressBar('Contract Templates', ContractTemplateSeeder::class);
+            // }
+            
+            // Contract has complex dependencies - needs more work
+            // if (class_exists(ContractSeeder::class)) {
+            //     $this->callWithProgressBar('Contracts', ContractSeeder::class);
+            // }
+            // if (class_exists(ContractScheduleSeeder::class)) {
+            //     $this->callWithProgressBar('Contract Schedules', ContractScheduleSeeder::class);
+            // }
             if (class_exists(TicketSeeder::class)) {
                 $this->callWithProgressBar('Tickets', TicketSeeder::class);
             }
@@ -67,15 +71,19 @@ class DevDatabaseSeeder extends Seeder
             if (class_exists(ProjectSeeder::class)) {
                 $this->callWithProgressBar('Projects', ProjectSeeder::class);
             }
-            if (class_exists(ProjectTaskSeeder::class)) {
-                $this->callWithProgressBar('Project Tasks', ProjectTaskSeeder::class);
-            }
+            // if (class_exists(ProjectTaskSeeder::class)) {
+            //     $this->callWithProgressBar('Project Tasks', ProjectTaskSeeder::class);
+            // }
+            // ContractSeeder has a service dependency issue
+            // if (class_exists(ContractSeeder::class)) {
+            //     $this->callWithProgressBar('Contracts', ContractSeeder::class);
+            // }
             if (class_exists(InvoiceSeeder::class)) {
                 $this->callWithProgressBar('Invoices', InvoiceSeeder::class);
             }
-            if (class_exists(InvoiceItemSeeder::class)) {
-                $this->callWithProgressBar('Invoice Items', InvoiceItemSeeder::class);
-            }
+            // if (class_exists(InvoiceItemSeeder::class)) {
+            //     $this->callWithProgressBar('Invoice Items', InvoiceItemSeeder::class);
+            // }
             if (class_exists(PaymentSeeder::class)) {
                 $this->callWithProgressBar('Payments', PaymentSeeder::class);
             }
@@ -115,7 +123,6 @@ class DevDatabaseSeeder extends Seeder
         } catch (\Exception $e) {
             DB::rollBack();
             $this->command->error('Seeding failed: ' . $e->getMessage());
-            $this->command->error('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }

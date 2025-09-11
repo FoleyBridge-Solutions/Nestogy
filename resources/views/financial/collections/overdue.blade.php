@@ -22,7 +22,7 @@
         <flux:card.header>
             <flux:card.title>Collection Summary</flux:card.title>
         </flux:card.header>
-        <flux:card.body>
+        
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <flux:stat>
                     <flux:stat.label>Total Overdue</flux:stat.label>
@@ -42,7 +42,7 @@
                     <flux:stat.description>Last 30 days</flux:stat.description>
                 </flux:stat>
             </div>
-        </flux:card.body>
+        
     </flux:card>
 
     <flux:card>
@@ -59,7 +59,7 @@
                 </flux:select>
             </flux:card.actions>
         </flux:card.header>
-        <flux:card.body>
+        
             <flux:table>
                 <flux:table.header>
                     <flux:table.row>
@@ -134,7 +134,7 @@
             <div class="mt-4">
                 {{ $overdueInvoices->links() }}
             </div>
-        </flux:card.body>
+        
     </flux:card>
 </flux:main>
 @endsection

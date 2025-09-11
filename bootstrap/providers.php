@@ -9,6 +9,7 @@ return [
     App\Providers\RmmServiceProvider::class,
     App\Providers\DynamicRouteServiceProvider::class,
     App\Providers\ContractPluginServiceProvider::class,
+    App\Providers\SidebarServiceProvider::class,
     Flux\FluxServiceProvider::class,
     FluxPro\FluxProServiceProvider::class,
 ];

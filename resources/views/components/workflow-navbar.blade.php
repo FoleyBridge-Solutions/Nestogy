@@ -109,7 +109,7 @@ $workflowItems = [
             <flux:navmenu.separator />
             
             @if($selectedClient)
-                <flux:navmenu.item icon="user" href="{{ route('clients.show', $selectedClient) }}">
+                <flux:navmenu.item icon="user" href="{{ route('clients.index') }}">
                     {{ Str::limit($selectedClient->name, 25) }}
                 </flux:navmenu.item>
                 <flux:navmenu.item icon="arrow-path" href="{{ route('clients.clear-selection') }}">

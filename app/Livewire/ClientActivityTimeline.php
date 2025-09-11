@@ -12,7 +12,7 @@ class ClientActivityTimeline extends Component
     use WithPagination;
 
     public Client $client;
-    public $perPage = 10;
+    public $perPage = 5;
     public $activities = [];
     public $hasMore = true;
     public $page = 1;

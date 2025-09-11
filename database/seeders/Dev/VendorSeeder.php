@@ -192,6 +192,7 @@ class VendorSeeder extends Seeder
         foreach ($selectedVendors as $index) {
             $vendorData = $vendors[$index];
             $vendorData['template'] = false;
+            $vendorData['company_id'] = $company->id;
             
             Vendor::create($vendorData);
         }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Client extends Model
 {
@@ -148,6 +149,60 @@ class Client extends Model
     public function primaryContact()
     {
         return $this->hasOne(Contact::class)->where('primary', true);
+    }
+
+    /**
+     * Get the technicians assigned to this client.
+     */
+    public function assignedTechnicians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_clients')
+            ->withPivot(['access_level', 'is_primary', 'assigned_at', 'expires_at', 'notes'])
+            ->withTimestamps()
+            ->whereNull('user_clients.expires_at')
+            ->orWhere('user_clients.expires_at', '>', now());
+    }
+    
+    /**
+     * Get the primary technician for this client.
+     */
+    public function primaryTechnician()
+    {
+        return $this->assignedTechnicians()
+            ->wherePivot('is_primary', true)
+            ->first();
+    }
+    
+    /**
+     * Check if a specific user is assigned to this client.
+     */
+    public function hasAssignedTechnician($userId): bool
+    {
+        return $this->assignedTechnicians()
+            ->where('users.id', $userId)
+            ->exists();
+    }
+    
+    /**
+     * Assign a technician to this client.
+     */
+    public function assignTechnician(User $user, array $options = []): void
+    {
+        $this->assignedTechnicians()->syncWithoutDetaching([
+            $user->id => array_merge([
+                'access_level' => 'view',
+                'is_primary' => false,
+                'assigned_at' => now(),
+            ], $options)
+        ]);
+    }
+    
+    /**
+     * Remove a technician from this client.
+     */
+    public function removeTechnician(User $user): void
+    {
+        $this->assignedTechnicians()->detach($user->id);
     }
 
     /**

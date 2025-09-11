@@ -26,7 +26,7 @@ use Carbon\Carbon;
  * @property int|null $client_id
  * @property int|null $manager_id
  * @property \Illuminate\Support\Carbon|null $start_date
- * @property \Illuminate\Support\Carbon|null $due_date
+ * @property \Illuminate\Support\Carbon|null $due
  * @property \Illuminate\Support\Carbon|null $actual_start_date
  * @property \Illuminate\Support\Carbon|null $actual_end_date
  * @property decimal|null $budget
@@ -213,7 +213,15 @@ class Project extends Model
     }
 
     /**
-     * Get project comments/notes.
+     * Get project expenses.
+     */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(ProjectExpense::class);
+    }
+
+    /**
+     * Get project comments.
      */
     public function comments(): HasMany
     {
@@ -304,11 +312,11 @@ class Project extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->due_date || $this->isCompleted()) {
+        if (!$this->due || $this->isCompleted()) {
             return false;
         }
-
-        return Carbon::now()->gt($this->due_date);
+        
+        return Carbon::now()->gt($this->due);
     }
 
     /**
@@ -316,12 +324,12 @@ class Project extends Model
      */
     public function isDueSoon(int $days = 7): bool
     {
-        if (!$this->due_date || $this->isCompleted()) {
+        if (!$this->due || $this->isCompleted()) {
             return false;
         }
-
-        return Carbon::now()->diffInDays($this->due_date, false) <= $days && 
-               Carbon::now()->lte($this->due_date);
+        
+        return Carbon::now()->diffInDays($this->due, false) <= $days && 
+               Carbon::now()->lte($this->due);
     }
 
     /**
@@ -329,11 +337,11 @@ class Project extends Model
      */
     public function getDaysUntilDue(): ?int
     {
-        if (!$this->due_date) {
+        if (!$this->due) {
             return null;
         }
-
-        return Carbon::now()->diffInDays($this->due_date, false);
+        
+        return Carbon::now()->diffInDays($this->due, false);
     }
 
     /**
@@ -341,11 +349,11 @@ class Project extends Model
      */
     public function getPlannedDurationInDays(): ?int
     {
-        if (!$this->start_date || !$this->due_date) {
+        if (!$this->start_date || !$this->due) {
             return null;
         }
 
-        return $this->start_date->diffInDays($this->due_date);
+        return $this->start_date->diffInDays($this->due);
     }
 
     /**
@@ -369,7 +377,7 @@ class Project extends Model
         $totalTasks = $this->tasks()->count();
         
         if ($totalTasks === 0) {
-            return $this->isCompleted() ? 100 : $this->progress_percentage;
+            return $this->isCompleted() ? 100.0 : (float) ($this->progress_percentage ?? 0);
         }
 
         $completedTasks = $this->tasks()
@@ -428,11 +436,11 @@ class Project extends Model
      */
     public function getExpectedProgress(): ?float
     {
-        if (!$this->start_date || !$this->due_date) {
+        if (!$this->start_date || !$this->due) {
             return null;
         }
 
-        $totalDays = $this->start_date->diffInDays($this->due_date);
+        $totalDays = $this->start_date->diffInDays($this->due);
         if ($totalDays === 0) {
             return 100;
         }
@@ -460,12 +468,12 @@ class Project extends Model
                 'total' => $this->tasks()->count(),
                 'completed' => $this->tasks()->whereIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])->count(),
                 'in_progress' => $this->tasks()->where('status', Task::STATUS_IN_PROGRESS)->count(),
-                'overdue' => $this->tasks()->where('due_date', '<', Carbon::now())->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])->count(),
+                'overdue' => $this->tasks()->where('due', '<', Carbon::now())->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])->count(),
             ],
             'milestones' => [
                 'total' => $this->milestones()->count(),
                 'completed' => $this->milestones()->where('is_completed', true)->count(),
-                'overdue' => $this->milestones()->where('due_date', '<', Carbon::now())->where('is_completed', false)->count(),
+                'overdue' => $this->milestones()->where('due', '<', Carbon::now())->where('is_completed', false)->count(),
             ],
             'team' => [
                 'members' => $this->teamMembers()->count(),
@@ -599,8 +607,8 @@ class Project extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED])
-                    ->whereNotNull('due_date')
-                    ->where('due_date', '<', Carbon::now());
+                    ->whereNotNull('due')
+                    ->where('due', '<', Carbon::now());
     }
 
     /**
@@ -609,9 +617,9 @@ class Project extends Model
     public function scopeDueSoon($query, int $days = 7)
     {
         return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED])
-                    ->whereNotNull('due_date')
-                    ->where('due_date', '>=', Carbon::now())
-                    ->where('due_date', '<=', Carbon::now()->addDays($days));
+                    ->whereNotNull('due')
+                    ->where('due', '>=', Carbon::now())
+                    ->where('due', '<=', Carbon::now()->addDays($days));
     }
 
     /**
@@ -688,7 +696,7 @@ class Project extends Model
             'client_id' => 'nullable|integer|exists:clients,id',
             'manager_id' => 'nullable|integer|exists:users,id',
             'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date|after_or_equal:start_date',
+            'due' => 'nullable|date|after_or_equal:start_date',
             'budget' => 'nullable|numeric|min:0',
             'budget_currency' => 'nullable|string|size:3',
             'category' => 'nullable|in:' . implode(',', self::getAvailableCategories()),

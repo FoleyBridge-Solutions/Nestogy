@@ -3,209 +3,305 @@
 @section('title', 'User Management')
 
 @section('content')
-<div class="space-y-6">
+<flux:container>
     <!-- Page Header -->
-    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">User Management</h1>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Manage user accounts, roles, and permissions for {{ Auth::user()->company->name }}
-                    </p>
-                </div>
-                <div class="flex space-x-3">
-                    <a href="{{ route('users.export.csv') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-                        </svg>
-                        Export CSV
-                    </a>
-                    @can('create', App\Models\User::class)
-                    <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Add User
-                    </a>
-                    @endcan
-                </div>
+    <flux:card>
+        <div class="flex items-center justify-between">
+            <div>
+                <flux:heading size="xl">User Management</flux:heading>
+                <flux:text>Manage user accounts, roles, and permissions for {{ Auth::user()->company->name }}</flux:text>
+            </div>
+            <div class="flex gap-3">
+                <flux:button href="{{ route('users.export.csv') }}" variant="ghost" icon="arrow-down-tray">
+                    Export CSV
+                </flux:button>
+                @can('create', App\Models\User::class)
+                <flux:button href="{{ route('users.create') }}" variant="primary" icon="plus">
+                    Add User
+                </flux:button>
+                @endcan
             </div>
         </div>
-    </div>
+    </flux:card>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow rounded-lg">
-        <div class="px-4 py-5 sm:px-6">
-            <form method="GET" action="{{ route('users.index') }}" class="space-y-4">
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                    <!-- Search -->
-                    <div>
-                        <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Search</label>
-                        <input type="text" name="search" id="search" value="{{ request('search') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                               placeholder="Name or email...">
-                    </div>
+    <flux:card>
+        <flux:heading size="lg">Filters</flux:heading>
+        <flux:separator class="my-4" />
+        
+        <form method="GET" action="{{ route('users.index') }}">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <!-- Search -->
+                <flux:input 
+                    name="search" 
+                    placeholder="Name or email..." 
+                    value="{{ request('search') }}"
+                    icon="magnifying-glass"
+                />
 
-                    <!-- Role Filter -->
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Role</label>
-                        <select name="role" id="role" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            <option value="">All Roles</option>
-                            <option value="1" {{ request('role') == '1' ? 'selected' : '' }}>User</option>
-                            <option value="2" {{ request('role') == '2' ? 'selected' : '' }}>Technician</option>
-                            <option value="3" {{ request('role') == '3' ? 'selected' : '' }}>Admin</option>
-                            @if(Auth::user()->userSetting->role == 4)
-                            <option value="4" {{ request('role') == '4' ? 'selected' : '' }}>Super Admin</option>
-                            @endif
-                        </select>
-                    </div>
+                <!-- Role Filter -->
+                <flux:select 
+                    name="role" 
+                    placeholder="All Roles"
+                    value="{{ request('role') }}"
+                >
+                    <flux:select.option value="">All Roles</flux:select.option>
+                    @foreach(\Silber\Bouncer\BouncerFacade::role()->get() as $role)
+                        @if($role->name !== 'super-admin' || Auth::user()->isA('super-admin'))
+                            <flux:select.option value="{{ $role->name }}">
+                                {{ $role->title ?: ucwords(str_replace('-', ' ', $role->name)) }}
+                            </flux:select.option>
+                        @endif
+                    @endforeach
+                </flux:select>
 
-                    <!-- Status Filter -->
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Status</label>
-                        <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            <option value="">All Status</option>
-                            <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                    </div>
+                <!-- Status Filter -->
+                <flux:select 
+                    name="status" 
+                    placeholder="All Status"
+                    value="{{ request('status') }}"
+                >
+                    <flux:select.option value="">All Status</flux:select.option>
+                    <flux:select.option value="1">Active</flux:select.option>
+                    <flux:select.option value="0">Inactive</flux:select.option>
+                </flux:select>
 
-                    <!-- Filter Button -->
-                    <div class="flex items-end">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full justify-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                            </svg>
-                            Filter
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+                <!-- Filter Button -->
+                <flux:button type="submit" variant="primary" icon="funnel">
+                    Filter
+                </flux:button>
+            </div>
+            
+            @if(request()->hasAny(['search', 'role', 'status']))
+                <flux:button href="{{ route('users.index') }}" variant="ghost" size="sm">
+                    Clear Filters
+                </flux:button>
+            @endif
+        </form>
+    </flux:card>
 
     <!-- Users Table -->
-    <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
-                <tr>
-                    <th scope="col-span-12" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                    </th>
-                    <th scope="col-span-12" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
-                    </th>
-                    <th scope="col-span-12" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                    </th>
-                    <th scope="col-span-12" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Last Login
-                    </th>
-                    <th scope="col-span-12" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                    </th>
-                    <th scope="col-span-12" class="relative px-6 py-3">
-                        <span class="sr-only">Actions</span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 dark:bg-gray-800 divide-y divide-gray-200">
+    <flux:card>
+        <flux:table>
+            <flux:table.columns>
+                <flux:table.column>User</flux:table.column>
+                <flux:table.column>Role</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Last Login</flux:table.column>
+                <flux:table.column>Created</flux:table.column>
+                <flux:table.column class="w-1">Actions</flux:table.column>
+            </flux:table.columns>
+            
+            <flux:table.rows>
                 @forelse($users as $user)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full" src="{{ $user->getAvatarUrl() ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->name) }}" alt="{{ $user->name }}">
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white dark:text-white">
-                                    {{ $user->name }}
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    {{ $user->email }}
-                                </div>
+                <flux:table.row>
+                    <flux:table.cell>
+                        <div class="flex items-center gap-3">
+                            <flux:avatar 
+                                src="{{ $user->getAvatarUrl() ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->name) }}" 
+                                size="xs"
+                            />
+                            <div>
+                                <div class="font-medium">{{ $user->name }}</div>
+                                <flux:text class="text-sm">{{ $user->email }}</flux:text>
                             </div>
                         </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    </flux:table.cell>
+                    
+                    <flux:table.cell>
                         @php
-                            $roleNames = [
-                                1 => ['name' => 'User', 'color' => 'gray'],
-                                2 => ['name' => 'Technician', 'color' => 'blue'],
-                                3 => ['name' => 'Admin', 'color' => 'yellow'],
-                                4 => ['name' => 'Super Admin', 'color' => 'red']
+                            $userRoles = $user->getRoles();
+                            $primaryRole = $userRoles->first();
+                            
+                            $roleVariants = [
+                                'super-admin' => 'danger',
+                                'admin' => 'warning',
+                                'technician' => 'info',
+                                'accountant' => 'info',
+                                'sales-representative' => 'info',
+                                'marketing-specialist' => 'info',
+                                'user' => 'ghost',
+                                'client-user' => 'ghost',
                             ];
-                            $role = $roleNames[$user->userSetting->role ?? 1] ?? ['name' => 'User', 'color' => 'gray'];
+                            
+                            $variant = $roleVariants[$primaryRole] ?? 'ghost';
+                            $displayName = ucwords(str_replace('-', ' ', $primaryRole));
                         @endphp
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $role['color'] }}-100 text-{{ $role['color'] }}-800">
-                            {{ $role['name'] }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                        <flux:badge color="{{ $variant === 'danger' ? 'red' : ($variant === 'warning' ? 'yellow' : ($variant === 'info' ? 'blue' : 'zinc')) }}" size="sm" inset="top bottom">
+                            {{ $displayName }}
+                        </flux:badge>
+                    </flux:table.cell>
+                    
+                    <flux:table.cell>
                         @if($user->status)
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Active
-                            </span>
+                            <flux:badge color="green" size="sm" inset="top bottom">Active</flux:badge>
                         @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                Inactive
-                            </span>
+                            <flux:badge color="red" size="sm" inset="top bottom">Inactive</flux:badge>
                         @endif
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Never' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $user->created_at->format('M d, Y') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div class="flex items-center justify-end space-x-2">
-                            <a href="{{ route('users.show', $user) }}" class="text-gray-600 dark:text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white dark:text-white dark:hover:text-white dark:text-white">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                            </a>
+                    </flux:table.cell>
+                    
+                    <flux:table.cell>
+                        <flux:text class="text-sm">
+                            {{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Never' }}
+                        </flux:text>
+                    </flux:table.cell>
+                    
+                    <flux:table.cell>
+                        <flux:text class="text-sm">
+                            {{ $user->created_at->format('M d, Y') }}
+                        </flux:text>
+                    </flux:table.cell>
+                    
+                    <flux:table.cell>
+                        <div class="flex items-center gap-1">
+                            <flux:button 
+                                href="{{ route('users.show', $user) }}" 
+                                variant="ghost" 
+                                size="sm" 
+                                icon="eye"
+                                icon-variant="mini"
+                            />
+                            
                             @can('update', $user)
-                            <a href="{{ route('users.edit', $user) }}" class="text-blue-600 hover:text-blue-900">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </a>
+                            <flux:button 
+                                href="{{ route('users.edit', $user) }}" 
+                                variant="ghost" 
+                                size="sm" 
+                                icon="pencil"
+                                icon-variant="mini"
+                            />
                             @endcan
+                            
                             @can('delete', $user)
-                            @if($user->id !== Auth::id())
-                            <form action="{{ route('users.archive', $user) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to archive this user?');">
-                                @csrf
-                                @method('POST')
-                                <button type="submit" class="text-red-600 hover:text-red-900">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M10 12l4 4m0-4l-4 4"></path>
-                                    </svg>
-                                </button>
-                            </form>
-                            @endif
+                                @if($user->id !== Auth::id())
+                                <flux:dropdown align="end">
+                                    <flux:button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        icon="ellipsis-vertical"
+                                        icon-variant="mini"
+                                    />
+                                    
+                                    <flux:menu>
+                                        <form action="{{ route('users.archive', $user) }}" method="POST" 
+                                              onsubmit="return confirm('Are you sure you want to archive this user?');">
+                                            @csrf
+                                            @method('POST')
+                                            <flux:menu.item 
+                                                type="submit"
+                                                icon="archive-box"
+                                                variant="danger"
+                                            >
+                                                Archive User
+                                            </flux:menu.item>
+                                        </form>
+                                        
+                                        @if($user->archived_at)
+                                        <form action="{{ route('users.restore', $user) }}" method="POST">
+                                            @csrf
+                                            @method('POST')
+                                            <flux:menu.item 
+                                                type="submit"
+                                                icon="arrow-path"
+                                            >
+                                                Restore User
+                                            </flux:menu.item>
+                                        </form>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                                @endif
                             @endcan
                         </div>
-                    </td>
-                </tr>
+                    </flux:table.cell>
+                </flux:table.row>
                 @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                        No users found
-                    </td>
-                </tr>
+                <flux:table.row>
+                    <flux:table.cell colspan="6">
+                        <div class="text-center py-8">
+                            <flux:icon name="users" class="mx-auto text-zinc-400 mb-4" size="lg" />
+                            <flux:text>No users found</flux:text>
+                        </div>
+                    </flux:table.cell>
+                </flux:table.row>
                 @endforelse
-            </tbody>
-        </table>
+            </flux:table.rows>
+        </flux:table>
 
         <!-- Pagination -->
         @if($users->hasPages())
-        <div class="bg-white dark:bg-gray-800 dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 dark:border-gray-700 sm:px-6">
-            {{ $users->links() }}
-        </div>
+            <flux:separator class="my-4" />
+            <div class="flex items-center justify-between">
+                <flux:text class="text-sm">
+                    Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} users
+                </flux:text>
+                
+                <div class="flex gap-2">
+                    @if($users->onFirstPage())
+                        <flux:button variant="ghost" size="sm" disabled icon="chevron-left">
+                            Previous
+                        </flux:button>
+                    @else
+                        <flux:button 
+                            href="{{ $users->previousPageUrl() }}" 
+                            variant="ghost" 
+                            size="sm" 
+                            icon="chevron-left"
+                        >
+                            Previous
+                        </flux:button>
+                    @endif
+                    
+                    @php
+                        $currentPage = $users->currentPage();
+                        $lastPage = $users->lastPage();
+                        $start = max(1, $currentPage - 2);
+                        $end = min($lastPage, $currentPage + 2);
+                    @endphp
+                    
+                    @if($start > 1)
+                        <flux:button href="{{ $users->url(1) }}" variant="ghost" size="sm">1</flux:button>
+                        @if($start > 2)
+                            <span class="px-2 text-zinc-400">...</span>
+                        @endif
+                    @endif
+                    
+                    @for($page = $start; $page <= $end; $page++)
+                        @if($page == $currentPage)
+                            <flux:button variant="primary" size="sm" disabled>
+                                {{ $page }}
+                            </flux:button>
+                        @else
+                            <flux:button href="{{ $users->url($page) }}" variant="ghost" size="sm">
+                                {{ $page }}
+                            </flux:button>
+                        @endif
+                    @endfor
+                    
+                    @if($end < $lastPage)
+                        @if($end < $lastPage - 1)
+                            <span class="px-2 text-zinc-400">...</span>
+                        @endif
+                        <flux:button href="{{ $users->url($lastPage) }}" variant="ghost" size="sm">{{ $lastPage }}</flux:button>
+                    @endif
+                    
+                    @if($users->hasMorePages())
+                        <flux:button 
+                            href="{{ $users->nextPageUrl() }}" 
+                            variant="ghost" 
+                            size="sm" 
+                            icon-trailing="chevron-right"
+                        >
+                            Next
+                        </flux:button>
+                    @else
+                        <flux:button variant="ghost" size="sm" disabled icon-trailing="chevron-right">
+                            Next
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
         @endif
-    </div>
-</div>
+    </flux:card>
+</flux:container>
 @endsection

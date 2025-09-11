@@ -104,7 +104,22 @@ class ClientSwitcher extends Component
         }
 
         // Get recent clients from the service (uses accessed_at field)
-        return $this->favoriteService->getRecentClients($this->user, 5);
+        $recentClients = $this->favoriteService->getRecentClients($this->user, 5);
+        
+        // If no recent clients, show the first 5 active clients as a fallback
+        if ($recentClients->isEmpty() && $this->favoriteClients->isEmpty()) {
+            return Client::where('company_id', $this->user->company_id)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->limit(5)
+                ->get(['id', 'name', 'company_name', 'email', 'status']);
+        }
+        
+        // Filter out favorites from recent to avoid duplication
+        $favoriteIds = $this->favoriteClients->pluck('id')->toArray();
+        return $recentClients->filter(function ($client) use ($favoriteIds) {
+            return !in_array($client->id, $favoriteIds);
+        });
     }
 
     /**

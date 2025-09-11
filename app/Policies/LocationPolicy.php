@@ -13,6 +13,11 @@ class LocationPolicy
      */
     public function viewAny(User $user): bool
     {
+        // Admins can always view locations
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
         return $user->can('clients.locations.view');
     }
 
@@ -21,6 +26,11 @@ class LocationPolicy
      */
     public function view(User $user, Location $location): bool
     {
+        // Admins can always view locations from their company
+        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
+            return true;
+        }
+        
         return $user->can('clients.locations.view') && $this->sameCompany($user, $location);
     }
 
@@ -29,6 +39,11 @@ class LocationPolicy
      */
     public function create(User $user): bool
     {
+        // Admins can always create locations
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
         return $user->can('clients.locations.manage');
     }
 
@@ -37,6 +52,11 @@ class LocationPolicy
      */
     public function update(User $user, Location $location): bool
     {
+        // Admins can always update locations from their company
+        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
+            return true;
+        }
+        
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 
@@ -45,6 +65,11 @@ class LocationPolicy
      */
     public function delete(User $user, Location $location): bool
     {
+        // Admins can always delete locations from their company
+        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
+            return true;
+        }
+        
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 
@@ -53,6 +78,11 @@ class LocationPolicy
      */
     public function restore(User $user, Location $location): bool
     {
+        // Admins can always restore locations from their company
+        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
+            return true;
+        }
+        
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 
@@ -61,6 +91,11 @@ class LocationPolicy
      */
     public function forceDelete(User $user, Location $location): bool
     {
+        // Admins can always force delete locations from their company
+        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
+            return true;
+        }
+        
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 

@@ -34,20 +34,21 @@ class ClientsList extends Component
         $this->resetPage();
     }
 
-    public function selectClientAndRedirect($clientId)
+    public function selectAndViewClient($clientId)
     {
         $client = Client::find($clientId);
         
         if ($client && $client->company_id === auth()->user()->company_id) {
-            // Set client in session using NavigationService
-            NavigationService::setSelectedClient($client);
+            // Set client in session using NavigationService - pass ID not object
+            NavigationService::setSelectedClient($client->id);
             
             // Update client access timestamp
             $client->accessed_at = now();
             $client->save();
             
-            // Redirect to dashboard
-            return redirect()->route('dashboard');
+            // Refresh the page to show the selected client's details
+            // The dynamicIndex method will detect the selected client and show the detail view
+            return redirect()->route('clients.index');
         }
     }
     
@@ -56,8 +57,8 @@ class ClientsList extends Component
         $client = Client::find($clientId);
         
         if ($client && $client->company_id === auth()->user()->company_id) {
-            // Set client in session using NavigationService
-            NavigationService::setSelectedClient($client);
+            // Set client in session using NavigationService - pass ID not object
+            NavigationService::setSelectedClient($client->id);
             
             // Update client access timestamp
             $client->accessed_at = now();

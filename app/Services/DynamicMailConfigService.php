@@ -181,6 +181,30 @@ class DynamicMailConfigService
     }
 
     /**
+     * Force mail to use log driver for development/testing
+     */
+    public function forceLogDriver(): void
+    {
+        Config::set([
+            'mail.default' => 'log',
+            'mail.mailers.log' => [
+                'transport' => 'log',
+                'channel' => null,
+            ],
+            'mail.from' => [
+                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'name' => env('MAIL_FROM_NAME', config('app.name')),
+            ]
+        ]);
+
+        // Clear cached instances
+        app()->forgetInstance('mail.manager');
+        app()->forgetInstance('mailer');
+        
+        Log::info('Mail driver forced to log for development');
+    }
+
+    /**
      * Test if current mail configuration is working
      * 
      * @return array

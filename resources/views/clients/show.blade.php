@@ -11,7 +11,7 @@
             "metrics metrics metrics"
             "activity notes sidebar"
             "tabs tabs tabs";
-        grid-template-columns: 1fr 1fr 300px;
+        grid-template-columns: 1fr 1fr 425px;
         gap: 0.75rem;
         padding: 0.75rem;
     }
@@ -45,6 +45,8 @@
     
     .sidebar-section {
         grid-area: sidebar;
+        display: flex;
+        flex-direction: column;
     }
     
     .tabs-section {
@@ -143,7 +145,7 @@
     }
     
     .info-card-title {
-        font-size: 0.75rem;
+        font-size: 0.875rem;
         font-weight: 600;
         text-transform: uppercase;
         color: rgb(107 114 128);
@@ -151,7 +153,19 @@
     }
     
     .info-card-content {
-        font-size: 0.875rem;
+        font-size: 0.95rem;
+    }
+    
+    .info-card.active-services {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+    }
+    
+    .info-card.active-services .info-card-content {
+        flex: 1;
+        overflow-y: auto;
     }
     
     /* Responsive */
@@ -381,10 +395,10 @@
                 @endphp
                 @if($primaryContact)
                     <p class="font-medium">{{ $primaryContact->name }}</p>
-                    <p class="text-xs text-gray-600">{{ $primaryContact->email }}</p>
-                    <p class="text-xs text-gray-600">{{ $primaryContact->phone }}</p>
+                    <p class="text-sm text-gray-600">{{ $primaryContact->email }}</p>
+                    <p class="text-sm text-gray-600">{{ $primaryContact->phone }}</p>
                 @else
-                    <p class="text-xs text-gray-500">No primary contact set</p>
+                    <p class="text-sm text-gray-500">No primary contact set</p>
                 @endif
             </div>
         </flux:card>
@@ -393,16 +407,16 @@
         <flux:card class="info-card">
             <div class="info-card-title">Billing</div>
             <div class="info-card-content">
-                <div class="flex justify-between text-xs mb-1">
+                <div class="flex justify-between text-sm mb-1">
                     <span class="text-gray-600">Net Terms</span>
                     <span>{{ $client->net_terms ?? 30 }} days</span>
                 </div>
-                <div class="flex justify-between text-xs mb-1">
+                <div class="flex justify-between text-sm mb-1">
                     <span class="text-gray-600">Currency</span>
                     <span>{{ $client->currency_code ?? 'USD' }}</span>
                 </div>
                 @if($client->rate)
-                    <div class="flex justify-between text-xs">
+                    <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Rate</span>
                         <span>${{ number_format($client->rate, 0) }}/hr</span>
                     </div>
@@ -418,25 +432,25 @@
                     $primaryLocation = $client->locations()->where('primary', true)->first();
                 @endphp
                 @if($primaryLocation)
-                    <p class="text-xs">{{ $primaryLocation->address }}</p>
-                    <p class="text-xs">{{ $primaryLocation->city }}, {{ $primaryLocation->state }} {{ $primaryLocation->zip_code }}</p>
+                    <p class="text-sm">{{ $primaryLocation->address }}</p>
+                    <p class="text-sm">{{ $primaryLocation->city }}, {{ $primaryLocation->state }} {{ $primaryLocation->zip_code }}</p>
                 @elseif($client->address)
-                    <p class="text-xs">{{ $client->address }}</p>
-                    <p class="text-xs">{{ $client->city }}, {{ $client->state }} {{ $client->zip_code }}</p>
+                    <p class="text-sm">{{ $client->address }}</p>
+                    <p class="text-sm">{{ $client->city }}, {{ $client->state }} {{ $client->zip_code }}</p>
                 @else
-                    <p class="text-xs text-gray-500">No location set</p>
+                    <p class="text-sm text-gray-500">No location set</p>
                 @endif
             </div>
         </flux:card>
         
         <!-- Active Services -->
-        <flux:card class="info-card">
+        <flux:card class="info-card active-services">
             <div class="info-card-title">Active Services</div>
             <div class="info-card-content">
                 @if(!empty($metrics['active_services']))
                     <div class="space-y-1">
                         @foreach(array_slice($metrics['active_services'], 0, 3) as $service)
-                            <div class="text-xs">
+                            <div class="text-sm">
                                 <div class="font-medium">{{ $service['name'] }}</div>
                                 <div class="text-gray-600">
                                     {{ $service['quantity'] }}x @ ${{ number_format($service['price'], 0) }}/{{ $service['billing_cycle'] }}
@@ -444,13 +458,13 @@
                             </div>
                         @endforeach
                         @if(count($metrics['active_services']) > 3)
-                            <div class="text-xs text-gray-500">
+                            <div class="text-sm text-gray-500">
                                 +{{ count($metrics['active_services']) - 3 }} more services
                             </div>
                         @endif
                     </div>
                 @else
-                    <p class="text-xs text-gray-500">No active services</p>
+                    <p class="text-sm text-gray-500">No active services</p>
                 @endif
             </div>
         </flux:card>

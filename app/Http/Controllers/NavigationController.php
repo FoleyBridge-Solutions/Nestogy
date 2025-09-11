@@ -313,7 +313,7 @@ class NavigationController extends Controller
                         'icon' => '👥',
                         'title' => $client->name,
                         'subtitle' => $client->email,
-                        'url' => route('clients.show', $client->id),
+                        'url' => route('clients.index'),
                         'meta' => [
                             'status' => $client->status,
                         ],

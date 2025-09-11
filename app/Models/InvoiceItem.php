@@ -233,6 +233,45 @@ class InvoiceItem extends Model
     }
 
     /**
+     * Calculate sales tax using TaxJar
+     */
+    protected function calculateSalesTax(float $amount): float
+    {
+        try {
+            $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
+            $address = $this->getServiceAddress();
+
+            // Use the actual state code from the address, not 'US'
+            $stateCode = $address['state_code'] ?? $address['state'] ?? 'DC'; // Default to DC if not found
+
+            $taxService = \App\Services\TaxEngine\TaxServiceFactory::getService($stateCode, $companyId);
+
+            // If no service is configured for this state, try to use TaxJar directly
+            if (!$taxService) {
+                $taxService = new \App\Services\TaxEngine\TaxJarService();
+                $taxService->setCompanyId($companyId);
+            }
+
+            $params = [
+                'amount' => $amount,
+                'service_address' => $address,
+                'service_type' => 'general'
+            ];
+
+            $result = $taxService->calculateTaxes($params);
+            return $result['total_tax_amount'] ?? 0.0;
+
+        } catch (\Exception $e) {
+            \Log::warning('Sales tax calculation failed, using 0', [
+                'item_id' => $this->id,
+                'amount' => $amount,
+                'error' => $e->getMessage()
+            ]);
+            return 0.0;
+        }
+    }
+
+    /**
      * Calculate and update item totals.
      */
     public function calculateTotals(): void
@@ -253,6 +292,9 @@ class InvoiceItem extends Model
         } elseif ($this->taxRate) {
             // Fallback to legacy tax calculation
             $taxAmount = $this->taxRate->calculateTaxAmount($discountedSubtotal);
+        } else {
+            // Use TaxJar for general sales tax calculation
+            $taxAmount = $this->calculateSalesTax($discountedSubtotal);
         }
         
         // Calculate total
@@ -512,6 +554,9 @@ class InvoiceItem extends Model
             } elseif ($item->taxRate) {
                 // Fallback to legacy tax calculation
                 $taxAmount = $item->taxRate->calculateTaxAmount($discountedSubtotal);
+            } else {
+                // Use TaxJar for general sales tax
+                $taxAmount = $item->calculateSalesTax($discountedSubtotal);
             }
             
             // Calculate total

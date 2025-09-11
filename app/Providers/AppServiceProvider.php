@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Silber\Bouncer\BouncerFacade as Bouncer;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -191,5 +192,34 @@ class AppServiceProvider extends ServiceProvider
         ]);
         
         // Note: Bouncer scope is set per-request via SetBouncerScope middleware
+        
+        // Register custom Blade directives for enhanced permissions
+        $this->registerPermissionDirectives();
+    }
+    
+    /**
+     * Register custom Blade directives for permission checking
+     */
+    protected function registerPermissionDirectives(): void
+    {
+        // Check single permission with wildcard support
+        Blade::if('permission', function ($permission) {
+            return auth()->check() && auth()->user()->hasPermission($permission);
+        });
+        
+        // Check any of multiple permissions
+        Blade::if('anyPermission', function (...$permissions) {
+            return auth()->check() && auth()->user()->hasAnyPermission($permissions);
+        });
+        
+        // Check all permissions
+        Blade::if('allPermissions', function (...$permissions) {
+            return auth()->check() && auth()->user()->hasAllPermissions($permissions);
+        });
+        
+        // Check resource-level permission
+        Blade::if('canAccess', function ($permission, $resource) {
+            return auth()->check() && auth()->user()->canAccessResource($permission, $resource);
+        });
     }
 }

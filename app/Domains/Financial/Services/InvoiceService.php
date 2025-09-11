@@ -210,12 +210,12 @@ class InvoiceService
     public function calculateInvoiceTotals(Invoice $invoice): array
     {
         return [
-            'subtotal' => $invoice->getSubtotal(),
-            'discount' => $invoice->discount_amount,
-            'tax' => $invoice->getTotalTax(),
-            'total' => $invoice->amount,
-            'paid' => $invoice->getTotalPaid(),
-            'balance' => $invoice->getBalance(),
+            'subtotal' => round($invoice->getSubtotal(), 2),
+            'discount' => round($invoice->discount_amount, 2),
+            'tax' => round($invoice->getTotalTax(), 2),
+            'total' => round($invoice->amount, 2),
+            'paid' => round($invoice->getTotalPaid(), 2),
+            'balance' => round($invoice->getBalance(), 2),
         ];
     }
 }

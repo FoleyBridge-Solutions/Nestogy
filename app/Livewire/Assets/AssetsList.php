@@ -86,14 +86,14 @@ class AssetsList extends Component
     protected function getFilteredQuery()
     {
         return Asset::query()
-            ->with(['client', 'location', 'assignedUser'])
+            ->with(['client', 'location'])
             ->when($this->search, function($query) {
                 $query->where(function($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('asset_tag', 'like', '%' . $this->search . '%')
-                      ->orWhere('serial_number', 'like', '%' . $this->search . '%')
+                      ->orWhere('serial', 'like', '%' . $this->search . '%')
                       ->orWhere('model', 'like', '%' . $this->search . '%')
-                      ->orWhere('manufacturer', 'like', '%' . $this->search . '%');
+                      ->orWhere('make', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
                 });
             })
             ->when($this->clientId, fn($q) => $q->where('client_id', $this->clientId))

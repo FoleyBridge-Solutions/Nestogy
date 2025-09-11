@@ -6,12 +6,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use App\Services\TaxEngine\TexasComptrollerDataService;
+use App\Services\TaxEngine\OfficialTaxDataService;
 
 echo "Exploring Texas Comptroller Files for Q3 2025...\n\n";
 
 try {
-    $service = new TexasComptrollerDataService();
+    $service = new OfficialTaxDataService();
     
     // List all available files for Q3 2025
     $fileList = $service->listAvailableFiles('2025Q3');

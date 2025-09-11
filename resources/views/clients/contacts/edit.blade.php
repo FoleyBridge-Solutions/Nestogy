@@ -43,7 +43,7 @@
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <a href="{{ route('clients.contacts.show', [$client, $contact]) }}" 
+                        <a href="{{ route('clients.contacts.show', $contact) }}" 
                            class="inline-flex items-center px-6 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -51,7 +51,7 @@
                             Back to Contact
                         </a>
                         <form method="POST" 
-                              action="{{ route('clients.contacts.destroy', [$client, $contact]) }}" 
+                              action="{{ route('clients.contacts.destroy', $contact) }}" 
                               class="inline"
                               onsubmit="return confirm('Are you sure you want to delete this contact? This action cannot be undone.')">
                             @csrf
@@ -118,7 +118,7 @@
 
         <!-- Form -->
         <div class="bg-white shadow rounded-lg">
-            <form method="POST" action="{{ route('clients.contacts.update', [$client, $contact]) }}" class="space-y-6" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('clients.contacts.update', $contact) }}" class="space-y-6" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 
@@ -394,7 +394,7 @@
 
                 <!-- Form Actions -->
                 <div class="px-6 py-6 bg-gray-50 text-right sm:px-6 space-x-3">
-                    <a href="{{ route('clients.contacts.show', [$client, $contact]) }}" 
+                    <a href="{{ route('clients.contacts.show', $contact) }}" 
                        class="inline-flex justify-center py-2 px-6 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </a>

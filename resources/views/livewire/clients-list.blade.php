@@ -129,15 +129,15 @@
                                 <flux:table.cell>
                                     <div class="flex items-center justify-end gap-2">
                                         <flux:button 
-                                            wire:click="selectClientAndRedirect({{ $client->id }})"
+                                            wire:click="selectAndViewClient({{ $client->id }})"
                                             variant="primary"
                                             size="sm"
                                             wire:loading.attr="disabled"
                                         >
-                                            <span wire:loading.remove wire:target="selectClientAndRedirect({{ $client->id }})">
+                                            <span wire:loading.remove wire:target="selectAndViewClient({{ $client->id }})">
                                                 View
                                             </span>
-                                            <span wire:loading wire:target="selectClientAndRedirect({{ $client->id }})">
+                                            <span wire:loading wire:target="selectAndViewClient({{ $client->id }})">
                                                 Loading...
                                             </span>
                                         </flux:button>

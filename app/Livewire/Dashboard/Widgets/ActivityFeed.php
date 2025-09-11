@@ -24,7 +24,7 @@ class ActivityFeed extends Component
     public bool $loading = true;
     public ?int $clientId = null;
     public string $filter = 'all'; // all, tickets, financial, clients, system
-    public int $limit = 20;
+    public int $limit = 6;
     public bool $autoRefresh = true;
     
     public function mount(?int $clientId = null)
@@ -71,7 +71,7 @@ class ActivityFeed extends Component
         $query = Ticket::where('company_id', $companyId)
             ->with(['client', 'assignee'])
             ->orderByDesc('updated_at')
-            ->limit(10);
+            ->limit(6);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);
@@ -123,7 +123,7 @@ class ActivityFeed extends Component
         $invoiceQuery = Invoice::where('company_id', $companyId)
             ->with('client')
             ->orderByDesc('created_at')
-            ->limit(5);
+            ->limit(6);
             
         if ($this->clientId) {
             $invoiceQuery->where('client_id', $this->clientId);
@@ -143,7 +143,7 @@ class ActivityFeed extends Component
                 'client' => $invoice->client?->name,
                 'timestamp' => $invoice->created_at,
                 'status' => $invoice->status,
-                'link' => route('invoices.show', $invoice->id),
+                'link' => route('financial.invoices.show', $invoice->id),
             ];
         }));
         
@@ -151,7 +151,7 @@ class ActivityFeed extends Component
         $paymentQuery = Payment::where('company_id', $companyId)
             ->with(['client', 'invoice'])
             ->orderByDesc('created_at')
-            ->limit(5);
+            ->limit(6);
             
         if ($this->clientId) {
             $paymentQuery->where('client_id', $this->clientId);
@@ -171,7 +171,7 @@ class ActivityFeed extends Component
                 'client' => $payment->client?->name,
                 'timestamp' => $payment->created_at,
                 'method' => $payment->payment_method,
-                'link' => route('payments.show', $payment->id),
+                'link' => $payment->invoice_id ? route('financial.invoices.show', $payment->invoice_id) : '#',
             ];
         }));
         

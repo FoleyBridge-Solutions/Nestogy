@@ -4,6 +4,7 @@ namespace Database\Seeders\Dev;
 
 use Illuminate\Database\Seeder;
 use App\Models\Category;
+use App\Models\Company;
 
 class CategorySeeder extends Seeder
 {
@@ -14,29 +15,36 @@ class CategorySeeder extends Seeder
     {
         $this->command->info('Creating categories...');
 
-        // Invoice categories
-        $this->createInvoiceCategories();
-        
-        // Expense categories
-        $this->createExpenseCategories();
-        
-        // Income categories  
-        $this->createIncomeCategories();
-        
-        // Ticket categories
-        $this->createTicketCategories();
-        
-        // Product categories
-        $this->createProductCategories();
-        
-        // Asset categories
-        $this->createAssetCategories();
-        
-        // Quote categories
-        $this->createQuoteCategories();
-        
-        // Recurring categories
-        $this->createRecurringCategories();
+        // Get all companies
+        $companies = Company::all();
+
+        foreach ($companies as $company) {
+            $this->command->info("  Creating categories for {$company->name}...");
+            
+            // Invoice categories
+            $this->createInvoiceCategories($company->id);
+            
+            // Expense categories
+            $this->createExpenseCategories($company->id);
+            
+            // Income categories  
+            $this->createIncomeCategories($company->id);
+            
+            // Ticket categories
+            $this->createTicketCategories($company->id);
+            
+            // Product categories
+            $this->createProductCategories($company->id);
+            
+            // Asset categories
+            $this->createAssetCategories($company->id);
+            
+            // Quote categories
+            $this->createQuoteCategories($company->id);
+            
+            // Recurring categories
+            $this->createRecurringCategories($company->id);
+        }
 
         $this->command->info('Categories created successfully.');
     }
@@ -44,7 +52,7 @@ class CategorySeeder extends Seeder
     /**
      * Create invoice categories
      */
-    private function createInvoiceCategories(): void
+    private function createInvoiceCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Service', 'color' => '#3B82F6', 'icon' => 'wrench'],
@@ -59,17 +67,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_INVOICE],
-                array_merge($category, ['type' => Category::TYPE_INVOICE])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_INVOICE
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_INVOICE
+                ])
             );
         }
-        $this->command->info('  ✓ Invoice categories created');
+        $this->command->info('    ✓ Invoice categories created');
     }
 
     /**
      * Create expense categories
      */
-    private function createExpenseCategories(): void
+    private function createExpenseCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Hardware', 'color' => '#3B82F6', 'icon' => 'desktop-computer'],
@@ -88,17 +103,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_EXPENSE],
-                array_merge($category, ['type' => Category::TYPE_EXPENSE])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_EXPENSE
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_EXPENSE
+                ])
             );
         }
-        $this->command->info('  ✓ Expense categories created');
+        $this->command->info('    ✓ Expense categories created');
     }
 
     /**
      * Create income categories
      */
-    private function createIncomeCategories(): void
+    private function createIncomeCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Managed Services', 'color' => '#3B82F6', 'icon' => 'server'],
@@ -113,17 +135,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_INCOME],
-                array_merge($category, ['type' => Category::TYPE_INCOME])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_INCOME
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_INCOME
+                ])
             );
         }
-        $this->command->info('  ✓ Income categories created');
+        $this->command->info('    ✓ Income categories created');
     }
 
     /**
      * Create ticket categories
      */
-    private function createTicketCategories(): void
+    private function createTicketCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Support Request', 'color' => '#3B82F6', 'icon' => 'support'],
@@ -142,17 +171,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_TICKET],
-                array_merge($category, ['type' => Category::TYPE_TICKET])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_TICKET
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_TICKET
+                ])
             );
         }
-        $this->command->info('  ✓ Ticket categories created');
+        $this->command->info('    ✓ Ticket categories created');
     }
 
     /**
      * Create product categories
      */
-    private function createProductCategories(): void
+    private function createProductCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Computers', 'color' => '#3B82F6', 'icon' => 'desktop-computer'],
@@ -167,17 +203,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_PRODUCT],
-                array_merge($category, ['type' => Category::TYPE_PRODUCT])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_PRODUCT
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_PRODUCT
+                ])
             );
         }
-        $this->command->info('  ✓ Product categories created');
+        $this->command->info('    ✓ Product categories created');
     }
 
     /**
      * Create asset categories
      */
-    private function createAssetCategories(): void
+    private function createAssetCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Desktop', 'color' => '#3B82F6', 'icon' => 'desktop-computer'],
@@ -196,17 +239,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_ASSET],
-                array_merge($category, ['type' => Category::TYPE_ASSET])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_ASSET
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_ASSET
+                ])
             );
         }
-        $this->command->info('  ✓ Asset categories created');
+        $this->command->info('    ✓ Asset categories created');
     }
 
     /**
      * Create quote categories
      */
-    private function createQuoteCategories(): void
+    private function createQuoteCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'New Project', 'color' => '#3B82F6', 'icon' => 'sparkles'],
@@ -219,17 +269,24 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_QUOTE],
-                array_merge($category, ['type' => Category::TYPE_QUOTE])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_QUOTE
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_QUOTE
+                ])
             );
         }
-        $this->command->info('  ✓ Quote categories created');
+        $this->command->info('    ✓ Quote categories created');
     }
 
     /**
      * Create recurring categories
      */
-    private function createRecurringCategories(): void
+    private function createRecurringCategories(int $companyId): void
     {
         $categories = [
             ['name' => 'Monthly Services', 'color' => '#3B82F6', 'icon' => 'calendar'],
@@ -241,10 +298,17 @@ class CategorySeeder extends Seeder
 
         foreach ($categories as $category) {
             Category::updateOrCreate(
-                ['name' => $category['name'], 'type' => Category::TYPE_RECURRING],
-                array_merge($category, ['type' => Category::TYPE_RECURRING])
+                [
+                    'company_id' => $companyId,
+                    'name' => $category['name'], 
+                    'type' => Category::TYPE_RECURRING
+                ],
+                array_merge($category, [
+                    'company_id' => $companyId,
+                    'type' => Category::TYPE_RECURRING
+                ])
             );
         }
-        $this->command->info('  ✓ Recurring categories created');
+        $this->command->info('    ✓ Recurring categories created');
     }
 }

@@ -27,29 +27,24 @@ class InvoiceFactory extends Factory
         $date = $this->faker->dateTimeBetween('-6 months', 'now');
         $dueDate = (clone $date)->modify('+30 days');
         
-        $subtotal = $this->faker->randomFloat(2, 100, 10000);
-        $taxRate = $this->faker->randomFloat(2, 0, 0.15); // 0-15% tax
-        $taxAmount = $subtotal * $taxRate;
-        $total = $subtotal + $taxAmount;
+        $amount = $this->faker->randomFloat(2, 100, 10000);
+        $discountAmount = $this->faker->optional(0.3)->randomFloat(2, 0, $amount * 0.2);
 
         return [
-            'company_id' => Company::factory(),
-            'client_id' => Client::factory(),
-            'invoice_number' => 'INV-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'company_id' => Company::first()?->id ?? 1,
+            'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
+            'prefix' => 'INV',
+            'number' => $this->faker->unique()->numberBetween(1000, 9999),
+            'scope' => $this->faker->optional()->word(),
             'date' => $date,
             'due_date' => $dueDate,
             'status' => $this->faker->randomElement(['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled']),
-            'subtotal' => $subtotal,
-            'tax_amount' => $taxAmount,
-            'tax_rate' => $taxRate,
-            'discount_amount' => $this->faker->optional(0.3)->randomFloat(2, 0, $subtotal * 0.2),
-            'total' => $total,
+            'discount_amount' => $discountAmount ?? 0,
+            'amount' => $amount,
             'currency_code' => 'USD',
-            'notes' => $this->faker->optional()->paragraph(),
-            'terms' => $this->faker->optional()->text(200),
-            'paid_at' => null,
-            'sent_at' => null,
-            'viewed_at' => null,
+            'note' => $this->faker->optional()->paragraph(),
+            'url_key' => $this->faker->uuid(),
+            'category_id' => \App\Models\Category::where('type', 'income')->inRandomOrder()->first()?->id ?? 1,
             'created_at' => $date,
             'updated_at' => $date,
         ];

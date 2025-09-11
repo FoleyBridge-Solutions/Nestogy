@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Contracts\Services\EmailServiceInterface;
+use App\Contracts\Services\PdfServiceInterface;
 use Illuminate\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Collection;
 use App\Models\Quote;
@@ -13,15 +15,18 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class EmailService implements EmailServiceInterface
 {
     protected Mailer $mailer;
+    protected PdfServiceInterface $pdfService;
 
-    public function __construct(Mailer $mailer)
+    public function __construct(Mailer $mailer, PdfServiceInterface $pdfService)
     {
         $this->mailer = $mailer;
+        $this->pdfService = $pdfService;
     }
 
     /**
@@ -324,47 +329,98 @@ class EmailService implements EmailServiceInterface
     /**
      * Send invoice email to client
      */
-    public function sendInvoiceEmail(Invoice $invoice): bool
+    /**
+     * Generate invoice PDF for email attachment
+     */
+    protected function generateInvoicePdf(Invoice $invoice): ?string
+    {
+        try {
+            $invoice->load(['client', 'items', 'payments']);
+
+            // Generate PDF content
+            $pdfContent = $this->pdfService->generateInvoice(['invoice' => $invoice]);
+
+            // Generate filename
+            $filename = $this->pdfService->generateFilename('invoice', $invoice->invoice_number ?? $invoice->number);
+
+            // Save to temporary storage for email attachment
+            $tempPath = 'temp/' . $filename;
+            Storage::disk('local')->put($tempPath, $pdfContent);
+
+            // Return the full path to the temporary file
+            return Storage::disk('local')->path($tempPath);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to generate invoice PDF for email', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    public function sendInvoiceEmail(Invoice $invoice, array $options = []): bool
     {
         try {
             $client = $invoice->client;
-            
-            if (!$client || !$client->email) {
-                Log::warning('Cannot send invoice email - no client email', [
+
+            // Use custom recipient if provided, otherwise use client email
+            $recipientEmail = $options['to'] ?? $client->email ?? null;
+
+            if (!$recipientEmail) {
+                Log::warning('Cannot send invoice email - no recipient email', [
                     'invoice_id' => $invoice->id,
                     'client_id' => $client->id ?? null
                 ]);
                 return false;
             }
 
-            $emailData = [
-                'invoice' => $invoice,
-                'client' => $client,
-                'viewUrl' => $this->generateSecureInvoiceUrl($invoice),
-                'dueDate' => $invoice->due_date,
-                'totalAmount' => number_format($invoice->amount, 2),
+            // Prepare options for the mailable
+            $mailOptions = [
+                'to' => $recipientEmail,
+                'recipient_name' => $options['recipient_name'] ?? $client->name,
+                'subject' => $this->generateInvoiceSubject($invoice, $options),
+                'message' => $options['message'] ?? null,
+                'attach_pdf' => $options['attach_pdf'] ?? true,
+                'view_url' => $this->generateSecureInvoiceUrl($invoice),
             ];
 
-            Mail::send('emails.invoices.send', $emailData, function ($message) use ($client, $invoice) {
-                $message->to($client->email, $client->name)
-                        ->subject("Invoice #{$invoice->number}")
-                        ->from(config('mail.from.address'), config('app.name'));
-            });
+            // Queue the email for processing
+            $invoiceEmail = new \App\Mail\InvoiceEmail($invoice, $mailOptions);
+            Mail::queue($invoiceEmail);
 
-            Log::info('Invoice email sent successfully', [
+            Log::info('Invoice email queued successfully', [
                 'invoice_id' => $invoice->id,
-                'client_email' => $client->email
+                'recipient_email' => $recipientEmail,
+                'attach_pdf' => $mailOptions['attach_pdf']
             ]);
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error('Failed to send invoice email', [
+            Log::error('Failed to queue invoice email', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage()
             ]);
             return false;
         }
+    }
+
+    /**
+     * Generate subject line for invoice email
+     */
+    private function generateInvoiceSubject(Invoice $invoice, array $options): string
+    {
+        if (isset($options['subject'])) {
+            return $options['subject'];
+        }
+
+        $companyName = config('app.name');
+        if (Auth::check() && Auth::user()->company) {
+            $companyName = Auth::user()->company->name;
+        }
+
+        return "Invoice #" . ($invoice->invoice_number ?? $invoice->number) . " from " . $companyName;
     }
 
     /**
@@ -423,8 +479,7 @@ class EmailService implements EmailServiceInterface
      */
     private function generateSecureInvoiceUrl(Invoice $invoice): string
     {
-        // Assuming invoices have a similar URL key mechanism as quotes
-        // If not, we can use a signed URL or the regular route
-        return route('invoices.show', $invoice);
+        // Use the correct financial.invoices.show route
+        return route('financial.invoices.show', $invoice);
     }
 }

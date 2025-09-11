@@ -17,7 +17,7 @@ class TemplateContentGenerator
 {
     protected $variableMapper;
 
-    public function __construct(TemplateVariableMapper $variableMapper = null)
+    public function __construct(?TemplateVariableMapper $variableMapper = null)
     {
         $this->variableMapper = $variableMapper ?: new TemplateVariableMapper();
     }

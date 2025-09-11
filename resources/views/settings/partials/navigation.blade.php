@@ -5,12 +5,14 @@
     $navigationSections = [
         'core' => [
             'title' => 'Core Settings',
-            'routes' => ['settings.general', 'settings.security', 'settings.email', 'settings.user-management', 'subsidiaries.index'],
+            'routes' => ['settings.general', 'settings.security', 'settings.email', 'settings.user-management', 'settings.permissions.*', 'settings.roles.*', 'subsidiaries.index'],
             'items' => [
                 ['route' => 'settings.general', 'title' => 'General', 'active_routes' => ['settings.general', 'settings.index']],
                 ['route' => 'settings.security', 'title' => 'Security & Access', 'active_routes' => ['settings.security']],
                 ['route' => 'settings.email', 'title' => 'Email & Communication', 'active_routes' => ['settings.email']],
                 ['route' => 'settings.user-management', 'title' => 'User Management', 'active_routes' => ['settings.user-management']],
+                ['route' => 'settings.permissions.index', 'title' => 'Permissions Management', 'active_routes' => ['settings.permissions.*']],
+                ['route' => 'settings.roles.index', 'title' => 'Roles & Abilities', 'active_routes' => ['settings.roles.*']],
                 ['route' => 'subsidiaries.index', 'title' => 'Subsidiary Management', 'active_routes' => ['subsidiaries.index', 'subsidiaries.create', 'subsidiaries.edit', 'subsidiaries.show']]
             ]
         ],

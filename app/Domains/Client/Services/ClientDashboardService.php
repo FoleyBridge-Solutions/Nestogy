@@ -177,7 +177,7 @@ class ClientDashboardService
                     'date' => $invoice->created_at,
                     'status' => $invoice->status,
                     'amount' => $invoice->total,
-                    'url' => route('invoices.show', $invoice),
+                    'url' => route('financial.invoices.show', $invoice),
                 ];
             });
 
@@ -192,7 +192,7 @@ class ClientDashboardService
                     'description' => "Payment received",
                     'date' => $payment->created_at,
                     'amount' => $payment->amount,
-                    'url' => route('payments.show', $payment),
+                    'url' => $payment->invoice_id ? route('financial.invoices.show', $payment->invoice_id) : '#',
                 ];
             });
 
