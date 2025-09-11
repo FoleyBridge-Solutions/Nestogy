@@ -98,6 +98,15 @@
                                 @case('cog')
                                     <flux:icon.cog class="size-5 transition-colors {{ $iconColorClass }}" />
                                     @break
+                                @case('envelope')
+                                    <flux:icon.envelope class="size-5 transition-colors {{ $iconColorClass }}" />
+                                    @break
+                                @case('pencil')
+                                    <flux:icon.pencil class="size-5 transition-colors {{ $iconColorClass }}" />
+                                    @break
+                                @case('cog-6-tooth')
+                                    <flux:icon.cog-6-tooth class="size-5 transition-colors {{ $iconColorClass }}" />
+                                    @break
                                 @default
                                     <flux:icon.bolt class="size-5 transition-colors {{ $iconColorClass }}" />
                             @endswitch

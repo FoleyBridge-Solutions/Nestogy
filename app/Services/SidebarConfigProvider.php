@@ -97,6 +97,8 @@ class SidebarConfigProvider
                 return $this->getClientsConfig($selectedClient);
             case 'tickets':
                 return $this->getTicketsConfig();
+            case 'email':
+                return $this->getEmailConfig();
             case 'assets':
                 return $this->getAssetsConfig();
             case 'financial':
@@ -182,10 +184,10 @@ class SidebarConfigProvider
                         ],
                         [
                             'name' => 'Communication Log',
-                            'route' => 'clients.show',
+                            'route' => 'clients.communications.index',
                             'icon' => 'chat-bubble-left-right',
-                            'key' => 'communication',
-                            'params' => ['client' => 'current', 'section' => 'communication']
+                            'key' => 'communications',
+                            'params' => []
                         ]
                     ]
                 ],
@@ -322,6 +324,164 @@ class SidebarConfigProvider
                     ]
                 ]
             ]
+        ];
+    }
+    
+    /**
+     * Get email sidebar configuration
+     */
+    protected function getEmailConfig(): array
+    {
+        $user = auth()->user();
+        $accountsCount = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->count() : 0;
+        $unreadCount = $user ? \App\Domains\Email\Models\EmailMessage::whereHas('emailAccount', function($q) use ($user) {
+            $q->where('user_id', $user->id)->where('is_active', true);
+        })->unread()->count() : 0;
+
+        // Get user's email accounts for dynamic sidebar
+        $emailAccounts = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->with('folders')->get() : collect();
+
+        $sections = [
+            [
+                'type' => 'primary',
+                'items' => [
+                    [
+                        'name' => 'Inbox',
+                        'route' => 'email.inbox.index',
+                        'icon' => 'inbox',
+                        'key' => 'inbox',
+                        'badge' => $unreadCount > 0 ? $unreadCount : null,
+                        'badge_type' => 'info'
+                    ],
+                    [
+                        'name' => 'Compose',
+                        'route' => 'email.compose.index',
+                        'icon' => 'pencil',
+                        'key' => 'compose'
+                    ]
+                ]
+            ]
+        ];
+
+        // Add email accounts section if user has accounts
+        if ($emailAccounts->isNotEmpty()) {
+            $accountItems = [];
+            foreach ($emailAccounts as $account) {
+                $accountUnreadCount = $account->messages()->unread()->count();
+                $accountItems[] = [
+                    'name' => $account->name,
+                    'route' => 'email.inbox.index',
+                    'route_params' => ['account_id' => $account->id],
+                    'icon' => 'envelope',
+                    'key' => 'account-' . $account->id,
+                    'badge' => $accountUnreadCount > 0 ? $accountUnreadCount : null,
+                    'badge_type' => 'info',
+                    'description' => $account->email_address
+                ];
+            }
+
+            $sections[] = [
+                'type' => 'section',
+                'title' => 'ACCOUNTS',
+                'expandable' => true,
+                'default_expanded' => true,
+                'items' => $accountItems
+            ];
+        }
+
+        // Always include folders section with dynamic content
+        $folderItems = [
+            [
+                'name' => 'Inbox',
+                'route' => 'email.inbox.index',
+                'icon' => 'inbox',
+                'key' => 'inbox-folder',
+                'badge' => $unreadCount > 0 ? $unreadCount : null,
+                'badge_type' => 'info'
+            ],
+            [
+                'name' => 'Sent',
+                'route' => 'email.inbox.index',
+                'icon' => 'paper-airplane',
+                'key' => 'sent-folder'
+            ],
+            [
+                'name' => 'Drafts',
+                'route' => 'email.inbox.index',
+                'icon' => 'document-text',
+                'key' => 'drafts-folder'
+            ],
+            [
+                'name' => 'Trash',
+                'route' => 'email.inbox.index',
+                'icon' => 'trash',
+                'key' => 'trash-folder'
+            ]
+        ];
+
+        // Add dynamic folders from email accounts
+        if ($emailAccounts->isNotEmpty()) {
+            foreach ($emailAccounts as $account) {
+                // Add synced folders from this account
+                foreach ($account->folders as $folder) {
+                    $folderUnreadCount = $folder->unread_count;
+                    $folderName = $folder->getDisplayName();
+
+                    // Add account name for non-standard folders
+                    if (!in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
+                        $folderName .= ' (' . $account->name . ')';
+                    }
+
+                    $folderItems[] = [
+                        'name' => $folderName,
+                        'route' => 'email.inbox.index',
+                        'route_params' => ['account_id' => $account->id, 'folder_id' => $folder->id],
+                        'icon' => $folder->getIcon(),
+                        'key' => 'folder-' . $folder->id,
+                        'badge' => $folderUnreadCount > 0 ? $folderUnreadCount : null,
+                        'badge_type' => 'info',
+                        'description' => $account->email_address
+                    ];
+                }
+            }
+        }
+
+        $sections[] = [
+            'type' => 'section',
+            'title' => 'FOLDERS',
+            'expandable' => true,
+            'default_expanded' => true,
+            'items' => $folderItems
+        ];
+
+        // Add management section
+        $sections[] = [
+            'type' => 'section',
+            'title' => 'MANAGEMENT',
+            'expandable' => true,
+            'default_expanded' => false,
+            'items' => [
+                [
+                    'name' => 'Email Accounts',
+                    'route' => 'email.accounts.index',
+                    'icon' => 'cog',
+                    'key' => 'accounts',
+                    'badge' => $accountsCount > 0 ? $accountsCount : null,
+                    'badge_type' => 'success'
+                ],
+                [
+                    'name' => 'Signatures',
+                    'route' => 'email.signatures.index',
+                    'icon' => 'pencil-square',
+                    'key' => 'signatures'
+                ]
+            ]
+        ];
+
+        return [
+            'title' => 'Email Management',
+            'icon' => 'envelope',
+            'sections' => $sections
         ];
     }
     

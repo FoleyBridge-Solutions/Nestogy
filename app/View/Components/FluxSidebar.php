@@ -96,6 +96,9 @@ class FluxSidebar extends Component
                 case 'invoices':
                     $count = $selectedClient->invoices()->whereIn('status', ['draft', 'sent'])->count();
                     break;
+                case 'communications':
+                    $count = $selectedClient->communicationLogs()->count();
+                    break;
             }
             
             // Apply badge type styling

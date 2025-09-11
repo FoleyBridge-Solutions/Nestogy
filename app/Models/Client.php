@@ -246,6 +246,14 @@ class Client extends Model
     }
 
     /**
+     * Get the client's communication logs.
+     */
+    public function communicationLogs()
+    {
+        return $this->hasMany(CommunicationLog::class);
+    }
+
+    /**
      * Get the tags associated with the client.
      */
     public function tags()

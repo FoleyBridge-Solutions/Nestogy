@@ -94,6 +94,34 @@ class Contact extends Authenticatable
         'must_change_password',
         'session_timeout_minutes',
         'allowed_ip_addresses',
+        // Communication preferences
+        'preferred_contact_method',
+        'best_time_to_contact',
+        'timezone',
+        'language',
+        'do_not_disturb',
+        'marketing_opt_in',
+        // Professional details
+        'linkedin_url',
+        'assistant_name',
+        'assistant_email',
+        'assistant_phone',
+        'reports_to_id',
+        'work_schedule',
+        'professional_bio',
+        // Location & Availability
+        'office_location_id',
+        'is_emergency_contact',
+        'is_after_hours_contact',
+        'out_of_office_start',
+        'out_of_office_end',
+        // Social & Web presence
+        'website',
+        'twitter_handle',
+        'facebook_url',
+        'instagram_handle',
+        'company_blog',
+        'role',
     ];
 
     /**
@@ -134,6 +162,15 @@ class Contact extends Authenticatable
         'login_count' => 'integer',
         'failed_login_count' => 'integer',
         'session_timeout_minutes' => 'integer',
+        // New field casts
+        'do_not_disturb' => 'boolean',
+        'marketing_opt_in' => 'boolean',
+        'reports_to_id' => 'integer',
+        'office_location_id' => 'integer',
+        'is_emergency_contact' => 'boolean',
+        'is_after_hours_contact' => 'boolean',
+        'out_of_office_start' => 'date',
+        'out_of_office_end' => 'date',
     ];
 
     /**
@@ -194,6 +231,30 @@ class Contact extends Authenticatable
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    /**
+     * Get the contact this contact reports to.
+     */
+    public function reportsTo(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'reports_to_id');
+    }
+
+    /**
+     * Get the contacts that report to this contact.
+     */
+    public function directReports(): HasMany
+    {
+        return $this->hasMany(Contact::class, 'reports_to_id');
+    }
+
+    /**
+     * Get the office location for this contact.
+     */
+    public function officeLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'office_location_id');
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Vendor;
+use App\Services\NavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -30,10 +31,17 @@ class ContactController extends Controller
     }
 
     /**
-     * Display a listing of contacts for a specific client (client-centric view)
+     * Display a listing of contacts for a specific client (session-based client selection)
      */
-    public function index(Request $request, Client $client)
+    public function index(Request $request)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Authorize client access
         $this->authorize('view', $client);
         
@@ -88,10 +96,17 @@ class ContactController extends Controller
     }
 
     /**
-     * Show the form for creating a new contact for a specific client
+     * Show the form for creating a new contact (session-based client selection)
      */
-    public function create(Request $request, Client $client)
+    public function create(Request $request)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Authorize client access
         $this->authorize('view', $client);
         
@@ -104,10 +119,17 @@ class ContactController extends Controller
     }
 
     /**
-     * Store a newly created contact for a specific client
+     * Store a newly created contact (session-based client selection)
      */
-    public function store(Request $request, Client $client)
+    public function store(Request $request)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Authorize client access
         $this->authorize('view', $client);
         
@@ -159,15 +181,22 @@ class ContactController extends Controller
                         ->update(['primary' => false]);
         }
 
-        return redirect()->route('clients.contacts.index', $client)
+        return redirect()->route('clients.contacts.index')
                         ->with('success', 'Contact created successfully.');
     }
 
     /**
-     * Display the specified contact for a specific client
+     * Display the specified contact (session-based client selection)
      */
-    public function show(Client $client, Contact $contact)
+    public function show(Contact $contact)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
@@ -188,10 +217,17 @@ class ContactController extends Controller
     }
 
     /**
-     * Show the form for editing the specified contact for a specific client
+     * Show the form for editing the specified contact (session-based client selection)
      */
-    public function edit(Client $client, Contact $contact)
+    public function edit(Contact $contact)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
@@ -210,10 +246,17 @@ class ContactController extends Controller
     }
 
     /**
-     * Update the specified contact for a specific client
+     * Update the specified contact (session-based client selection)
      */
-    public function update(Request $request, Client $client, Contact $contact)
+    public function update(Request $request, Contact $contact)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
@@ -286,15 +329,22 @@ class ContactController extends Controller
                         ->update(['primary' => false]);
         }
 
-        return redirect()->route('clients.contacts.index', $client)
+        return redirect()->route('clients.contacts.index')
                         ->with('success', 'Contact updated successfully.');
     }
 
     /**
-     * Remove the specified contact for a specific client
+     * Remove the specified contact (session-based client selection)
      */
-    public function destroy(Client $client, Contact $contact)
+    public function destroy(Contact $contact)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
@@ -311,15 +361,22 @@ class ContactController extends Controller
 
         $contact->delete();
 
-        return redirect()->route('clients.contacts.index', $client)
+        return redirect()->route('clients.contacts.index')
                         ->with('success', 'Contact deleted successfully.');
     }
 
     /**
-     * Export contacts for a specific client to CSV
+     * Export contacts to CSV (session-based client selection)
      */
-    public function export(Request $request, Client $client)
+    public function export(Request $request)
     {
+        // Get selected client from session
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+        }
+
         // Authorize client access
         $this->authorize('view', $client);
         

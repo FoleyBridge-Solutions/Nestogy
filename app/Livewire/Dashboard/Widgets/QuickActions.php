@@ -54,6 +54,14 @@ class QuickActions extends Component
                     'route' => 'team.index',
                     'permission' => 'view-team',
                 ],
+                [
+                    'title' => 'Email Inbox',
+                    'description' => 'Check your email messages',
+                    'icon' => 'envelope',
+                    'color' => 'blue',
+                    'route' => 'email.inbox.index',
+                    'permission' => 'view-email',
+                ],
             ],
             'operations' => [
                 [
@@ -87,6 +95,14 @@ class QuickActions extends Component
                     'color' => 'purple',
                     'route' => 'knowledge.index',
                     'permission' => 'view-knowledge',
+                ],
+                [
+                    'title' => 'Compose Email',
+                    'description' => 'Send an email to clients',
+                    'icon' => 'pencil',
+                    'color' => 'green',
+                    'route' => 'email.compose.index',
+                    'permission' => 'send-email',
                 ],
             ],
             'financial' => [
@@ -155,6 +171,14 @@ class QuickActions extends Component
                     'color' => 'orange',
                     'route' => 'documentation.index',
                     'permission' => 'view-documentation',
+                ],
+                [
+                    'title' => 'Email Accounts',
+                    'description' => 'Manage email accounts',
+                    'icon' => 'cog-6-tooth',
+                    'color' => 'blue',
+                    'route' => 'email.accounts.index',
+                    'permission' => 'manage-email',
                 ],
             ],
         ];

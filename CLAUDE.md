@@ -233,3 +233,19 @@ grep -n "</flux:" file.blade.php | sed 's/.*<\/flux://' | sed 's/>.*//' | sort |
 ```bash
 php artisan view:clear
 ```
+
+## Development Workflow
+
+### Committing and Pushing Changes
+After completing development work, always commit and push changes to the repository:
+
+1. **Stage changes**: `git add <files>` or `git add .` for all changes
+2. **Commit with descriptive message**: `git commit -m "Brief description of what was changed/fixed"`
+3. **Push to repository**: `git push`
+
+**IMPORTANT**: Always push completed work to ensure changes are preserved and available to the team. This includes:
+- Bug fixes
+- New features
+- Configuration updates
+- Documentation changes
+- Any other modifications to the codebase

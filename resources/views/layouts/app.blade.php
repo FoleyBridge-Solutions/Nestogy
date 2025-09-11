@@ -107,13 +107,19 @@
             
             <flux:spacer />
             <!-- Client Switcher -->
-            @livewire('client-switcher')
+            @auth
+                @livewire('client-switcher')
+            @endauth
             
             <!-- Navbar Timer -->
-            @livewire('navbar-timer')
-            
+            @auth
+                @livewire('navbar-timer')
+            @endauth
+
             <!-- Command Palette -->
-            @livewire('command-palette')
+            @auth
+                @livewire('command-palette')
+            @endauth
             
             {{-- Global keyboard shortcut for command palette --}}
             <script>
@@ -124,6 +130,10 @@
                     }
                 });
             </script>
+            <flux:navbar.item icon="envelope" 
+                            href="{{ route('email.inbox.index') }}" 
+                            class="max-lg:hidden"
+                            aria-label="Email" />
             <flux:navbar.item icon="cog-6-tooth" 
                             href="{{ route('settings.index') }}" 
                             class="max-lg:hidden"
@@ -286,19 +296,31 @@
         @endif
 
         <!-- Page Content -->
-        <div class="p-4 lg:p-6">
+        <div class="p-4 lg:p-6 h-full">
             @yield('content')
         </div>
     </flux:main>
 
-    <!-- Additional Scripts -->
-    @stack('scripts')
-    
     <!-- Livewire Scripts -->
     @livewireScripts
-    
+
     <!-- Flux Scripts -->
     @fluxScripts
+
+    <!-- Defer Flux component initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure all components are rendered
+            setTimeout(function() {
+                if (window.Flux && window.Flux.init) {
+                    window.Flux.init();
+                }
+            }, 100);
+        });
+    </script>
+
+    <!-- Additional Scripts -->
+    @stack('scripts')
     
     <!-- Flux Toast Component -->
     <flux:toast />
