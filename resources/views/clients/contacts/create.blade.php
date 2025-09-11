@@ -134,25 +134,10 @@
             <flux:heading size="lg" class="mb-4">Contact Type</flux:heading>
             
             <div class="space-y-3">
-                <flux:checkbox name="primary" value="1" :checked="old('primary')">
-                    <flux:label>Primary Contact</flux:label>
-                    <flux:description>Main point of contact for this client</flux:description>
-                </flux:checkbox>
-
-                <flux:checkbox name="billing" value="1" :checked="old('billing')">
-                    <flux:label>Billing Contact</flux:label>
-                    <flux:description>Receives invoices and handles payments</flux:description>
-                </flux:checkbox>
-
-                <flux:checkbox name="technical" value="1" :checked="old('technical')">
-                    <flux:label>Technical Contact</flux:label>
-                    <flux:description>Handles technical issues and support requests</flux:description>
-                </flux:checkbox>
-
-                <flux:checkbox name="important" value="1" :checked="old('important')">
-                    <flux:label>Important Contact</flux:label>
-                    <flux:description>Key stakeholder or decision maker</flux:description>
-                </flux:checkbox>
+                <flux:checkbox name="primary" value="1" :checked="old('primary')" label="Primary Contact" description="Main point of contact for this client" />
+                <flux:checkbox name="billing" value="1" :checked="old('billing')" label="Billing Contact" description="Receives invoices and handles payments" />
+                <flux:checkbox name="technical" value="1" :checked="old('technical')" label="Technical Contact" description="Handles technical issues and support requests" />
+                <flux:checkbox name="important" value="1" :checked="old('important')" label="Important Contact" description="Key stakeholder or decision maker" />
             </div>
         </flux:card>
 
