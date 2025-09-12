@@ -84,14 +84,24 @@
                                 <!-- Server Details -->
                                 <flux:table.cell class="py-2">
                                     <div class="space-y-0.5 text-sm text-zinc-600">
-                                        <div class="flex items-center gap-1">
-                                            <flux:icon.server class="w-3 h-3 flex-shrink-0" />
-                                            <span class="truncate">{{ $account->imap_host }}:{{ $account->imap_port }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <flux:icon.paper-airplane class="w-3 h-3 flex-shrink-0" />
-                                            <span class="truncate">{{ $account->smtp_host }}:{{ $account->smtp_port }}</span>
-                                        </div>
+                                        @if($account->connection_type === 'oauth')
+                                            <div class="flex items-center gap-1">
+                                                <flux:icon.key class="w-3 h-3 flex-shrink-0" />
+                                                <span class="text-sm font-medium text-emerald-600">OAuth Connection</span>
+                                            </div>
+                                            <div class="text-xs text-zinc-500">
+                                                {{ ucfirst(str_replace('_', ' ', $account->oauth_provider)) }}
+                                            </div>
+                                        @else
+                                            <div class="flex items-center gap-1">
+                                                <flux:icon.server class="w-3 h-3 flex-shrink-0" />
+                                                <span class="truncate">{{ $account->imap_host }}:{{ $account->imap_port }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <flux:icon.paper-airplane class="w-3 h-3 flex-shrink-0" />
+                                                <span class="truncate">{{ $account->smtp_host }}:{{ $account->smtp_port }}</span>
+                                            </div>
+                                        @endif
                                         <div class="text-xs text-zinc-500">
                                             {{ $account->folders->count() }} folders
                                         </div>

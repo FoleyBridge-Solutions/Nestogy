@@ -7,6 +7,7 @@ use App\Domains\Email\Services\ImapService;
 use App\Domains\Email\Services\Providers\MicrosoftGraphProvider;
 use App\Domains\Email\Services\Providers\GoogleWorkspaceProvider;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class UnifiedEmailSyncService
 {
@@ -199,9 +200,44 @@ class UnifiedEmailSyncService
      */
     protected function syncGoogleLabels(EmailAccount $account, string $accessToken): array
     {
-        // Implementation would use Gmail API to sync labels
-        // This is a placeholder for the actual implementation
-        return ['count' => 0];
+        try {
+            $provider = new GoogleWorkspaceProvider($account->company);
+            $labels = $provider->getLabels($accessToken);
+            
+            $syncedCount = 0;
+            foreach ($labels as $label) {
+                // Skip system labels that aren't useful as folders
+                if (in_array($label['type'] ?? '', ['system']) && 
+                    !in_array($label['id'], ['INBOX', 'SENT', 'DRAFT', 'SPAM', 'TRASH'])) {
+                    continue;
+                }
+                
+                // Create or update email folder
+                \App\Domains\Email\Models\EmailFolder::updateOrCreate(
+                    [
+                        'email_account_id' => $account->id,
+                        'remote_id' => $label['id'],
+                    ],
+                    [
+                        'name' => $label['name'],
+                        'type' => $this->mapGoogleLabelToType($label),
+                        'is_selectable' => true,
+                        'message_count' => $label['messagesTotal'] ?? 0,
+                        'unread_count' => $label['messagesUnread'] ?? 0,
+                    ]
+                );
+                $syncedCount++;
+            }
+            
+            return ['count' => $syncedCount];
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to sync Google labels', [
+                'account_id' => $account->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -209,8 +245,145 @@ class UnifiedEmailSyncService
      */
     protected function syncGoogleMessages(EmailAccount $account, string $accessToken): array
     {
-        // Implementation would use Gmail API to sync messages
-        // This is a placeholder for the actual implementation
-        return ['count' => 0];
+        try {
+            $provider = new GoogleWorkspaceProvider($account->company);
+            
+            // Get recent messages (last 7 days by default)
+            $query = 'newer_than:7d';
+            $messages = $provider->getMessages($accessToken, [
+                'query' => $query,
+                'maxResults' => 50
+            ]);
+            
+            $syncedCount = 0;
+            if (!empty($messages['messages'])) {
+                foreach ($messages['messages'] as $messageRef) {
+                    try {
+                        // Get full message details
+                        $messageDetails = $provider->getMessage($accessToken, $messageRef['id']);
+                        
+                        // Extract message data
+                        $messageData = $this->parseGoogleMessage($messageDetails);
+                        
+                        // Create or update email message
+                        \App\Domains\Email\Models\EmailMessage::updateOrCreate(
+                            [
+                                'email_account_id' => $account->id,
+                                'remote_id' => $messageDetails['id'],
+                            ],
+                            $messageData
+                        );
+                        
+                        $syncedCount++;
+                        
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to sync individual Gmail message', [
+                            'account_id' => $account->id,
+                            'message_id' => $messageRef['id'],
+                            'error' => $e->getMessage(),
+                        ]);
+                        // Continue with other messages
+                    }
+                }
+            }
+            
+            return ['count' => $syncedCount];
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to sync Google messages', [
+                'account_id' => $account->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Map Google label to folder type
+     */
+    protected function mapGoogleLabelToType(array $label): string
+    {
+        $labelId = $label['id'] ?? '';
+        $labelName = strtolower($label['name'] ?? '');
+        
+        if ($labelId === 'INBOX') return 'inbox';
+        if ($labelId === 'SENT') return 'sent';
+        if ($labelId === 'DRAFT') return 'drafts';
+        if ($labelId === 'SPAM') return 'spam';
+        if ($labelId === 'TRASH') return 'trash';
+        
+        return 'folder';
+    }
+
+    /**
+     * Parse Google message into database format
+     */
+    protected function parseGoogleMessage(array $messageDetails): array
+    {
+        $payload = $messageDetails['payload'] ?? [];
+        $headers = $payload['headers'] ?? [];
+        
+        // Extract headers
+        $subject = '';
+        $from = '';
+        $to = '';
+        $date = '';
+        
+        foreach ($headers as $header) {
+            switch (strtolower($header['name'])) {
+                case 'subject':
+                    $subject = $header['value'];
+                    break;
+                case 'from':
+                    $from = $header['value'];
+                    break;
+                case 'to':
+                    $to = $header['value'];
+                    break;
+                case 'date':
+                    $date = $header['value'];
+                    break;
+            }
+        }
+        
+        // Extract body
+        $body = $this->extractGoogleMessageBody($payload);
+        
+        return [
+            'subject' => $subject,
+            'from_address' => $from,
+            'to_address' => $to,
+            'body' => $body,
+            'received_at' => $date ? Carbon::parse($date) : now(),
+            'is_read' => !in_array('UNREAD', $messageDetails['labelIds'] ?? []),
+            'size' => $messageDetails['sizeEstimate'] ?? 0,
+        ];
+    }
+
+    /**
+     * Extract body from Google message payload
+     */
+    protected function extractGoogleMessageBody(array $payload): string
+    {
+        if (!empty($payload['body']['data'])) {
+            return base64_decode(str_replace(['-', '_'], ['+', '/'], $payload['body']['data']));
+        }
+        
+        if (!empty($payload['parts'])) {
+            foreach ($payload['parts'] as $part) {
+                if ($part['mimeType'] === 'text/plain' && !empty($part['body']['data'])) {
+                    return base64_decode(str_replace(['-', '_'], ['+', '/'], $part['body']['data']));
+                }
+            }
+            
+            // Fallback to HTML if no plain text found
+            foreach ($payload['parts'] as $part) {
+                if ($part['mimeType'] === 'text/html' && !empty($part['body']['data'])) {
+                    return base64_decode(str_replace(['-', '_'], ['+', '/'], $part['body']['data']));
+                }
+            }
+        }
+        
+        return '';
     }
 }

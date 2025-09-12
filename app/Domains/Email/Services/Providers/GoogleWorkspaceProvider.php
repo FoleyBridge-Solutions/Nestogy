@@ -121,4 +121,71 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
         return !empty($this->config['client_id']) &&
                !empty($this->config['client_secret']);
     }
+
+    /**
+     * Get Gmail labels (folders) using Gmail API
+     */
+    public function getLabels(string $accessToken): array
+    {
+        $response = Http::withToken($accessToken)
+            ->get('https://gmail.googleapis.com/gmail/v1/users/me/labels');
+
+        if ($response->failed()) {
+            Log::error('Failed to get Gmail labels', [
+                'response' => $response->body(),
+                'status' => $response->status(),
+            ]);
+            throw new \Exception('Failed to retrieve Gmail labels');
+        }
+
+        return $response->json()['labels'] ?? [];
+    }
+
+    /**
+     * Get Gmail messages using Gmail API
+     */
+    public function getMessages(string $accessToken, array $options = []): array
+    {
+        $params = [
+            'maxResults' => $options['maxResults'] ?? 100,
+            'q' => $options['query'] ?? '',
+        ];
+
+        if (!empty($options['pageToken'])) {
+            $params['pageToken'] = $options['pageToken'];
+        }
+
+        $response = Http::withToken($accessToken)
+            ->get('https://gmail.googleapis.com/gmail/v1/users/me/messages', $params);
+
+        if ($response->failed()) {
+            Log::error('Failed to get Gmail messages', [
+                'response' => $response->body(),
+                'status' => $response->status(),
+            ]);
+            throw new \Exception('Failed to retrieve Gmail messages');
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Get specific Gmail message details using Gmail API
+     */
+    public function getMessage(string $accessToken, string $messageId): array
+    {
+        $response = Http::withToken($accessToken)
+            ->get("https://gmail.googleapis.com/gmail/v1/users/me/messages/{$messageId}");
+
+        if ($response->failed()) {
+            Log::error('Failed to get Gmail message details', [
+                'message_id' => $messageId,
+                'response' => $response->body(),
+                'status' => $response->status(),
+            ]);
+            throw new \Exception("Failed to retrieve Gmail message: {$messageId}");
+        }
+
+        return $response->json();
+    }
 }

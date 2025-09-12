@@ -5,6 +5,7 @@ namespace App\Domains\Email\Controllers;
 use App\Http\Controllers\Controller;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\ImapService;
+use App\Domains\Email\Services\UnifiedEmailSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -13,7 +14,8 @@ use Illuminate\Validation\Rule;
 class EmailAccountController extends Controller
 {
     public function __construct(
-        private ImapService $imapService
+        private ImapService $imapService,
+        private UnifiedEmailSyncService $unifiedSyncService
     ) {}
 
     public function index()
@@ -368,7 +370,8 @@ class EmailAccountController extends Controller
         $this->authorize('update', $emailAccount);
 
         try {
-            $result = $this->imapService->syncAccount($emailAccount);
+            // Use UnifiedEmailSyncService to handle both OAuth and IMAP accounts
+            $result = $this->unifiedSyncService->syncAccount($emailAccount);
             
             return response()->json([
                 'success' => true,
