@@ -292,7 +292,7 @@ class ProjectTemplate extends Model
     /**
      * Clone template for customization.
      */
-    public function clone(string $newName = null): ProjectTemplate
+    public function clone(?string $newName = null): ProjectTemplate
     {
         $attributes = $this->toArray();
         unset($attributes['id'], $attributes['created_at'], $attributes['updated_at'], $attributes['deleted_at']);
