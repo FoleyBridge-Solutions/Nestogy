@@ -197,37 +197,38 @@
 
     <!-- Delete Confirmation Modal -->
     @if($showDeleteModal && $accountToDelete)
-        <flux:modal wire:model="showDeleteModal">
-            <flux:modal.header>
-                <flux:heading>Confirm Account Deletion</flux:heading>
-            </flux:modal.header>
-            <flux:modal.body>
-                <flux:text>
-                    Are you sure you want to delete the email account 
-                    <strong>"{{ $accountToDelete->name }}"</strong> ({{ $accountToDelete->email_address }})?
-                </flux:text>
-                <flux:text class="mt-2 text-sm text-zinc-600">
-                    This will permanently remove the account and all its folders and messages. 
-                    This action cannot be undone.
-                </flux:text>
-            </flux:modal.body>
-            <flux:modal.footer>
-                <flux:button variant="ghost" wire:click="cancelDelete">
-                    Cancel
-                </flux:button>
-                <flux:button 
-                    variant="danger" 
-                    wire:click="deleteAccount"
-                    wire:loading.attr="disabled"
-                >
-                    <span wire:loading.remove wire:target="deleteAccount">
-                        Delete Account
-                    </span>
-                    <span wire:loading wire:target="deleteAccount">
-                        Deleting...
-                    </span>
-                </flux:button>
-            </flux:modal.footer>
+        <flux:modal wire:model="showDeleteModal" class="min-w-[22rem]">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">Confirm Account Deletion</flux:heading>
+                    <flux:text class="mt-2">
+                        Are you sure you want to delete the email account 
+                        <strong>"{{ $accountToDelete->name }}"</strong> ({{ $accountToDelete->email_address }})?
+                    </flux:text>
+                    <flux:text class="mt-2 text-sm text-zinc-600">
+                        This will permanently remove the account and all its folders and messages. 
+                        This action cannot be undone.
+                    </flux:text>
+                </div>
+                <div class="flex gap-2">
+                    <flux:spacer />
+                    <flux:button variant="ghost" wire:click="cancelDelete">
+                        Cancel
+                    </flux:button>
+                    <flux:button 
+                        variant="danger" 
+                        wire:click="deleteAccount"
+                        wire:loading.attr="disabled"
+                    >
+                        <span wire:loading.remove wire:target="deleteAccount">
+                            Delete Account
+                        </span>
+                        <span wire:loading wire:target="deleteAccount">
+                            Deleting...
+                        </span>
+                    </flux:button>
+                </div>
+            </div>
         </flux:modal>
     @endif
 </div>
