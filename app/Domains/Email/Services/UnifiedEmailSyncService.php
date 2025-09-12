@@ -30,6 +30,10 @@ class UnifiedEmailSyncService
      */
     public function syncAccount(EmailAccount $account): array
     {
+        // Force error logging to ensure we see this in production
+        error_log("OAUTH_DEBUG: Starting syncAccount for {$account->email_address} (ID: {$account->id})");
+        error_log("OAUTH_DEBUG: Connection type: {$account->connection_type}, Provider: {$account->provider}");
+        
         try {
             if ($account->connection_type === 'oauth') {
                 return $this->syncOAuthAccount($account);
@@ -61,10 +65,15 @@ class UnifiedEmailSyncService
      */
     protected function syncOAuthAccount(EmailAccount $account): array
     {
+        error_log("OAUTH_DEBUG: Starting syncOAuthAccount for provider: {$account->oauth_provider}");
+        
         // Ensure tokens are valid
         if (!$this->tokenManager->ensureValidTokens($account)) {
+            error_log("OAUTH_DEBUG: Token refresh failed for account {$account->id}");
             throw new \Exception('Unable to refresh OAuth tokens');
         }
+        
+        error_log("OAUTH_DEBUG: Tokens validated successfully for account {$account->id}");
 
         // Use provider-specific sync method
         switch ($account->oauth_provider) {
