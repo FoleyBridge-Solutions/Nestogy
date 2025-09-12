@@ -370,15 +370,27 @@ class EmailAccountController extends Controller
         $this->authorize('update', $emailAccount);
 
         try {
+            \Log::info('Starting email sync', [
+                'account_id' => $emailAccount->id,
+                'account_email' => $emailAccount->email_address,
+                'connection_type' => $emailAccount->connection_type,
+                'provider' => $emailAccount->provider,
+            ]);
+
             // Use UnifiedEmailSyncService to handle both OAuth and IMAP accounts
             $result = $this->unifiedSyncService->syncAccount($emailAccount);
             
+            \Log::info('Email sync completed', [
+                'account_id' => $emailAccount->id,
+                'result' => $result,
+            ]);
+            
             return response()->json([
-                'success' => true,
-                'message' => "Sync completed! {$result['folders_synced']} folders and {$result['messages_synced']} messages synced.",
-                'folders_synced' => $result['folders_synced'],
-                'messages_synced' => $result['messages_synced'],
-                'errors' => $result['errors'],
+                'success' => $result['success'] ?? true,
+                'message' => "Sync completed! " . ($result['folders_synced'] ?? 0) . " folders and " . ($result['messages_synced'] ?? 0) . " messages synced.",
+                'folders_synced' => $result['folders_synced'] ?? 0,
+                'messages_synced' => $result['messages_synced'] ?? 0,
+                'errors' => $result['errors'] ?? [],
             ]);
             
         } catch (\Exception $e) {
