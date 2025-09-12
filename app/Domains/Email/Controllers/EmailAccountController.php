@@ -367,7 +367,12 @@ class EmailAccountController extends Controller
 
     public function sync(EmailAccount $emailAccount)
     {
+        error_log("OAUTH_DEBUG: EmailAccountController::sync() called for account {$emailAccount->id}");
+        error_log("OAUTH_DEBUG: Account email: {$emailAccount->email_address}, connection_type: {$emailAccount->connection_type}");
+        
         $this->authorize('update', $emailAccount);
+        
+        error_log("OAUTH_DEBUG: Authorization passed, about to sync");
 
         try {
             \Log::info('Starting email sync', [
