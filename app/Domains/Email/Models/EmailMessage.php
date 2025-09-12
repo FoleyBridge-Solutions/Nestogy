@@ -19,6 +19,7 @@ class EmailMessage extends Model
         'email_folder_id',
         'message_id',
         'uid',
+        'remote_id',
         'thread_id',
         'reply_to_message_id',
         'subject',

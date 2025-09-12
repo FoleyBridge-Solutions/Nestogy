@@ -201,33 +201,64 @@ class UnifiedEmailSyncService
     protected function syncGoogleLabels(EmailAccount $account, string $accessToken): array
     {
         try {
+            Log::info('Starting Google labels sync', [
+                'account_id' => $account->id,
+                'account_email' => $account->email_address,
+            ]);
+
             $provider = new GoogleWorkspaceProvider($account->company);
             $labels = $provider->getLabels($accessToken);
+            
+            Log::info('Retrieved Gmail labels', [
+                'account_id' => $account->id,
+                'labels_count' => count($labels),
+                'labels' => collect($labels)->pluck('name', 'id')->toArray(),
+            ]);
             
             $syncedCount = 0;
             foreach ($labels as $label) {
                 // Skip system labels that aren't useful as folders
                 if (in_array($label['type'] ?? '', ['system']) && 
                     !in_array($label['id'], ['INBOX', 'SENT', 'DRAFT', 'SPAM', 'TRASH'])) {
+                    Log::debug('Skipping system label', [
+                        'label_id' => $label['id'],
+                        'label_name' => $label['name'],
+                        'label_type' => $label['type'] ?? 'unknown',
+                    ]);
                     continue;
                 }
                 
                 // Create or update email folder
-                \App\Domains\Email\Models\EmailFolder::updateOrCreate(
+                $folder = \App\Domains\Email\Models\EmailFolder::updateOrCreate(
                     [
                         'email_account_id' => $account->id,
                         'remote_id' => $label['id'],
                     ],
                     [
                         'name' => $label['name'],
+                        'path' => $label['id'], // Gmail uses label ID as path
                         'type' => $this->mapGoogleLabelToType($label),
                         'is_selectable' => true,
                         'message_count' => $label['messagesTotal'] ?? 0,
                         'unread_count' => $label['messagesUnread'] ?? 0,
+                        'last_synced_at' => now(),
                     ]
                 );
+                
+                Log::debug('Synced Gmail label', [
+                    'folder_id' => $folder->id,
+                    'label_id' => $label['id'],
+                    'label_name' => $label['name'],
+                    'folder_type' => $folder->type,
+                ]);
+                
                 $syncedCount++;
             }
+            
+            Log::info('Completed Google labels sync', [
+                'account_id' => $account->id,
+                'synced_count' => $syncedCount,
+            ]);
             
             return ['count' => $syncedCount];
             
@@ -235,6 +266,7 @@ class UnifiedEmailSyncService
             Log::error('Failed to sync Google labels', [
                 'account_id' => $account->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
@@ -352,11 +384,14 @@ class UnifiedEmailSyncService
         return [
             'subject' => $subject,
             'from_address' => $from,
-            'to_address' => $to,
-            'body' => $body,
+            'to_addresses' => $to,
+            'body_text' => $body,
+            'body_html' => $body, // For now, same as text - can be improved later
             'received_at' => $date ? Carbon::parse($date) : now(),
             'is_read' => !in_array('UNREAD', $messageDetails['labelIds'] ?? []),
-            'size' => $messageDetails['sizeEstimate'] ?? 0,
+            'size_bytes' => $messageDetails['sizeEstimate'] ?? 0,
+            'has_attachments' => false, // TODO: Detect attachments
+            'is_draft' => in_array('DRAFT', $messageDetails['labelIds'] ?? []),
         ];
     }
 

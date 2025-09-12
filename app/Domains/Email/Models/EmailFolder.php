@@ -15,6 +15,7 @@ class EmailFolder extends Model
         'email_account_id',
         'name',
         'path',
+        'remote_id',
         'type',
         'message_count',
         'unread_count',
