@@ -44,38 +44,38 @@ class OAuthCallbackController extends Controller
             ]);
             Log::info('OAuth parameter validation passed');
 
-            // Verify state to prevent CSRF attacks
-            $sessionState = Session::get('oauth_state');
-            Log::info('OAuth state comparison', [
-                'session_state' => $sessionState,
+            // Verify state from DATABASE instead of session
+            $oauthState = \DB::table('oauth_states')
+                ->where('state', $request->state)
+                ->where('expires_at', '>', now())
+                ->first();
+
+            Log::info('OAuth state lookup', [
                 'request_state' => $request->state,
-                'states_match' => $sessionState === $request->state,
+                'state_found' => !empty($oauthState),
+                'state_data' => $oauthState,
             ]);
 
-            if (!$sessionState || $sessionState !== $request->state) {
-                Log::warning('OAuth state mismatch - REDIRECTING WITH ERROR', [
-                    'session_state' => $sessionState,
+            if (!$oauthState) {
+                Log::warning('OAuth state not found in database - REDIRECTING WITH ERROR', [
                     'request_state' => $request->state,
                 ]);
                 return redirect()->route('email.accounts.index')
-                    ->with('error', 'OAuth authentication failed: Invalid state parameter');
+                    ->with('error', 'OAuth authentication failed: Invalid or expired state parameter');
             }
 
-            // Get OAuth context from session
-            $oauthContext = Session::get('oauth_context');
-            Log::info('OAuth context check', [
-                'has_context' => !empty($oauthContext),
-                'context_data' => $oauthContext,
-            ]);
+            // Get OAuth context from database record
+            $oauthContext = [
+                'company_id' => $oauthState->company_id,
+                'user_id' => $oauthState->user_id,
+                'email' => $oauthState->email,
+            ];
 
-            if (!$oauthContext) {
-                Log::warning('OAuth context missing - REDIRECTING WITH ERROR');
-                return redirect()->route('email.accounts.index')
-                    ->with('error', 'OAuth authentication failed: Missing context');
-            }
+            // Delete used state
+            \DB::table('oauth_states')->where('id', $oauthState->id)->delete();
 
-            // Clear session data
-            Session::forget(['oauth_state', 'oauth_context']);
+            // Clean up expired states
+            \DB::table('oauth_states')->where('expires_at', '<', now())->delete();
 
             $companyId = $oauthContext['company_id'];
             $userId = $oauthContext['user_id'];

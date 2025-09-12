@@ -98,12 +98,16 @@ class EmailAccountController extends Controller
             // Generate state for CSRF protection
             $state = Str::random(32);
 
-            // Store OAuth context in session
-            Session::put('oauth_state', $state);
-            Session::put('oauth_context', [
+            // Store OAuth context in DATABASE instead of session
+            \DB::table('oauth_states')->insert([
+                'state' => $state,
                 'company_id' => $company->id,
                 'user_id' => $user->id,
                 'email' => $request->email,
+                'provider' => $company->email_provider_type,
+                'expires_at' => now()->addMinutes(30),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             // Get authorization URL
