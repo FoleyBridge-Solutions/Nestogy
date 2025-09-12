@@ -435,6 +435,8 @@ class UnifiedEmailSyncService
         $folderId = $this->determineGmailMessageFolder($messageDetails, $account);
         
         return [
+            'message_id' => $messageDetails['id'], // Use Gmail message ID as message_id
+            'uid' => $messageDetails['id'], // Use Gmail message ID as UID for Gmail
             'subject' => $subject,
             'from_address' => $from,
             'to_addresses' => $to,
