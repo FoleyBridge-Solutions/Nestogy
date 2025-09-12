@@ -79,6 +79,7 @@
             <div class="flex flex-flex-1 px-6 sm:flex-flex flex-wrap -mx-4 items-center justify-center space-y-2 sm:space-y-0 sm:space-x-6">
                 <button type="button" 
                         onclick="document.getElementById('helpModal').classList.remove('hidden')"
+                        aria-describedby="helpModal"
                         class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors">
                     <i class="fas fa-question-circle mr-1"></i>Get Help
                 </button>
@@ -92,22 +93,23 @@
 </div>
 
 <!-- Help Modal -->
-<div id="helpModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+<div id="helpModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-labelledby="helpModalTitle" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen px-6 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="document.getElementById('helpModal').classList.add('hidden')"></div>
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="document.getElementById('helpModal').classList.add('hidden')" aria-hidden="true"></div>
 
         <!-- Modal panel -->
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <!-- Header -->
             <div class="bg-white dark:bg-gray-800 px-6 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                    <h3 id="helpModalTitle" class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                         <i class="fas fa-question-circle mr-2 text-blue-600 dark:text-blue-400"></i>
                         Email Verification Help
                     </h3>
                     <button type="button" 
                             onclick="document.getElementById('helpModal').classList.add('hidden')"
+                            aria-label="Close modal"
                             class="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 transition-colors">
                         <i class="fas fa-times text-lg"></i>
                     </button>
@@ -154,6 +156,7 @@
                 </a>
                 <button type="button" 
                         onclick="document.getElementById('helpModal').classList.add('hidden')"
+                        aria-label="Close help modal"
                         class="mt-6 w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                     Close
                 </button>

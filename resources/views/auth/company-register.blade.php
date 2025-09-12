@@ -116,7 +116,7 @@
                         <label for="company_name" class="block text-sm font-medium text-gray-700">
                             Company Name *
                         </label>
-                        <input id="company_name" name="company_name" type="text" required 
+                        <input id="company_name" name="company_name" type="text" required autocomplete="organization"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="Your company name" value="{{ old('company_name') }}">
                     </div>
@@ -125,7 +125,7 @@
                         <label for="company_email" class="block text-sm font-medium text-gray-700">
                             Company Email *
                         </label>
-                        <input id="company_email" name="company_email" type="email" required 
+                        <input id="company_email" name="company_email" type="email" required autocomplete="email"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="info@yourcompany.com" value="{{ old('company_email') }}">
                     </div>
@@ -134,7 +134,7 @@
                         <label for="company_phone" class="block text-sm font-medium text-gray-700">
                             Phone Number
                         </label>
-                        <input id="company_phone" name="company_phone" type="tel" 
+                        <input id="company_phone" name="company_phone" type="tel" autocomplete="tel"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="(555) 123-4567" value="{{ old('company_phone') }}">
                     </div>
@@ -143,7 +143,7 @@
                         <label for="company_website" class="block text-sm font-medium text-gray-700">
                             Website
                         </label>
-                        <input id="company_website" name="company_website" type="url" 
+                        <input id="company_website" name="company_website" type="url" autocomplete="url"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="https://yourcompany.com" value="{{ old('company_website') }}">
                     </div>
@@ -163,7 +163,7 @@
                         <label for="admin_name" class="block text-sm font-medium text-gray-700">
                             Your Full Name *
                         </label>
-                        <input id="admin_name" name="admin_name" type="text" required 
+                        <input id="admin_name" name="admin_name" type="text" required autocomplete="name"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="John Doe" value="{{ old('admin_name') }}">
                     </div>
@@ -172,7 +172,7 @@
                         <label for="admin_email" class="block text-sm font-medium text-gray-700">
                             Your Email Address *
                         </label>
-                        <input id="admin_email" name="admin_email" type="email" required 
+                        <input id="admin_email" name="admin_email" type="email" required autocomplete="email"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="john@yourcompany.com" value="{{ old('admin_email') }}">
                     </div>
@@ -181,7 +181,7 @@
                         <label for="admin_password" class="block text-sm font-medium text-gray-700">
                             Password *
                         </label>
-                        <input id="admin_password" name="admin_password" type="password" required 
+                        <input id="admin_password" name="admin_password" type="password" required autocomplete="new-password"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="Your secure password">
                     </div>
@@ -190,7 +190,7 @@
                         <label for="admin_password_confirmation" class="block text-sm font-medium text-gray-700">
                             Confirm Password *
                         </label>
-                        <input id="admin_password_confirmation" name="admin_password_confirmation" type="password" required 
+                        <input id="admin_password_confirmation" name="admin_password_confirmation" type="password" required autocomplete="new-password"
                                class="mt-1 appearance-none relative block w-full px-6 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                placeholder="Confirm your password">
                     </div>

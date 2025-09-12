@@ -59,8 +59,8 @@
                         <div class="bundle-product-flex flex-wrap mb-2">
                             <div class="flex flex-wrap items-end">
                                 <div class="md:w-1/2">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
-                                    <select name="products[0][product_id]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                                    <label for="product_0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
+                                    <select name="products[0][product_id]" id="product_0" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
                                         <option value="">Select a product...</option>
                                         @foreach($products as $product)
                                             <option value="{{ $product->id }}">{{ $product->name }} - ${{ number_format($product->price, 2) }}</option>
@@ -68,11 +68,11 @@
                                     </select>
                                 </div>
                                 <div class="md:w-1/4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
-                                    <input type="number" name="products[0][quantity]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="1" min="1" required>
+                                    <label for="quantity_0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
+                                    <input type="number" name="products[0][quantity]" id="quantity_0" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="1" min="1" required>
                                 </div>
                                 <div class="md:w-1/4">
-                                    <flux:button variant="ghost" color="red" class="px-3 py-1 text-sm remove-product" type="button"   disabled>
+                                    <flux:button variant="ghost" color="red" class="px-3 py-1 text-sm remove-product" type="button" aria-label="Remove product" disabled>
                                         <i class="fas fa-trash"></i>
                                     </flux:button>
                                 </div>
@@ -80,7 +80,7 @@
                         </div>
                     </div>
                     
-                    <flux:button variant="ghost" class="px-3 py-1 text-sm" type="button" id="add-product">
+                    <flux:button variant="ghost" class="px-3 py-1 text-sm" type="button" id="add-product" aria-label="Add another product to bundle">
                         <i class="fas fa-plus"></i> Add Product
                     </flux:button>
                 </x-content-card>
@@ -93,26 +93,29 @@
 
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pricing Type</label>
-                        <div class="flex items-center">
-                            <input class="flex items-center-input" type="radio" name="pricing_type" 
-                                   id="calculated" value="calculated" checked>
-                            <label class="flex items-center-label" for="calculated">
-                                Calculate from products
-                            </label>
-                        </div>
-                        <div class="flex items-center">
-                            <input class="flex items-center-input" type="radio" name="pricing_type" 
-                                   id="fixed" value="fixed">
-                            <label class="flex items-center-label" for="fixed">
-                                Fixed price
-                            </label>
-                        </div>
+                        <fieldset>
+                            <legend class="sr-only">Pricing Type</legend>
+                            <div class="flex items-center">
+                                <input class="flex items-center-input" type="radio" name="pricing_type" 
+                                       id="calculated" value="calculated" checked>
+                                <label class="flex items-center-label" for="calculated">
+                                    Calculate from products
+                                </label>
+                            </div>
+                            <div class="flex items-center">
+                                <input class="flex items-center-input" type="radio" name="pricing_type" 
+                                       id="fixed" value="fixed">
+                                <label class="flex items-center-label" for="fixed">
+                                    Fixed price
+                                </label>
+                            </div>
+                        </fieldset>
                     </div>
 
-                    <div class="mb-3" id="fixed-price-group" style="display: none;">
+                    <div class="mb-3" id="fixed-price-group" style="display: none;" aria-hidden="true">
                         <label for="fixed_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fixed Price</label>
                         <div class="flex">
-                            <span class="flex-text">$</span>
+                            <span class="flex-text" aria-label="US Dollar">$</span>
                             <input type="number" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('fixed_price') border-red-500 @enderror" 
                                    id="fixed_price" name="fixed_price" value="{{ old('fixed_price') }}" 
                                    step="0.01" min="0">
@@ -134,10 +137,10 @@
                         @enderror
                     </div>
 
-                    <div class="mb-3" id="discount-value-group" style="display: none;">
+                    <div class="mb-3" id="discount-value-group" style="display: none;" aria-hidden="true">
                         <label for="discount_value" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Discount Value</label>
                         <div class="flex">
-                            <span class="flex-text" id="discount-symbol">%</span>
+                            <span class="flex-text" id="discount-symbol" aria-label="Discount unit">%</span>
                             <input type="number" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('discount_value') border-red-500 @enderror" 
                                    id="discount_value" name="discount_value" value="{{ old('discount_value') }}" 
                                    step="0.01" min="0">
@@ -183,8 +186,8 @@ document.addEventListener('DOMContentLoaded', function() {
         newRow.innerHTML = `
             <div class="flex flex-wrap items-end">
                 <div class="md:w-1/2">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
-                    <select name="products[${productIndex}][product_id]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                    <label for="product_${productIndex}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
+                    <select name="products[${productIndex}][product_id]" id="product_${productIndex}" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
                         <option value="">Select a product...</option>
                         @foreach($products as $product)
                             <option value="{{ $product->id }}">{{ $product->name }} - ${{ number_format($product->price, 2) }}</option>
@@ -192,11 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     </select>
                 </div>
                 <div class="md:w-1/4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
-                    <input type="number" name="products[${productIndex}][quantity]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="1" min="1" required>
+                    <label for="quantity_${productIndex}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
+                    <input type="number" name="products[${productIndex}][quantity]" id="quantity_${productIndex}" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="1" min="1" required>
                 </div>
                 <div class="md:w-1/4">
-                    <flux:button variant="ghost" color="red" class="px-3 py-1 text-sm remove-product" type="button">
+                    <flux:button variant="ghost" color="red" class="px-3 py-1 text-sm remove-product" type="button" aria-label="Remove product">
                         <i class="fas fa-trash"></i>
                     </flux:button>
                 </div>
@@ -229,8 +232,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const fixedPriceGroup = document.getElementById('fixed-price-group');
             if (this.value === 'fixed') {
                 fixedPriceGroup.style.display = 'block';
+                fixedPriceGroup.setAttribute('aria-hidden', 'false');
             } else {
                 fixedPriceGroup.style.display = 'none';
+                fixedPriceGroup.setAttribute('aria-hidden', 'true');
             }
         });
     });
@@ -242,9 +247,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (this.value) {
             discountValueGroup.style.display = 'block';
-            discountSymbol.textContent = this.value === 'percentage' ? '%' : '$';
+            discountValueGroup.setAttribute('aria-hidden', 'false');
+            if (this.value === 'percentage') {
+                discountSymbol.textContent = '%';
+                discountSymbol.setAttribute('aria-label', 'Percentage');
+            } else {
+                discountSymbol.textContent = '$';
+                discountSymbol.setAttribute('aria-label', 'US Dollar');
+            }
         } else {
             discountValueGroup.style.display = 'none';
+            discountValueGroup.setAttribute('aria-hidden', 'true');
         }
     });
 

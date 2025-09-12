@@ -57,7 +57,7 @@
             <div class="px-6 py-8 sm:p-6">
                 <!-- File Upload -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CSV File</label>
+                    <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CSV File</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                         <div class="space-y-1 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">

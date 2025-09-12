@@ -40,7 +40,8 @@ $activeItem = 'contracts';
                             <div class="flex items-center justify-between mb-6">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Template</span>
                                 <div class="flex items-center space-x-2">
-                                    <select x-model="templateFilter.category" @change="filterTemplates()" 
+                                    <label for="template-category-filter" class="sr-only">Filter by category</label>
+                                    <select x-model="templateFilter.category" @change="filterTemplates()" id="template-category-filter" 
                                             class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                         <option value="">All Categories</option>
                                         <option value="msp">MSP</option>
@@ -48,7 +49,8 @@ $activeItem = 'contracts';
                                         <option value="var">VAR</option>
                                         <option value="compliance">Compliance</option>
                                     </select>
-                                    <select x-model="templateFilter.billingModel" @change="filterTemplates()"
+                                    <label for="template-billing-model-filter" class="sr-only">Filter by billing model</label>
+                                    <select x-model="templateFilter.billingModel" @change="filterTemplates()" id="template-billing-model-filter"
                                             class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                         <option value="">All Models</option>
                                         <option value="fixed">Fixed</option>
