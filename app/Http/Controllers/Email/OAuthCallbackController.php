@@ -90,6 +90,8 @@ class OAuthCallbackController extends Controller
                 'user_id' => $userId,
                 'email' => $email,
                 'provider' => $company->email_provider_type,
+                'account_user_id' => $account->user_id,
+                'tokens_received' => !empty($tokens),
             ]);
 
             return redirect()->route('email.accounts.index')

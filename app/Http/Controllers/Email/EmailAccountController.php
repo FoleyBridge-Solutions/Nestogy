@@ -35,8 +35,11 @@ class EmailAccountController extends Controller
     public function index()
     {
         $company = Auth::user()->company;
+        $user = Auth::user();
 
+        // Show only the current user's email accounts
         $accounts = EmailAccount::where('company_id', $company->id)
+            ->where('user_id', $user->id)
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->get();
