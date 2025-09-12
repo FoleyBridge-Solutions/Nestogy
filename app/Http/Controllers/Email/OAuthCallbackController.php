@@ -27,17 +27,33 @@ class OAuthCallbackController extends Controller
      */
     public function callback(Request $request)
     {
+        Log::info('OAuth callback received', [
+            'has_code' => $request->has('code'),
+            'has_state' => $request->has('state'),
+            'code_length' => $request->code ? strlen($request->code) : 0,
+            'state' => $request->state,
+            'all_params' => $request->all(),
+        ]);
+
         try {
             // Validate required parameters
+            Log::info('About to validate OAuth parameters');
             $request->validate([
                 'code' => 'required|string',
                 'state' => 'required|string',
             ]);
+            Log::info('OAuth parameter validation passed');
 
             // Verify state to prevent CSRF attacks
             $sessionState = Session::get('oauth_state');
+            Log::info('OAuth state comparison', [
+                'session_state' => $sessionState,
+                'request_state' => $request->state,
+                'states_match' => $sessionState === $request->state,
+            ]);
+
             if (!$sessionState || $sessionState !== $request->state) {
-                Log::warning('OAuth state mismatch', [
+                Log::warning('OAuth state mismatch - REDIRECTING WITH ERROR', [
                     'session_state' => $sessionState,
                     'request_state' => $request->state,
                 ]);
@@ -47,7 +63,13 @@ class OAuthCallbackController extends Controller
 
             // Get OAuth context from session
             $oauthContext = Session::get('oauth_context');
+            Log::info('OAuth context check', [
+                'has_context' => !empty($oauthContext),
+                'context_data' => $oauthContext,
+            ]);
+
             if (!$oauthContext) {
+                Log::warning('OAuth context missing - REDIRECTING WITH ERROR');
                 return redirect()->route('email.accounts.index')
                     ->with('error', 'OAuth authentication failed: Missing context');
             }
@@ -98,10 +120,12 @@ class OAuthCallbackController extends Controller
                 ->with('success', 'Email account connected successfully!');
 
         } catch (\Exception $e) {
-            Log::error('OAuth callback failed', [
+            Log::error('OAuth callback EXCEPTION - REDIRECTING WITH ERROR', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_params' => $request->all(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
             return redirect()->route('email.accounts.index')
