@@ -213,19 +213,23 @@
                         </div>
 
                         <div class="flex-1 overflow-y-auto p-4">
-                            <flux:tabs>
-                                <flux:tabs.tab selected>Content</flux:tabs.tab>
-                                @if($this->selectedMessage()->attachments->isNotEmpty())
-                                    <flux:tabs.tab>Attachments ({{ $this->selectedMessage()->attachments->count() }})</flux:tabs.tab>
-                                @endif
-                                <flux:tabs.tab>Headers</flux:tabs.tab>
+                            <flux:tab.group>
+                                <flux:tab.group>
+                                <flux:tabs>
+                                    <flux:tab name="content">Content</flux:tab>
+                                    @if($this->selectedMessage()->attachments->isNotEmpty())
+                                        <flux:tab name="attachments">Attachments ({{ $this->selectedMessage()->attachments->count() }})</flux:tab>
+                                    @endif
+                                    <flux:tab name="headers">Headers</flux:tab>
+                                </flux:tabs>
+                                </flux:tab.group>
 
-                                <flux:tabs.panel class="prose dark:prose-invert max-w-none">
+                                <flux:tab.panel name="content" class="prose dark:prose-invert max-w-none">
                                     {!! $this->selectedMessage()->body_html ?: nl2br(e($this->selectedMessage()->body_text)) !!}
-                                </flux:tabs.panel>
+                                </flux:tab.panel>
 
                                 @if($this->selectedMessage()->attachments->isNotEmpty())
-                                    <flux:tabs.panel>
+                                    <flux:tab.panel name="attachments">
                                         <div class="space-y-2">
                                             @foreach($this->selectedMessage()->attachments as $attachment)
                                                 <div class="flex items-center gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
@@ -236,18 +240,18 @@
                                                 </div>
                                             @endforeach
                                         </div>
-                                    </flux:tabs.panel>
+                                    </flux:tab.panel>
                                 @endif
 
-                                <flux:tabs.panel>
+                                <flux:tab.panel name="headers">
                                     <div class="text-xs text-zinc-500">
                                         <pre class="whitespace-pre-wrap">Message-ID: {{ $this->selectedMessage()->message_id }}
-From: {{ $this->selectedMessage()->from_name }} &lt;{{ $this->selectedMessage()->from_address }}&gt;
-To: {{ $this->selectedMessage()->to_addresses ? implode(', ', $this->selectedMessage()->to_addresses) : '' }}
-Date: {{ $this->selectedMessage()->sent_at }}</pre>
+ From: {{ $this->selectedMessage()->from_name }} &lt;{{ $this->selectedMessage()->from_address }}&gt;
+ To: {{ $this->selectedMessage()->to_addresses ? implode(', ', $this->selectedMessage()->to_addresses) : '' }}
+ Date: {{ $this->selectedMessage()->sent_at }}</pre>
                                     </div>
-                                </flux:tabs.panel>
-                            </flux:tabs>
+                                </flux:tab.panel>
+                            </flux:tab.group>
                         </div>
                     </flux:card>
                 @else
