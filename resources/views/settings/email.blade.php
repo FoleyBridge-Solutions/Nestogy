@@ -5,11 +5,46 @@
 @section('settings-title', 'Email Settings')
 @section('settings-description', 'Configure SMTP, IMAP, and email notification settings')
 
+@php
+    $sidebarContext = 'settings';
+@endphp
+
 @section('settings-content')
 <div x-data="{ activeTab: 'smtp' }">
     <form method="POST" action="{{ route('settings.email.update') }}">
         @csrf
         @method('PUT')
+
+        <!-- Provider Status Banner -->
+        @if($providerSettings['is_oauth_provider'])
+            <div class="px-6 py-4 {{ $providerSettings['oauth_configured'] ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200' }} border-l-4 mb-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        @if($providerSettings['oauth_configured'])
+                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        @else
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        @endif
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium {{ $providerSettings['oauth_configured'] ? 'text-green-800' : 'text-yellow-800' }}">
+                            {{ $availableProviders[$currentProvider]['name'] }} Integration
+                        </h3>
+                        <div class="mt-1 text-sm {{ $providerSettings['oauth_configured'] ? 'text-green-700' : 'text-yellow-700' }}">
+                            @if($providerSettings['oauth_configured'])
+                                <p>OAuth is configured and ready to use. You can use OAuth authentication for secure email connections.</p>
+                            @else
+                                <p>OAuth is not fully configured. <a href="{{ route('settings.company-email-provider') }}" class="underline font-medium">Configure your {{ $availableProviders[$currentProvider]['name'] }} settings</a> to enable OAuth authentication.</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200 dark:border-gray-700">
@@ -48,6 +83,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
                                 SMTP Configuration (Outgoing Mail)
+                                @if($providerSettings['is_oauth_provider'] && $providerSettings['oauth_configured'])
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        OAuth Available
+                                    </span>
+                                @endif
                             </h3>
                         </div>
                         <div class="p-6">
@@ -82,68 +122,118 @@
                                 </div>
                             </div>
 
-                            <div class="mb-6">
-                                <label for="smtp_encryption" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Encryption
-                                </label>
-                                <select id="smtp_encryption" 
-                                        name="smtp_encryption"
-                                        class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('smtp_encryption') border-red-500 @enderror">
-                                    <option value="">None</option>
-                                    <option value="tls" {{ old('smtp_encryption', $setting?->smtp_encryption ?? '') == 'tls' ? 'selected' : '' }}>TLS</option>
-                                    <option value="ssl" {{ old('smtp_encryption', $setting?->smtp_encryption ?? '') == 'ssl' ? 'selected' : '' }}>SSL</option>
-                                </select>
-                                @error('smtp_encryption')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                             <div class="mb-6">
+                                 <label for="smtp_encryption" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                     Encryption
+                                 </label>
+                                 <select id="smtp_encryption"
+                                         name="smtp_encryption"
+                                         class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('smtp_encryption') border-red-500 @enderror">
+                                     <option value="">None</option>
+                                     <option value="tls" {{ old('smtp_encryption', $setting?->smtp_encryption ?? '') == 'tls' ? 'selected' : '' }}>TLS</option>
+                                     <option value="ssl" {{ old('smtp_encryption', $setting?->smtp_encryption ?? '') == 'ssl' ? 'selected' : '' }}>SSL</option>
+                                 </select>
+                                 @error('smtp_encryption')
+                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                 @enderror
+                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <label for="smtp_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        SMTP Username
-                                    </label>
-                                    <input type="text" 
-                                           id="smtp_username" 
-                                           name="smtp_username" 
-                                           value="{{ old('smtp_username', $setting?->smtp_username ?? '') }}"
-                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('smtp_username') border-red-500 @enderror">
-                                    @error('smtp_username')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label for="smtp_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        SMTP Password
-                                        @if(!empty($setting?->smtp_password))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                Saved
-                                            </span>
-                                        @endif
-                                    </label>
-                                    <div class="relative">
-                                        <input type="password" 
-                                               id="smtp_password" 
-                                               name="smtp_password" 
-                                               placeholder="{{ !empty($setting?->smtp_password) ? 'Leave blank to keep current password' : 'Enter SMTP password' }}"
-                                               class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pr-10 @error('smtp_password') border-red-500 @enderror">
-                                        <button type="button" 
-                                                onclick="togglePasswordVisibility('smtp_password')"
-                                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    @error('smtp_password')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                            </div>
+                             <!-- Authentication Method -->
+                             <div class="mb-6">
+                                 <label for="smtp_auth_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                     Authentication Method
+                                 </label>
+                                 <select id="smtp_auth_method"
+                                         name="smtp_auth_method"
+                                         class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('smtp_auth_method') border-red-500 @enderror">
+                                     <option value="password" {{ old('smtp_auth_method', $setting?->smtp_auth_method ?? 'password') == 'password' ? 'selected' : '' }}>Username/Password</option>
+                                     @if($providerSettings['is_oauth_provider'] && $providerSettings['oauth_configured'])
+                                         <option value="oauth" {{ old('smtp_auth_method', $setting?->smtp_auth_method ?? '') == 'oauth' ? 'selected' : '' }}>
+                                             OAuth ({{ $availableProviders[$currentProvider]['name'] }})
+                                         </option>
+                                     @endif
+                                 </select>
+                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                     @if($providerSettings['is_oauth_provider'] && $providerSettings['oauth_configured'])
+                                         Choose OAuth for secure token-based authentication with your {{ $availableProviders[$currentProvider]['name'] }} account.
+                                     @else
+                                         Use username/password for traditional authentication.
+                                     @endif
+                                 </p>
+                                 @error('smtp_auth_method')
+                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                 @enderror
+                             </div>
+
+                             <!-- Username/Password Fields (shown when not using OAuth) -->
+                             <div id="smtp_credentials_section" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" style="{{ old('smtp_auth_method', $setting?->smtp_auth_method ?? 'password') == 'oauth' ? 'display: none;' : '' }}">
+                                 <div>
+                                     <label for="smtp_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                         SMTP Username
+                                     </label>
+                                     <input type="text"
+                                            id="smtp_username"
+                                            name="smtp_username"
+                                            value="{{ old('smtp_username', $setting?->smtp_username ?? '') }}"
+                                            class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('smtp_username') border-red-500 @enderror">
+                                     @error('smtp_username')
+                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                     @enderror
+                                 </div>
+                                 <div>
+                                     <label for="smtp_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                         SMTP Password
+                                         @if(!empty($setting?->smtp_password))
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
+                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                 </svg>
+                                                 Saved
+                                             </span>
+                                         @endif
+                                     </label>
+                                     <div class="relative">
+                                         <input type="password"
+                                                id="smtp_password"
+                                                name="smtp_password"
+                                                placeholder="{{ !empty($setting?->smtp_password) ? 'Leave blank to keep current password' : 'Enter SMTP password' }}"
+                                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pr-10 @error('smtp_password') border-red-500 @enderror">
+                                         <button type="button"
+                                                 onclick="togglePasswordVisibility('smtp_password')"
+                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                             </svg>
+                                         </button>
+                                     </div>
+                                     @error('smtp_password')
+                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                     @enderror
+                                 </div>
+                             </div>
+
+                             <!-- OAuth Notice (shown when using OAuth) -->
+                             <div id="smtp_oauth_notice" class="mb-6 p-4 bg-blue-50 rounded-lg" style="{{ old('smtp_auth_method', $setting?->smtp_auth_method ?? 'password') == 'oauth' ? '' : 'display: none;' }}">
+                                 <div class="flex">
+                                     <div class="flex-shrink-0">
+                                         <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                         </svg>
+                                     </div>
+                                     <div class="ml-3">
+                                         <h3 class="text-sm font-medium text-blue-800">
+                                             OAuth Authentication Selected
+                                         </h3>
+                                         <div class="mt-1 text-sm text-blue-700">
+                                             <p>Your {{ $availableProviders[$currentProvider]['name'] }} account will be used for authentication. No username/password required.</p>
+                                             @if($providerSettings['setup_instructions'])
+                                                 <p class="mt-2">{{ $providerSettings['setup_instructions'] }}</p>
+                                             @endif
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -189,6 +279,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H10"></path>
                                 </svg>
                                 IMAP Configuration (Incoming Mail)
+                                @if($providerSettings['is_oauth_provider'] && $providerSettings['oauth_configured'])
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        OAuth Available
+                                    </span>
+                                @endif
                             </h3>
                         </div>
                         <div class="p-6">
@@ -223,68 +318,118 @@
                                 </div>
                             </div>
 
-                            <div class="mb-6">
-                                <label for="imap_encryption" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Encryption
-                                </label>
-                                <select id="imap_encryption" 
-                                        name="imap_encryption"
-                                        class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('imap_encryption') border-red-500 @enderror">
-                                    <option value="">None</option>
-                                    <option value="tls" {{ old('imap_encryption', $setting?->imap_encryption ?? '') == 'tls' ? 'selected' : '' }}>TLS</option>
-                                    <option value="ssl" {{ old('imap_encryption', $setting?->imap_encryption ?? '') == 'ssl' ? 'selected' : '' }}>SSL</option>
-                                </select>
-                                @error('imap_encryption')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                             <div class="mb-6">
+                                 <label for="imap_encryption" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                     Encryption
+                                 </label>
+                                 <select id="imap_encryption"
+                                         name="imap_encryption"
+                                         class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('imap_encryption') border-red-500 @enderror">
+                                     <option value="">None</option>
+                                     <option value="tls" {{ old('imap_encryption', $setting?->imap_encryption ?? '') == 'tls' ? 'selected' : '' }}>TLS</option>
+                                     <option value="ssl" {{ old('imap_encryption', $setting?->imap_encryption ?? '') == 'ssl' ? 'selected' : '' }}>SSL</option>
+                                 </select>
+                                 @error('imap_encryption')
+                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                 @enderror
+                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="imap_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        IMAP Username
-                                    </label>
-                                    <input type="text" 
-                                           id="imap_username" 
-                                           name="imap_username" 
-                                           value="{{ old('imap_username', $setting?->imap_username ?? '') }}"
-                                           class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('imap_username') border-red-500 @enderror">
-                                    @error('imap_username')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label for="imap_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        IMAP Password
-                                        @if(!empty($setting?->imap_password))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                Saved
-                                            </span>
-                                        @endif
-                                    </label>
-                                    <div class="relative">
-                                        <input type="password" 
-                                               id="imap_password" 
-                                               name="imap_password" 
-                                               placeholder="{{ !empty($setting?->imap_password) ? 'Leave blank to keep current password' : 'Enter IMAP password' }}"
-                                               class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pr-10 @error('imap_password') border-red-500 @enderror">
-                                        <button type="button" 
-                                                onclick="togglePasswordVisibility('imap_password')"
-                                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    @error('imap_password')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                            </div>
+                             <!-- IMAP Authentication Method -->
+                             <div class="mb-6">
+                                 <label for="imap_auth_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                     Authentication Method
+                                 </label>
+                                 <select id="imap_auth_method"
+                                         name="imap_auth_method"
+                                         class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('imap_auth_method') border-red-500 @enderror">
+                                     <option value="password" {{ old('imap_auth_method', $setting?->imap_auth_method ?? 'password') == 'password' ? 'selected' : '' }}>Username/Password</option>
+                                     @if($providerSettings['is_oauth_provider'] && $providerSettings['oauth_configured'])
+                                         <option value="oauth" {{ old('imap_auth_method', $setting?->imap_auth_method ?? '') == 'oauth' ? 'selected' : '' }}>
+                                             OAuth ({{ $availableProviders[$currentProvider]['name'] }})
+                                         </option>
+                                     @endif
+                                 </select>
+                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                     @if($providerSettings['is_oauth_provider'] && $providerSettings['oauth_configured'])
+                                         Choose OAuth for secure token-based authentication with your {{ $availableProviders[$currentProvider]['name'] }} account.
+                                     @else
+                                         Use username/password for traditional authentication.
+                                     @endif
+                                 </p>
+                                 @error('imap_auth_method')
+                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                 @enderror
+                             </div>
+
+                             <!-- IMAP Username/Password Fields (shown when not using OAuth) -->
+                             <div id="imap_credentials_section" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="{{ old('imap_auth_method', $setting?->imap_auth_method ?? 'password') == 'oauth' ? 'display: none;' : '' }}">
+                                 <div>
+                                     <label for="imap_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                         IMAP Username
+                                     </label>
+                                     <input type="text"
+                                            id="imap_username"
+                                            name="imap_username"
+                                            value="{{ old('imap_username', $setting?->imap_username ?? '') }}"
+                                            class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('imap_username') border-red-500 @enderror">
+                                     @error('imap_username')
+                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                     @enderror
+                                 </div>
+                                 <div>
+                                     <label for="imap_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                         IMAP Password
+                                         @if(!empty($setting?->imap_password))
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2">
+                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                 </svg>
+                                                 Saved
+                                             </span>
+                                         @endif
+                                     </label>
+                                     <div class="relative">
+                                         <input type="password"
+                                                id="imap_password"
+                                                name="imap_password"
+                                                placeholder="{{ !empty($setting?->imap_password) ? 'Leave blank to keep current password' : 'Enter IMAP password' }}"
+                                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pr-10 @error('imap_password') border-red-500 @enderror">
+                                         <button type="button"
+                                                 onclick="togglePasswordVisibility('imap_password')"
+                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                             </svg>
+                                         </button>
+                                     </div>
+                                     @error('imap_password')
+                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                     @enderror
+                                 </div>
+                             </div>
+
+                             <!-- IMAP OAuth Notice (shown when using OAuth) -->
+                             <div id="imap_oauth_notice" class="p-4 bg-blue-50 rounded-lg" style="{{ old('imap_auth_method', $setting?->imap_auth_method ?? 'password') == 'oauth' ? '' : 'display: none;' }}">
+                                 <div class="flex">
+                                     <div class="flex-shrink-0">
+                                         <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                         </svg>
+                                     </div>
+                                     <div class="ml-3">
+                                         <h3 class="text-sm font-medium text-blue-800">
+                                             OAuth Authentication Selected
+                                         </h3>
+                                         <div class="mt-1 text-sm text-blue-700">
+                                             <p>Your {{ $availableProviders[$currentProvider]['name'] }} account will be used for authentication. No username/password required.</p>
+                                             @if($providerSettings['setup_instructions'])
+                                                 <p class="mt-2">{{ $providerSettings['setup_instructions'] }}</p>
+                                             @endif
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -418,14 +563,50 @@
 // Email configuration management
 document.addEventListener('DOMContentLoaded', function() {
     loadEmailProviderPresets();
-    
+
     // Setup provider preset change handler
     document.getElementById('email_provider_preset').addEventListener('change', function() {
         if (this.value) {
             applyProviderPreset(this.value);
         }
     });
+
+    // Setup authentication method change handlers
+    setupAuthMethodHandlers();
 });
+
+function setupAuthMethodHandlers() {
+    // SMTP authentication method handler
+    const smtpAuthMethod = document.getElementById('smtp_auth_method');
+    if (smtpAuthMethod) {
+        smtpAuthMethod.addEventListener('change', function() {
+            toggleAuthFields('smtp', this.value);
+        });
+    }
+
+    // IMAP authentication method handler
+    const imapAuthMethod = document.getElementById('imap_auth_method');
+    if (imapAuthMethod) {
+        imapAuthMethod.addEventListener('change', function() {
+            toggleAuthFields('imap', this.value);
+        });
+    }
+}
+
+function toggleAuthFields(protocol, method) {
+    const credentialsSection = document.getElementById(protocol + '_credentials_section');
+    const oauthNotice = document.getElementById(protocol + '_oauth_notice');
+
+    if (method === 'oauth') {
+        // Hide credentials, show OAuth notice
+        if (credentialsSection) credentialsSection.style.display = 'none';
+        if (oauthNotice) oauthNotice.style.display = 'block';
+    } else {
+        // Show credentials, hide OAuth notice
+        if (credentialsSection) credentialsSection.style.display = 'grid';
+        if (oauthNotice) oauthNotice.style.display = 'none';
+    }
+}
 
 /**
  * Load email provider presets
@@ -475,22 +656,39 @@ async function applyProviderPreset(presetKey) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.presets[presetKey]) {
             const preset = data.presets[presetKey];
-            
+
             // Fill SMTP settings
             document.getElementById('smtp_host').value = preset.smtp_host || '';
             document.getElementById('smtp_port').value = preset.smtp_port || '';
             document.getElementById('smtp_encryption').value = preset.smtp_encryption || '';
-            
+
             // Fill IMAP settings
             document.getElementById('imap_host').value = preset.imap_host || '';
             document.getElementById('imap_port').value = preset.imap_port || '';
             document.getElementById('imap_encryption').value = preset.imap_encryption || '';
-            
+
+            // Handle OAuth-specific settings
+            if (preset.auth_mode === 'oauth') {
+                document.getElementById('smtp_auth_method').value = 'oauth';
+                document.getElementById('imap_auth_method').value = 'oauth';
+
+                // Hide credential fields and show OAuth notices
+                toggleAuthFields('smtp', 'oauth');
+                toggleAuthFields('imap', 'oauth');
+            } else {
+                document.getElementById('smtp_auth_method').value = 'password';
+                document.getElementById('imap_auth_method').value = 'password';
+
+                // Show credential fields and hide OAuth notices
+                toggleAuthFields('smtp', 'password');
+                toggleAuthFields('imap', 'password');
+            }
+
             // Show instructions if available
             if (preset.instructions) {
                 showConnectionStatus('info', 'Provider Settings Applied', preset.instructions);
@@ -554,6 +752,7 @@ async function testEmailConnection() {
         formData.append('smtp_host', document.getElementById('smtp_host').value);
         formData.append('smtp_port', document.getElementById('smtp_port').value);
         formData.append('smtp_encryption', document.getElementById('smtp_encryption').value);
+        formData.append('smtp_auth_method', document.getElementById('smtp_auth_method').value);
         formData.append('smtp_username', document.getElementById('smtp_username').value);
         formData.append('smtp_password', document.getElementById('smtp_password').value);
         formData.append('mail_from_email', document.getElementById('mail_from_email').value);

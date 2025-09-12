@@ -158,10 +158,6 @@ class EmailAccount extends Model
     }
 
     // Helper methods
-    public function isOAuthProvider(): bool
-    {
-        return in_array($this->provider, ['gmail', 'outlook']) && !empty($this->oauth_access_token);
-    }
 
     public function needsTokenRefresh(): bool
     {

@@ -24,18 +24,20 @@ class EmailSettingsRequest extends FormRequest
             'smtp_host' => 'nullable|string|max:255',
             'smtp_port' => 'nullable|integer|min:1|max:65535',
             'smtp_encryption' => 'nullable|in:tls,ssl',
+            'smtp_auth_method' => 'nullable|in:password,oauth',
             'smtp_username' => 'nullable|string|max:255',
             'smtp_password' => 'nullable|string|max:255',
             'mail_from_email' => 'nullable|email|max:255',
             'mail_from_name' => 'nullable|string|max:255',
-            
+
             // IMAP Settings
             'imap_host' => 'nullable|string|max:255',
             'imap_port' => 'nullable|integer|min:1|max:65535',
             'imap_encryption' => 'nullable|in:tls,ssl',
+            'imap_auth_method' => 'nullable|in:password,oauth',
             'imap_username' => 'nullable|string|max:255',
             'imap_password' => 'nullable|string|max:255',
-            
+
             // Ticket Email Settings
             'ticket_email_parse' => 'boolean',
             'ticket_new_ticket_notification_email' => 'nullable|email|max:255',

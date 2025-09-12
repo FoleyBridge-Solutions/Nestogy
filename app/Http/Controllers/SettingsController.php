@@ -16,6 +16,7 @@ use App\Services\SettingsService;
 use App\Services\EmailConnectionTestService;
 use App\Services\DynamicMailConfigService;
 use App\Domains\Ticket\Services\SLAService;
+use App\Domains\Email\Services\EmailProviderService;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Setting;
@@ -32,13 +33,20 @@ class SettingsController extends Controller
     protected EmailConnectionTestService $emailTestService;
     protected DynamicMailConfigService $mailConfigService;
     protected SLAService $slaService;
-    
-    public function __construct(SettingsService $settingsService, EmailConnectionTestService $emailTestService, DynamicMailConfigService $mailConfigService, SLAService $slaService)
-    {
+    protected EmailProviderService $emailProviderService;
+
+    public function __construct(
+        SettingsService $settingsService,
+        EmailConnectionTestService $emailTestService,
+        DynamicMailConfigService $mailConfigService,
+        SLAService $slaService,
+        EmailProviderService $emailProviderService
+    ) {
         $this->settingsService = $settingsService;
         $this->emailTestService = $emailTestService;
         $this->mailConfigService = $mailConfigService;
         $this->slaService = $slaService;
+        $this->emailProviderService = $emailProviderService;
     }
     
     /**
@@ -72,7 +80,7 @@ class SettingsController extends Controller
     private function getOrCreateSettings(Company $company): Setting
     {
         $setting = $company->setting;
-        
+
         if (!$setting) {
             $setting = Setting::create([
                 'company_id' => $company->id,
@@ -87,8 +95,92 @@ class SettingsController extends Controller
                 'timezone' => 'America/New_York',
             ]);
         }
-        
+
         return $setting;
+    }
+
+    /**
+     * Get provider-specific settings for the company
+     */
+    private function getProviderSpecificSettings(Company $company, string $providerType): array
+    {
+        $settings = [
+            'is_oauth_provider' => in_array($providerType, ['microsoft365', 'google_workspace']),
+            'can_use_oauth' => false,
+            'oauth_configured' => false,
+            'recommended_settings' => [],
+            'setup_instructions' => null,
+        ];
+
+        if ($settings['is_oauth_provider']) {
+            $config = $company->email_provider_config ?? [];
+            $settings['can_use_oauth'] = !empty($config['client_id']) && !empty($config['client_secret']);
+            $settings['oauth_configured'] = $settings['can_use_oauth'];
+
+            // Get recommended SMTP/IMAP settings for OAuth providers
+            $settings['recommended_settings'] = $this->getRecommendedProviderSettings($providerType);
+
+            // Get setup instructions
+            $settings['setup_instructions'] = $this->getProviderSetupInstructions($providerType);
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Get recommended SMTP/IMAP settings for OAuth providers
+     */
+    private function getRecommendedProviderSettings(string $providerType): array
+    {
+        $settings = [];
+
+        if ($providerType === 'microsoft365') {
+            $settings = [
+                'smtp' => [
+                    'host' => 'smtp-mail.outlook.com',
+                    'port' => 587,
+                    'encryption' => 'tls',
+                    'auth_mode' => 'oauth'
+                ],
+                'imap' => [
+                    'host' => 'outlook.office365.com',
+                    'port' => 993,
+                    'encryption' => 'tls',
+                    'auth_mode' => 'oauth'
+                ]
+            ];
+        } elseif ($providerType === 'google_workspace') {
+            $settings = [
+                'smtp' => [
+                    'host' => 'smtp.gmail.com',
+                    'port' => 587,
+                    'encryption' => 'tls',
+                    'auth_mode' => 'oauth'
+                ],
+                'imap' => [
+                    'host' => 'imap.gmail.com',
+                    'port' => 993,
+                    'encryption' => 'tls',
+                    'auth_mode' => 'oauth'
+                ]
+            ];
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Get setup instructions for OAuth providers
+     */
+    private function getProviderSetupInstructions(string $providerType): ?string
+    {
+        if ($providerType === 'microsoft365') {
+            return 'Configure Microsoft 365 OAuth in Company Email Provider settings first, then use OAuth authentication here.';
+        } elseif ($providerType === 'google_workspace') {
+            return 'Configure Google Workspace OAuth in Company Email Provider settings first, then use OAuth authentication here.';
+        }
+
+        return null;
     }
 
     /**
@@ -188,8 +280,23 @@ class SettingsController extends Controller
     {
         $company = Auth::user()->company;
         $setting = $company->setting;
-        
-        return view('settings.email', compact('company', 'setting'));
+
+        // Get email provider information
+        $availableProviders = EmailProviderService::getAvailableProviders();
+        $currentProvider = $company->email_provider_type ?? 'manual';
+        $providerConfig = $company->email_provider_config ?? [];
+
+        // Get provider-specific settings
+        $providerSettings = $this->getProviderSpecificSettings($company, $currentProvider);
+
+        return view('settings.email', compact(
+            'company',
+            'setting',
+            'availableProviders',
+            'currentProvider',
+            'providerConfig',
+            'providerSettings'
+        ));
     }
     
     /**
@@ -235,7 +342,8 @@ class SettingsController extends Controller
             'smtp_host' => 'required|string|max:255',
             'smtp_port' => 'required|integer|min:1|max:65535',
             'smtp_encryption' => 'nullable|in:tls,ssl',
-            'smtp_username' => 'required|string|max:255',
+            'smtp_auth_method' => 'nullable|in:password,oauth',
+            'smtp_username' => 'nullable|string|max:255',
             'smtp_password' => 'nullable|string|max:255',
             'mail_from_email' => 'nullable|email|max:255',
             'mail_from_name' => 'nullable|string|max:255',
@@ -254,10 +362,39 @@ class SettingsController extends Controller
         try {
             // Prepare settings for testing
             $settings = $request->only([
-                'smtp_host', 'smtp_port', 'smtp_encryption', 
-                'smtp_username', 'smtp_password', 
+                'smtp_host', 'smtp_port', 'smtp_encryption',
+                'smtp_auth_method', 'smtp_username', 'smtp_password',
                 'mail_from_email', 'mail_from_name'
             ]);
+
+            // Handle OAuth authentication
+            if (($settings['smtp_auth_method'] ?? 'password') === 'oauth') {
+                $company = Auth::user()->company;
+
+                // Check if OAuth is configured for the company
+                if ($company->email_provider_type === 'microsoft365' || $company->email_provider_type === 'google_workspace') {
+                    $config = $company->email_provider_config ?? [];
+
+                    if (empty($config['client_id']) || empty($config['client_secret'])) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'OAuth is not properly configured. Please configure your email provider settings first.',
+                            'error_type' => 'oauth_not_configured'
+                        ], 400);
+                    }
+
+                    // For OAuth testing, we'll use a placeholder - actual OAuth token would be obtained during real usage
+                    $settings['smtp_username'] = $request->mail_from_email ?? $settings['smtp_username'];
+                    $settings['smtp_password'] = 'oauth_placeholder'; // This would be replaced with actual OAuth token
+                    $settings['auth_mode'] = 'oauth';
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'OAuth authentication is selected but no OAuth provider is configured.',
+                        'error_type' => 'no_oauth_provider'
+                    ], 400);
+                }
+            }
             
             // If password is empty, try to use saved password
             if (empty($settings['smtp_password'])) {
@@ -309,13 +446,43 @@ class SettingsController extends Controller
     public function getEmailProviderPresets()
     {
         try {
+            $company = Auth::user()->company;
             $presets = $this->emailTestService->getCommonProviderPresets();
-            
+
+            // Add OAuth provider presets if configured
+            if ($company->email_provider_type === 'microsoft365') {
+                $presets['microsoft365_oauth'] = [
+                    'name' => 'Microsoft 365 (OAuth)',
+                    'smtp_host' => 'smtp-mail.outlook.com',
+                    'smtp_port' => 587,
+                    'smtp_encryption' => 'tls',
+                    'imap_host' => 'outlook.office365.com',
+                    'imap_port' => 993,
+                    'imap_encryption' => 'tls',
+                    'auth_mode' => 'oauth',
+                    'oauth_provider' => 'microsoft365',
+                    'instructions' => 'Uses OAuth authentication with your Microsoft 365 account.'
+                ];
+            } elseif ($company->email_provider_type === 'google_workspace') {
+                $presets['google_workspace_oauth'] = [
+                    'name' => 'Google Workspace (OAuth)',
+                    'smtp_host' => 'smtp.gmail.com',
+                    'smtp_port' => 587,
+                    'smtp_encryption' => 'tls',
+                    'imap_host' => 'imap.gmail.com',
+                    'imap_port' => 993,
+                    'imap_encryption' => 'tls',
+                    'auth_mode' => 'oauth',
+                    'oauth_provider' => 'google_workspace',
+                    'instructions' => 'Uses OAuth authentication with your Google Workspace account.'
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'presets' => $presets
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
