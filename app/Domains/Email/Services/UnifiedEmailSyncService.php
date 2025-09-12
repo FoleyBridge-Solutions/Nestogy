@@ -326,7 +326,7 @@ class UnifiedEmailSyncService
                         $messageDetails = $provider->getMessage($accessToken, $messageRef['id']);
                         
                         // Extract message data
-                        $messageData = $this->parseGoogleMessage($messageDetails);
+                        $messageData = $this->parseGoogleMessage($messageDetails, $account);
                         
                         // Create or update email message
                         \App\Domains\Email\Models\EmailMessage::updateOrCreate(
@@ -400,7 +400,7 @@ class UnifiedEmailSyncService
     /**
      * Parse Google message into database format
      */
-    protected function parseGoogleMessage(array $messageDetails): array
+    protected function parseGoogleMessage(array $messageDetails, \App\Domains\Email\Models\EmailAccount $account): array
     {
         $payload = $messageDetails['payload'] ?? [];
         $headers = $payload['headers'] ?? [];
@@ -431,6 +431,9 @@ class UnifiedEmailSyncService
         // Extract body
         $body = $this->extractGoogleMessageBody($payload);
         
+        // Determine email folder
+        $folderId = $this->determineGmailMessageFolder($messageDetails, $account);
+        
         return [
             'subject' => $subject,
             'from_address' => $from,
@@ -442,7 +445,106 @@ class UnifiedEmailSyncService
             'size_bytes' => $messageDetails['sizeEstimate'] ?? 0,
             'has_attachments' => false, // TODO: Detect attachments
             'is_draft' => in_array('DRAFT', $messageDetails['labelIds'] ?? []),
+            'email_folder_id' => $folderId,
         ];
+    }
+
+    /**
+     * Determine the appropriate folder for a Gmail message based on its labels
+     */
+    protected function determineGmailMessageFolder(array $messageDetails, \App\Domains\Email\Models\EmailAccount $account): int
+    {
+        $labelIds = $messageDetails['labelIds'] ?? [];
+        
+        Log::debug('Determining Gmail message folder', [
+            'account_id' => $account->id,
+            'message_id' => $messageDetails['id'] ?? 'unknown',
+            'label_ids' => $labelIds,
+        ]);
+        
+        // Priority mapping for Gmail labels to folder types
+        $labelPriorities = [
+            'DRAFT' => 'drafts',
+            'SENT' => 'sent', 
+            'SPAM' => 'spam',
+            'TRASH' => 'trash',
+            'INBOX' => 'inbox',
+        ];
+        
+        // Find the highest priority label
+        $targetFolderType = null;
+        foreach ($labelPriorities as $labelId => $folderType) {
+            if (in_array($labelId, $labelIds)) {
+                $targetFolderType = $folderType;
+                break;
+            }
+        }
+        
+        // If no standard labels found, look for custom labels
+        if (!$targetFolderType && !empty($labelIds)) {
+            // Try to find a custom folder that matches a label
+            foreach ($labelIds as $labelId) {
+                if (!in_array($labelId, ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'])) {
+                    $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
+                        ->where('remote_id', $labelId)
+                        ->first();
+                    
+                    if ($folder) {
+                        Log::debug('Found custom folder for Gmail message', [
+                            'account_id' => $account->id,
+                            'folder_id' => $folder->id,
+                            'folder_name' => $folder->name,
+                            'label_id' => $labelId,
+                        ]);
+                        return $folder->id;
+                    }
+                }
+            }
+        }
+        
+        // Default to inbox if no specific folder determined
+        if (!$targetFolderType) {
+            $targetFolderType = 'inbox';
+        }
+        
+        // Find or create the folder
+        $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
+            ->where('type', $targetFolderType)
+            ->first();
+            
+        if (!$folder) {
+            Log::info('Creating missing Gmail folder', [
+                'account_id' => $account->id,
+                'folder_type' => $targetFolderType,
+            ]);
+            
+            $folderNames = [
+                'inbox' => 'Inbox',
+                'sent' => 'Sent',
+                'drafts' => 'Drafts',
+                'trash' => 'Trash',
+                'spam' => 'Spam',
+            ];
+            
+            $folder = \App\Domains\Email\Models\EmailFolder::create([
+                'email_account_id' => $account->id,
+                'name' => $folderNames[$targetFolderType] ?? ucfirst($targetFolderType),
+                'remote_id' => strtoupper($targetFolderType),
+                'type' => $targetFolderType,
+                'is_selectable' => true,
+                'message_count' => 0,
+            ]);
+        }
+        
+        Log::debug('Determined Gmail message folder', [
+            'account_id' => $account->id,
+            'folder_id' => $folder->id,
+            'folder_name' => $folder->name,
+            'folder_type' => $folder->type,
+            'target_folder_type' => $targetFolderType,
+        ]);
+        
+        return $folder->id;
     }
 
     /**
