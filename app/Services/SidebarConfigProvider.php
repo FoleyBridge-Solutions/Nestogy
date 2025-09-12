@@ -166,7 +166,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'COMMUNICATION',
                     'expandable' => true,
-                    'default_expanded' => true,
+                    'default_expanded' => false,
                     'items' => [
                         [
                             'name' => 'Contacts',
@@ -195,7 +195,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'SERVICE MANAGEMENT',
                     'expandable' => true,
-                    'default_expanded' => true,
+                    'default_expanded' => false,
                     'items' => [
                         [
                             'name' => 'Support Tickets',
@@ -217,6 +217,70 @@ class SidebarConfigProvider
                             'icon' => 'folder',
                             'key' => 'projects',
                             'params' => ['client_id' => 'current']
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'IT INFRASTRUCTURE',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'IT Documentation',
+                            'route' => 'clients.it-documentation.index',
+                            'icon' => 'document-text',
+                            'key' => 'it-documentation',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Documents',
+                            'route' => 'clients.documents.index',
+                            'icon' => 'folder-open',
+                            'key' => 'documents',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Files',
+                            'route' => 'clients.files.index',
+                            'icon' => 'paper-clip',
+                            'key' => 'files',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Domains',
+                            'route' => 'clients.domains.index',
+                            'icon' => 'globe-alt',
+                            'key' => 'domains',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Credentials',
+                            'route' => 'clients.credentials.index',
+                            'icon' => 'key',
+                            'key' => 'credentials',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Licenses',
+                            'route' => 'clients.licenses.index',
+                            'icon' => 'identification',
+                            'key' => 'licenses',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Vendors',
+                            'route' => 'clients.vendors.index',
+                            'icon' => 'building-office',
+                            'key' => 'vendors',
+                            'params' => ['client' => 'current']
+                        ],
+                        [
+                            'name' => 'Services',
+                            'route' => 'clients.services.index',
+                            'icon' => 'cog-6-tooth',
+                            'key' => 'services',
+                            'params' => ['client' => 'current']
                         ]
                     ]
                 ],
@@ -298,7 +362,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'STATUS VIEWS',
                     'expandable' => true,
-                    'default_expanded' => true,
+                    'default_expanded' => false,
                     'items' => [
                         [
                             'name' => 'Open Tickets',
@@ -384,7 +448,7 @@ class SidebarConfigProvider
                 'type' => 'section',
                 'title' => 'ACCOUNTS',
                 'expandable' => true,
-                'default_expanded' => true,
+                'default_expanded' => false,
                 'items' => $accountItems
             ];
         }
@@ -450,7 +514,7 @@ class SidebarConfigProvider
             'type' => 'section',
             'title' => 'FOLDERS',
             'expandable' => true,
-            'default_expanded' => true,
+            'default_expanded' => false,
             'items' => $folderItems
         ];
 
@@ -515,7 +579,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'CATEGORIES',
                     'expandable' => true,
-                    'default_expanded' => true,
+                    'default_expanded' => false,
                     'items' => [
                         [
                             'name' => 'Hardware',
@@ -636,7 +700,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'Core Settings',
                     'expandable' => true,
-                    'default_expanded' => true,
+                    'default_expanded' => false,
                     'items' => [
                         ['name' => 'General', 'route' => 'settings.general', 'icon' => 'adjustments-horizontal', 'key' => 'general'],
                         ['name' => 'Security & Access', 'route' => 'settings.security', 'icon' => 'shield-check', 'key' => 'security'],

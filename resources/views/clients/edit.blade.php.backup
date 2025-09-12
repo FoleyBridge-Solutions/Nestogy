@@ -1,0 +1,657 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Client - ' . $client->name)
+
+@section('content')
+<div class="space-y-4">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <flux:heading size="xl">Edit {{ $client->lead ? 'Lead' : 'Client' }}</flux:heading>
+            <flux:text class="mt-2">Update {{ $client->name }}'s information</flux:text>
+        </div>
+        <div class="flex items-center gap-3">
+            <flux:button 
+                variant="ghost" 
+                size="sm"
+                href="{{ route('clients.show', $client) }}" 
+                icon="eye"
+            >
+                View
+            </flux:button>
+            <flux:button 
+                variant="ghost" 
+                size="sm"
+                href="{{ $client->lead ? route('clients.leads') : route('clients.index') }}" 
+                icon="arrow-left"
+            >
+                Back to {{ $client->lead ? 'Leads' : 'Clients' }}
+            </flux:button>
+        </div>
+    </div>
+
+    <!-- Client Form -->
+    <flux:card class="space-y-6">
+        <form method="POST" action="{{ route('clients.update', $client) }}" enctype="multipart/form-data" class="space-y-6">
+            @csrf
+            @method('PUT')
+            
+            <!-- Basic Information -->
+            <div>
+                <flux:heading size="lg" class="mb-6">Basic Information</flux:heading>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <!-- Client Type -->
+                    <div class="sm:col-span-2">
+                        <flux:radio.group 
+                            name="type" 
+                            label="Client Type" 
+                            description="Select the type of {{ $client->lead ? 'lead' : 'client' }}"
+                            variant="segmented"
+                        >
+                            <flux:radio 
+                                value="individual" 
+                                label="Individual"
+                                @if(old('type', $client->type) == 'individual') checked @endif
+                            />
+                            <flux:radio 
+                                value="business" 
+                                label="Business"
+                                @if(old('type', $client->type) == 'business') checked @endif
+                            />
+                        </flux:radio.group>
+                    </div>
+
+                    <!-- Name -->
+                    <flux:field>
+                        <flux:label badge="Required">Full Name / Company Name</flux:label>
+                        <flux:input 
+                            name="name" 
+                            value="{{ old('name', $client->name) }}" 
+                            required 
+                        />
+                        <flux:error name="name" />
+                    </flux:field>
+
+                    <!-- Company (for individuals) -->
+                    <flux:field id="company-field" @class(['hidden' => old('type', $client->type) == 'business'])>
+                        <flux:label>Company</flux:label>
+                        <flux:input 
+                            name="company" 
+                            value="{{ old('company', $client->company) }}" 
+                        />
+                        <flux:error name="company" />
+                    </flux:field>
+
+                    <!-- Email -->
+                    <flux:field>
+                        <flux:label badge="Required">Email Address</flux:label>
+                        <flux:input 
+                            name="email" 
+                            type="email"
+                            value="{{ old('email', $client->email) }}" 
+                            required 
+                        />
+                        <flux:error name="email" />
+                    </flux:field>
+
+                        <!-- Phone -->
+                        <flux:field>
+                            <flux:label>Phone Number</flux:label>
+                            <flux:input 
+                                name="phone" 
+                                type="tel"
+                                value="{{ old('phone', $client->phone) }}" 
+                            />
+                            <flux:error name="phone" />
+                        </flux:field>
+
+                        <!-- Website -->
+                        <flux:field>
+                            <flux:label>Website</flux:label>
+                            <flux:input 
+                                name="website" 
+                                type="url"
+                                value="{{ old('website', $client->website) }}" 
+                                placeholder="https://"
+                            />
+                            <flux:error name="website" />
+                        </flux:field>
+
+                        <!-- Tax ID -->
+                        <flux:field>
+                            <flux:label>Tax ID / EIN</flux:label>
+                            <flux:input 
+                                name="tax_id_number" 
+                                value="{{ old('tax_id_number', $client->tax_id_number) }}" 
+                            />
+                            <flux:error name="tax_id_number" />
+                        </flux:field>
+
+                        <!-- Referral Source -->
+                        <flux:field>
+                            <flux:label>Referral Source</flux:label>
+                            <flux:input 
+                                name="referral" 
+                                value="{{ old('referral', $client->referral) }}" 
+                                placeholder="How did they hear about us?"
+                            />
+                            <flux:error name="referral" />
+                        </flux:field>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <flux:fieldset>
+                    <flux:legend>Address Information</flux:legend>
+                    <div class="space-y-6">
+                        <!-- Street Address with Google Places Autocomplete -->
+                        <flux:field>
+                            <flux:label>Street Address</flux:label>
+                            <flux:input 
+                                name="address" 
+                                id="address"
+                                value="{{ old('address', $client->address) }}"
+                                placeholder="Start typing an address..."
+                                autocomplete="street-address"
+                            />
+                            <flux:error name="address" />
+                        </flux:field>
+
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-6">
+                            <!-- City -->
+                            <flux:field>
+                                <flux:label>City</flux:label>
+                                <flux:input 
+                                    name="city" 
+                                    value="{{ old('city', $client->city) }}" 
+                                />
+                                <flux:error name="city" />
+                            </flux:field>
+
+                            <!-- State -->
+                            <flux:field>
+                                <flux:label>State / Province</flux:label>
+                                <flux:input 
+                                    name="state" 
+                                    value="{{ old('state', $client->state) }}" 
+                                />
+                                <flux:error name="state" />
+                            </flux:field>
+
+                            <!-- ZIP Code -->
+                            <flux:field>
+                                <flux:label>ZIP / Postal Code</flux:label>
+                                <flux:input 
+                                    name="zip_code" 
+                                    value="{{ old('zip_code', $client->zip_code) }}" 
+                                />
+                                <flux:error name="zip_code" />
+                            </flux:field>
+
+                            <!-- Country -->
+                            <flux:field class="col-span-2">
+                                <flux:label>Country</flux:label>
+                                <flux:select name="country" placeholder="Select Country">
+                                    <flux:select.option value="US" @if(old('country', $client->country) == 'US') selected @endif>United States</flux:select.option>
+                                    <flux:select.option value="CA" @if(old('country', $client->country) == 'CA') selected @endif>Canada</flux:select.option>
+                                    <flux:select.option value="GB" @if(old('country', $client->country) == 'GB') selected @endif>United Kingdom</flux:select.option>
+                                    <flux:select.option value="AU" @if(old('country', $client->country) == 'AU') selected @endif>Australia</flux:select.option>
+                                </flux:select>
+                                <flux:error name="country" />
+                            </flux:field>
+                        </div>
+                    </div>
+                </flux:fieldset>
+
+                <!-- Billing Information -->
+                <flux:fieldset>
+                    <flux:legend>Billing Information</flux:legend>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <!-- Status -->
+                        <flux:field>
+                            <flux:label>Status</flux:label>
+                            <flux:select name="is_active">
+                                <flux:select.option value="1" @if(old('is_active', $client->is_active) == '1') selected @endif>Active</flux:select.option>
+                                <flux:select.option value="0" @if(old('is_active', $client->is_active) == '0') selected @endif>Inactive</flux:select.option>
+                            </flux:select>
+                            <flux:error name="is_active" />
+                        </flux:field>
+
+                        <!-- Billing Rate -->
+                        <flux:field>
+                            <flux:label>Default Billing Rate ($/hour)</flux:label>
+                            <flux:input 
+                                name="rate" 
+                                type="number"
+                                value="{{ old('rate', $client->rate) }}" 
+                                step="0.01" 
+                                min="0"
+                                prefix="$"
+                            />
+                            <flux:error name="rate" />
+                        </flux:field>
+
+                        <!-- Currency -->
+                        <flux:field>
+                            <flux:label>Currency</flux:label>
+                            <flux:select name="currency_code">
+                                <flux:select.option value="USD" @if(old('currency_code', $client->currency_code) == 'USD') selected @endif>USD - US Dollar</flux:select.option>
+                                <flux:select.option value="EUR" @if(old('currency_code', $client->currency_code) == 'EUR') selected @endif>EUR - Euro</flux:select.option>
+                                <flux:select.option value="GBP" @if(old('currency_code', $client->currency_code) == 'GBP') selected @endif>GBP - British Pound</flux:select.option>
+                                <flux:select.option value="CAD" @if(old('currency_code', $client->currency_code) == 'CAD') selected @endif>CAD - Canadian Dollar</flux:select.option>
+                            </flux:select>
+                            <flux:error name="currency_code" />
+                        </flux:field>
+
+                        <!-- Payment Terms -->
+                        <flux:field>
+                            <flux:label>Payment Terms (days)</flux:label>
+                            <flux:select name="net_terms">
+                                <flux:select.option value="15" @if(old('net_terms', $client->net_terms) == '15') selected @endif>Net 15</flux:select.option>
+                                <flux:select.option value="30" @if(old('net_terms', $client->net_terms) == '30') selected @endif>Net 30</flux:select.option>
+                                <flux:select.option value="45" @if(old('net_terms', $client->net_terms) == '45') selected @endif>Net 45</flux:select.option>
+                                <flux:select.option value="60" @if(old('net_terms', $client->net_terms) == '60') selected @endif>Net 60</flux:select.option>
+                            </flux:select>
+                            <flux:error name="net_terms" />
+                        </flux:field>
+                    </div>
+                </flux:fieldset>
+
+                <!-- Tags -->
+                <div class="mb-8">
+                    <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-2">Tags</label>
+                    <p class="text-sm text-gray-500 mb-6">Add tags to categorize this {{ $client->lead ? 'lead' : 'client' }}</p>
+                    <div id="tag-container" class="flex flex-wrap gap-2 mb-6">
+                        <!-- Selected tags will appear here -->
+                    </div>
+                    <div class="flex">
+                        <input type="text" id="tag-input" placeholder="Type a tag and press Enter"
+                               class="flex-1 border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-l-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" id="add-tag-btn" class="px-6 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+                            Add Tag
+                        </button>
+                    </div>
+                    <input type="hidden" name="tags" id="tags-hidden" value="{{ old('tags', json_encode($client->tags->pluck('name')->toArray())) }}">
+                </div>
+
+                <!-- Notes -->
+                <flux:field>
+                    <flux:label>Notes</flux:label>
+                    <flux:textarea 
+                        name="notes" 
+                        rows="4" 
+                        placeholder="Add any additional notes about this {{ $client->lead ? 'lead' : 'client' }}..."
+                    >{{ old('notes', $client->notes) }}</flux:textarea>
+                    <flux:error name="notes" />
+                </flux:field>
+
+                <!-- Avatar Upload -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300">Client Avatar</label>
+                    <div class="mt-1 flex items-center space-x-5">
+                        <div class="flex-shrink-0">
+                            @if($client->avatar)
+                                <img id="avatar-preview" class="h-20 w-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 dark:border-gray-600" 
+                                     src="{{ Storage::url($client->avatar) }}" alt="Current avatar">
+                            @else
+                                <img id="avatar-preview" class="h-20 w-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 dark:border-gray-600" 
+                                     src="https://via.placeholder.com/80x80/e5e7eb/6b7280?text=Avatar" alt="Avatar preview">
+                            @endif
+                        </div>
+                        <div>
+                            <input type="file" name="avatar" id="avatar" accept="image/*" class="sr-only" onchange="previewAvatar(this)">
+                            <label for="avatar" class="cursor-pointer bg-white dark:bg-gray-800 dark:bg-gray-800 py-2 px-6 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Change avatar
+                            </label>
+                            @if($client->avatar)
+                            <button type="button" onclick="removeAvatar()" class="ml-3 py-2 px-6 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">
+                                Remove
+                            </button>
+                            <input type="hidden" name="remove_avatar" id="remove_avatar" value="0">
+                            @endif
+                            <p class="mt-2 text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                        </div>
+                    </div>
+                    @error('avatar')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex gap-4 justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+                <flux:button 
+                    variant="ghost" 
+                    href="{{ route('clients.show', $client) }}"
+                >
+                    Cancel
+                </flux:button>
+                <flux:button 
+                    type="submit" 
+                    variant="primary"
+                >
+                    Update {{ $client->lead ? 'Lead' : 'Client' }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:card>
+
+    <!-- Danger Zone -->
+    <x-content-card :compact="true">
+        <div class="border-l-4 border-red-400 pl-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-6">Danger Zone</h3>
+            <div class="flex items-center justify-between p-6 bg-red-50 rounded-lg">
+                <div>
+                    <h4 class="text-sm font-medium text-red-800">Delete {{ $client->lead ? 'Lead' : 'Client' }}</h4>
+                    <p class="text-sm text-red-600">Permanently delete this {{ $client->lead ? 'lead' : 'client' }} and all associated data. This action cannot be undone.</p>
+                </div>
+                <button onclick="confirmDelete()" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                    Delete {{ $client->lead ? 'Lead' : 'Client' }}
+                </button>
+            </div>
+        </div>
+    </x-content-card>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-8 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800 dark:bg-gray-800">
+        <div class="mt-6 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mt-2">Delete {{ $client->lead ? 'Lead' : 'Client' }}</h3>
+            <div class="mt-2 px-7 py-6">
+                <p class="text-sm text-gray-500">Are you sure you want to delete <strong>{{ $client->name }}</strong>? This will also delete all associated tickets, invoices, and assets. This action cannot be undone.</p>
+            </div>
+            <div class="items-center px-6 py-6">
+                <button id="confirmDeleteBtn" class="px-6 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600">Delete</button>
+                <button onclick="closeDeleteModal()" class="px-6 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<!-- Google Maps JavaScript API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&libraries=places&callback=initAutocomplete" async defer></script>
+
+<script>
+let autocomplete;
+
+function initAutocomplete() {
+    const addressInput = document.getElementById('address');
+    
+    // Initialize the autocomplete object
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        types: ['address'],
+        componentRestrictions: { country: ['us', 'ca'] }, // Restrict to US and Canada
+        fields: ['address_components', 'formatted_address', 'geometry', 'name']
+    });
+
+    // Add listener for when a place is selected
+    autocomplete.addListener('place_changed', fillInAddress);
+}
+
+function fillInAddress() {
+    const place = autocomplete.getPlace();
+    
+    if (!place.address_components) {
+        console.log('No address components found');
+        return;
+    }
+
+    // Parse address components
+    const addressComponents = {};
+    place.address_components.forEach(component => {
+        const types = component.types;
+        
+        if (types.includes('street_number')) {
+            addressComponents.street_number = component.long_name;
+        }
+        if (types.includes('route')) {
+            addressComponents.route = component.long_name;
+        }
+        if (types.includes('locality')) {
+            addressComponents.city = component.long_name;
+        }
+        if (types.includes('administrative_area_level_1')) {
+            addressComponents.state = component.short_name;
+        }
+        if (types.includes('postal_code')) {
+            addressComponents.zip_code = component.long_name;
+        }
+        if (types.includes('country')) {
+            addressComponents.country = component.short_name;
+        }
+    });
+
+    // Fill in the form fields
+    let streetAddress = '';
+    if (addressComponents.street_number) {
+        streetAddress += addressComponents.street_number;
+    }
+    if (addressComponents.route) {
+        streetAddress += (streetAddress ? ' ' : '') + addressComponents.route;
+    }
+    
+    if (streetAddress) {
+        document.getElementById('address').value = streetAddress;
+    }
+    
+    if (addressComponents.city) {
+        document.getElementById('city').value = addressComponents.city;
+    }
+    
+    if (addressComponents.state) {
+        document.getElementById('state').value = addressComponents.state;
+    }
+    
+    if (addressComponents.zip_code) {
+        document.getElementById('zip_code').value = addressComponents.zip_code;
+    }
+    
+    if (addressComponents.country) {
+        // Map country codes to the dropdown values
+        const countryMapping = {
+            'US': 'US',
+            'CA': 'CA',
+            'GB': 'GB',
+            'AU': 'AU'
+        };
+        
+        const countryCode = countryMapping[addressComponents.country];
+        if (countryCode) {
+            document.getElementById('country').value = countryCode;
+        }
+    }
+}
+
+// Bias the autocomplete object to the user's geographical location
+function geolocate() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const geolocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            const circle = new google.maps.Circle({
+                center: geolocation,
+                radius: position.coords.accuracy
+            });
+            autocomplete.setBounds(circle.getBounds());
+        });
+    }
+}
+
+// Optional: Add geolocation bias when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add focus listener to trigger geolocation
+    const addressInput = document.getElementById('address');
+    if (addressInput) {
+        addressInput.addEventListener('focus', geolocate);
+    }
+});
+
+<script>
+// Toggle company field based on client type
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const companyField = document.getElementById('company-field');
+        if (this.value === 'business') {
+            companyField.classList.add('hidden');
+        } else {
+            companyField.classList.remove('hidden');
+        }
+    });
+});
+
+// Avatar preview
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatar-preview').src = e.target.result;
+            document.getElementById('remove_avatar').value = '0';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Remove avatar
+function removeAvatar() {
+    document.getElementById('avatar-preview').src = 'https://via.placeholder.com/80x80/e5e7eb/6b7280?text=Avatar';
+    document.getElementById('avatar').value = '';
+    document.getElementById('remove_avatar').value = '1';
+}
+
+// Tags functionality
+let tags = [];
+try {
+    tags = JSON.parse(document.getElementById('tags-hidden').value || '[]');
+} catch (e) {
+    tags = [];
+}
+
+function renderTags() {
+    const container = document.getElementById('tag-container');
+    container.innerHTML = '';
+    
+    tags.forEach((tag, index) => {
+        const tagEl = document.createElement('span');
+        tagEl.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800';
+        tagEl.innerHTML = `
+            ${tag}
+            <button type="button" onclick="removeTag(${index})" class="ml-2 inline-flex items-center justify-center w-4 h-4 text-blue-400 hover:text-blue-600">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        `;
+        container.appendChild(tagEl);
+    });
+    
+    document.getElementById('tags-hidden').value = JSON.stringify(tags);
+}
+
+function addTag() {
+    const input = document.getElementById('tag-input');
+    const tag = input.value.trim();
+    
+    if (tag && !tags.includes(tag)) {
+        tags.push(tag);
+        renderTags();
+        input.value = '';
+    }
+}
+
+function removeTag(index) {
+    tags.splice(index, 1);
+    renderTags();
+}
+
+document.getElementById('add-tag-btn').addEventListener('click', addTag);
+document.getElementById('tag-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addTag();
+    }
+});
+
+// Initial render
+renderTags();
+
+// Delete confirmation
+function confirmDelete() {
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route("clients.destroy", $client) }}';
+    
+    const methodField = document.createElement('input');
+    methodField.type = 'hidden';
+    methodField.name = '_method';
+    methodField.value = 'DELETE';
+    
+    const tokenField = document.createElement('input');
+    tokenField.type = 'hidden';
+    tokenField.name = '_token';
+    tokenField.value = '{{ csrf_token() }}';
+    
+    form.appendChild(methodField);
+    form.appendChild(tokenField);
+    document.body.appendChild(form);
+    form.submit();
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = ['name', 'email'];
+    let isValid = true;
+    
+    requiredFields.forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (!field.value.trim()) {
+            isValid = false;
+            field.classList.add('border-red-300');
+        } else {
+            field.classList.remove('border-red-300');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+    }
+});
+
+// Auto-format phone number
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 6) {
+        value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 3) {
+        value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+    }
+    e.target.value = value;
+});
+
+// Close modal when clicking outside
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+</script>
+@endpush

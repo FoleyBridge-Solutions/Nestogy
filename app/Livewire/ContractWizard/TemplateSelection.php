@@ -313,7 +313,7 @@ class TemplateSelection extends Component
         // Only dispatch if not during initial hydration to prevent duplicate events
         if (!$this->isInitializing) {
             // Target the parent wizard specifically to avoid event collisions
-            return $this->dispatch('templateSelected', template: $template)->to(\App\Livewire\ContractWizard::class);
+            $this->dispatch('templateSelected', template: $template)->to(\App\Livewire\ContractWizard::class);
         }
     }
 

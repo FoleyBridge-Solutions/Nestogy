@@ -825,4 +825,12 @@ class CDRProcessingService
             'usage_category' => $classification['usage_category'],
             'billing_category' => $classification['billing_category'],
             'quantity' => $usageMetrics['quantity'],
-            'unit_type
+            'unit_type' => $usageMetrics['unit_type'],
+            'unit_cost' => $usageMetrics['unit_cost'] ?? 0.00,
+            'total_cost' => $usageMetrics['total_cost'] ?? 0.00,
+            'recorded_at' => now(),
+            'processed_at' => now(),
+            'status' => 'processed'
+        ]);
+    }
+}

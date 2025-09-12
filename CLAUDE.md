@@ -84,6 +84,7 @@ The application uses DDD with bounded contexts in `app/Domains/`:
 - **Asset**: Equipment and inventory management
 - **Client**: Customer relationship management
 - **Contract**: Service agreements and SLAs
+- **Email**: Email management and inbox functionality
 - **Financial**: Billing, invoicing, payments
 - **Integration**: Third-party service connectors
 - **Knowledge**: Documentation and knowledge base
@@ -101,6 +102,7 @@ Each domain typically contains:
 - `Services/` - Business logic
 - `Repositories/` - Data access layer
 - `Events/` and `Listeners/` - Domain events
+- `routes.php` - Domain-specific routes (auto-loaded)
 
 ### Key Technologies
 - **Backend**: Laravel 12, PHP 8.2+
@@ -233,6 +235,53 @@ grep -n "</flux:" file.blade.php | sed 's/.*<\/flux://' | sed 's/>.*//' | sort |
 ```bash
 php artisan view:clear
 ```
+
+## Domain Routing System
+
+### Overview
+The application uses a maintainable domain-based routing system where each domain manages its own routes. Routes are automatically discovered and registered via the `DomainRouteManager` service.
+
+### Domain Route Configuration
+Domain routes are configured in `config/domains.php` with the following structure:
+```php
+'DomainName' => [
+    'enabled' => true,                    // Enable/disable domain routes
+    'middleware' => ['web'],               // Middleware stack (if not defined in routes file)
+    'prefix' => null,                      // URL prefix (null if defined in routes file)
+    'name' => null,                        // Route name prefix (null if defined in routes file)
+    'priority' => 50,                      // Loading priority (lower = higher priority)
+    'description' => 'Domain description',
+    'tags' => ['tag1', 'tag2'],          // Categorization tags
+    'features' => [],                      // Feature flags for documentation
+]
+```
+
+### Important Notes
+- **DO NOT** add prefix/name in config if the domain's `routes.php` already defines them (avoid double prefixing)
+- Each domain should have its own `routes.php` file in `app/Domains/{DomainName}/routes.php`
+- Routes are loaded in priority order to prevent conflicts
+- Use `php artisan routes:domain-list` to view all domain routes and their status
+
+### Domain Route Commands
+```bash
+php artisan routes:domain-list           # List all domain routes and status
+php artisan routes:domain-list --validate # Validate domain configuration
+php artisan routes:domain-generate       # Auto-discover and generate config
+php artisan routes:domain-toggle {domain} --enable/--disable  # Enable/disable domain
+```
+
+### Adding a New Domain
+1. Create domain folder: `app/Domains/YourDomain/`
+2. Add `routes.php` file with proper namespace imports
+3. Add domain to `config/domains.php` or run `php artisan routes:domain-generate`
+4. Clear route cache: `php artisan route:clear && php artisan route:cache`
+
+### Route Registration Flow
+1. Bootstrap (`bootstrap/app.php`) calls `DomainRouteManager::registerDomainRoutes()`
+2. Manager reads `config/domains.php` configuration
+3. Domains are sorted by priority
+4. Each enabled domain's routes are registered with configured middleware/prefix/name
+5. Routes are cached for production
 
 ## Development Workflow
 

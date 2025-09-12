@@ -10,6 +10,11 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            // Register domain routes using the Domain Route Manager
+            $routeManager = app(\App\Services\DomainRouteManager::class);
+            $routeManager->registerDomainRoutes();
+        }
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust load balancer proxies for cluster deployment

@@ -57,8 +57,8 @@ $mobile = $mobile ?? false;
         @endif
 
         <!-- Navigation Content -->
-        <div class="flex-1 overflow-y-auto {{ $mobile ? 'pb-4' : '' }}" x-data="sidebarNavigation()">
-            <flux:navlist class="p-2 space-y-1 {{ $mobile ? 'space-y-2' : '' }}">
+        <div class="flex-1 overflow-y-auto {{ $mobile ? 'pb-4' : '' }}" x-data="sidebarNavigation()" x-init="init()"
+            <nav class="p-2 space-y-1 {{ $mobile ? 'space-y-2' : '' }}">
                 @foreach($sidebarConfig['sections'] ?? [] as $sectionIndex => $section)
                     
                     @if($section['type'] === 'primary')
@@ -76,20 +76,25 @@ $mobile = $mobile ?? false;
                                     $iconAttr = (config('sidebar.features.icons', true) && isset($item['icon'])) ? $item['icon'] : null;
                                     $badgeAttr = ($badgeData['count'] > 0) ? ($badgeData['count'] > 99 ? '99+' : $badgeData['count']) : null;
                                 @endphp
-                                <flux:navlist.item 
-                                    href="{{ route($item['route'], $routeParams) }}" 
-                                    :current="$isActive"
-                                    :icon="$iconAttr"
-                                    :badge="$badgeAttr"
-                                    class="font-medium {{ $mobile ? 'py-6 text-base' : '' }}"
+                                <a
+                                    href="{{ route($item['route'], $routeParams) }}"
+                                    class="group flex items-center px-3 py-3 text-sm font-bold rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $mobile ? 'py-6 text-base' : '' }}"
                                 >
-                                    {{ $item['name'] }}
+                                    @if($iconAttr)
+                                        <flux:icon name="{{ $iconAttr }}" class="mr-3 w-6 h-6 {{ $isActive ? 'text-indigo-500 dark:text-indigo-300' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400' }}" />
+                                    @endif
+                                    <span class="flex-1">{{ $item['name'] }}</span>
+                                    @if($badgeAttr)
+                                        <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                            {{ $badgeAttr }}
+                                        </span>
+                                    @endif
                                     @if(config('sidebar.features.descriptions', false) && isset($item['description']))
                                         <span class="block text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                                             {{ $item['description'] }}
                                         </span>
                                     @endif
-                                </flux:navlist.item>
+                                </a>
                             @endif
                         @endforeach
                         
@@ -113,12 +118,35 @@ $mobile = $mobile ?? false;
                             $shouldExpand = $sectionHasActiveItem || $isDefaultExpanded;
                         @endphp
                         
-                        <flux:navlist.group 
-                            :heading="$section['title']" 
-                            :expandable="$isExpandable"
-                            :expanded="$shouldExpand"
-                            class="{{ $isPriority ? 'priority-section' : '' }}"
-                        >
+                        <div class="sidebar-section {{ $isPriority ? 'priority-section' : '' }}" data-section-id="section_{{ $sectionIndex }}">
+                            <!-- Section Header -->
+                            <button 
+                                type="button"
+                                @click="toggleSection('section_{{ $sectionIndex }}')"
+                                class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg"
+                                x-bind:class="sectionExpanded.section_{{ $sectionIndex }} && 'bg-gray-50 dark:bg-gray-800'"
+                            >
+                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                    {{ $section['title'] }}
+                                </span>
+                                <flux:icon 
+                                    name="chevron-right" 
+                                    class="w-4 h-4 transition-transform duration-200"
+                                    x-bind:class="sectionExpanded.section_{{ $sectionIndex }} && 'rotate-90'"
+                                />
+                            </button>
+                            
+                            <!-- Section Content -->
+                            <div 
+                                x-show="sectionExpanded.section_{{ $sectionIndex }}"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                x-transition:enter-end="opacity-100 transform translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 transform translate-y-0"
+                                x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                class="mt-1 space-y-1"
+                            >
                             @foreach($section['items'] as $item)
                                 @php
                                     $isActive = $activeSection === $item['key'];
@@ -132,27 +160,33 @@ $mobile = $mobile ?? false;
                                         $iconAttr = (config('sidebar.features.icons', true) && isset($item['icon'])) ? $item['icon'] : null;
                                         $badgeAttr = ($badgeData['count'] > 0) ? ($badgeData['count'] > 99 ? '99+' : $badgeData['count']) : null;
                                     @endphp
-                                    <flux:navlist.item 
-                                        href="{{ route($item['route'], $routeParams) }}" 
-                                        :current="$isActive"
-                                        :icon="$iconAttr"
-                                        :badge="$badgeAttr"
-                                        class="{{ $mobile ? 'py-2 text-base min-h-[44px]' : '' }}"
+                                    <a
+                                        href="{{ route($item['route'], $routeParams) }}"
+                                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $mobile ? 'py-2 text-base min-h-[44px]' : '' }}"
                                     >
-                                        {{ $item['name'] }}
+                                        @if($iconAttr)
+                                            <flux:icon name="{{ $iconAttr }}" class="mr-3 w-5 h-5 {{ $isActive ? 'text-indigo-500 dark:text-indigo-300' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400' }}" />
+                                        @endif
+                                        <span class="flex-1">{{ $item['name'] }}</span>
+                                        @if($badgeAttr)
+                                            <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                                {{ $badgeAttr }}
+                                            </span>
+                                        @endif
                                         @if(config('sidebar.features.descriptions', false) && isset($item['description']))
                                             <span class="block text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                                                 {{ $item['description'] }}
                                             </span>
                                         @endif
-                                    </flux:navlist.item>
+                                    </a>
                                 @endif
                             @endforeach
-                        </flux:navlist.group>
+                            </div>
+                        </div>
                     
                     @elseif($section['type'] === 'divider')
                         <!-- Simple divider -->
-                        <flux:separator variant="subtle" class="my-3" />
+                        <div class="border-t border-gray-200 dark:border-gray-700 my-3"></div>
                         
                     @elseif($section['type'] === 'custom')
                         <!-- Custom section content -->
@@ -162,10 +196,10 @@ $mobile = $mobile ?? false;
                     @endif
                     
                     @if(!$loop->last && $section['type'] === 'primary')
-                        <flux:separator variant="subtle" class="my-3" />
+                        <div class="border-t border-gray-200 dark:border-gray-700 my-3"></div>
                     @endif
                 @endforeach
-            </flux:navlist>
+            </nav>
         </div>
 
         @if(config('sidebar.features.footer', true) && (isset($sidebarConfig['footer']) || $sidebarContext))
@@ -228,6 +262,19 @@ $mobile = $mobile ?? false;
             background: rgb(146 64 14);
             color: rgb(254 240 138);
         }
+
+        .sidebar-section {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .sidebar-section button:focus {
+            outline: 2px solid rgb(99 102 241);
+            outline-offset: -2px;
+        }
     </style>
     @endpush
 
@@ -236,6 +283,23 @@ $mobile = $mobile ?? false;
         function sidebarNavigation() {
             return {
                 searchTerm: '',
+                sectionExpanded: {
+                    @foreach($sidebarConfig['sections'] ?? [] as $sectionIndex => $section)
+                        @if($section['type'] === 'section')
+                            @php
+                                $sectionHasActiveItem = false;
+                                foreach($section['items'] as $item) {
+                                    if($activeSection === $item['key']) {
+                                        $sectionHasActiveItem = true;
+                                        break;
+                                    }
+                                }
+                                $shouldExpand = $sectionHasActiveItem || ($section['default_expanded'] ?? false);
+                            @endphp
+                            'section_{{ $sectionIndex }}': {{ $shouldExpand ? 'true' : 'false' }},
+                        @endif
+                    @endforeach
+                },
                 
                 init() {
                     // Initialize search functionality
@@ -312,6 +376,22 @@ $mobile = $mobile ?? false;
                     });
                 },
                 
+                toggleSection(sectionId) {
+                    // If clicking on an already expanded section, collapse it
+                    if (this.sectionExpanded[sectionId]) {
+                        this.sectionExpanded[sectionId] = false;
+                        return;
+                    }
+                    
+                    // Close all other sections (accordion behavior)
+                    Object.keys(this.sectionExpanded).forEach(key => {
+                        this.sectionExpanded[key] = false;
+                    });
+                    
+                    // Open the clicked section
+                    this.sectionExpanded[sectionId] = true;
+                },
+
                 restoreExpandedState() {
                     // Restore expanded/collapsed state from localStorage
                     const state = localStorage.getItem('sidebar-expanded-state');

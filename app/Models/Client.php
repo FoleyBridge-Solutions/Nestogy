@@ -39,6 +39,12 @@ class Client extends Model
         'type',
         'accessed_at',
         'sla_id',
+        'referral',
+        'rate',
+        'currency_code',
+        'net_terms',
+        'tax_id_number',
+        'rmm_id',
         // Custom rate fields
         'custom_standard_rate',
         'custom_after_hours_rate',

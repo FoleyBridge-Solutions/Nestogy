@@ -93,7 +93,8 @@ class LoginController extends Controller
             if (!$passwordValid) {
                 $this->ensureConsistentTiming($startTime);
                 $this->incrementFailedAttempts($request);
-                return $this->failedLogin($request);
+                $this->failedLogin($request);
+                return null; // This line won't be reached due to exception
             }
             
             // Step 3: Check 2FA if enabled (atomic with password check)
@@ -102,7 +103,8 @@ class LoginController extends Controller
                 if (!$twoFactorCode || !$this->verify2FA($user, $twoFactorCode)) {
                     $this->ensureConsistentTiming($startTime);
                     $this->incrementFailedAttempts($request);
-                    return $this->failedLogin($request);
+                    $this->failedLogin($request);
+                    return null; // This line won't be reached due to exception
                 }
             }
             
@@ -112,7 +114,8 @@ class LoginController extends Controller
             if ($companies->isEmpty()) {
                 $this->ensureConsistentTiming($startTime);
                 $this->incrementFailedAttempts($request);
-                return $this->failedLogin($request, 'Your account has been deactivated.');
+                $this->failedLogin($request, 'Your account has been deactivated.');
+                return null; // This line won't be reached due to exception
             }
             
             // Clear failed attempts on successful authentication
@@ -130,7 +133,8 @@ class LoginController extends Controller
         } catch (\Exception $e) {
             $this->ensureConsistentTiming($startTime);
             \Log::error('Login error: ' . $e->getMessage());
-            return $this->failedLogin($request);
+            $this->failedLogin($request);
+            return null; // This line won't be reached due to exception
         }
     }
 

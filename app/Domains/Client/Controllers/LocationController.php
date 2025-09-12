@@ -248,9 +248,12 @@ class LocationController extends Controller
      */
     public function update(Request $request, Location $location)
     {
-        // Verify location belongs to client
-        if ($location->client_id !== $client->id) {
-            abort(404, 'Location not found for this client');
+        // Get client from location
+        $client = $location->client;
+        
+        // Set client in session if different
+        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
+            \App\Services\NavigationService::setSelectedClient($client->id);
         }
         
         // Authorize access
@@ -329,9 +332,12 @@ class LocationController extends Controller
      */
     public function destroy(Location $location)
     {
-        // Verify location belongs to client
-        if ($location->client_id !== $client->id) {
-            abort(404, 'Location not found for this client');
+        // Get client from location
+        $client = $location->client;
+        
+        // Set client in session if different
+        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
+            \App\Services\NavigationService::setSelectedClient($client->id);
         }
         
         // Authorize access
@@ -355,6 +361,15 @@ class LocationController extends Controller
      */
     public function export(Request $request)
     {
+        // Get client from session
+        $client = \App\Services\NavigationService::getSelectedClient();
+        
+        // If no client selected, redirect to client selection
+        if (!$client) {
+            return redirect()->route('clients.index')
+                ->with('info', 'Please select a client to export locations.');
+        }
+        
         // Authorize client access
         $this->authorize('view', $client);
         
@@ -457,6 +472,14 @@ class LocationController extends Controller
      */
     public function getContacts()
     {
+        // Get client from session
+        $client = \App\Services\NavigationService::getSelectedClient();
+        
+        // If no client selected, return error
+        if (!$client) {
+            return response()->json(['error' => 'No client selected'], 400);
+        }
+        
         // Authorize client access
         $this->authorize('view', $client);
 

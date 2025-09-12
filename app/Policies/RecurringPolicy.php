@@ -241,3 +241,4 @@ class RecurringPolicy
             && $recurring->company_id === $user->company_id
             && ($user->isAdmin() || $user->isManager());
     }
+}

@@ -362,7 +362,7 @@ class ImapService
     private function generateThreadId(Message $message): string
     {
         // Simple thread ID generation - could be enhanced with proper threading logic
-        $subject = preg_replace('/^(re:|fwd?:|fw:)\s*/i', '', $message->getSubject() ?: '');
+        $subject = preg_replace('/^(re:|fwd?:)\s*/i', '', $message->getSubject() ?: '');
         return hash('md5', $subject . $message->getMessageId());
     }
 

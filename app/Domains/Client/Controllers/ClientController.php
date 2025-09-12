@@ -70,6 +70,11 @@ class ClientController extends BaseController
     public function dynamicIndex(Request $request)
     {
         $user = Auth::user();
+        
+        // Redirect to login if not authenticated
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         // Check if there's a selected client in the session
         $selectedClient = \App\Services\NavigationService::getSelectedClient();
@@ -96,6 +101,11 @@ class ClientController extends BaseController
     public function index(Request $request)
     {
         $user = Auth::user();
+        
+        // Redirect to login if not authenticated
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         // Check if this is a DataTables AJAX request
         if ($request->ajax() && $request->has('draw')) {

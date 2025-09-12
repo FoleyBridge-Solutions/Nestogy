@@ -110,3 +110,87 @@ class ForceHttpsMiddleware
     }
 
     /**
+     * Check if the current path requires HTTPS.
+     */
+    protected function isSecurePath(Request $request): bool
+    {
+        $path = trim($request->path(), '/');
+        
+        foreach ($this->securePaths as $pattern) {
+            if ($this->matchesPattern($path, $pattern)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if the current path is explicitly allowed to use HTTP.
+     */
+    protected function isInsecurePath(Request $request): bool
+    {
+        $path = trim($request->path(), '/');
+        
+        foreach ($this->insecurePaths as $pattern) {
+            if ($this->matchesPattern($path, $pattern)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if a path matches a pattern (supports wildcards).
+     */
+    protected function matchesPattern(string $path, string $pattern): bool
+    {
+        // Convert pattern to regex
+        $regex = str_replace(['*', '/'], ['[^/]*', '\/'], $pattern);
+        $regex = '/^' . $regex . '$/i';
+        
+        return preg_match($regex, $path);
+    }
+
+    /**
+     * Redirect to HTTPS version of the URL.
+     */
+    protected function redirectToHttps(Request $request): Response
+    {
+        $httpsUrl = 'https://' . $request->getHost() . $request->getRequestUri();
+        
+        // Log security redirect
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'https_redirect',
+            'model_type' => 'security',
+            'details' => [
+                'from_url' => $request->fullUrl(),
+                'to_url' => $httpsUrl,
+                'ip' => $request->ip(),
+                'user_agent' => $request->header('User-Agent')
+            ]
+        ]);
+        
+        return redirect($httpsUrl, 301);
+    }
+
+    /**
+     * Add security headers to HTTPS responses.
+     */
+    protected function addSecurityHeaders(Response $response): void
+    {
+        $headers = [
+            'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'DENY',
+            'X-XSS-Protection' => '1; mode=block',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin'
+        ];
+
+        foreach ($headers as $header => $value) {
+            $response->headers->set($header, $value);
+        }
+    }
+}

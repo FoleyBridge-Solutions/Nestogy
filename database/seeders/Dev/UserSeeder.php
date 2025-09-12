@@ -78,9 +78,7 @@ class UserSeeder extends Seeder
 
         // Extract domain from company email
         $emailDomain = str_replace(['info@', 'www.'], '', $company->email);
-        if (strpos($emailDomain, '@') === false) {
-            $emailDomain = $emailDomain;
-        }
+        // No need to reassign if '@' is not found - already has correct value
 
         // Admin users (2)
         for ($i = 1; $i <= 2; $i++) {
