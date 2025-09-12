@@ -358,7 +358,6 @@ class UnifiedEmailSyncService
                     'messages_count' => count($broadMessages['messages'] ?? []),
                     'result_size_estimate' => $broadMessages['resultSizeEstimate'] ?? 0,
                 ]);
-                }
             }
             
             return ['count' => $syncedCount];
