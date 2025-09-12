@@ -20,13 +20,7 @@ class EmailAccountController extends Controller
 
     public function index()
     {
-        $accounts = EmailAccount::forUser(Auth::id())
-            ->with('folders')
-            ->orderBy('is_default', 'desc')
-            ->orderBy('name')
-            ->get();
-
-        return view('email.accounts.index', compact('accounts'));
+        return view('email.accounts.index');
     }
 
     public function create()
