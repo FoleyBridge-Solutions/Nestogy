@@ -20,6 +20,8 @@ class EmailAccount extends Model
         'name',
         'email_address',
         'provider',
+        'connection_type',
+        'oauth_provider',
         'imap_host',
         'imap_port',
         'imap_encryption',
@@ -34,6 +36,7 @@ class EmailAccount extends Model
         'oauth_access_token',
         'oauth_refresh_token',
         'oauth_expires_at',
+        'oauth_token_expires_at',
         'oauth_scopes',
         'is_default',
         'is_active',
@@ -48,6 +51,7 @@ class EmailAccount extends Model
     protected $casts = [
         'imap_validate_cert' => 'boolean',
         'oauth_expires_at' => 'datetime',
+        'oauth_token_expires_at' => 'datetime',
         'oauth_scopes' => 'array',
         'is_default' => 'boolean',
         'is_active' => 'boolean',
@@ -82,6 +86,25 @@ class EmailAccount extends Model
     public function signatures(): HasMany
     {
         return $this->hasMany(EmailSignature::class);
+    }
+
+    /**
+     * Check if this account uses OAuth authentication
+     */
+    public function isOAuthProvider(): bool
+    {
+        return $this->connection_type === 'oauth' &&
+               in_array($this->oauth_provider, ['microsoft365', 'google_workspace']);
+    }
+
+    /**
+     * Check if OAuth tokens are valid
+     */
+    public function hasValidOAuthTokens(): bool
+    {
+        return $this->oauth_access_token &&
+               $this->oauth_expires_at &&
+               $this->oauth_expires_at->isFuture();
     }
 
     // Mutators for password encryption

@@ -294,22 +294,54 @@ class ImapService
 
     private function createClient(EmailAccount $account): Client
     {
+        // For OAuth accounts, use the OAuth token manager to ensure valid tokens
+        if ($account->connection_type === 'oauth') {
+            $tokenManager = app(\App\Domains\Email\Services\OAuthTokenManager::class);
+            $tokenManager->ensureValidTokens($account);
+        }
+
         $config = [
             'host' => $account->imap_host,
             'port' => $account->imap_port,
             'encryption' => $account->imap_encryption,
             'validate_cert' => $account->imap_validate_cert,
-            'username' => $account->imap_username,
-            'password' => $account->imap_password,
         ];
 
-        // Handle OAuth if needed
-        if ($account->isOAuthProvider()) {
+        // Configure authentication based on connection type
+        if ($account->connection_type === 'oauth') {
+            // For OAuth, use XOAUTH2 authentication
             $config['authentication'] = 'oauth';
-            // Additional OAuth configuration would go here
+            $config['username'] = $account->email_address;
+            $config['password'] = $this->generateOAuthToken($account);
+        } else {
+            // Traditional username/password authentication
+            $config['username'] = $account->imap_username;
+            $config['password'] = $account->imap_password;
         }
 
         return $this->clientManager->make($config);
+    }
+
+    /**
+     * Generate OAuth token for IMAP authentication
+     */
+    private function generateOAuthToken(EmailAccount $account): string
+    {
+        if (!$account->oauth_access_token) {
+            throw new \Exception('No OAuth access token available');
+        }
+
+        // For Microsoft 365, use XOAUTH2 format
+        if ($account->oauth_provider === 'microsoft365') {
+            return base64_encode("user={$account->email_address}\x01auth=Bearer {$account->oauth_access_token}\x01\x01");
+        }
+
+        // For Google Workspace, use OAuth2 format
+        if ($account->oauth_provider === 'google_workspace') {
+            return "user={$account->email_address}\x01auth=Bearer {$account->oauth_access_token}\x01\x01";
+        }
+
+        throw new \Exception("Unsupported OAuth provider: {$account->oauth_provider}");
     }
 
     private function determineFolderType(string $name, string $path): string

@@ -334,6 +334,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('accounts/{emailAccount}/test-connection', [\App\Domains\Email\Controllers\EmailAccountController::class, 'testConnection'])->name('accounts.test-connection');
         Route::post('accounts/{emailAccount}/sync', [\App\Domains\Email\Controllers\EmailAccountController::class, 'sync'])->name('accounts.sync');
         Route::post('accounts/{emailAccount}/set-default', [\App\Domains\Email\Controllers\EmailAccountController::class, 'setDefault'])->name('accounts.set-default');
+        Route::post('accounts/connect-oauth', [\App\Http\Controllers\Email\EmailAccountController::class, 'connectOAuth'])->name('accounts.connect-oauth');
+        Route::post('accounts/{emailAccount}/refresh-tokens', [\App\Http\Controllers\Email\EmailAccountController::class, 'refreshTokens'])->name('accounts.refresh-tokens');
+
+        // OAuth callback route
+        Route::get('oauth/callback', [\App\Http\Controllers\Email\OAuthCallbackController::class, 'callback'])->name('oauth.callback');
         
         // Inbox management routes
         Route::get('inbox', [\App\Domains\Email\Controllers\InboxController::class, 'index'])->name('inbox.index');
@@ -491,6 +496,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/email/provider-presets', [\App\Http\Controllers\SettingsController::class, 'getEmailProviderPresets'])->name('email.provider-presets');
         Route::get('/email/config-status', [\App\Http\Controllers\SettingsController::class, 'getMailConfigStatus'])->name('email.config-status');
         Route::post('/email/send-test', [\App\Http\Controllers\SettingsController::class, 'sendRealTestEmail'])->name('email.send-test');
+
+        // Company Email Provider Settings
+        Route::get('/company-email-provider', [\App\Http\Controllers\Settings\CompanyEmailProviderController::class, 'show'])->name('company-email-provider');
+        Route::put('/company-email-provider', [\App\Http\Controllers\Settings\CompanyEmailProviderController::class, 'update'])->name('company-email-provider.update');
+        Route::post('/company-email-provider/test-connection', [\App\Http\Controllers\Settings\CompanyEmailProviderController::class, 'testConnection'])->name('company-email-provider.test-connection');
         
         // User Management Settings
         Route::get('/user-management', [\App\Http\Controllers\SettingsController::class, 'userManagement'])->name('user-management');

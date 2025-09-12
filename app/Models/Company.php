@@ -82,6 +82,9 @@ class Company extends Model
         'can_create_subsidiaries',
         'max_subsidiary_depth',
         'inherited_permissions',
+        // Email provider fields
+        'email_provider_type',
+        'email_provider_config',
     ];
 
     /**
@@ -108,6 +111,8 @@ class Company extends Model
         'subsidiary_settings' => 'array',
         'inherited_permissions' => 'array',
         'can_create_subsidiaries' => 'boolean',
+        // Email provider casts
+        'email_provider_config' => 'array',
     ];
 
     /**

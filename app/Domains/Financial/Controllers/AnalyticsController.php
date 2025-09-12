@@ -11,4 +11,10 @@ class AnalyticsController extends Controller
     {
         return view('financial.analytics.index');
     }
+
+    public function contracts()
+    {
+        // TODO: Add contract analytics logic
+        return view('financial.analytics.contracts');
+    }
 }

@@ -634,80 +634,85 @@ class SidebarConfigProvider
             'sections' => [
                 [
                     'type' => 'section',
-                    'title' => 'CONFIGURATION',
-                    'expandable' => false,
+                    'title' => 'Core Settings',
+                    'expandable' => true,
+                    'default_expanded' => true,
                     'items' => [
-                        [
-                            'name' => 'General',
-                            'route' => 'settings.general',
-                            'icon' => 'adjustments-horizontal',
-                            'key' => 'general'
-                        ],
-                        [
-                            'name' => 'Security',
-                            'route' => 'settings.security',
-                            'icon' => 'shield-check',
-                            'key' => 'security'
-                        ],
-                        [
-                            'name' => 'Email',
-                            'route' => 'settings.email',
-                            'icon' => 'envelope',
-                            'key' => 'email'
-                        ],
-                        [
-                            'name' => 'Billing & Financial',
-                            'route' => 'settings.billing-financial',
-                            'icon' => 'credit-card',
-                            'key' => 'billing'
-                        ]
-                    ]
+                        ['name' => 'General', 'route' => 'settings.general', 'icon' => 'adjustments-horizontal', 'key' => 'general'],
+                        ['name' => 'Security & Access', 'route' => 'settings.security', 'icon' => 'shield-check', 'key' => 'security'],
+                        ['name' => 'Email & Communication', 'route' => 'settings.email', 'icon' => 'envelope', 'key' => 'email'],
+                        ['name' => 'Email Provider', 'route' => 'settings.company-email-provider', 'icon' => 'inbox-stack', 'key' => 'company-email-provider'],
+                        ['name' => 'User Management', 'route' => 'settings.user-management', 'icon' => 'users', 'key' => 'user-management'],
+                        ['name' => 'Permissions Management', 'route' => 'settings.permissions.index', 'icon' => 'key', 'key' => 'permissions'],
+                        ['name' => 'Roles & Abilities', 'route' => 'settings.roles.index', 'icon' => 'identification', 'key' => 'roles'],
+                        ['name' => 'Subsidiary Management', 'route' => 'subsidiaries.index', 'icon' => 'building-office-2', 'key' => 'subsidiaries'],
+                    ],
                 ],
                 [
                     'type' => 'section',
-                    'title' => 'USER MANAGEMENT',
-                    'expandable' => false,
+                    'title' => 'Financial Management',
+                    'expandable' => true,
                     'items' => [
-                        [
-                            'name' => 'Users',
-                            'route' => 'users.index',
-                            'icon' => 'users',
-                            'key' => 'users'
-                        ],
-                        [
-                            'name' => 'Roles',
-                            'route' => 'settings.roles.index',
-                            'icon' => 'identification',
-                            'key' => 'roles'
-                        ],
-                        [
-                            'name' => 'Permissions',
-                            'route' => 'settings.permissions.index',
-                            'icon' => 'key',
-                            'key' => 'permissions'
-                        ]
-                    ]
+                        ['name' => 'Billing & Financial', 'route' => 'settings.billing-financial', 'icon' => 'credit-card', 'key' => 'billing-financial'],
+                        ['name' => 'Accounting Integration', 'route' => 'settings.accounting', 'icon' => 'book-open', 'key' => 'accounting'],
+                        ['name' => 'Payment Gateways', 'route' => 'settings.payment-gateways', 'icon' => 'banknotes', 'key' => 'payment-gateways'],
+                    ],
                 ],
                 [
                     'type' => 'section',
-                    'title' => 'SYSTEM',
-                    'expandable' => false,
+                    'title' => 'Service Delivery',
+                    'expandable' => true,
                     'items' => [
-                        [
-                            'name' => 'RMM & Monitoring',
-                            'route' => 'settings.rmm-monitoring',
-                            'icon' => 'computer-desktop',
-                            'key' => 'rmm-monitoring'
-                        ],
-                        [
-                            'name' => 'API & Webhooks',
-                            'route' => 'settings.api-webhooks',
-                            'icon' => 'link',
-                            'key' => 'api-webhooks'
-                        ]
-                    ]
-                ]
-            ]
+                        ['name' => 'Ticketing & Service Desk', 'route' => 'settings.ticketing-service-desk', 'icon' => 'ticket', 'key' => 'ticketing-service-desk'],
+                        ['name' => 'Project Management', 'route' => 'settings.project-management', 'icon' => 'folder', 'key' => 'project-management'],
+                        ['name' => 'Asset & Inventory', 'route' => 'settings.asset-inventory', 'icon' => 'computer-desktop', 'key' => 'asset-inventory'],
+                        ['name' => 'Client Portal', 'route' => 'settings.client-portal', 'icon' => 'user-group', 'key' => 'client-portal'],
+                        ['name' => 'Contract Clauses', 'route' => 'settings.contract-clauses', 'icon' => 'document-text', 'key' => 'contract-clauses'],
+                        ['name' => 'Contract Templates', 'route' => 'settings.contract-templates.index', 'icon' => 'document-duplicate', 'key' => 'contract-templates'],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'Technology Integration',
+                    'expandable' => true,
+                    'items' => [
+                        ['name' => 'RMM & Monitoring', 'route' => 'settings.rmm-monitoring', 'icon' => 'computer-desktop', 'key' => 'rmm-monitoring'],
+                        ['name' => 'Third-Party Integrations', 'route' => 'settings.integrations', 'icon' => 'puzzle-piece', 'key' => 'integrations'],
+                        ['name' => 'Automation & Workflows', 'route' => 'settings.automation-workflows', 'icon' => 'bolt', 'key' => 'automation-workflows'],
+                        ['name' => 'API & Webhooks', 'route' => 'settings.api-webhooks', 'icon' => 'link', 'key' => 'api-webhooks'],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'Compliance & Security',
+                    'expandable' => true,
+                    'items' => [
+                        ['name' => 'Compliance & Audit', 'route' => 'settings.compliance-audit', 'icon' => 'clipboard-document-check', 'key' => 'compliance-audit'],
+                        ['name' => 'Backup & Recovery', 'route' => 'settings.backup-recovery', 'icon' => 'circle-stack', 'key' => 'backup-recovery'],
+                        ['name' => 'Data Management', 'route' => 'settings.data-management', 'icon' => 'circle-stack', 'key' => 'data-management'],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'System & Performance',
+                    'expandable' => true,
+                    'items' => [
+                        ['name' => 'Performance & Optimization', 'route' => 'settings.performance-optimization', 'icon' => 'rocket-launch', 'key' => 'performance-optimization'],
+                        ['name' => 'Reporting & Analytics', 'route' => 'settings.reporting-analytics', 'icon' => 'chart-bar', 'key' => 'reporting-analytics'],
+                        ['name' => 'Notifications & Alerts', 'route' => 'settings.notifications-alerts', 'icon' => 'bell', 'key' => 'notifications-alerts'],
+                        ['name' => 'Mobile & Remote Access', 'route' => 'settings.mobile-remote', 'icon' => 'device-phone-mobile', 'key' => 'mobile-remote'],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'Knowledge & Training',
+                    'expandable' => true,
+                    'items' => [
+                        ['name' => 'Training & Documentation', 'route' => 'settings.training-documentation', 'icon' => 'academic-cap', 'key' => 'training-documentation'],
+                        ['name' => 'Knowledge Base', 'route' => 'settings.knowledge-base', 'icon' => 'book-open', 'key' => 'knowledge-base'],
+                    ],
+                ],
+            ],
         ];
     }
     

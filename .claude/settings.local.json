@@ -59,7 +59,10 @@
       "Bash(git remote add:*)",
       "Bash(git config:*)",
       "Bash(git branch:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []
