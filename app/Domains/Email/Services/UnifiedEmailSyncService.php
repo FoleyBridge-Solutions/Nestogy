@@ -278,17 +278,39 @@ class UnifiedEmailSyncService
     protected function syncGoogleMessages(EmailAccount $account, string $accessToken): array
     {
         try {
+            Log::info('Starting Google messages sync', [
+                'account_id' => $account->id,
+                'account_email' => $account->email_address,
+            ]);
+
             $provider = new GoogleWorkspaceProvider($account->company);
             
             // Get recent messages (last 7 days by default)
             $query = 'newer_than:7d';
+            Log::info('Querying Gmail messages', [
+                'account_id' => $account->id,
+                'query' => $query,
+                'max_results' => 50,
+            ]);
+            
             $messages = $provider->getMessages($accessToken, [
                 'query' => $query,
                 'maxResults' => 50
             ]);
             
+            Log::info('Retrieved Gmail messages response', [
+                'account_id' => $account->id,
+                'messages_count' => count($messages['messages'] ?? []),
+                'total_result_size_estimate' => $messages['resultSizeEstimate'] ?? 0,
+                'has_next_page_token' => isset($messages['nextPageToken']),
+            ]);
+            
             $syncedCount = 0;
             if (!empty($messages['messages'])) {
+                Log::info('Processing Gmail messages', [
+                    'account_id' => $account->id,
+                    'message_count' => count($messages['messages']),
+                ]);
                 foreach ($messages['messages'] as $messageRef) {
                     try {
                         // Get full message details
@@ -316,6 +338,26 @@ class UnifiedEmailSyncService
                         ]);
                         // Continue with other messages
                     }
+                }
+            } else {
+                Log::warning('No Gmail messages found with current query, trying broader search', [
+                    'account_id' => $account->id,
+                    'original_query' => $query,
+                ]);
+                
+                // Try with a broader query (last 30 days)
+                $broadQuery = 'newer_than:30d';
+                $broadMessages = $provider->getMessages($accessToken, [
+                    'query' => $broadQuery,
+                    'maxResults' => 10
+                ]);
+                
+                Log::info('Broader Gmail search results', [
+                    'account_id' => $account->id,
+                    'query' => $broadQuery,
+                    'messages_count' => count($broadMessages['messages'] ?? []),
+                    'result_size_estimate' => $broadMessages['resultSizeEstimate'] ?? 0,
+                ]);
                 }
             }
             
