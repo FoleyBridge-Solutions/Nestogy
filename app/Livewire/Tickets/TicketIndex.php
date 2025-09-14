@@ -3,7 +3,7 @@
 namespace App\Livewire\Tickets;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Client\Models\Client;
+use App\Models\Client;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;

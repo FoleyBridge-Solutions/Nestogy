@@ -3,7 +3,7 @@
 namespace App\Livewire\Projects;
 
 use App\Domains\Project\Models\Project;
-use App\Domains\Client\Models\Client;
+use App\Models\Client;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
