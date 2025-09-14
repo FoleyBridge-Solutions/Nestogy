@@ -78,11 +78,15 @@ class ClientIndex extends Component
         if ($client && $client->company_id === Auth::user()->company_id) {
             NavigationService::setSelectedClient($clientId);
             $this->selectedClient = $client;
-            
+
             session()->flash('success', "Selected client: {$client->name}");
-            
-            // Refresh the component
-            $this->dispatch('client-selected');
+
+            // Dispatch event to refresh other components
+            $this->dispatch('client-selected', clientId: $clientId);
+
+            // Redirect to refresh the entire page with the new client context
+            return redirect()->route('clients.index')
+                ->with('success', "Selected client: {$client->name}");
         }
     }
 
@@ -90,7 +94,13 @@ class ClientIndex extends Component
     {
         NavigationService::clearSelectedClient();
         $this->selectedClient = null;
-        session()->flash('info', 'Client selection cleared');
+
+        // Dispatch event to refresh other components
+        $this->dispatch('client-cleared');
+
+        // Redirect to refresh the entire page
+        return redirect()->route('clients.index')
+            ->with('info', 'Client selection cleared');
     }
 
     public function confirmDelete($clientId)

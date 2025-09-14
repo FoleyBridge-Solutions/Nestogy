@@ -316,6 +316,28 @@ class ClientSwitcher extends Component
     }
 
     /**
+     * Event listener for client selection from index page
+     */
+    #[On('client-selected')]
+    public function handleClientSelected($clientId)
+    {
+        $this->selectedClientId = $clientId;
+        unset($this->currentClient);
+        unset($this->recentClients);
+    }
+
+    /**
+     * Event listener for client clearing from index page
+     */
+    #[On('client-cleared')]
+    public function handleClientCleared()
+    {
+        $this->selectedClientId = null;
+        unset($this->currentClient);
+        unset($this->recentClients);
+    }
+
+    /**
      * Dehydrate - runs at the end of every request
      */
     public function dehydrate()
