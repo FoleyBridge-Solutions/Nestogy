@@ -435,5 +435,9 @@
             });
         }
     </script>
+
+    {{-- Timer Modals (Global) --}}
+    @livewire('timer-completion-modal')
+    @livewire('timer-batch-completion-modal')
 </body>
 </html>

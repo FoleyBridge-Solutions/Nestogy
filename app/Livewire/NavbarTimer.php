@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
+use Flux\Flux;
 
 class NavbarTimer extends Component
 {
@@ -35,6 +36,7 @@ class NavbarTimer extends Component
         'timerPaused' => 'refreshTimers',
         'timerResumed' => 'refreshTimers',
         'refreshNavbarTimer' => 'refreshTimers',
+        'timer:completion-confirmed' => 'handleTimerCompleted',
     ];
     
     public function mount()
@@ -147,80 +149,62 @@ class NavbarTimer extends Component
     public function pauseTimer($timerId)
     {
         try {
+            $timer = TicketTimeEntry::find($timerId);
+            if (!$timer) {
+                throw new \Exception('Timer not found');
+            }
+
             $service = app(TimeTrackingService::class);
-            $service->pauseTracking($timerId, Auth::user(), 'Paused from navbar');
-            
+            $service->pauseTracking($timer, 'Paused from navbar');
+
             $this->refreshTimers();
-            
-            $this->dispatch('show-toast', [
-                'message' => 'Timer paused',
-                'type' => 'info'
-            ]);
+
+            Flux::toast(
+                text: 'Timer paused'
+            );
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to pause timer',
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to pause timer',
+                variant: 'danger'
+            );
         }
     }
     
     public function resumeTimer($timerId)
     {
         try {
+            $timer = TicketTimeEntry::find($timerId);
+            if (!$timer) {
+                throw new \Exception('Timer not found');
+            }
+
             $service = app(TimeTrackingService::class);
-            $service->resumeTracking($timerId, Auth::user());
-            
+            $service->resumeTracking($timer);
+
             $this->refreshTimers();
-            
-            $this->dispatch('show-toast', [
-                'message' => 'Timer resumed',
-                'type' => 'success'
-            ]);
+
+            Flux::toast(
+                text: 'Timer resumed',
+                variant: 'success'
+            );
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to resume timer',
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to resume timer',
+                variant: 'danger'
+            );
         }
     }
     
     public function stopTimer($timerId)
     {
-        try {
-            $timer = TicketTimeEntry::find($timerId);
-            if (!$timer) {
-                throw new \Exception('Timer not found');
-            }
-            
-            $service = app(TimeTrackingService::class);
-            $result = $service->stopTracking($timer);
-            
-            $hours = round($result->hours_worked, 2);
-            $amount = $result->amount;
-            
-            $this->refreshTimers();
-            
-            $this->dispatch('show-toast', [
-                'message' => "Timer stopped - {$hours}h recorded (\${$amount})",
-                'type' => 'success'
-            ]);
-            
-            // Refresh other components
-            $this->dispatch('refreshTimer');
-            
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to stop timer: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
-        }
+        // Dispatch event to show completion modal instead of stopping directly
+        $this->dispatch('timer:request-stop', timerId: $timerId, source: 'navbar');
     }
     
     public function stopAllTimers()
     {
-        foreach ($this->activeTimers as $timer) {
-            $this->stopTimer($timer['id']);
-        }
+        // Dispatch event to show batch completion modal
+        $this->dispatch('timer:request-stop-all');
     }
     
     public function navigateToTicket($ticketId)
@@ -256,10 +240,9 @@ class NavbarTimer extends Component
             case 'both':
                 // Allow both timers to run
                 $this->dispatch('confirmed-start-timer', ticketId: $this->pendingTicketId);
-                $this->dispatch('show-toast', [
-                    'message' => 'Multiple timers are now running',
-                    'type' => 'info'
-                ]);
+                Flux::toast(
+                    text: 'Multiple timers are now running'
+                );
                 break;
                 
             case 'cancel':
@@ -272,6 +255,26 @@ class NavbarTimer extends Component
         $this->pendingTicketNumber = null;
     }
     
+    public function handleTimerCompleted($data)
+    {
+        // Refresh timers after successful completion
+        $this->refreshTimers();
+
+        // Show success message if provided
+        if (isset($data['hours']) && isset($data['amount'])) {
+            $message = "Timer stopped - {$data['hours']}h recorded";
+            if ($data['amount'] > 0) {
+                $message .= " (\${$data['amount']})";
+            }
+
+            Flux::toast(
+                heading: 'Timer stopped',
+                text: $message,
+                variant: 'success'
+            );
+        }
+    }
+
     public function refreshTimers()
     {
         // Clear cache to force reload

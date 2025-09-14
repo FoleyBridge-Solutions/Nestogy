@@ -165,6 +165,11 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
     public function closer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'closed_by');
@@ -173,6 +178,11 @@ class Ticket extends Model
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'contact_id');
     }
 
     public function location(): BelongsTo
@@ -236,6 +246,11 @@ class Ticket extends Model
     }
 
     public function timeEntries(): HasMany
+    {
+        return $this->hasMany(TicketTimeEntry::class);
+    }
+
+    public function timeLogs(): HasMany
     {
         return $this->hasMany(TicketTimeEntry::class);
     }

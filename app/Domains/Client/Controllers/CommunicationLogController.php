@@ -50,11 +50,17 @@ class CommunicationLogController extends Controller
         $types = CommunicationLog::TYPES;
         $channels = CommunicationLog::CHANNELS;
 
+        // Navigation context for sidebar
+        $activeDomain = 'clients';
+        $activeSection = 'communications';
+
         return view('clients.communications.index', compact(
             'client',
             'communications',
             'types',
-            'channels'
+            'channels',
+            'activeDomain',
+            'activeSection'
         ));
     }
 
@@ -74,11 +80,17 @@ class CommunicationLogController extends Controller
         $types = CommunicationLog::TYPES;
         $channels = CommunicationLog::CHANNELS;
 
+        // Navigation context for sidebar
+        $activeDomain = 'clients';
+        $activeSection = 'communications';
+
         return view('clients.communications.create', compact(
             'client',
             'contacts',
             'types',
-            'channels'
+            'channels',
+            'activeDomain',
+            'activeSection'
         ));
     }
 
@@ -140,9 +152,15 @@ class CommunicationLogController extends Controller
 
         $communication->load(['user', 'contact']);
 
+        // Navigation context for sidebar
+        $activeDomain = 'clients';
+        $activeSection = 'communications';
+
         return view('clients.communications.show', compact(
             'client',
-            'communication'
+            'communication',
+            'activeDomain',
+            'activeSection'
         ));
     }
 
@@ -162,12 +180,18 @@ class CommunicationLogController extends Controller
         $types = CommunicationLog::TYPES;
         $channels = CommunicationLog::CHANNELS;
 
+        // Navigation context for sidebar
+        $activeDomain = 'clients';
+        $activeSection = 'communications';
+
         return view('clients.communications.edit', compact(
             'client',
             'communication',
             'contacts',
             'types',
-            'channels'
+            'channels',
+            'activeDomain',
+            'activeSection'
         ));
     }
 

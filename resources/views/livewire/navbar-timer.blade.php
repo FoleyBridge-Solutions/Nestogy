@@ -93,33 +93,50 @@
                             <!-- Timer Controls -->
                             <div class="flex items-center gap-2">
                                 @if($timer['is_paused'])
-                                    <flux:button 
+                                    <flux:button
                                         wire:click="resumeTimer({{ $timer['id'] }})"
                                         size="xs"
                                         variant="primary"
-                                        class="flex-1">
-                                        <flux:icon name="play" variant="micro" />
-                                        Resume
+                                        class="flex-1"
+                                        wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="resumeTimer({{ $timer['id'] }})">
+                                            <flux:icon name="play" variant="micro" />
+                                            Resume
+                                        </span>
+                                        <span wire:loading wire:target="resumeTimer({{ $timer['id'] }})">
+                                            <flux:icon name="arrow-path" variant="micro" class="animate-spin" />
+                                        </span>
                                     </flux:button>
                                 @else
-                                    <flux:button 
+                                    <flux:button
                                         wire:click="pauseTimer({{ $timer['id'] }})"
                                         size="xs"
                                         variant="ghost"
-                                        class="flex-1">
-                                        <flux:icon name="pause" variant="micro" />
-                                        Pause
+                                        class="flex-1"
+                                        wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="pauseTimer({{ $timer['id'] }})">
+                                            <flux:icon name="pause" variant="micro" />
+                                            Pause
+                                        </span>
+                                        <span wire:loading wire:target="pauseTimer({{ $timer['id'] }})">
+                                            <flux:icon name="arrow-path" variant="micro" class="animate-spin" />
+                                        </span>
                                     </flux:button>
                                 @endif
                                 
-                                <flux:button 
+                                <flux:button
                                     wire:click="stopTimer({{ $timer['id'] }})"
-                                    wire:confirm="Stop this timer and save {{ $timer['elapsed_display'] }} to ticket?"
                                     size="xs"
                                     variant="danger"
-                                    class="flex-1">
-                                    <flux:icon name="stop" variant="micro" />
-                                    Stop
+                                    class="flex-1"
+                                    wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="stopTimer({{ $timer['id'] }})">
+                                        <flux:icon name="stop" variant="micro" />
+                                        Stop
+                                    </span>
+                                    <span wire:loading wire:target="stopTimer({{ $timer['id'] }})">
+                                        <flux:icon name="arrow-path" variant="micro" class="animate-spin" />
+                                    </span>
                                 </flux:button>
                                 
                                 <flux:button 
@@ -143,12 +160,18 @@
                                     {{ $totalElapsedTime }}
                                 </div>
                             </div>
-                            <flux:button 
+                            <flux:button
                                 wire:click="stopAllTimers"
-                                wire:confirm="Stop all {{ $timerCount }} timers?"
                                 size="xs"
-                                variant="danger">
-                                Stop All Timers
+                                variant="danger"
+                                wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="stopAllTimers">
+                                    Stop All Timers
+                                </span>
+                                <span wire:loading wire:target="stopAllTimers">
+                                    <flux:icon name="arrow-path" variant="micro" class="animate-spin" />
+                                    Processing...
+                                </span>
                             </flux:button>
                         </div>
                     </div>

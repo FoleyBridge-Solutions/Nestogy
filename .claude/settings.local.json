@@ -67,7 +67,17 @@
       "mcp__ide__getDiagnostics",
       "Bash(sed:*)",
       "Bash(composer:*)",
-      "Bash(COMPOSER_ALLOW_SUPERUSER=1 composer update laravel/framework laravel/nightwatch league/csv livewire/flux livewire/flux-pro spatie/laravel-data spatie/laravel-pdf --no-interaction)"
+      "Bash(COMPOSER_ALLOW_SUPERUSER=1 composer update laravel/framework laravel/nightwatch league/csv livewire/flux livewire/flux-pro spatie/laravel-data spatie/laravel-pdf --no-interaction)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(do)",
+      "Bash(echo \"Fixing: $file\")",
+      "WebSearch",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(PGPASSWORD=password psql -h 127.0.0.1 -U nestogy -d nestogy -c \"\\d ticket_comments\")",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then echo \"=== $file ===\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

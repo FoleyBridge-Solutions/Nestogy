@@ -29,19 +29,17 @@
 
     {{-- Page Header --}}
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>
-                {{ $selectedClient ? 'Select Different Client' : 'Select Client' }}
-            </flux:card.title>
-            <flux:card.description>
-                {{ $selectedClient 
-                    ? 'Choose a different client to work with, or manage client relationships' 
-                    : 'Choose a client to access their contacts, locations, documents and other information' 
-                }}
-            </flux:card.description>
-        </flux:card.header>
-        
-        <div class="flex justify-end gap-3 px-6 pb-4">
+        <flux:heading size="lg">
+            {{ $selectedClient ? 'Select Different Client' : 'Select Client' }}
+        </flux:heading>
+        <flux:subheading>
+            {{ $selectedClient
+                ? 'Choose a different client to work with, or manage client relationships'
+                : 'Choose a client to access their contacts, locations, documents and other information'
+            }}
+        </flux:subheading>
+
+        <div class="flex justify-end gap-3 mt-4">
             <flux:button variant="outline" href="{{ route('clients.import.form') }}">
                 <flux:icon.arrow-up-tray class="size-4" />
                 Import
@@ -286,52 +284,54 @@
     </flux:card>
 
     {{-- Delete Confirmation Modal --}}
-    <flux:modal wire:model="showDeleteModal" max-width="sm">
-        <flux:modal.header>
-            <flux:modal.title>Delete Client</flux:modal.title>
-        </flux:modal.header>
-        
-        <flux:modal.body>
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-red-100 dark:bg-red-900 rounded-full">
-                    <flux:icon.exclamation-triangle class="size-5 text-red-600 dark:text-red-400" />
-                </div>
-                <p>Are you sure you want to delete this client? This action cannot be undone.</p>
+    <flux:modal wire:model.self="showDeleteModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Delete Client</flux:heading>
+                <flux:text class="mt-2">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-red-100 dark:bg-red-900 rounded-full">
+                            <flux:icon.exclamation-triangle class="size-5 text-red-600 dark:text-red-400" />
+                        </div>
+                        <p>Are you sure you want to delete this client? This action cannot be undone.</p>
+                    </div>
+                </flux:text>
             </div>
-        </flux:modal.body>
-        
-        <flux:modal.footer>
-            <flux:button variant="ghost" wire:click="$set('showDeleteModal', false)">
-                Cancel
-            </flux:button>
-            <flux:button variant="danger" wire:click="deleteClient">
-                Delete Client
-            </flux:button>
-        </flux:modal.footer>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" wire:click="deleteClient">
+                    Delete Client
+                </flux:button>
+            </div>
+        </div>
     </flux:modal>
 
     {{-- Convert Lead Modal --}}
-    <flux:modal wire:model="showConvertModal" max-width="sm">
-        <flux:modal.header>
-            <flux:modal.title>Convert Lead to Customer</flux:modal.title>
-        </flux:modal.header>
-        
-        <flux:modal.body>
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-green-100 dark:bg-green-900 rounded-full">
-                    <flux:icon.check-circle class="size-5 text-green-600 dark:text-green-400" />
-                </div>
-                <p>Are you sure you want to convert this lead to a customer?</p>
+    <flux:modal wire:model.self="showConvertModal" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Convert Lead to Customer</flux:heading>
+                <flux:text class="mt-2">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-green-100 dark:bg-green-900 rounded-full">
+                            <flux:icon.check-circle class="size-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <p>Are you sure you want to convert this lead to a customer?</p>
+                    </div>
+                </flux:text>
             </div>
-        </flux:modal.body>
-        
-        <flux:modal.footer>
-            <flux:button variant="ghost" wire:click="$set('showConvertModal', false)">
-                Cancel
-            </flux:button>
-            <flux:button variant="success" wire:click="convertLead">
-                Convert to Customer
-            </flux:button>
-        </flux:modal.footer>
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button variant="primary" wire:click="convertLead">
+                    Convert to Customer
+                </flux:button>
+            </div>
+        </div>
     </flux:modal>
 </div>

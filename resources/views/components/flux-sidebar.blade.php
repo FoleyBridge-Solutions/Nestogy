@@ -56,6 +56,29 @@ $mobile = $mobile ?? false;
         </div>
         @endif
 
+        <!-- Expand/Collapse All Controls -->
+        <div class="flex-shrink-0 px-4 py-2 border-b border-zinc-100 dark:border-zinc-800">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Navigation</span>
+                <div class="flex items-center space-x-1">
+                    <button
+                        @click="expandAll()"
+                        class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                        title="Expand all sections"
+                    >
+                        <flux:icon name="chevron-double-down" class="w-4 h-4" />
+                    </button>
+                    <button
+                        @click="collapseAll()"
+                        class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                        title="Collapse all sections"
+                    >
+                        <flux:icon name="chevron-double-up" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Navigation Content -->
         <div class="flex-1 overflow-y-auto {{ $mobile ? 'pb-4' : '' }}" x-data="sidebarNavigation()" x-init="init()"
             <nav class="p-2 space-y-1 {{ $mobile ? 'space-y-2' : '' }}">
@@ -114,8 +137,9 @@ $mobile = $mobile ?? false;
                                 }
                             }
                             
-                            // Expand if section has active item, otherwise use default
-                            $shouldExpand = $sectionHasActiveItem || $isDefaultExpanded;
+                            // Always expand all sections by default for easier navigation
+                            // Sections will be expanded unless user explicitly collapses them
+                            $shouldExpand = true;
                         @endphp
                         
                         <div class="sidebar-section {{ $isPriority ? 'priority-section' : '' }}" data-section-id="section_{{ $sectionIndex }}">
@@ -294,7 +318,7 @@ $mobile = $mobile ?? false;
                                         break;
                                     }
                                 }
-                                $shouldExpand = $sectionHasActiveItem || ($section['default_expanded'] ?? false);
+                                $shouldExpand = $sectionHasActiveItem || ($section['default_expanded'] ?? true);
                             @endphp
                             'section_{{ $sectionIndex }}': {{ $shouldExpand ? 'true' : 'false' }},
                         @endif
@@ -377,28 +401,48 @@ $mobile = $mobile ?? false;
                 },
                 
                 toggleSection(sectionId) {
-                    // If clicking on an already expanded section, collapse it
-                    if (this.sectionExpanded[sectionId]) {
-                        this.sectionExpanded[sectionId] = false;
-                        return;
-                    }
-                    
-                    // Close all other sections (accordion behavior)
+                    // Simply toggle the clicked section without affecting others
+                    this.sectionExpanded[sectionId] = !this.sectionExpanded[sectionId];
+
+                    // Save state to localStorage
+                    this.saveExpandedState();
+                },
+
+                saveExpandedState() {
+                    // Save current expanded state to localStorage
+                    const stateKey = 'sidebar-expanded-state-{{ $sidebarContext }}';
+                    localStorage.setItem(stateKey, JSON.stringify(this.sectionExpanded));
+                },
+
+                expandAll() {
+                    // Expand all sections
+                    Object.keys(this.sectionExpanded).forEach(key => {
+                        this.sectionExpanded[key] = true;
+                    });
+                    this.saveExpandedState();
+                },
+
+                collapseAll() {
+                    // Collapse all sections
                     Object.keys(this.sectionExpanded).forEach(key => {
                         this.sectionExpanded[key] = false;
                     });
-                    
-                    // Open the clicked section
-                    this.sectionExpanded[sectionId] = true;
+                    this.saveExpandedState();
                 },
 
                 restoreExpandedState() {
                     // Restore expanded/collapsed state from localStorage
-                    const state = localStorage.getItem('sidebar-expanded-state');
+                    const stateKey = 'sidebar-expanded-state-{{ $sidebarContext }}';
+                    const state = localStorage.getItem(stateKey);
                     if (state) {
                         try {
-                            const expandedSections = JSON.parse(state);
+                            const savedState = JSON.parse(state);
                             // Apply saved state to sections
+                            Object.keys(savedState).forEach(key => {
+                                if (this.sectionExpanded.hasOwnProperty(key)) {
+                                    this.sectionExpanded[key] = savedState[key];
+                                }
+                            });
                         } catch (e) {
                             console.error('Failed to restore sidebar state:', e);
                         }

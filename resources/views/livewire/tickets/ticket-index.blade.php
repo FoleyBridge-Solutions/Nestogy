@@ -138,13 +138,13 @@
                 <flux:table.column>
                     <flux:checkbox wire:model.live="selectAll" />
                 </flux:table.column>
-                <flux:table.column 
-                    sortable 
-                    wire:click="sortBy('ticket_number')"
+                <flux:table.column
+                    sortable
+                    wire:click="sortBy('number')"
                     class="cursor-pointer"
                 >
                     Ticket #
-                    @if($sortField === 'ticket_number')
+                    @if($sortField === 'number')
                         <flux:icon.chevron-{{ $sortDirection === 'asc' ? 'up' : 'down' }} class="size-3 inline" />
                     @endif
                 </flux:table.column>
@@ -204,7 +204,7 @@
                         </flux:table.cell>
                         <flux:table.cell>
                             <a href="{{ route('tickets.show', $ticket) }}" class="text-blue-600 hover:underline">
-                                #{{ $ticket->ticket_number }}
+                                #{{ $ticket->number }}
                             </a>
                         </flux:table.cell>
                         <flux:table.cell>
@@ -219,21 +219,24 @@
                             {{ $ticket->client?->name ?? '-' }}
                         </flux:table.cell>
                         <flux:table.cell>
-                            <flux:badge variant="{{ 
-                                $ticket->status === 'open' ? 'success' : 
-                                ($ticket->status === 'in_progress' ? 'info' : 
-                                ($ticket->status === 'resolved' ? 'warning' : 
-                                ($ticket->status === 'closed' ? 'outline' : 'danger')))
-                            }}">
+                            <flux:badge color="{{
+                                $ticket->status === 'open' ? 'green' :
+                                ($ticket->status === 'in_progress' ? 'blue' :
+                                ($ticket->status === 'pending' ? 'amber' :
+                                ($ticket->status === 'resolved' ? 'purple' :
+                                ($ticket->status === 'closed' ? 'zinc' : 'red'))))
+                            }}" size="sm">
                                 {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                             </flux:badge>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <flux:badge variant="{{ 
-                                $ticket->priority === 'urgent' ? 'danger' : 
-                                ($ticket->priority === 'high' ? 'warning' : 
-                                ($ticket->priority === 'medium' ? 'info' : 'outline'))
-                            }}">
+                            <flux:badge color="{{
+                                $ticket->priority === 'critical' ? 'red' :
+                                ($ticket->priority === 'urgent' ? 'red' :
+                                ($ticket->priority === 'high' ? 'orange' :
+                                ($ticket->priority === 'medium' ? 'yellow' :
+                                ($ticket->priority === 'low' ? 'gray' : 'zinc'))))
+                            }}" size="sm">
                                 {{ ucfirst($ticket->priority) }}
                             </flux:badge>
                         </flux:table.cell>

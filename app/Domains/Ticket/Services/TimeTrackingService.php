@@ -55,7 +55,7 @@ class TimeTrackingService
 
     /**
      * Start time tracking for a ticket
-     * 
+     *
      * @param Ticket $ticket
      * @param User $technician
      * @param array $options
@@ -63,10 +63,10 @@ class TimeTrackingService
      */
     public function startTracking(Ticket $ticket, User $technician, array $options = []): TicketTimeEntry
     {
-        // Check if there's already an active timer
-        $activeEntry = $this->getActiveTimer($technician);
+        // Check if there's already an active timer FOR THIS SPECIFIC TICKET
+        $activeEntry = $this->getActiveTimerForTicket($technician, $ticket);
         if ($activeEntry) {
-            throw new \Exception('Technician already has an active timer. Please stop it first.');
+            throw new \Exception('You already have an active timer for this ticket. Please stop it first.');
         }
 
         $entry = new TicketTimeEntry();
@@ -410,7 +410,7 @@ class TimeTrackingService
 
     /**
      * Get active timer for technician
-     * 
+     *
      * @param User $technician
      * @return TicketTimeEntry|null
      */
@@ -418,6 +418,24 @@ class TimeTrackingService
     {
         return TicketTimeEntry::where('user_id', $technician->id)
             ->where('company_id', $technician->company_id)
+            ->where('entry_type', TicketTimeEntry::TYPE_TIMER)
+            ->whereNotNull('started_at')
+            ->whereNull('ended_at')
+            ->first();
+    }
+
+    /**
+     * Get active timer for technician on a specific ticket
+     *
+     * @param User $technician
+     * @param Ticket $ticket
+     * @return TicketTimeEntry|null
+     */
+    public function getActiveTimerForTicket(User $technician, Ticket $ticket): ?TicketTimeEntry
+    {
+        return TicketTimeEntry::where('user_id', $technician->id)
+            ->where('company_id', $technician->company_id)
+            ->where('ticket_id', $ticket->id)
             ->where('entry_type', TicketTimeEntry::TYPE_TIMER)
             ->whereNotNull('started_at')
             ->whereNull('ended_at')
@@ -954,16 +972,20 @@ class TimeTrackingService
             'client_id' => $ticket->client_id,
         ]);
 
-        // Check for existing active timer
-        $activeTimer = $this->getActiveTimer($technician);
-        
-        if ($activeTimer) {
+        // Check for existing active timer for this ticket
+        $activeTimerForTicket = $this->getActiveTimerForTicket($technician, $ticket);
+
+        if ($activeTimerForTicket) {
             return [
-                'error' => 'Active timer exists',
-                'active_timer' => $activeTimer,
-                'message' => 'You already have an active timer running. Stop it first or switch to this ticket.',
+                'error' => 'Active timer exists for this ticket',
+                'active_timer' => $activeTimerForTicket,
+                'message' => 'You already have an active timer running for this ticket.',
             ];
         }
+
+        // Check for other active timers (informational)
+        $allActiveTimers = $this->getAllActiveTimers($technician);
+        $otherActiveTimers = $allActiveTimers->where('ticket_id', '!=', $ticket->id);
 
         return [
             'ticket' => $ticket,
@@ -972,6 +994,15 @@ class TimeTrackingService
             'rate_info' => $rateInfo,
             'billable_suggestion' => $this->determineBillability($ticket, $options),
             'ready_to_start' => true,
+            'other_active_timers' => $otherActiveTimers->count(),
+            'other_active_timer_tickets' => $otherActiveTimers->map(function ($timer) {
+                return [
+                    'ticket_id' => $timer->ticket_id,
+                    'ticket_number' => $timer->ticket->number ?? $timer->ticket_id,
+                    'started_at' => $timer->started_at,
+                    'elapsed_minutes' => $timer->started_at->diffInMinutes(now()),
+                ];
+            })->values()->toArray(),
         ];
     }
 

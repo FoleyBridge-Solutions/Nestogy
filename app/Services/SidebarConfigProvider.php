@@ -166,7 +166,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'COMMUNICATION',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         [
                             'name' => 'Contacts',
@@ -195,7 +195,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'SERVICE MANAGEMENT',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         [
                             'name' => 'Support Tickets',
@@ -224,7 +224,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'IT INFRASTRUCTURE',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         [
                             'name' => 'IT Documentation',
@@ -288,7 +288,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'BILLING & FINANCE',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         [
                             'name' => 'Contracts',
@@ -362,7 +362,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'STATUS VIEWS',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         [
                             'name' => 'Open Tickets',
@@ -579,7 +579,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'CATEGORIES',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         [
                             'name' => 'Hardware',
@@ -700,7 +700,7 @@ class SidebarConfigProvider
                     'type' => 'section',
                     'title' => 'Core Settings',
                     'expandable' => true,
-                    'default_expanded' => false,
+                    'default_expanded' => true,
                     'items' => [
                         ['name' => 'General', 'route' => 'settings.general', 'icon' => 'adjustments-horizontal', 'key' => 'general'],
                         ['name' => 'Security & Access', 'route' => 'settings.security', 'icon' => 'shield-check', 'key' => 'security'],

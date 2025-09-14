@@ -115,9 +115,54 @@ class TicketComment extends Model
         return $this->belongsTo(TicketTimeEntry::class, 'time_entry_id');
     }
 
+    /**
+     * Get the attachments for the comment
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketCommentAttachment::class, 'ticket_comment_id');
+    }
+
     // ===========================================
     // ACCESSORS & HELPERS
     // ===========================================
+
+    /**
+     * Check if comment has attachments
+     */
+    public function hasAttachments(): bool
+    {
+        return $this->attachments()->exists();
+    }
+
+    /**
+     * Add an attachment from uploaded file data
+     * @param string $filename The filename to save as
+     * @param string $originalFilename The original filename uploaded
+     * @param string $mimeType The MIME type of the file
+     * @param string $content The base64 encoded content
+     * @param int $size The file size in bytes
+     * @param int|null $uploadedBy The user ID who uploaded it
+     * @return TicketCommentAttachment
+     */
+    public function addAttachment(
+        string $filename,
+        string $originalFilename,
+        string $mimeType,
+        string $content,
+        int $size,
+        ?int $uploadedBy = null
+    ): TicketCommentAttachment {
+        return $this->attachments()->create([
+            'company_id' => $this->company_id,
+            'filename' => $filename,
+            'original_filename' => $originalFilename,
+            'mime_type' => $mimeType,
+            'content' => $content,
+            'size' => $size,
+            'uploaded_by' => $uploadedBy,
+        ]);
+    }
 
     /**
      * Check if comment is public

@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
+use Flux\Flux;
 
 class TicketTimeTracker extends Component
 {
@@ -53,7 +54,8 @@ class TicketTimeTracker extends Component
     
     protected $listeners = [
         'refreshTimer' => '$refresh',
-        'confirmed-start-timer' => 'handleConfirmedStart'
+        'confirmed-start-timer' => 'handleConfirmedStart',
+        'timer:completion-confirmed' => 'handleTimerCompleted'
     ];
     
     public function mount(Ticket $ticket)
@@ -251,16 +253,16 @@ class TicketTimeTracker extends Component
             // Notify navbar timer to refresh
             $this->dispatch('timerStarted')->to('navbar-timer');
             
-            $this->dispatch('show-toast', [
-                'message' => '⚡ Timer started successfully!',
-                'type' => 'success'
-            ]);
+            Flux::toast(
+                text: 'Timer started successfully',
+                variant: 'success'
+            );
             
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to start timer: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to start timer: ' . $e->getMessage(),
+                variant: 'danger'
+            );
         }
     }
     
@@ -278,16 +280,15 @@ class TicketTimeTracker extends Component
             // Notify navbar timer
             $this->dispatch('timerPaused')->to('navbar-timer');
             
-            $this->dispatch('show-toast', [
-                'message' => '⏸️ Timer paused',
-                'type' => 'info'
-            ]);
+            Flux::toast(
+                text: 'Timer paused'
+            );
             
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to pause timer: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to pause timer: ' . $e->getMessage(),
+                variant: 'danger'
+            );
         }
     }
     
@@ -305,55 +306,25 @@ class TicketTimeTracker extends Component
             // Notify navbar timer
             $this->dispatch('timerResumed')->to('navbar-timer');
             
-            $this->dispatch('show-toast', [
-                'message' => '▶️ Timer resumed',
-                'type' => 'success'
-            ]);
+            Flux::toast(
+                text: 'Timer resumed',
+                variant: 'success'
+            );
             
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to resume timer: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to resume timer: ' . $e->getMessage(),
+                variant: 'danger'
+            );
         }
     }
     
     public function stopTimer()
     {
         if (!$this->activeTimerId) return;
-        
-        try {
-            $service = app(TimeTrackingService::class);
-            $activeTimer = $this->activeTimer;
-            $result = $service->stopTracking($activeTimer);
-            
-            $hours = round($result->hours_worked, 2);
-            $amount = $result->amount;
-            
-            $this->isTimerRunning = false;
-            $this->isPaused = false;
-            $this->activeTimerId = null;
-            $this->activeTimerStartedAt = null;
-            $this->elapsedTime = '00:00:00';
-            $this->liveRevenue = 0;
-            
-            $this->loadMetrics();
-            $this->loadRecentEntries();
-            
-            // Notify navbar timer
-            $this->dispatch('timerStopped')->to('navbar-timer');
-            
-            $this->dispatch('show-toast', [
-                'message' => "⏹️ Timer stopped - {$hours}h saved (\${$amount})",
-                'type' => 'success'
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to stop timer: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
-        }
+
+        // Dispatch event to show completion modal instead of stopping directly
+        $this->dispatch('timer:request-stop', timerId: $this->activeTimerId, source: 'ticket-page');
     }
     
     public function addManualEntry()
@@ -395,16 +366,16 @@ class TicketTimeTracker extends Component
             $this->loadMetrics();
             $this->loadRecentEntries();
             
-            $this->dispatch('show-toast', [
-                'message' => '✅ Time entry added successfully!',
-                'type' => 'success'
-            ]);
+            Flux::toast(
+                text: 'Time entry added successfully',
+                variant: 'success'
+            );
             
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to add entry: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to add entry: ' . $e->getMessage(),
+                variant: 'danger'
+            );
         }
     }
     
@@ -417,16 +388,16 @@ class TicketTimeTracker extends Component
             $this->loadMetrics();
             $this->loadRecentEntries();
             
-            $this->dispatch('show-toast', [
-                'message' => '✅ Time entry created from template!',
-                'type' => 'success'
-            ]);
+            Flux::toast(
+                text: 'Time entry created from template',
+                variant: 'success'
+            );
             
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to use template: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to use template: ' . $e->getMessage(),
+                variant: 'danger'
+            );
         }
     }
     
@@ -439,10 +410,10 @@ class TicketTimeTracker extends Component
                 
             // Don't allow deletion of approved entries
             if ($entry->status === 'approved') {
-                $this->dispatch('show-toast', [
-                    'message' => 'Cannot delete approved entries',
-                    'type' => 'error'
-                ]);
+                Flux::toast(
+                    text: 'Cannot delete approved entries',
+                    variant: 'danger'
+                );
                 return;
             }
             
@@ -451,16 +422,16 @@ class TicketTimeTracker extends Component
             $this->loadMetrics();
             $this->loadRecentEntries();
             
-            $this->dispatch('show-toast', [
-                'message' => '🗑️ Entry deleted',
-                'type' => 'success'
-            ]);
+            Flux::toast(
+                text: 'Entry deleted',
+                variant: 'success'
+            );
             
         } catch (\Exception $e) {
-            $this->dispatch('show-toast', [
-                'message' => 'Failed to delete entry: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            Flux::toast(
+                text: 'Failed to delete entry: ' . $e->getMessage(),
+                variant: 'danger'
+            );
         }
     }
     
@@ -560,11 +531,11 @@ class TicketTimeTracker extends Component
         try {
             $service = app(TimeTrackingService::class);
             $this->currentRate = $service->getCurrentRateInfo();
-            
+
             if (isset($this->currentRate['multiplier'])) {
                 $this->rateMultiplier = $this->currentRate['multiplier'];
             }
-            
+
             if (isset($this->currentRate['visual_indicator'])) {
                 $this->rateBadge = $this->currentRate['visual_indicator']['badge'] ?? 'Standard';
                 $this->rateColor = $this->currentRate['visual_indicator']['color'] ?? 'zinc';
@@ -574,6 +545,35 @@ class TicketTimeTracker extends Component
             $this->rateMultiplier = 1;
             $this->rateBadge = 'Standard';
             $this->rateColor = 'zinc';
+        }
+    }
+
+    public function handleTimerCompleted($data)
+    {
+        // Reset timer state
+        $this->isTimerRunning = false;
+        $this->isPaused = false;
+        $this->activeTimerId = null;
+        $this->activeTimerStartedAt = null;
+        $this->elapsedTime = '00:00:00';
+        $this->liveRevenue = 0;
+
+        // Reload all data
+        $this->loadMetrics();
+        $this->loadRecentEntries();
+
+        // Show success message if provided
+        if (isset($data['hours']) && isset($data['amount'])) {
+            $message = "Timer stopped - {$data['hours']}h recorded";
+            if ($data['amount'] > 0) {
+                $message .= " (\${$data['amount']})";
+            }
+
+            Flux::toast(
+                heading: 'Timer completed',
+                text: $message,
+                variant: 'success'
+            );
         }
     }
     

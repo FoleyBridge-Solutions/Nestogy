@@ -308,6 +308,16 @@ class ClientController extends BaseController
     {
         $this->authorize('view', $client);
 
+        // Set the client in session and redirect to clients index
+        // This will let dynamicIndex handle displaying the client
+        \App\Services\NavigationService::setSelectedClient($client->id);
+
+        // Only redirect if we're accessing via /clients/{id} directly
+        // Check if we're being called from dynamicIndex to avoid loop
+        if ($request->route()->getName() === 'clients.show') {
+            return redirect()->route('clients.index');
+        }
+
         // Update client access timestamp
         $this->clientService->updateClientAccess($client);
 
