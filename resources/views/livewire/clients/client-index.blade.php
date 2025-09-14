@@ -168,8 +168,8 @@
                                 </flux:avatar>
                                 <div>
                                     <div class="font-medium">{{ $client->name }}</div>
-                                    @if($client->company)
-                                        <div class="text-sm text-gray-500">{{ $client->company }}</div>
+                                    @if($client->company_name)
+                                        <div class="text-sm text-gray-500">{{ $client->company_name }}</div>
                                     @endif
                                 </div>
                             </div>
