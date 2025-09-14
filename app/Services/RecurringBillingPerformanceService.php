@@ -473,7 +473,7 @@ class RecurringBillingPerformanceService
     /**
      * Get performance statistics
      */
-    public function getPerformanceStatistics(string $operation = null, int $hours = 24): array
+    public function getPerformanceStatistics(?string $operation = null, int $hours = 24): array
     {
         $stats = [];
         $startTime = now()->subHours($hours);

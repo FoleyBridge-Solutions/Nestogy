@@ -283,7 +283,7 @@ class OfficialTaxDataService extends BaseTaxDataService
     /**
      * Download address data for Texas
      */
-    public function downloadAddressData(string $jurisdictionCode = null): array
+    public function downloadAddressData(?string $jurisdictionCode = null): array
     {
         if (!$this->isConfigured()) {
             return [
@@ -824,7 +824,7 @@ class OfficialTaxDataService extends BaseTaxDataService
     /**
      * Download and process county address data from SIFT API
      */
-    public function processCountyAddressData(string $countyFips, string $quarter = null): array
+    public function processCountyAddressData(string $countyFips, ?string $quarter = null): array
     {
         $quarter = $quarter ?: $this->quarter;
         
@@ -1197,7 +1197,7 @@ class OfficialTaxDataService extends BaseTaxDataService
         };
     }
     
-    protected function cleanStringField(?string $value, int $maxLength = null): ?string
+    protected function cleanStringField(?string $value, ?int $maxLength = null): ?string
     {
         if (empty($value)) return null;
         

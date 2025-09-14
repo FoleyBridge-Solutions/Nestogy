@@ -181,7 +181,7 @@ class SLAService
     /**
      * Check if resolution SLA is breached
      */
-    public function isResolutionBreached(Client $client, string $priority, Carbon $createdAt, Carbon $resolvedAt = null): bool
+    public function isResolutionBreached(Client $client, string $priority, Carbon $createdAt, ?Carbon $resolvedAt = null): bool
     {
         $sla = $this->getClientSLA($client);
         

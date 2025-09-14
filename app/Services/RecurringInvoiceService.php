@@ -98,7 +98,7 @@ class RecurringInvoiceService
     /**
      * Generate due invoices from recurring schedules
      */
-    public function generateDueInvoices(Carbon $asOfDate = null): Collection
+    public function generateDueInvoices(?Carbon $asOfDate = null): Collection
     {
         $asOfDate = $asOfDate ?? now();
         $generatedInvoices = collect();
@@ -138,7 +138,7 @@ class RecurringInvoiceService
     /**
      * Generate single invoice from recurring schedule
      */
-    public function generateInvoiceFromRecurring(RecurringInvoice $recurring, Carbon $invoiceDate = null): ?Invoice
+    public function generateInvoiceFromRecurring(RecurringInvoice $recurring, ?Carbon $invoiceDate = null): ?Invoice
     {
         $invoiceDate = $invoiceDate ?? now();
 
@@ -259,7 +259,7 @@ class RecurringInvoiceService
     /**
      * Pause recurring invoice schedule
      */
-    public function pauseRecurringSchedule(RecurringInvoice $recurring, string $reason = null): bool
+    public function pauseRecurringSchedule(RecurringInvoice $recurring, ?string $reason = null): bool
     {
         $recurring->update([
             'status' => 'paused',

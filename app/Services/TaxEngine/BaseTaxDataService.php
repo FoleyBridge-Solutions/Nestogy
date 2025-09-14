@@ -305,7 +305,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
     abstract public function getStateCode(): string;
     abstract public function getStateName(): string;
     abstract public function downloadTaxRates(): array;
-    abstract public function downloadAddressData(string $jurisdictionCode = null): array;
+    abstract public function downloadAddressData(?string $jurisdictionCode = null): array;
     abstract public function updateDatabaseWithRates(array $rates): array;
     abstract public function listAvailableFiles(): array;
     abstract public function downloadFile(string $filePath): array;

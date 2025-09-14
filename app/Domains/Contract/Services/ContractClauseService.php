@@ -17,7 +17,7 @@ class ContractClauseService
 {
     protected DefinitionRegistry $definitionRegistry;
 
-    public function __construct(DefinitionRegistry $definitionRegistry = null)
+    public function __construct(?DefinitionRegistry $definitionRegistry = null)
     {
         $this->definitionRegistry = $definitionRegistry ?: new DefinitionRegistry();
     }

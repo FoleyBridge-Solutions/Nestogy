@@ -205,7 +205,7 @@ class ProcessFailedPayments extends Command
         );
 
         if ($results['successful'] > 0) {
-            $this->info("Successfully collected ${$results['total_collected']} from {$results['successful']} invoices");
+            $this->info("Successfully collected {$results['total_collected']} from {$results['successful']} invoices");
         }
 
         if ($results['failed'] > 0) {

@@ -32,7 +32,7 @@ class EmailService implements EmailServiceInterface
     /**
      * Get configuration value
      */
-    protected function config(string $key = null)
+    protected function config(?string $key = null)
     {
         $config = config('mail');
         return $key ? ($config[$key] ?? null) : $config;

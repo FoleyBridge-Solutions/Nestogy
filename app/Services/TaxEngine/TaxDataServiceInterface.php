@@ -40,7 +40,7 @@ interface TaxDataServiceInterface
     /**
      * Download and process address jurisdiction data
      */
-    public function downloadAddressData(string $jurisdictionCode = null): array;
+    public function downloadAddressData(?string $jurisdictionCode = null): array;
 
     /**
      * Update local database with tax rates
