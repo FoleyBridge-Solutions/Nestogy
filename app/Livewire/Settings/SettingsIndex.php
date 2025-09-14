@@ -46,13 +46,13 @@ class SettingsIndex extends Component
                 'name' => 'Tickets',
                 'icon' => 'ticket',
                 'description' => 'Ticket system configuration',
-                'route' => 'settings.tickets'
+                'route' => 'settings.ticketing-service-desk'
             ],
             'projects' => [
                 'name' => 'Projects',
                 'icon' => 'folder',
                 'description' => 'Project management settings',
-                'route' => 'settings.projects'
+                'route' => 'settings.project-management'
             ],
             'assets' => [
                 'name' => 'Assets',
