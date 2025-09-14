@@ -30,25 +30,25 @@
 
                 {{-- Status Filter --}}
                 <flux:select wire:model.live="status" placeholder="All Statuses">
-                    <flux:option value="">All Statuses</flux:option>
+                    <option value="">All Statuses</option>
                     @foreach($statuses as $statusOption)
-                        <flux:option value="{{ $statusOption }}">{{ ucfirst(str_replace('_', ' ', $statusOption)) }}</flux:option>
+                        <option value="{{ $statusOption }}">{{ ucfirst(str_replace('_', ' ', $statusOption)) }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Client Filter --}}
                 <flux:select wire:model.live="clientId" placeholder="All Clients">
-                    <flux:option value="">All Clients</flux:option>
+                    <option value="">All Clients</option>
                     @foreach($clients as $client)
-                        <flux:option value="{{ $client->id }}">{{ $client->name }}</flux:option>
+                        <option value="{{ $client->id }}">{{ $client->name }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Priority Filter --}}
                 <flux:select wire:model.live="priority" placeholder="All Priorities">
-                    <flux:option value="">All Priorities</flux:option>
+                    <option value="">All Priorities</option>
                     @foreach($priorities as $priorityOption)
-                        <flux:option value="{{ $priorityOption }}">{{ ucfirst($priorityOption) }}</flux:option>
+                        <option value="{{ $priorityOption }}">{{ ucfirst($priorityOption) }}</option>
                     @endforeach
                 </flux:select>
             </div>
@@ -56,18 +56,18 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 {{-- Manager Filter --}}
                 <flux:select wire:model.live="managerId" placeholder="All Managers">
-                    <flux:option value="">All Managers</flux:option>
+                    <option value="">All Managers</option>
                     @foreach($users as $user)
-                        <flux:option value="{{ $user->id }}">{{ $user->name }}</flux:option>
+                        <option value="{{ $user->id }}">{{ $user->name }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Per Page --}}
                 <flux:select wire:model.live="perPage">
-                    <flux:option value="10">10 per page</flux:option>
-                    <flux:option value="25">25 per page</flux:option>
-                    <flux:option value="50">50 per page</flux:option>
-                    <flux:option value="100">100 per page</flux:option>
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
                 </flux:select>
             </div>
         </div>

@@ -36,25 +36,25 @@
 
                 {{-- Type Filter --}}
                 <flux:select wire:model.live="type" placeholder="All Types">
-                    <flux:option value="">All Types</flux:option>
+                    <option value="">All Types</option>
                     @foreach($types as $typeOption)
-                        <flux:option value="{{ $typeOption }}">{{ $typeOption }}</flux:option>
+                        <option value="{{ $typeOption }}">{{ $typeOption }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Status Filter --}}
                 <flux:select wire:model.live="status" placeholder="All Statuses">
-                    <flux:option value="">All Statuses</flux:option>
+                    <option value="">All Statuses</option>
                     @foreach($statuses as $statusOption)
-                        <flux:option value="{{ $statusOption }}">{{ $statusOption }}</flux:option>
+                        <option value="{{ $statusOption }}">{{ $statusOption }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Client Filter --}}
                 <flux:select wire:model.live="clientId" placeholder="All Clients">
-                    <flux:option value="">All Clients</flux:option>
+                    <option value="">All Clients</option>
                     @foreach($clients as $client)
-                        <flux:option value="{{ $client->id }}">{{ $client->name }}</flux:option>
+                        <option value="{{ $client->id }}">{{ $client->name }}</option>
                     @endforeach
                 </flux:select>
             </div>
@@ -62,26 +62,26 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 {{-- Assigned To Filter --}}
                 <flux:select wire:model.live="assignedTo" placeholder="All Users">
-                    <flux:option value="">All Users</flux:option>
+                    <option value="">All Users</option>
                     @foreach($users as $user)
-                        <flux:option value="{{ $user->id }}">{{ $user->name }}</flux:option>
+                        <option value="{{ $user->id }}">{{ $user->name }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Location Filter --}}
                 <flux:select wire:model.live="locationId" placeholder="All Locations">
-                    <flux:option value="">All Locations</flux:option>
+                    <option value="">All Locations</option>
                     @foreach($locations as $location)
-                        <flux:option value="{{ $location->id }}">{{ $location->name }}</flux:option>
+                        <option value="{{ $location->id }}">{{ $location->name }}</option>
                     @endforeach
                 </flux:select>
 
                 {{-- Per Page --}}
                 <flux:select wire:model.live="perPage">
-                    <flux:option value="10">10 per page</flux:option>
-                    <flux:option value="25">25 per page</flux:option>
-                    <flux:option value="50">50 per page</flux:option>
-                    <flux:option value="100">100 per page</flux:option>
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
                 </flux:select>
             </div>
         </div>

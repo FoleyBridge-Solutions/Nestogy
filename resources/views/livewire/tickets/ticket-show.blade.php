@@ -224,9 +224,9 @@
                         <label class="text-sm font-medium text-gray-700">Status</label>
                         <flux:select wire:model="status" wire:change="updateStatus" class="mt-1">
                             @foreach($statuses as $statusOption)
-                                <flux:option value="{{ $statusOption }}">
+                                <option value="{{ $statusOption }}">
                                     {{ ucfirst(str_replace('_', ' ', $statusOption)) }}
-                                </flux:option>
+                                </option>
                             @endforeach
                         </flux:select>
                     </div>
@@ -236,9 +236,9 @@
                         <label class="text-sm font-medium text-gray-700">Priority</label>
                         <flux:select wire:model="priority" wire:change="updatePriority" class="mt-1">
                             @foreach($priorities as $priorityOption)
-                                <flux:option value="{{ $priorityOption }}">
+                                <option value="{{ $priorityOption }}">
                                     {{ ucfirst($priorityOption) }}
-                                </flux:option>
+                                </option>
                             @endforeach
                         </flux:select>
                     </div>
@@ -247,9 +247,9 @@
                     <div class="mb-4">
                         <label class="text-sm font-medium text-gray-700">Assigned To</label>
                         <flux:select wire:model="assignedTo" wire:change="updateAssignee" class="mt-1">
-                            <flux:option value="">Unassigned</flux:option>
+                            <option value="">Unassigned</option>
                             @foreach($technicians as $tech)
-                                <flux:option value="{{ $tech->id }}">{{ $tech->name }}</flux:option>
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                             @endforeach
                         </flux:select>
                     </div>
@@ -389,11 +389,11 @@
         <form wire:submit.prevent="updateStatus">
             <div class="space-y-4">
                 <flux:select wire:model="newStatus" label="New Status" required>
-                    <flux:option value="">Select status...</flux:option>
+                    <option value="">Select status...</option>
                     @foreach($statuses as $statusOption)
-                        <flux:option value="{{ $statusOption }}">
+                        <option value="{{ $statusOption }}">
                             {{ ucfirst(str_replace('_', ' ', $statusOption)) }}
-                        </flux:option>
+                        </option>
                     @endforeach
                 </flux:select>
                 

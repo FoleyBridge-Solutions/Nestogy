@@ -41,16 +41,16 @@
                 
                 <flux:select wire:model="selectedTechnicianId" label="Select Technician" placeholder="Choose a technician to restrict...">
                     @foreach($availableTechnicians as $tech)
-                        <flux:option value="{{ $tech['id'] }}">
+                        <option value="{{ $tech['id'] }}">
                             {{ $tech['name'] }} ({{ $tech['email'] }})
-                        </flux:option>
+                        </option>
                     @endforeach
                 </flux:select>
                 
                 <flux:select wire:model="accessLevel" label="Access Level">
-                    <flux:option value="view">View Only</flux:option>
-                    <flux:option value="manage">Manage</flux:option>
-                    <flux:option value="admin">Admin</flux:option>
+                    <option value="view">View Only</option>
+                    <option value="manage">Manage</option>
+                    <option value="admin">Admin</option>
                 </flux:select>
                 
                 <flux:checkbox wire:model="isPrimary" label="Set as primary technician" />
@@ -112,9 +112,9 @@
                                         value="{{ $tech['access_level'] }}"
                                         size="sm"
                                     >
-                                        <flux:option value="view">View</flux:option>
-                                        <flux:option value="manage">Manage</flux:option>
-                                        <flux:option value="admin">Admin</flux:option>
+                                        <option value="view">View</option>
+                                        <option value="manage">Manage</option>
+                                        <option value="admin">Admin</option>
                                     </flux:select>
                                 </flux:cell>
                                 

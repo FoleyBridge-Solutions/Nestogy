@@ -209,14 +209,14 @@
                         <flux:field class="md:col-span-3">
                             <flux:label>Country</flux:label>
                             <flux:select wire:model="country" placeholder="Select Country">
-                                <flux:option value="US">United States</flux:option>
-                                <flux:option value="CA">Canada</flux:option>
-                                <flux:option value="GB">United Kingdom</flux:option>
-                                <flux:option value="AU">Australia</flux:option>
-                                <flux:option value="DE">Germany</flux:option>
-                                <flux:option value="FR">France</flux:option>
-                                <flux:option value="JP">Japan</flux:option>
-                                <flux:option value="IN">India</flux:option>
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="AU">Australia</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="JP">Japan</option>
+                                <option value="IN">India</option>
                             </flux:select>
                             @error('country')<flux:error>{{ $message }}</flux:error>@enderror
                         </flux:field>
@@ -262,9 +262,9 @@
                     <flux:field>
                         <flux:label>Account Status *</flux:label>
                         <flux:select wire:model="status">
-                            <flux:option value="active">Active</flux:option>
-                            <flux:option value="inactive">Inactive</flux:option>
-                            <flux:option value="suspended">Suspended</flux:option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
                         </flux:select>
                         @error('status')<flux:error>{{ $message }}</flux:error>@enderror
                     </flux:field>
@@ -273,12 +273,12 @@
                     <flux:field>
                         <flux:label>Currency</flux:label>
                         <flux:select wire:model="currency_code">
-                            <flux:option value="USD">USD - US Dollar</flux:option>
-                            <flux:option value="EUR">EUR - Euro</flux:option>
-                            <flux:option value="GBP">GBP - British Pound</flux:option>
-                            <flux:option value="CAD">CAD - Canadian Dollar</flux:option>
-                            <flux:option value="AUD">AUD - Australian Dollar</flux:option>
-                            <flux:option value="JPY">JPY - Japanese Yen</flux:option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                            <option value="JPY">JPY - Japanese Yen</option>
                         </flux:select>
                         @error('currency_code')<flux:error>{{ $message }}</flux:error>@enderror
                     </flux:field>
@@ -287,12 +287,12 @@
                     <flux:field>
                         <flux:label>Payment Terms</flux:label>
                         <flux:select wire:model="net_terms">
-                            <flux:option value="0">Due on Receipt</flux:option>
-                            <flux:option value="15">Net 15</flux:option>
-                            <flux:option value="30">Net 30</flux:option>
-                            <flux:option value="45">Net 45</flux:option>
-                            <flux:option value="60">Net 60</flux:option>
-                            <flux:option value="90">Net 90</flux:option>
+                            <option value="0">Due on Receipt</option>
+                            <option value="15">Net 15</option>
+                            <option value="30">Net 30</option>
+                            <option value="45">Net 45</option>
+                            <option value="60">Net 60</option>
+                            <option value="90">Net 90</option>
                         </flux:select>
                         @error('net_terms')<flux:error>{{ $message }}</flux:error>@enderror
                     </flux:field>
@@ -404,10 +404,10 @@
                                 <flux:field>
                                     <flux:label>Time Rounding Method</flux:label>
                                     <flux:select wire:model="custom_time_rounding_method">
-                                        <flux:option value="nearest">Round to Nearest</flux:option>
-                                        <flux:option value="up">Always Round Up</flux:option>
-                                        <flux:option value="down">Always Round Down</flux:option>
-                                        <flux:option value="none">No Rounding</flux:option>
+                                        <option value="nearest">Round to Nearest</option>
+                                        <option value="up">Always Round Up</option>
+                                        <option value="down">Always Round Down</option>
+                                        <option value="none">No Rounding</option>
                                     </flux:select>
                                 </flux:field>
                             </div>
@@ -443,14 +443,14 @@
                     <flux:field class="md:col-span-2">
                         <flux:label>Service Level Agreement (SLA)</flux:label>
                         <flux:select wire:model="sla_id" placeholder="Select SLA">
-                            <flux:option value="">Use Company Default</flux:option>
+                            <option value="">Use Company Default</option>
                             @foreach($slas as $sla)
-                                <flux:option value="{{ $sla->id }}">
+                                <option value="{{ $sla->id }}">
                                     {{ $sla->name }} 
                                     @if($sla->is_default)
                                         (Default)
                                     @endif
-                                </flux:option>
+                                </option>
                             @endforeach
                         </flux:select>
                         <flux:description>Defines response and resolution time commitments</flux:description>

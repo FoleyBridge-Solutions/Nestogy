@@ -294,7 +294,7 @@
                             <flux:label>Select Users</flux:label>
                             <flux:select multiple name="user_ids[]" size="lg">
                                 @foreach($users as $user)
-                                <flux:option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</flux:option>
+                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                                 @endforeach
                             </flux:select>
                         </div>
@@ -314,9 +314,9 @@
                         <div id="role-selection" class="hidden">
                             <flux:label>Select Role</flux:label>
                             <flux:select name="role">
-                                <flux:option value="">Choose a role...</flux:option>
+                                <option value="">Choose a role...</option>
                                 @foreach($roles as $role)
-                                <flux:option value="{{ $role->name }}">{{ $role->title }}</flux:option>
+                                <option value="{{ $role->name }}">{{ $role->title }}</option>
                                 @endforeach
                             </flux:select>
                         </div>
@@ -325,11 +325,11 @@
                         <div id="ability-selection" class="hidden">
                             <flux:label>Select Permission</flux:label>
                             <flux:select name="ability">
-                                <flux:option value="">Choose a permission...</flux:option>
+                                <option value="">Choose a permission...</option>
                                 @foreach($abilitiesByCategory as $category => $abilities)
                                 <optgroup label="{{ $category }}">
                                     @foreach($abilities as $ability)
-                                    <flux:option value="{{ $ability['name'] }}">{{ $ability['title'] }}</flux:option>
+                                    <option value="{{ $ability['name'] }}">{{ $ability['title'] }}</option>
                                     @endforeach
                                 </optgroup>
                                 @endforeach

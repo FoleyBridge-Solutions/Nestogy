@@ -531,15 +531,15 @@
                     
                     <flux:select wire:model="taskPriority" label="Priority">
                         @foreach($priorities as $priority)
-                            <flux:option value="{{ $priority }}">{{ ucfirst($priority) }}</flux:option>
+                            <option value="{{ $priority }}">{{ ucfirst($priority) }}</option>
                         @endforeach
                     </flux:select>
                 </div>
                 
                 <flux:select wire:model="taskAssignedTo" label="Assign To">
-                    <flux:option value="">Unassigned</flux:option>
+                    <option value="">Unassigned</option>
                     @foreach($technicians as $tech)
-                        <flux:option value="{{ $tech->id }}">{{ $tech->name }}</flux:option>
+                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                     @endforeach
                 </flux:select>
             </div>

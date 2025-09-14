@@ -72,22 +72,22 @@
                 </div>
                 
                 <flux:select wire:model.live="type" placeholder="All Types">
-                    <flux:option value="">All Types</flux:option>
-                    <flux:option value="individual">Individual</flux:option>
-                    <flux:option value="company">Company</flux:option>
+                    <option value="">All Types</option>
+                    <option value="individual">Individual</option>
+                    <option value="company">Company</option>
                 </flux:select>
                 
                 <flux:select wire:model.live="status" placeholder="All Status">
-                    <flux:option value="">All Status</flux:option>
-                    <flux:option value="active">Active</flux:option>
-                    <flux:option value="inactive">Inactive</flux:option>
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                 </flux:select>
                 
                 <flux:select wire:model.live="perPage">
-                    <flux:option value="10">10 per page</flux:option>
-                    <flux:option value="25">25 per page</flux:option>
-                    <flux:option value="50">50 per page</flux:option>
-                    <flux:option value="100">100 per page</flux:option>
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
                 </flux:select>
                 
                 <flux:button variant="outline" wire:click="exportCsv">
