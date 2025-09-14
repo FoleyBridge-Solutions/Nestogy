@@ -133,7 +133,7 @@ class InvoiceController extends Controller
             ]);
         }
 
-        return view('financial.invoices.index', compact('client', 'stats'));
+        return view('financial.invoices.index-livewire');
     }
 
     /**
@@ -142,7 +142,7 @@ class InvoiceController extends Controller
     public function create(Request $request)
     {
         // The Livewire component handles all the logic now
-        return view('financial.invoices.create');
+        return view('financial.invoices.create-livewire');
     }
 
     /**
@@ -227,7 +227,7 @@ class InvoiceController extends Controller
             ]);
         }
 
-        return view('financial.invoices.show', compact('invoice', 'totals'));
+        return view('financial.invoices.show-livewire', compact('invoice'));
     }
 
     /**
@@ -257,7 +257,7 @@ class InvoiceController extends Controller
         // Load invoice relationships
         $invoice->load('client', 'category', 'items');
 
-        return view('financial.invoices.edit', compact('invoice', 'clients', 'categories'));
+        return view('financial.invoices.edit-livewire', compact('invoice'));
     }
 
     /**
@@ -1114,7 +1114,7 @@ class InvoiceController extends Controller
             ->orderBy('due_date', 'asc')
             ->paginate(20);
 
-        return view('financial.invoices.index', compact('invoices'));
+        return view('financial.invoices.index-livewire');
     }
 
     public function draft(Request $request)
@@ -1125,7 +1125,7 @@ class InvoiceController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('financial.invoices.index', compact('invoices'));
+        return view('financial.invoices.index-livewire');
     }
 
     public function sent(Request $request)
@@ -1136,7 +1136,7 @@ class InvoiceController extends Controller
             ->orderBy('sent_at', 'desc')
             ->paginate(20);
 
-        return view('financial.invoices.index', compact('invoices'));
+        return view('financial.invoices.index-livewire');
     }
 
     public function paid(Request $request)
@@ -1147,7 +1147,7 @@ class InvoiceController extends Controller
             ->orderBy('paid_at', 'desc')
             ->paginate(20);
 
-        return view('financial.invoices.index', compact('invoices'));
+        return view('financial.invoices.index-livewire');
     }
 
     public function recurring(Request $request)

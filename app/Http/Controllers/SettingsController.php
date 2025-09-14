@@ -54,7 +54,7 @@ class SettingsController extends Controller
      */
     public function index()
     {
-        return $this->general();
+        return view('settings.index-livewire');
     }
     
     /**

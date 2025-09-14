@@ -63,7 +63,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(awk:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

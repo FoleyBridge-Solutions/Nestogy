@@ -161,7 +161,7 @@ class TicketController extends Controller
             ]);
         }
 
-        return view('tickets.index', compact('tickets', 'filterOptions'));
+        return view('tickets.index-livewire');
     }
 
     /**
@@ -368,9 +368,7 @@ class TicketController extends Controller
             ]);
         }
 
-        return view('tickets.show', compact(
-            'ticket', 'availableTransitions', 'recentActivity', 'otherViewers'
-        ));
+        return view('tickets.show-livewire', compact('ticket'));
     }
 
     /**

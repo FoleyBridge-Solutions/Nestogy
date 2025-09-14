@@ -28,7 +28,7 @@ class AssetController extends Controller
         $locations = $this->assetService->getLocationsForFilter();
         $contacts = $this->assetService->getContactsForFilter();
 
-        return view('assets.index', compact('assets', 'clients', 'locations', 'contacts'));
+        return view('assets.index-livewire');
     }
 
     public function create()

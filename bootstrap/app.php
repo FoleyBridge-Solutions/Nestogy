@@ -50,6 +50,13 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\AutoVerifyEmailWithoutSMTP::class, // Auto-verify emails when SMTP not configured
             \App\Http\Middleware\SetupWizardMiddleware::class, // Check if setup is needed last
         ]);
+
+        // Force HTTPS in production environment
+        if (app()->environment('production')) {
+            $middleware->web(prepend: [
+                \App\Http\Middleware\ForceHttpsMiddleware::class.':all',
+            ]);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

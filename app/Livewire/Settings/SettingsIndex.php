@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Livewire\Settings;
+
+use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
+
+class SettingsIndex extends Component
+{
+    public $activeCategory = 'general';
+    
+    public function getSettingCategories()
+    {
+        return [
+            'general' => [
+                'name' => 'General',
+                'icon' => 'cog',
+                'description' => 'Company information and basic settings',
+                'route' => 'settings.general'
+            ],
+            'email' => [
+                'name' => 'Email',
+                'icon' => 'envelope',
+                'description' => 'Email configuration and templates',
+                'route' => 'settings.email'
+            ],
+            'billing' => [
+                'name' => 'Billing & Financial',
+                'icon' => 'currency-dollar',
+                'description' => 'Billing, invoicing, and payment settings',
+                'route' => 'settings.billing-financial'
+            ],
+            'integrations' => [
+                'name' => 'Integrations',
+                'icon' => 'puzzle-piece',
+                'description' => 'Third-party service integrations',
+                'route' => 'settings.integrations'
+            ],
+            'security' => [
+                'name' => 'Security',
+                'icon' => 'shield-check',
+                'description' => 'Security and access control settings',
+                'route' => 'settings.security'
+            ],
+            'tickets' => [
+                'name' => 'Tickets',
+                'icon' => 'ticket',
+                'description' => 'Ticket system configuration',
+                'route' => 'settings.tickets'
+            ],
+            'projects' => [
+                'name' => 'Projects',
+                'icon' => 'folder',
+                'description' => 'Project management settings',
+                'route' => 'settings.projects'
+            ],
+            'assets' => [
+                'name' => 'Assets',
+                'icon' => 'computer-desktop',
+                'description' => 'Asset management configuration',
+                'route' => 'settings.asset-inventory'
+            ],
+            'contracts' => [
+                'name' => 'Contracts',
+                'icon' => 'document-text',
+                'description' => 'Contract templates and clauses',
+                'route' => 'settings.contract-templates'
+            ],
+            'automation' => [
+                'name' => 'Automation',
+                'icon' => 'play',
+                'description' => 'Workflows and automation rules',
+                'route' => 'settings.automation-workflows'
+            ],
+            'api' => [
+                'name' => 'API & Webhooks',
+                'icon' => 'code-bracket',
+                'description' => 'API keys and webhook configuration',
+                'route' => 'settings.api-webhooks'
+            ],
+            'data' => [
+                'name' => 'Data Management',
+                'icon' => 'database',
+                'description' => 'Backup, export, and data retention',
+                'route' => 'settings.data-management'
+            ],
+        ];
+    }
+
+    public function setActiveCategory($category)
+    {
+        $this->activeCategory = $category;
+    }
+
+    public function render()
+    {
+        return view('livewire.settings.settings-index', [
+            'categories' => $this->getSettingCategories()
+        ]);
+    }
+}

@@ -139,9 +139,7 @@ class ProjectController extends Controller
         // Calculate statistics
         $statistics = $this->calculateStatistics();
 
-        return view('projects.index', compact(
-            'projects', 'clients', 'managers', 'members', 'statistics'
-        ));
+        return view('projects.index-livewire');
     }
 
     /**
@@ -303,7 +301,7 @@ class ProjectController extends Controller
         // Load the project with necessary relationships
         $project = $this->projectRepository->getProjectWithRelations($project->id);
 
-        return view('projects.show', compact('project'));
+        return view('projects.show-livewire', compact('project'));
     }
 
     /**

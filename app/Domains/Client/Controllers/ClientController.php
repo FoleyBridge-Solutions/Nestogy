@@ -153,7 +153,7 @@ class ClientController extends BaseController
             return response()->json($clients);
         }
 
-        return view('clients.index-simple', compact('clients', 'selectedClient'));
+        return view('clients.index-livewire');
     }
 
     /**
@@ -366,7 +366,7 @@ class ClientController extends BaseController
             ]);
         }
 
-        return view('clients.show', compact('client', 'stats', 'metrics', 'recentActivity', 'upcomingRenewals'));
+        return view('clients.show-livewire', compact('client'));
     }
 
     /**
@@ -706,33 +706,8 @@ class ClientController extends BaseController
      */
     public function leads(Request $request)
     {
-        $user = Auth::user();
-
-        $query = Client::with(['primaryContact'])
-            ->where('company_id', $user->company_id)
-            ->whereNull('archived_at')
-            ->where('lead', true);
-
-        // Apply filters
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('type', 'like', "%{$search}%")
-                    ->orWhere('referral', 'like', "%{$search}%");
-            });
-        }
-
-        $leads = $query->orderBy('created_at', 'desc')->paginate(25);
-
-        if ($request->wantsJson()) {
-            return response()->json($leads);
-        }
-
-        return view('clients.index-simple', [
-            'clients' => $leads,
-            'isLeadsView' => true,
-        ]);
+        // Use the same Livewire component with leads parameter
+        return view('clients.index-livewire-leads');
     }
 
     /**
