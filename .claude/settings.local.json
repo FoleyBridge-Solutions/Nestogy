@@ -65,7 +65,9 @@
       "Bash(awk:*)",
       "Bash(git checkout:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(composer:*)",
+      "Bash(COMPOSER_ALLOW_SUPERUSER=1 composer update laravel/framework laravel/nightwatch league/csv livewire/flux livewire/flux-pro spatie/laravel-data spatie/laravel-pdf --no-interaction)"
     ],
     "deny": [],
     "ask": []
