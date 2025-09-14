@@ -100,7 +100,7 @@
                     </flux:button>
                     <flux:menu>
                         <flux:menu.item wire:click="bulkUpdateStatus('open')">
-                            <flux:icon.circle class="size-4 text-green-500" />
+                            <flux:icon.check-circle class="size-4 text-green-500" />
                             Open
                         </flux:menu.item>
                         <flux:menu.item wire:click="bulkUpdateStatus('in_progress')">
