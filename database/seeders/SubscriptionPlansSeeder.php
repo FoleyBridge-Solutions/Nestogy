@@ -19,7 +19,7 @@ class SubscriptionPlansSeeder extends Seeder
                 'stripe_price_id' => 'price_free',
                 'price_monthly' => 0.00,
                 'user_limit' => 2,
-                'pricing_model' => 'flat_rate',
+                'pricing_model' => 'fixed',
                 'description' => 'Perfect for small MSPs just getting started',
                 'features' => json_encode([
                     '2 users included',
@@ -38,7 +38,7 @@ class SubscriptionPlansSeeder extends Seeder
                 'stripe_price_id' => 'price_pro_monthly',
                 'price_monthly' => 79.00,
                 'user_limit' => 10,
-                'pricing_model' => 'flat_rate',
+                'pricing_model' => 'fixed',
                 'description' => 'Ideal for growing MSPs with expanding teams',
                 'features' => json_encode([
                     '10 users included',
