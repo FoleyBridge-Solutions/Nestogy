@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto space-y-6">
     <!-- Page Header -->
     <flux:card>
-        <flux:card.header>
+        <div class="border-b pb-4 mb-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <flux:button href="{{ route('settings.permissions.index') }}" variant="ghost" icon="arrow-left" class="mr-4">
@@ -27,7 +27,7 @@
                     </flux:button>
                 </div>
             </div>
-        </flux:card.header>
+        </div>
     </flux:card>
 
     <!-- Permission Summary -->
@@ -81,10 +81,10 @@
         
         <!-- Roles Assignment -->
         <flux:card>
-            <flux:card.header>
+            <div class="border-b pb-4 mb-4">
                 <flux:heading size="lg">Role Assignment</flux:heading>
                 <flux:subheading>Assign roles to grant predefined sets of permissions</flux:subheading>
-            </flux:card.header>
+            </div>
             
             
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,7 +144,7 @@
 
         <!-- Direct Permissions Assignment -->
         <flux:card>
-            <flux:card.header>
+            <div class="border-b pb-4 mb-4">
                 <div class="flex items-center justify-between">
                     <div>
                         <flux:heading size="lg">Direct Permissions</flux:heading>
@@ -159,7 +159,7 @@
                         </flux:button>
                     </div>
                 </div>
-            </flux:card.header>
+            </div>
             
             
                 <flux:accordion>
@@ -208,10 +208,10 @@
 
         <!-- Effective Permissions Summary -->
         <flux:card>
-            <flux:card.header>
+            <div class="border-b pb-4 mb-4">
                 <flux:heading size="lg">Effective Permissions Summary</flux:heading>
                 <flux:subheading>All permissions this user has from both roles and direct assignments</flux:subheading>
-            </flux:card.header>
+            </div>
             
             
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">

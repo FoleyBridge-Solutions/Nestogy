@@ -22,18 +22,18 @@
     </div>
 
     <flux:table>
-        <flux:columns>
-            <flux:column>Network Details</flux:column>
-            <flux:column>Type</flux:column>
-            <flux:column>IP Range</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column>Network Details</flux:table.column>
+            <flux:table.column>Type</flux:table.column>
+            <flux:table.column>IP Range</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @foreach($networks as $network)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $network->name }}</div>
                     @if($network->location)
                         <div class="text-sm text-gray-500">{{ $network->location }}</div>
@@ -41,32 +41,32 @@
                     @if($network->provider)
                         <div class="text-sm text-gray-500">{{ $network->provider }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="blue">{{ ucfirst($network->network_type) }}</flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-mono text-sm">{{ $network->ip_range }}</div>
                     @if($network->subnet_mask)
                         <div class="text-sm text-gray-500">/{{ $network->subnet_mask }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="{{ $network->is_active ? 'green' : 'gray' }}">
                         {{ $network->is_active ? 'Active' : 'Inactive' }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.networks.show', [$client, $network]) }}">
                         View
                     </flux:button>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.networks.edit', [$client, $network]) }}">
                         Edit
                     </flux:button>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforeach
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     {{ $networks->links() }}

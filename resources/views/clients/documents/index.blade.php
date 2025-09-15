@@ -60,35 +60,35 @@
     <!-- Documents Table -->
     <flux:card>
         <flux:table>
-            <flux:columns>
-                <flux:column>Document</flux:column>
-                <flux:column>Category</flux:column>
-                <flux:column>Size</flux:column>
-                <flux:column>Uploaded</flux:column>
-                <flux:column></flux:column>
-            </flux:columns>
+            <flux:table.columns>
+                <flux:table.column>Document</flux:table.column>
+                <flux:table.column>Category</flux:table.column>
+                <flux:table.column>Size</flux:table.column>
+                <flux:table.column>Uploaded</flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
 
-            <flux:rows>
+            <flux:table.rows>
                 @forelse($documents as $document)
-                <flux:flex flex-wrap>
-                    <flux:cell>
+                <flux:table.row>
+                    <flux:table.cell>
                         <div class="font-medium">{{ $document->name }}</div>
                         <div class="text-sm text-gray-500">{{ $document->original_filename }}</div>
                         @if($document->is_confidential)
                             <flux:badge color="red" class="mt-1">Confidential</flux:badge>
                         @endif
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="blue">
                             {{ $categories[$document->category] ?? $document->category }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>{{ $document->formatted_file_size }}</flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>{{ $document->formatted_file_size }}</flux:table.cell>
+                    <flux:table.cell>
                         <div>{{ $document->created_at->format('M j, Y') }}</div>
                         <div class="text-sm text-gray-500">by {{ $document->uploader->name ?? 'Unknown' }}</div>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <div class="flex gap-2">
                             <flux:button variant="outline" size="sm" href="{{ route('clients.documents.show', [$client, $document]) }}">
                                 View
@@ -97,19 +97,19 @@
                                 Download
                             </flux:button>
                         </div>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @empty
-                <flux:flex flex-wrap>
-                    <flux:cell colspan="5" class="text-center py-8">
+                <flux:table.row>
+                    <flux:table.cell colspan="5" class="text-center py-8">
                         <div class="text-gray-500">No documents found</div>
                         <flux:button href="{{ route('clients.documents.create', $client) }}" class="mt-6">
                             Upload Document
                         </flux:button>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @endforelse
-            </flux:rows>
+            </flux:table.rows>
         </flux:table>
 
         @if($documents->hasPages())

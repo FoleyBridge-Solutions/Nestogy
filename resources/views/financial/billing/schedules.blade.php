@@ -6,51 +6,51 @@
 <flux:main class="space-y-6">
     <flux:header>
         <flux:heading>Billing Schedules</flux:heading>
-        <flux:actions>
+        
             <flux:button href="{{ route('financial.billing.create-schedule') }}" variant="primary">
                 <flux:icon name="plus" size="sm" />
                 New Schedule
             </flux:button>
-        </flux:actions>
+        
     </flux:header>
 
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>Upcoming Billing</flux:card.title>
-        </flux:card.header>
+        <div class="border-b pb-4 mb-4">
+            <flux:heading size="lg">Upcoming Billing</flux:heading>
+        </div>
         
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <flux:stat>
-                    <flux:stat.label>Due Today</flux:stat.label>
-                    <flux:stat.value>${{ number_format($dueToday ?? 0, 2) }}</flux:stat.value>
-                    <flux:stat.description>{{ $countDueToday ?? 0 }} invoices</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Due Today</div>
+                    <div class="text-2xl font-bold text-gray-900">${{ number_format($dueToday ?? 0, 2) }}</div>
+                    <div class="text-xs text-gray-400">{{ $countDueToday ?? 0 }} invoices</div>
+                </div>
                 
-                <flux:stat>
-                    <flux:stat.label>Due This Week</flux:stat.label>
-                    <flux:stat.value>${{ number_format($dueThisWeek ?? 0, 2) }}</flux:stat.value>
-                    <flux:stat.description>{{ $countDueThisWeek ?? 0 }} invoices</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Due This Week</div>
+                    <div class="text-2xl font-bold text-gray-900">${{ number_format($dueThisWeek ?? 0, 2) }}</div>
+                    <div class="text-xs text-gray-400">{{ $countDueThisWeek ?? 0 }} invoices</div>
+                </div>
                 
-                <flux:stat>
-                    <flux:stat.label>Due This Month</flux:stat.label>
-                    <flux:stat.value>${{ number_format($dueThisMonth ?? 0, 2) }}</flux:stat.value>
-                    <flux:stat.description>{{ $countDueThisMonth ?? 0 }} invoices</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Due This Month</div>
+                    <div class="text-2xl font-bold text-gray-900">${{ number_format($dueThisMonth ?? 0, 2) }}</div>
+                    <div class="text-xs text-gray-400">{{ $countDueThisMonth ?? 0 }} invoices</div>
+                </div>
                 
-                <flux:stat>
-                    <flux:stat.label>Monthly Recurring</flux:stat.label>
-                    <flux:stat.value>${{ number_format($monthlyRecurring ?? 0, 2) }}</flux:stat.value>
-                    <flux:stat.description>MRR</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Monthly Recurring</div>
+                    <div class="text-2xl font-bold text-gray-900">${{ number_format($monthlyRecurring ?? 0, 2) }}</div>
+                    <div class="text-xs text-gray-400">MRR</div>
+                </div>
             </div>
         
     </flux:card>
 
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>Billing Schedules</flux:card.title>
-            <flux:card.actions>
+        <div class="border-b pb-4 mb-4">
+            <flux:heading size="lg">Billing Schedules</flux:heading>
+            <div class="flex gap-2 mt-4">
                 <flux:input type="search" name="search" placeholder="Search schedules..." />
                 <flux:select name="frequency">
                     <flux:select.option value="">All Frequencies</flux:select.option>
@@ -65,11 +65,11 @@
                     <flux:select.option value="paused">Paused</flux:select.option>
                     <flux:select.option value="cancelled">Cancelled</flux:select.option>
                 </flux:select>
-            </flux:card.actions>
-        </flux:card.header>
+            </div>
+        </div>
         
             <flux:table>
-                <flux:table.header>
+                <div class="mb-4">
                     <flux:table.row>
                         <flux:table.head>Client</flux:table.head>
                         <flux:table.head>Service</flux:table.head>
@@ -79,7 +79,7 @@
                         <flux:table.head>Status</flux:table.head>
                         <flux:table.head>Actions</flux:table.head>
                     </flux:table.row>
-                </flux:table.header>
+                </div>
                 <flux:table.body>
                     @forelse($schedules ?? [] as $schedule)
                     <flux:table.row>

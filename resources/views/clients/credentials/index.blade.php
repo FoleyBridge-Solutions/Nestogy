@@ -70,41 +70,41 @@
     <!-- Credentials Table -->
     <flux:card>
         <flux:table>
-            <flux:columns>
-                <flux:column>Service</flux:column>
-                <flux:column>Username</flux:column>
-                <flux:column>Type</flux:column>
-                <flux:column>Environment</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column></flux:column>
-            </flux:columns>
+            <flux:table.columns>
+                <flux:table.column>Service</flux:table.column>
+                <flux:table.column>Username</flux:table.column>
+                <flux:table.column>Type</flux:table.column>
+                <flux:table.column>Environment</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
 
-            <flux:rows>
+            <flux:table.rows>
                 @forelse($credentials as $credential)
-                <flux:flex flex-wrap>
-                    <flux:cell>
+                <flux:table.row>
+                    <flux:table.cell>
                         <div class="font-medium">{{ $credential->name }}</div>
                         @if($credential->service_name)
                             <div class="text-sm text-gray-500">{{ $credential->service_name }}</div>
                         @endif
-                    </flux:cell>
-                    <flux:cell>{{ $credential->username ?: '-' }}</flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>{{ $credential->username ?: '-' }}</flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="gray">
                             {{ $credentialTypes[$credential->credential_type] ?? $credential->credential_type }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="blue">
                             {{ $environments[$credential->environment] ?? $credential->environment }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="{{ $credential->is_active ? 'green' : 'gray' }}">
                             {{ $credential->status_label }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <div class="flex gap-2">
                             <flux:button variant="outline" size="sm" href="{{ route('clients.credentials.show', [$client, $credential]) }}">
                                 View
@@ -113,19 +113,19 @@
                                 Edit
                             </flux:button>
                         </div>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @empty
-                <flux:flex flex-wrap>
-                    <flux:cell colspan="6" class="text-center py-8">
+                <flux:table.row>
+                    <flux:table.cell colspan="6" class="text-center py-8">
                         <div class="text-gray-500">No credentials found</div>
                         <flux:button href="{{ route('clients.credentials.create', $client) }}" class="mt-6">
                             Add Credential
                         </flux:button>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @endforelse
-            </flux:rows>
+            </flux:table.rows>
         </flux:table>
 
         @if($credentials->hasPages())

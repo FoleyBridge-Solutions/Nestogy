@@ -6,7 +6,7 @@
 <div class="max-w-full mx-auto space-y-6 px-4">
     <!-- Page Header -->
     <flux:card>
-        <flux:card.header>
+        <div class="border-b pb-4 mb-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <flux:button href="{{ route('settings.permissions.index') }}" variant="ghost" icon="arrow-left" class="mr-4">
@@ -26,7 +26,7 @@
                     </flux:button>
                 </div>
             </div>
-        </flux:card.header>
+        </div>
     </flux:card>
 
     <!-- Matrix Legend -->

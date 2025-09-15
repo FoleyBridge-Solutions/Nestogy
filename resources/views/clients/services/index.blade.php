@@ -79,30 +79,30 @@
     <!-- Services Table -->
     <flux:card>
         <flux:table>
-            <flux:columns>
-                <flux:column>Service</flux:column>
-                <flux:column>Type</flux:column>
-                <flux:column>Technician</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column>Next Review</flux:column>
-                <flux:column></flux:column>
-            </flux:columns>
+            <flux:table.columns>
+                <flux:table.column>Service</flux:table.column>
+                <flux:table.column>Type</flux:table.column>
+                <flux:table.column>Technician</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Next Review</flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
 
-            <flux:rows>
+            <flux:table.rows>
                 @forelse($services as $service)
-                <flux:flex flex-wrap>
-                    <flux:cell>
+                <flux:table.row>
+                    <flux:table.cell>
                         <div class="font-medium">{{ $service->name }}</div>
                         @if($service->description)
                             <div class="text-sm text-gray-500">{{ Str::limit($service->description, 50) }}</div>
                         @endif
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="blue">
                             {{ $serviceTypes[$service->service_type] ?? $service->service_type }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         @if($service->technician)
                             {{ $service->technician->name }}
                             @if($service->backupTechnician)
@@ -111,13 +111,13 @@
                         @else
                             <span class="text-gray-400">Unassigned</span>
                         @endif
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="{{ $service->status === 'active' ? 'green' : ($service->status === 'inactive' ? 'gray' : 'yellow') }}">
                             {{ $serviceStatuses[$service->status] ?? $service->status }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         @if($service->next_review_date)
                             <div class="{{ $service->isReviewOverdue() ? 'text-red-600 font-medium' : ($service->isReviewDueSoon() ? 'text-orange-600 font-medium' : '') }}">
                                 {{ $service->next_review_date->format('M j, Y') }}
@@ -136,8 +136,8 @@
                         @else
                             <span class="text-gray-400">Not scheduled</span>
                         @endif
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <div class="flex gap-2">
                             <flux:button variant="outline" size="sm" href="{{ route('clients.services.show', [$client, $service]) }}">
                                 View
@@ -146,19 +146,19 @@
                                 Edit
                             </flux:button>
                         </div>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @empty
-                <flux:flex flex-wrap>
-                    <flux:cell colspan="6" class="text-center py-8">
+                <flux:table.row>
+                    <flux:table.cell colspan="6" class="text-center py-8">
                         <div class="text-gray-500">No services found</div>
                         <flux:button href="{{ route('clients.services.create', $client) }}" class="mt-6">
                             Add Service
                         </flux:button>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @endforelse
-            </flux:rows>
+            </flux:table.rows>
         </flux:table>
 
         @if($services->hasPages())

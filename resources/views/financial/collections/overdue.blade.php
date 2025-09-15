@@ -6,7 +6,7 @@
 <flux:main class="space-y-6">
     <flux:header>
         <flux:heading>Overdue Invoices</flux:heading>
-        <flux:actions>
+        
             <flux:button href="{{ route('financial.collections.reminders') }}" variant="outline">
                 <flux:icon name="mail" size="sm" />
                 Manage Reminders
@@ -15,40 +15,40 @@
                 <flux:icon name="plus" size="sm" />
                 New Invoice
             </flux:button>
-        </flux:actions>
+        
     </flux:header>
 
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>Collection Summary</flux:card.title>
-        </flux:card.header>
+        <div class="border-b pb-4 mb-4">
+            <flux:heading size="lg">Collection Summary</flux:heading>
+        </div>
         
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <flux:stat>
-                    <flux:stat.label>Total Overdue</flux:stat.label>
-                    <flux:stat.value>${{ number_format($totalOverdue, 2) }}</flux:stat.value>
-                    <flux:stat.description>{{ $overdueInvoices->total() }} invoices</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Total Overdue</div>
+                    <div class="text-2xl font-bold text-gray-900">${{ number_format($totalOverdue, 2) }}</div>
+                    <div class="text-xs text-gray-400">{{ $overdueInvoices->total() }} invoices</div>
+                </div>
                 
-                <flux:stat>
-                    <flux:stat.label>Average Days Overdue</flux:stat.label>
-                    <flux:stat.value>{{ number_format($avgDaysOverdue, 0) }}</flux:stat.value>
-                    <flux:stat.description>days past due</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Average Days Overdue</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ number_format($avgDaysOverdue, 0) }}</div>
+                    <div class="text-xs text-gray-400">days past due</div>
+                </div>
                 
-                <flux:stat>
-                    <flux:stat.label>Collection Rate</flux:stat.label>
-                    <flux:stat.value>68%</flux:stat.value>
-                    <flux:stat.description>Last 30 days</flux:stat.description>
-                </flux:stat>
+                <div class="bg-white rounded-lg border p-4">
+                    <div class="text-sm font-medium text-gray-500">Collection Rate</div>
+                    <div class="text-2xl font-bold text-gray-900">68%</div>
+                    <div class="text-xs text-gray-400">Last 30 days</div>
+                </div>
             </div>
         
     </flux:card>
 
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>Overdue Invoices</flux:card.title>
-            <flux:card.actions>
+        <div class="border-b pb-4 mb-4">
+            <flux:heading size="lg">Overdue Invoices</flux:heading>
+            <div class="flex gap-2 mt-4">
                 <flux:input type="search" name="search" placeholder="Search invoices..." />
                 <flux:select name="age">
                     <flux:select.option value="">All Ages</flux:select.option>
@@ -57,11 +57,11 @@
                     <flux:select.option value="90">61-90 days</flux:select.option>
                     <flux:select.option value="over90">Over 90 days</flux:select.option>
                 </flux:select>
-            </flux:card.actions>
-        </flux:card.header>
+            </div>
+        </div>
         
             <flux:table>
-                <flux:table.header>
+                <div class="mb-4">
                     <flux:table.row>
                         <flux:table.head>Invoice #</flux:table.head>
                         <flux:table.head>Client</flux:table.head>
@@ -71,7 +71,7 @@
                         <flux:table.head>Status</flux:table.head>
                         <flux:table.head>Actions</flux:table.head>
                     </flux:table.row>
-                </flux:table.header>
+                </div>
                 <flux:table.body>
                     @forelse($overdueInvoices as $invoice)
                     <flux:table.row>

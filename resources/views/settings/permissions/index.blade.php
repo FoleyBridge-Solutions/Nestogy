@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto space-y-6">
     <!-- Page Header -->
     <flux:card>
-        <flux:card.header>
+        <div class="border-b pb-4 mb-4">
             <div class="flex items-center justify-between">
                 <div>
                     <flux:heading>Permissions Management</flux:heading>
@@ -39,7 +39,7 @@
                     </flux:button>
                 </div>
             </div>
-        </flux:card.header>
+        </div>
     </flux:card>
 
     <!-- Statistics Cards -->
@@ -112,12 +112,12 @@
         <!-- Users Tab -->
         <flux:tabs.panel name="users">
             <flux:card>
-                <flux:card.header>
+                <div class="border-b pb-4 mb-4">
                     <div class="flex items-center justify-between">
                         <flux:heading size="lg">User Permissions</flux:heading>
                         <flux:input type="search" placeholder="Search users..." wire:model.live="searchUsers" />
                     </div>
-                </flux:card.header>
+                </div>
                 
                 <flux:table>
                     <flux:table.head>
@@ -199,18 +199,18 @@
                     </flux:table.body>
                 </flux:table>
                 
-                <flux:card.footer>
+                <div class="border-t pt-4 mt-4">
                     {{ $users->links() }}
-                </flux:card.footer>
+                </div>
             </flux:card>
         </flux:tabs.panel>
 
         <!-- Roles Tab -->
         <flux:tabs.panel name="roles">
             <flux:card>
-                <flux:card.header>
+                <div class="border-b pb-4 mb-4">
                     <flux:heading size="lg">Role Management</flux:heading>
-                </flux:card.header>
+                </div>
                 
                 <flux:table>
                     <flux:table.head>
@@ -280,10 +280,10 @@
         <!-- Quick Assign Tab -->
         <flux:tabs.panel name="quick-assign">
             <flux:card>
-                <flux:card.header>
+                <div class="border-b pb-4 mb-4">
                     <flux:heading size="lg">Quick Permission Assignment</flux:heading>
                     <flux:subheading>Bulk assign roles or permissions to multiple users at once</flux:subheading>
-                </flux:card.header>
+                </div>
                 
                 
                     <form action="{{ route('settings.permissions.bulk-assign') }}" method="POST" class="space-y-6">
@@ -348,9 +348,9 @@
     <!-- Recent Activity -->
     @if(count($recentChanges) > 0)
     <flux:card>
-        <flux:card.header>
+        <div class="border-b pb-4 mb-4">
             <flux:heading size="lg">Recent Permission Changes</flux:heading>
-        </flux:card.header>
+        </div>
         
         <flux:table>
             <flux:table.head>

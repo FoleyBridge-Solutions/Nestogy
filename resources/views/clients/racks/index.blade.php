@@ -24,36 +24,36 @@
     </div>
 
     <flux:table>
-        <flux:columns>
-            <flux:column>Rack Details</flux:column>
-            <flux:column>Location</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Capacity</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column>Rack Details</flux:table.column>
+            <flux:table.column>Location</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Capacity</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @foreach($racks as $rack)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $rack->name }}</div>
                     <div class="text-sm text-gray-500">Rack #{{ $rack->rack_number }}</div>
                     @if($rack->serial_number)
                         <div class="text-sm text-gray-500">{{ $rack->serial_number }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-medium">{{ $rack->location }}</div>
                     @if($rack->room)
                         <div class="text-sm text-gray-500">{{ $rack->room }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="{{ $rack->status === 'active' ? 'green' : ($rack->status === 'maintenance' ? 'yellow' : 'gray') }}">
                         {{ ucfirst($rack->status) }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="text-sm">
                         {{ $rack->used_units ?? 0 }}/{{ $rack->total_units ?? 0 }} units
                     </div>
@@ -62,18 +62,18 @@
                             <div class="bg-blue-600 h-2 rounded-full" style="width: {{ (($rack->used_units ?? 0) / $rack->total_units) * 100 }}%"></div>
                         </div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.racks.show', [$client, $rack]) }}">
                         View
                     </flux:button>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.racks.edit', [$client, $rack]) }}">
                         Edit
                     </flux:button>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforeach
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     {{ $racks->links() }}

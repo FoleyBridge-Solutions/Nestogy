@@ -71,36 +71,36 @@
     <!-- Licenses Table -->
     <flux:card>
         <flux:table>
-            <flux:columns>
-                <flux:column>License</flux:column>
-                <flux:column>Vendor</flux:column>
-                <flux:column>Type</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column>Expiry</flux:column>
-                <flux:column></flux:column>
-            </flux:columns>
+            <flux:table.columns>
+                <flux:table.column>License</flux:table.column>
+                <flux:table.column>Vendor</flux:table.column>
+                <flux:table.column>Type</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Expiry</flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
 
-            <flux:rows>
+            <flux:table.rows>
                 @forelse($licenses as $license)
-                <flux:flex flex-wrap>
-                    <flux:cell>
+                <flux:table.row>
+                    <flux:table.cell>
                         <div class="font-medium">{{ $license->name }}</div>
                         @if($license->version)
                             <div class="text-sm text-gray-500">v{{ $license->version }}</div>
                         @endif
-                    </flux:cell>
-                    <flux:cell>{{ $license->vendor ?? '-' }}</flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>{{ $license->vendor ?? '-' }}</flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="gray">
                             {{ $licenseTypes[$license->license_type] ?? $license->license_type }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="{{ $license->is_active ? 'green' : 'gray' }}">
                             {{ $license->status_label }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         @if($license->expiry_date)
                             <div class="{{ $license->isExpiringSoon() ? 'text-orange-600 font-medium' : ($license->isExpired() ? 'text-red-600 font-medium' : '') }}">
                                 {{ $license->expiry_date->format('M j, Y') }}
@@ -119,8 +119,8 @@
                         @else
                             <span class="text-gray-400">Never</span>
                         @endif
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <div class="flex gap-2">
                             <flux:button variant="outline" size="sm" href="{{ route('clients.licenses.show', [$client, $license]) }}">
                                 View
@@ -129,19 +129,19 @@
                                 Edit
                             </flux:button>
                         </div>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @empty
-                <flux:flex flex-wrap>
-                    <flux:cell colspan="6" class="text-center py-8">
+                <flux:table.row>
+                    <flux:table.cell colspan="6" class="text-center py-8">
                         <div class="text-gray-500">No licenses found</div>
                         <flux:button href="{{ route('clients.licenses.create', $client) }}" class="mt-6">
                             Add License
                         </flux:button>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @endforelse
-            </flux:rows>
+            </flux:table.rows>
         </flux:table>
 
         @if($licenses->hasPages())

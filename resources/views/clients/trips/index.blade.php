@@ -24,50 +24,50 @@
     </div>
 
     <flux:table>
-        <flux:columns>
-            <flux:column>Trip Details</flux:column>
-            <flux:column>Dates</flux:column>
-            <flux:column>Destination</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column>Trip Details</flux:table.column>
+            <flux:table.column>Dates</flux:table.column>
+            <flux:table.column>Destination</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @foreach($trips as $trip)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $trip->title }}</div>
                     <div class="text-sm text-gray-500">{{ $trip->trip_number }}</div>
                     <div class="text-sm text-gray-500">{{ ucfirst($trip->trip_type) }}</div>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-medium">{{ $trip->start_date->format('M j, Y') }}</div>
                     @if($trip->end_date)
                         <div class="text-sm text-gray-500">to {{ $trip->end_date->format('M j, Y') }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-medium">{{ $trip->destination_city }}</div>
                     @if($trip->destination_state)
                         <div class="text-sm text-gray-500">{{ $trip->destination_state }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="{{ $trip->status === 'completed' ? 'green' : ($trip->status === 'approved' ? 'blue' : 'yellow') }}">
                         {{ ucfirst($trip->status) }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.trips.show', [$client, $trip]) }}">
                         View
                     </flux:button>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.trips.edit', [$client, $trip]) }}">
                         Edit
                     </flux:button>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforeach
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     {{ $trips->links() }}

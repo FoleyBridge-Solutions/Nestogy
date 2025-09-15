@@ -139,7 +139,7 @@
                                     <i class="fas fa-edit"></i>
                                 </flux:button>
                             </div>
-                        </flux:cell>
+                        </flux:table.cell>
                     </flux:table.row>
                 @empty
                     <flux:table.row>

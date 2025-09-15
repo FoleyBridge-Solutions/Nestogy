@@ -41,41 +41,41 @@
 
     <!-- Recurring Invoices Table -->
     <flux:table>
-        <flux:columns>
-            <flux:column sortable="template_name">Template Name</flux:column>
-            <flux:column>Client</flux:column>
-            <flux:column>Amount</flux:column>
-            <flux:column>Frequency</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Next Invoice</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column sortable="template_name">Template Name</flux:table.column>
+            <flux:table.column>Client</flux:table.column>
+            <flux:table.column>Amount</flux:table.column>
+            <flux:table.column>Frequency</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Next Invoice</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @forelse($invoices as $invoice)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $invoice->template_name }}</div>
                     @if($invoice->description)
                         <div class="text-sm text-gray-500">{{ Str::limit($invoice->description, 30) }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>{{ $invoice->client->name }}</flux:cell>
-                <flux:cell>{{ $invoice->currency }} {{ number_format($invoice->total_amount, 2) }}</flux:cell>
-                <flux:cell>{{ ucfirst($invoice->frequency) }}</flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>{{ $invoice->client->name }}</flux:table.cell>
+                <flux:table.cell>{{ $invoice->currency }} {{ number_format($invoice->total_amount, 2) }}</flux:table.cell>
+                <flux:table.cell>{{ ucfirst($invoice->frequency) }}</flux:table.cell>
+                <flux:table.cell>
                     <flux:badge :color="$invoice->status === 'active' ? 'green' : ($invoice->status === 'paused' ? 'yellow' : 'gray')">
                         {{ ucfirst($invoice->status) }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     @if($invoice->next_invoice_date)
                         {{ $invoice->next_invoice_date->format('M j, Y') }}
                     @else
                         <span class="text-gray-400">N/A</span>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="flex space-x-1">
                         <flux:button href="{{ route('financial.recurring-invoices.show', $invoice) }}" size="sm" variant="ghost">
                             <flux:icon name="eye" />
@@ -84,11 +84,11 @@
                             <flux:icon name="pencil" />
                         </flux:button>
                     </div>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @empty
-            <flux:flex flex-wrap>
-                <flux:cell colspan="7" class="text-center py-8">
+            <flux:table.row>
+                <flux:table.cell colspan="7" class="text-center py-8">
                     <div class="text-gray-500">
                         <flux:icon name="document-text" class="w-12 h-12 mx-auto mb-6 text-gray-300" />
                         <p class="text-lg font-medium">No recurring invoices found</p>
@@ -98,10 +98,10 @@
                             Create First Recurring Invoice
                         </flux:button>
                     </div>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforelse
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     <!-- Pagination -->

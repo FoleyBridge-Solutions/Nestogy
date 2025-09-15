@@ -41,28 +41,28 @@
 
     <!-- Vendors Table -->
     <flux:table>
-        <flux:columns>
-            <flux:column sortable="name">Vendor Name</flux:column>
-            <flux:column>Type</flux:column>
-            <flux:column>Category</flux:column>
-            <flux:column>Contact</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Rating</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column sortable="name">Vendor Name</flux:table.column>
+            <flux:table.column>Type</flux:table.column>
+            <flux:table.column>Category</flux:table.column>
+            <flux:table.column>Contact</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Rating</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @forelse($vendors as $vendor)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $vendor->vendor_name }}</div>
                     @if($vendor->description)
                         <div class="text-sm text-gray-500">{{ Str::limit($vendor->description, 50) }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>{{ $vendor->vendor_type }}</flux:cell>
-                <flux:cell>{{ $vendor->category ?: 'N/A' }}</flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>{{ $vendor->vendor_type }}</flux:table.cell>
+                <flux:table.cell>{{ $vendor->category ?: 'N/A' }}</flux:table.cell>
+                <flux:table.cell>
                     @if($vendor->contact_person)
                         <div>{{ $vendor->contact_person }}</div>
                         @if($vendor->email)
@@ -71,8 +71,8 @@
                     @else
                         <span class="text-gray-400">No contact</span>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge :color="$vendor->is_preferred ? 'green' : ($vendor->is_approved ? 'blue' : 'gray')">
                         @if($vendor->is_preferred)
                             Preferred
@@ -82,8 +82,8 @@
                             Pending
                         @endif
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     @if($vendor->overall_rating)
                         <div class="flex items-center">
                             <flux:icon name="star" class="w-4 h-4 text-yellow-400 mr-1" />
@@ -92,8 +92,8 @@
                     @else
                         <span class="text-gray-400">Not rated</span>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="flex space-x-1">
                         <flux:button href="{{ route('clients.vendors.show', ['client' => $client->id, 'vendor' => $vendor->id]) }}" size="sm" variant="ghost">
                             <flux:icon name="eye" />
@@ -102,11 +102,11 @@
                             <flux:icon name="pencil" />
                         </flux:button>
                     </div>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @empty
-            <flux:flex flex-wrap>
-                <flux:cell colspan="7" class="text-center py-8">
+            <flux:table.row>
+                <flux:table.cell colspan="7" class="text-center py-8">
                     <div class="text-gray-500">
                         <flux:icon name="building-storefront" class="w-12 h-12 mx-auto mb-6 text-gray-300" />
                         <p class="text-lg font-medium">No vendors found</p>
@@ -116,10 +116,10 @@
                             Add First Vendor
                         </flux:button>
                     </div>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforelse
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     <!-- Pagination -->

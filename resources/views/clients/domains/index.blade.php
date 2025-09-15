@@ -85,30 +85,30 @@
     <!-- Domains Table -->
     <flux:card>
         <flux:table>
-            <flux:columns>
-                <flux:column>Domain</flux:column>
-                <flux:column>Registrar</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column>Expires</flux:column>
-                <flux:column></flux:column>
-            </flux:columns>
+            <flux:table.columns>
+                <flux:table.column>Domain</flux:table.column>
+                <flux:table.column>Registrar</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Expires</flux:table.column>
+                <flux:table.column></flux:table.column>
+            </flux:table.columns>
 
-            <flux:rows>
+            <flux:table.rows>
                 @forelse($domains as $domain)
-                <flux:flex flex-wrap>
-                    <flux:cell>
+                <flux:table.row>
+                    <flux:table.cell>
                         <div class="font-medium">{{ $domain->full_domain }}</div>
                         @if($domain->name !== $domain->domain_name)
                             <div class="text-sm text-gray-500">{{ $domain->name }}</div>
                         @endif
-                    </flux:cell>
-                    <flux:cell>{{ $registrars[$domain->registrar] ?? $domain->registrar ?? '-' }}</flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>{{ $registrars[$domain->registrar] ?? $domain->registrar ?? '-' }}</flux:table.cell>
+                    <flux:table.cell>
                         <flux:badge color="{{ $domain->status_color === 'green' ? 'green' : ($domain->status_color === 'red' ? 'red' : 'gray') }}">
                             {{ $statuses[$domain->status] ?? $domain->status }}
                         </flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         @if($domain->expires_at)
                             <div class="{{ $domain->isExpired() ? 'text-red-600 font-medium' : ($domain->isExpiringSoon() ? 'text-orange-600 font-medium' : '') }}">
                                 {{ $domain->expires_at->format('M j, Y') }}
@@ -127,8 +127,8 @@
                         @else
                             <span class="text-gray-400">Never</span>
                         @endif
-                    </flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <div class="flex gap-2">
                             <flux:button variant="outline" size="sm" href="{{ route('clients.domains.show', [$client, $domain]) }}">
                                 View
@@ -137,19 +137,19 @@
                                 Edit
                             </flux:button>
                         </div>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @empty
-                <flux:flex flex-wrap>
-                    <flux:cell colspan="5" class="text-center py-8">
+                <flux:table.row>
+                    <flux:table.cell colspan="5" class="text-center py-8">
                         <div class="text-gray-500">No domains found</div>
                         <flux:button href="{{ route('clients.domains.create', $client) }}" class="mt-6">
                             Add Domain
                         </flux:button>
-                    </flux:cell>
-                </flux:flex flex-wrap>
+                    </flux:table.cell>
+                </flux:table.row>
                 @endforelse
-            </flux:rows>
+            </flux:table.rows>
         </flux:table>
 
         @if($domains->hasPages())

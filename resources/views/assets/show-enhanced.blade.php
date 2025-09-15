@@ -76,8 +76,8 @@
 
         {{-- Tab Navigation --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <flux:tabs default="overview">
-                <flux:tab.list class="border-b border-gray-200 dark:border-gray-700">
+            <flux:tab.group>
+                <flux:tabs wire:model="tab" class="border-b border-gray-200 dark:border-gray-700">
                     <flux:tab name="overview">Overview</flux:tab>
                     <flux:tab name="monitoring">Monitoring</flux:tab>
                     <flux:tab name="software">Software</flux:tab>
@@ -86,7 +86,7 @@
                     <flux:tab name="tools">Tools</flux:tab>
                     <flux:tab name="automation">Automation</flux:tab>
                     <flux:tab name="history">History</flux:tab>
-                </flux:tab.list>
+            </flux:tab.group>
 
                 {{-- Overview Tab --}}
                 <flux:tab.panel name="overview" class="p-6">
@@ -750,7 +750,7 @@
                                             <p class="text-xs text-gray-500 dark:text-gray-400">Monday-Friday: 8:00 AM - 6:00 PM</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">No automated reboots or major updates during business hours</p>
                                         </div>
-                                        <flux:toggle checked />
+                                        <flux:switch checked />
                                     </div>
                                 </div>
                             </div>

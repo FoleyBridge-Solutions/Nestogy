@@ -87,26 +87,26 @@
                 <flux:heading size="md">Current Access Restrictions</flux:heading>
                 
                 <flux:table>
-                    <flux:columns>
-                        <flux:column>Technician</flux:column>
-                        <flux:column>Access Level</flux:column>
-                        <flux:column>Primary</flux:column>
-                        <flux:column>Assigned</flux:column>
-                        <flux:column>Expires</flux:column>
-                        <flux:column>Actions</flux:column>
-                    </flux:columns>
+                    <flux:table.columns>
+                        <flux:table.column>Technician</flux:table.column>
+                        <flux:table.column>Access Level</flux:table.column>
+                        <flux:table.column>Primary</flux:table.column>
+                        <flux:table.column>Assigned</flux:table.column>
+                        <flux:table.column>Expires</flux:table.column>
+                        <flux:table.column>Actions</flux:table.column>
+                    </flux:table.columns>
                     
-                    <flux:rows>
+                    <flux:table.rows>
                         @foreach($technicians as $tech)
                             <flux:row>
-                                <flux:cell>
+                                <flux:table.cell>
                                     <div>
                                         <div class="font-medium">{{ $tech['name'] }}</div>
                                         <div class="text-sm text-zinc-600">{{ $tech['email'] }}</div>
                                     </div>
-                                </flux:cell>
+                                </flux:table.cell>
                                 
-                                <flux:cell>
+                                <flux:table.cell>
                                     <flux:select 
                                         wire:change="updateAccessLevel({{ $tech['id'] }}, $event.target.value)"
                                         value="{{ $tech['access_level'] }}"
@@ -116,9 +116,9 @@
                                         <option value="manage">Manage</option>
                                         <option value="admin">Admin</option>
                                     </flux:select>
-                                </flux:cell>
+                                </flux:table.cell>
                                 
-                                <flux:cell>
+                                <flux:table.cell>
                                     @if($tech['is_primary'])
                                         <flux:badge variant="success" size="sm">Primary</flux:badge>
                                     @else
@@ -130,13 +130,13 @@
                                             Set Primary
                                         </flux:button>
                                     @endif
-                                </flux:cell>
+                                </flux:table.cell>
                                 
-                                <flux:cell>
+                                <flux:table.cell>
                                     {{ \Carbon\Carbon::parse($tech['assigned_at'])->format('M d, Y') }}
-                                </flux:cell>
+                                </flux:table.cell>
                                 
-                                <flux:cell>
+                                <flux:table.cell>
                                     @if($tech['expires_at'])
                                         <flux:badge variant="warning" size="sm">
                                             {{ \Carbon\Carbon::parse($tech['expires_at'])->format('M d, Y') }}
@@ -144,9 +144,9 @@
                                     @else
                                         <span class="text-sm text-zinc-600">Permanent</span>
                                     @endif
-                                </flux:cell>
+                                </flux:table.cell>
                                 
-                                <flux:cell>
+                                <flux:table.cell>
                                     <flux:button 
                                         wire:click="removeTechnician({{ $tech['id'] }})"
                                         wire:confirm="Are you sure you want to remove this technician?"
@@ -154,10 +154,10 @@
                                         size="sm"
                                         icon="trash"
                                     />
-                                </flux:cell>
+                                </flux:table.cell>
                             </flux:row>
                         @endforeach
-                    </flux:rows>
+                    </flux:table.rows>
                 </flux:table>
             </div>
         @else

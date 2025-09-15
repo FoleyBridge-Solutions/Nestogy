@@ -394,7 +394,7 @@
         {{-- Enhanced List View --}}
         <flux:card>
             <flux:table>
-                <flux:table.header>
+                <div class="mb-4">
                     <flux:table.row>
                         <flux:table.head>
                             <flux:checkbox wire:model.live="selectAll" />
@@ -414,7 +414,7 @@
                         <flux:table.head>Last Seen</flux:table.head>
                         <flux:table.head></flux:table.head>
                     </flux:table.row>
-                </flux:table.header>
+                </div>
                 <flux:table.body>
                     @forelse($assets as $asset)
                         <flux:table.row class="hover:bg-gray-50">

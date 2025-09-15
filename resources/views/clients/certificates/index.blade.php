@@ -24,29 +24,29 @@
     </div>
 
     <flux:table>
-        <flux:columns>
-            <flux:column>Certificate Details</flux:column>
-            <flux:column>Subject/Domains</flux:column>
-            <flux:column>Expires</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column>Certificate Details</flux:table.column>
+            <flux:table.column>Subject/Domains</flux:table.column>
+            <flux:table.column>Expires</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @foreach($certificates as $certificate)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $certificate->name }}</div>
                     <div class="text-sm text-gray-500">{{ $certificate->issuer }}</div>
                     <div class="text-sm text-gray-500">{{ $certificate->type }}</div>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-medium">{{ $certificate->subject }}</div>
                     @if($certificate->domain_names)
                         <div class="text-sm text-gray-500">{{ Str::limit($certificate->domain_names, 50) }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-medium">{{ $certificate->expires_at->format('M j, Y') }}</div>
                     @if($certificate->expires_at->isPast())
                         <flux:badge color="red">Expired</flux:badge>
@@ -55,23 +55,23 @@
                     @else
                         <div class="text-sm text-gray-500">{{ $certificate->expires_at->diffForHumans() }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="{{ $certificate->status === 'active' ? 'green' : ($certificate->status === 'expired' ? 'red' : 'gray') }}">
                         {{ ucfirst($certificate->status) }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.certificates.show', [$client, $certificate]) }}">
                         View
                     </flux:button>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.certificates.edit', [$client, $certificate]) }}">
                         Edit
                     </flux:button>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforeach
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     {{ $certificates->links() }}

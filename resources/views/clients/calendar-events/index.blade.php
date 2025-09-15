@@ -22,53 +22,53 @@
     </div>
 
     <flux:table>
-        <flux:columns>
-            <flux:column>Event Details</flux:column>
-            <flux:column>Date & Time</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Priority</flux:column>
-            <flux:column>Actions</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column>Event Details</flux:table.column>
+            <flux:table.column>Date & Time</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Priority</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @foreach($events as $event)
-            <flux:flex flex-wrap>
-                <flux:cell>
+            <flux:table.row>
+                <flux:table.cell>
                     <div class="font-medium">{{ $event->title }}</div>
                     <div class="text-sm text-gray-500">{{ ucfirst(str_replace('_', ' ', $event->event_type)) }}</div>
                     @if($event->location)
                         <div class="text-sm text-gray-500">{{ $event->location }}</div>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <div class="font-medium">{{ $event->start_datetime->format('M j, Y') }}</div>
                     @if(!$event->all_day)
                         <div class="text-sm text-gray-500">{{ $event->start_datetime->format('g:i A') }} - {{ $event->end_datetime->format('g:i A') }}</div>
                     @else
                         <flux:badge color="blue">All Day</flux:badge>
                     @endif
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="{{ $event->status === 'completed' ? 'green' : ($event->status === 'cancelled' ? 'red' : 'blue') }}">
                         {{ ucfirst($event->status) }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:badge color="{{ $event->priority === 'high' ? 'red' : ($event->priority === 'medium' ? 'yellow' : 'green') }}">
                         {{ ucfirst($event->priority) }}
                     </flux:badge>
-                </flux:cell>
-                <flux:cell>
+                </flux:table.cell>
+                <flux:table.cell>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.calendar-events.show', [$client, $event]) }}">
                         View
                     </flux:button>
                     <flux:button variant="ghost" size="sm" href="{{ route('clients.calendar-events.edit', [$client, $event]) }}">
                         Edit
                     </flux:button>
-                </flux:cell>
-            </flux:flex flex-wrap>
+                </flux:table.cell>
+            </flux:table.row>
             @endforeach
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
 
     {{ $events->links() }}

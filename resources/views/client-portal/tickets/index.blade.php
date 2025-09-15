@@ -155,24 +155,22 @@
                 </div>
             @else
                 <flux:table>
-                    <flux:thead>
-                        <flux:flex flex-wrap>
-                            <flux:cell heading>#</flux:cell>
-                            <flux:cell heading>Subject</flux:cell>
-                            <flux:cell heading>Status</flux:cell>
-                            <flux:cell heading>Priority</flux:cell>
-                            <flux:cell heading>Created</flux:cell>
-                            <flux:cell heading>Last Updated</flux:cell>
-                            <flux:cell heading>Actions</flux:cell>
-                        </flux:flex flex-wrap>
-                    </flux:thead>
-                    <flux:tbody>
+                    <flux:table.columns>
+                        <flux:table.column>#</flux:table.column>
+                        <flux:table.column>Subject</flux:table.column>
+                        <flux:table.column>Status</flux:table.column>
+                        <flux:table.column>Priority</flux:table.column>
+                        <flux:table.column>Created</flux:table.column>
+                        <flux:table.column>Last Updated</flux:table.column>
+                        <flux:table.column>Actions</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
                         @foreach($tickets as $ticket)
-                        <flux:flex flex-wrap>
-                            <flux:cell>
+                        <flux:table.row>
+                            <flux:table.cell>
                                 <span class="font-mono text-sm">{{ $ticket->ticket_number ?? '#' . $ticket->id }}</span>
-                            </flux:cell>
-                            <flux:cell>
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 <div>
                                     <a href="{{ route('client.tickets.show', $ticket->id) }}" class="text-blue-600 hover:underline font-medium">
                                         {{ Str::limit($ticket->subject, 50) }}
@@ -181,43 +179,43 @@
                                         <span class="block text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $ticket->category)) }}</span>
                                     @endif
                                 </div>
-                            </flux:cell>
-                            <flux:cell>
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 @php
                                     $statusColors = [
-                                        'Open' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                        'Awaiting Customer' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                        'In Progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                                        'Resolved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                                        'Closed' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                        'Open' => 'red',
+                                        'Awaiting Customer' => 'yellow',
+                                        'In Progress' => 'blue',
+                                        'Resolved' => 'green',
+                                        'Closed' => 'zinc'
                                     ];
-                                    $statusColor = $statusColors[$ticket->status] ?? 'bg-gray-100 text-gray-800';
+                                    $statusColor = $statusColors[$ticket->status] ?? 'zinc';
                                 @endphp
-                                <flux:badge class="{{ $statusColor }}">{{ $ticket->status }}</flux:badge>
-                            </flux:cell>
-                            <flux:cell>
+                                <flux:badge color="{{ $statusColor }}" size="sm">{{ $ticket->status }}</flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 @php
                                     $priorityColors = [
-                                        'Critical' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                        'High' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-                                        'Medium' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                        'Low' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        'Critical' => 'red',
+                                        'High' => 'orange',
+                                        'Medium' => 'yellow',
+                                        'Low' => 'green'
                                     ];
-                                    $priorityColor = $priorityColors[$ticket->priority] ?? 'bg-gray-100 text-gray-800';
+                                    $priorityColor = $priorityColors[$ticket->priority] ?? 'zinc';
                                 @endphp
-                                <flux:badge class="{{ $priorityColor }}">{{ $ticket->priority }}</flux:badge>
-                            </flux:cell>
-                            <flux:cell>
+                                <flux:badge color="{{ $priorityColor }}" size="sm">{{ $ticket->priority }}</flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 <span class="text-sm text-gray-600 dark:text-gray-400">
                                     {{ $ticket->created_at->format('M j, Y') }}
                                 </span>
-                            </flux:cell>
-                            <flux:cell>
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 <span class="text-sm text-gray-600 dark:text-gray-400">
                                     {{ $ticket->updated_at->diffForHumans() }}
                                 </span>
-                            </flux:cell>
-                            <flux:cell>
+                            </flux:table.cell>
+                            <flux:table.cell>
                                 <div class="flex gap-2">
                                     <flux:button size="sm" variant="ghost" href="{{ route('client.tickets.show', $ticket->id) }}">
                                         <i class="fas fa-eye"></i>
@@ -228,10 +226,10 @@
                                         </flux:button>
                                     @endif
                                 </div>
-                            </flux:cell>
-                        </flux:flex flex-wrap>
+                            </flux:table.cell>
+                        </flux:table.row>
                         @endforeach
-                    </flux:tbody>
+                    </flux:table.rows>
                 </flux:table>
 
                 <!-- Pagination -->
