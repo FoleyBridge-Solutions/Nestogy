@@ -465,6 +465,35 @@
             }
         }
         
+        function getPlanPriceDisplay(plan) {
+            if (plan.pricing_model === 'per_user') {
+                return `$${plan.price_per_user_monthly}`;
+            }
+            if (plan.price_monthly == 0) {
+                return 'Free';
+            }
+            return plan.formatted_price || `$${plan.price_monthly}`;
+        }
+
+        function getPlanPriceInterval(plan) {
+            if (plan.pricing_model === 'per_user') {
+                const minUsers = plan.minimum_users || 10;
+                return `/user/month`;
+            }
+            if (plan.price_monthly == 0) {
+                return 'Forever';
+            }
+            return '/month';
+        }
+
+        function getPlanMinimumUsersText(plan) {
+            if (plan.pricing_model === 'per_user' && plan.minimum_users) {
+                const totalCost = plan.price_per_user_monthly * plan.minimum_users;
+                return `<p class="text-xs text-gray-500 mt-1">Minimum ${plan.minimum_users} users ($${totalCost}/month total)</p>`;
+            }
+            return '';
+        }
+        
         function createPlanCard(plan) {
             const card = document.createElement('div');
             card.className = 'plan-card';
@@ -476,10 +505,11 @@
                         <h4 class="text-lg font-semibold text-gray-900">${plan.name}</h4>
                         <p class="text-sm text-gray-600 mt-1">${plan.description || ''}</p>
                         <div class="mt-2">
-                            <span class="text-2xl font-bold text-gray-900">${plan.price_monthly == 0 ? 'Free' : plan.formatted_price}</span>
-                            <span class="text-sm text-gray-500">${plan.price_monthly == 0 ? 'Forever' : '/month'}</span>
+                            <span class="text-2xl font-bold text-gray-900">${getPlanPriceDisplay(plan)}</span>
+                            <span class="text-sm text-gray-500">${getPlanPriceInterval(plan)}</span>
                         </div>
                         <p class="text-sm text-gray-500 mt-1">${plan.user_limit_text}</p>
+                        ${getPlanMinimumUsersText(plan)}
                     </div>
                     <div class="flex-shrink-0">
                         <input type="radio" name="plan_selection" value="${plan.id}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
