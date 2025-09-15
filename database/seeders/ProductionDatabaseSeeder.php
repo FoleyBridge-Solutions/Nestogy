@@ -16,19 +16,17 @@ class ProductionDatabaseSeeder extends Seeder
             SubscriptionPlansSeeder::class,
 
             // System permissions structure (roles only, no user assignments)
+            // Note: RolesAndPermissionsSeeder will create roles but won't assign to users
             RolesAndPermissionsSeeder::class,
 
-            // System configuration
-            CategorySeeder::class,
-            TaxSeeder::class,
-
-            // System templates
-            TicketTemplateSeeder::class,
-            ProjectTemplateSeeder::class,
-            DocumentTemplateSeeder::class,
-
-            // CRM/Marketing defaults
-            LeadSourceSeeder::class,
+            // Company-specific seeders are NOT included here since they require
+            // company_id=1 to exist. These will be run after company creation:
+            // - CategorySeeder
+            // - TaxSeeder
+            // - TicketTemplateSeeder
+            // - ProjectTemplateSeeder
+            // - DocumentTemplateSeeder
+            // - LeadSourceSeeder
         ]);
     }
 }
