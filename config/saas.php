@@ -135,60 +135,8 @@ return [
     |
     */
 
-    'default_plans' => [
-        'free' => [
-            'name' => 'Free',
-            'price_monthly' => 0.00,
-            'max_users' => 2,
-            'max_clients' => 10,
-            'features' => [
-                'basic_ticketing',
-                'basic_client_management',
-                'community_support',
-            ],
-        ],
-        'starter' => [
-            'name' => 'Starter',
-            'price_monthly' => 29.00,
-            'max_users' => 5,
-            'max_clients' => 100,
-            'features' => [
-                'basic_ticketing',
-                'client_management',
-                'basic_invoicing',
-                'email_support',
-            ],
-        ],
-        'professional' => [
-            'name' => 'Professional',
-            'price_monthly' => 79.00,
-            'max_users' => 25,
-            'max_clients' => 500,
-            'features' => [
-                'advanced_ticketing',
-                'client_management',
-                'advanced_invoicing',
-                'project_management',
-                'asset_tracking',
-                'priority_support',
-                'api_access',
-            ],
-        ],
-        'enterprise' => [
-            'name' => 'Enterprise',
-            'price_monthly' => 199.00,
-            'max_users' => null, // Unlimited
-            'max_clients' => null, // Unlimited
-            'features' => [
-                'full_platform_access',
-                'advanced_reporting',
-                'custom_integrations',
-                'dedicated_support',
-                'sla_guarantees',
-                'white_labeling',
-                'advanced_security',
-            ],
-        ],
-    ],
+    // Plan definitions moved to database via SubscriptionPlanSeeder
+    // This config section is deprecated - use SubscriptionPlan model instead
+    'default_plans' => [],
 
 ];

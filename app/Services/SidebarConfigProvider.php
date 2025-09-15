@@ -173,14 +173,14 @@ class SidebarConfigProvider
                             'route' => 'clients.contacts.index',
                             'icon' => 'users',
                             'key' => 'contacts',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Locations',
                             'route' => 'clients.locations.index',
                             'icon' => 'map-pin',
                             'key' => 'locations',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Communication Log',
@@ -228,59 +228,59 @@ class SidebarConfigProvider
                     'items' => [
                         [
                             'name' => 'IT Documentation',
-                            'route' => 'clients.it-documentation.index',
+                            'route' => 'clients.it-documentation.client-index',
                             'icon' => 'document-text',
                             'key' => 'it-documentation',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Documents',
                             'route' => 'clients.documents.index',
                             'icon' => 'folder-open',
                             'key' => 'documents',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Files',
                             'route' => 'clients.files.index',
                             'icon' => 'paper-clip',
                             'key' => 'files',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Domains',
                             'route' => 'clients.domains.index',
                             'icon' => 'globe-alt',
                             'key' => 'domains',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Credentials',
                             'route' => 'clients.credentials.index',
                             'icon' => 'key',
                             'key' => 'credentials',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Licenses',
                             'route' => 'clients.licenses.index',
                             'icon' => 'identification',
                             'key' => 'licenses',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Vendors',
                             'route' => 'clients.vendors.index',
                             'icon' => 'building-office',
                             'key' => 'vendors',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ],
                         [
                             'name' => 'Services',
                             'route' => 'clients.services.index',
                             'icon' => 'cog-6-tooth',
                             'key' => 'services',
-                            'params' => ['client' => 'current']
+                            'params' => []
                         ]
                     ]
                 ],

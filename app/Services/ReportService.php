@@ -11,7 +11,7 @@ use App\Models\Client;
 use App\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Project\Models\Project;
-use App\Domains\Asset\Models\Asset;
+use App\Models\Asset;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 

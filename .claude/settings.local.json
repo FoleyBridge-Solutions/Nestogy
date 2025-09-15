@@ -77,7 +77,8 @@
       "Bash(PGPASSWORD=password psql -h 127.0.0.1 -U nestogy -d nestogy -c \"\\d ticket_comments\")",
       "Bash(do if [ -f \"$file\" ])",
       "Bash(then echo \"=== $file ===\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

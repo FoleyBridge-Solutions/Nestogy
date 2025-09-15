@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Services\RoleService;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -13,10 +14,13 @@ use Carbon\Carbon;
 class UserService
 {
     protected $roleService;
+    protected $subscriptionService;
 
     public function __construct(RoleService $roleService)
     {
         $this->roleService = $roleService;
+        // Subscription service is optional to avoid circular dependency
+        $this->subscriptionService = app(SubscriptionService::class);
     }
     /**
      * Get all users with optional filters
@@ -91,6 +95,12 @@ class UserService
             }
 
             DB::commit();
+
+            // Update subscription user count after successful creation
+            if ($this->subscriptionService) {
+                $this->subscriptionService->handleUserCreated($user);
+            }
+
             return $user->fresh();
 
         } catch (\Exception $e) {
@@ -238,6 +248,90 @@ class UserService
                   ->get(['id', 'name', 'email']);
     }
 
+    /**
+     * Archive a user (soft delete)
+     */
+    public function archiveUser(User $user): bool
+    {
+        $result = $user->delete(); // This triggers soft delete via archived_at
+
+        // Update subscription user count after archiving
+        if ($result && $this->subscriptionService) {
+            $this->subscriptionService->handleUserDeleted($user);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Restore an archived user
+     */
+    public function restoreUser(User $user): bool
+    {
+        $result = $user->restore();
+
+        // Update subscription user count after restoring
+        if ($result && $this->subscriptionService) {
+            $this->subscriptionService->handleUserCreated($user);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Permanently delete a user
+     */
+    public function deleteUser(User $user): bool
+    {
+        // Update subscription count before deletion
+        if ($this->subscriptionService) {
+            $this->subscriptionService->handleUserDeleted($user);
+        }
+
+        return $user->forceDelete();
+    }
+
+    /**
+     * Update user status (active/inactive)
+     */
+    public function updateUserStatus(User $user, bool $status): User
+    {
+        $oldStatus = $user->status;
+        $user->update(['status' => $status]);
+
+        // Update subscription count if status changed
+        if ($oldStatus != $status && $this->subscriptionService) {
+            if ($status) {
+                $this->subscriptionService->handleUserCreated($user);
+            } else {
+                $this->subscriptionService->handleUserDeleted($user);
+            }
+        }
+
+        return $user;
+    }
+
+    /**
+     * Update user password
+     */
+    public function updateUserPassword(User $user, string $password): User
+    {
+        $user->update(['password' => Hash::make($password)]);
+        return $user;
+    }
+
+    /**
+     * Update user role
+     */
+    public function updateUserRole(User $user, $role): User
+    {
+        $this->roleService->assignRole($user, $role, $user->company_id);
+        return $user->fresh();
+    }
+
+    /**
+     * Update user profile
+     */
     /**
      * Update user last login
      */

@@ -166,42 +166,6 @@
                                 </td>
                             </tr>
 
-                            <!-- VoIP Tax Engine -->
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mr-3">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-bold text-gray-900 dark:text-white">VoIP Tax Engine</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">Federal, state & local telecom taxes</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        ✓ Built-in Engine
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                        ✗ None
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                        ✗ Manual
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                        ✗ Third-party
-                                    </span>
-                                </td>
-                            </tr>
 
                             <!-- RMM Integration -->
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
@@ -256,8 +220,8 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        ✓ RESTful API
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                        Enterprise Only
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -294,7 +258,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        $29/user/month
+                                        Free to start
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -424,7 +388,9 @@
                         </h3>
                         <div class="mb-6">
                             <span class="text-5xl font-black text-gray-900 dark:text-white">{{ $plan->getStartingPrice() }}</span>
-                            <span class="text-lg text-gray-600 dark:text-gray-300">/{{ $plan->getPriceExplanation() }}</span>
+                            @if($plan->getPriceExplanation())
+                                <span class="text-lg text-gray-600 dark:text-gray-300">/{{ $plan->getPriceExplanation() }}</span>
+                            @endif
                         </div>
                         <p class="text-gray-600 dark:text-gray-300 mb-8">
                             {{ $plan->description }}
@@ -443,6 +409,10 @@
                             @php
                                 $planFeatures = is_array($plan->features) ? $plan->features : json_decode($plan->features, true);
                                 $planFeatures = $planFeatures ?: [];
+                                // Filter out user-related features to avoid duplication
+                                $planFeatures = array_filter($planFeatures, function($feature) {
+                                    return !preg_match('/\d+_users?_included|unlimited_users/i', $feature);
+                                });
                             @endphp
                             @foreach(array_slice($planFeatures, 0, 5) as $feature)
                             <li class="flex items-center">
@@ -454,8 +424,8 @@
                             @endforeach
                         @endif
                     </ul>
-                    
-                    <div class="text-center">
+
+                    <div class="text-center mt-auto">
                         @guest
                         <a href="{{ route('signup.form') }}" class="w-full inline-block {{ $plan->name === 'professional' ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white' }} px-8 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105">
                             Get Started
@@ -465,6 +435,13 @@
                             Access Dashboard
                         </a>
                         @endguest
+
+                        {{-- Credit card notice for Free plan --}}
+                        @if($plan->slug === 'free')
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-4">
+                            Card required for verification • Never charged
+                        </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -525,10 +502,13 @@
         
         <div class="text-center mt-16">
             <p class="text-gray-600 dark:text-gray-300 mb-4">
-                All plans include complete integration suite, VoIP tax engine, and unlimited clients.
+                All plans include complete integration suite and unlimited clients.
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                No setup fees • Cancel anytime • 30-day money-back guarantee • Minimum 1-5 users per plan
+                No setup fees • Cancel anytime • 30-day money-back guarantee
+            </p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                * Credit card required for all plans (anti-fraud verification)
             </p>
         </div>
     </div>
@@ -582,13 +562,13 @@
                         <div class="flex-shrink-0">
                             <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                                 </svg>
                             </div>
                         </div>
                         <div class="ml-6">
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Automated VoIP Billing</h3>
-                            <p class="text-gray-600 dark:text-gray-300 leading-relaxed">Handles complex telecom taxes automatically - federal excise, USF, E911, and state/local taxes. No more manual calculations.</p>
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Advanced Reporting</h3>
+                            <p class="text-gray-600 dark:text-gray-300 leading-relaxed">Comprehensive analytics and reporting tools to track performance, profitability, and technician productivity in real-time.</p>
                         </div>
                     </div>
                 </div>
@@ -654,8 +634,8 @@
             </div>
             <div class="text-center group">
                 <div class="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 rounded-2xl p-8 group-hover:scale-105 transition-transform duration-300">
-                    <div class="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">$29</div>
-                    <div class="text-gray-600 dark:text-gray-300 font-semibold">Starting Price</div>
+                    <div class="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">Free</div>
+                    <div class="text-gray-600 dark:text-gray-300 font-semibold">To Start</div>
                 </div>
             </div>
             <div class="text-center group">

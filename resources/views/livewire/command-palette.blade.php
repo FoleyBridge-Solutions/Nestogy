@@ -20,7 +20,7 @@
             />
             
             {{-- Debug: Search = {{ $search }}, Results = {{ count($results) }} --}}
-            @if(strlen($search) >= 2 && count($results) > 0)
+            @if(strlen($search) >= 1 && count($results) > 0)
                 <flux:command.items>
                     @foreach($results as $index => $result)
                         @php

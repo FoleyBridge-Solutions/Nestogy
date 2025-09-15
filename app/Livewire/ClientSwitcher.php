@@ -219,6 +219,12 @@ class ClientSwitcher extends Component
         // Flash message
         session()->flash('message', "Switched to {$client->name}");
 
+        // Check if there's a return URL from the middleware redirect
+        if ($returnUrl = session('client_selection_return_url')) {
+            session()->forget('client_selection_return_url');
+            return redirect($returnUrl);
+        }
+
         // Navigate
         return $this->redirectRoute('clients.index', [], navigate: true);
     }

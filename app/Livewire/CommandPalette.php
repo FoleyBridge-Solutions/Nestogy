@@ -27,7 +27,7 @@ class CommandPalette extends Component
     {
         $this->isOpen = true;
         $this->search = '';
-        $this->results = [];
+        $this->results = $this->getPopularCommands();
         $this->selectedIndex = 0;
     }
 
@@ -41,11 +41,13 @@ class CommandPalette extends Component
 
     public function updatedSearch($value)
     {
-        if (strlen($value) < 2) {
-            $this->results = [];
+        if (strlen($value) < 1) {
+            // Show popular navigation commands when empty
+            $this->results = $this->getPopularCommands();
             return;
         }
 
+        // Perform search even for single character
         $this->performSearch($value);
         $this->selectedIndex = 0;
     }
@@ -255,29 +257,297 @@ class CommandPalette extends Component
         $actions = [];
         $queryLower = strtolower($query);
 
-        // Quick action mappings
-        $actionMappings = [
+        // Get all navigation items from sidebar configurations
+        $navigationActions = $this->getAllNavigationCommands();
+
+        // Filter navigation items based on query
+        foreach ($navigationActions as $action) {
+            // Check if title or keywords match the query
+            if (str_contains(strtolower($action['title']), $queryLower) ||
+                (isset($action['keywords']) && $this->matchesKeywords($action['keywords'], $queryLower))) {
+                $actions[] = $action;
+            }
+        }
+
+        // Quick action mappings for create/new actions
+        $quickActionMappings = [
             ['keywords' => ['new ticket', 'create ticket'], 'action' => ['title' => 'Create New Ticket', 'subtitle' => 'Quick Action', 'route_name' => 'tickets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
             ['keywords' => ['new client', 'add client'], 'action' => ['title' => 'Add New Client', 'subtitle' => 'Quick Action', 'route_name' => 'clients.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
             ['keywords' => ['new invoice', 'create invoice'], 'action' => ['title' => 'Create Invoice', 'subtitle' => 'Quick Action', 'route_name' => 'financial.invoices.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
-            ['keywords' => ['email', 'inbox', 'mail'], 'action' => ['title' => 'Email Inbox', 'subtitle' => 'Quick Action', 'route_name' => 'email.inbox.index', 'route_params' => [], 'icon' => 'envelope', 'type' => 'action']],
-            ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'action']],
-            ['keywords' => ['email accounts', 'email settings'], 'action' => ['title' => 'Email Accounts', 'subtitle' => 'Quick Action', 'route_name' => 'email.accounts.index', 'route_params' => [], 'icon' => 'at-symbol', 'type' => 'action']],
-            ['keywords' => ['dashboard'], 'action' => ['title' => 'Go to Dashboard', 'subtitle' => 'Quick Action', 'route_name' => 'dashboard', 'route_params' => [], 'icon' => 'home', 'type' => 'action']],
-            ['keywords' => ['settings', 'preferences'], 'action' => ['title' => 'Settings', 'subtitle' => 'Quick Action', 'route_name' => 'settings.index', 'route_params' => [], 'icon' => 'cog', 'type' => 'action']],
-            ['keywords' => ['reports'], 'action' => ['title' => 'View Reports', 'subtitle' => 'Quick Action', 'route_name' => 'reports.index', 'route_params' => [], 'icon' => 'chart-bar', 'type' => 'action']],
+            ['keywords' => ['new project', 'create project'], 'action' => ['title' => 'Create New Project', 'subtitle' => 'Quick Action', 'route_name' => 'projects.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
+            ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => 'Quick Action', 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
+            ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'action']],
         ];
 
-        foreach ($actionMappings as $mapping) {
+        foreach ($quickActionMappings as $mapping) {
             foreach ($mapping['keywords'] as $keyword) {
                 if (str_contains($queryLower, $keyword)) {
-                    $actions[] = $mapping['action'];
+                    // Check if not already added
+                    $exists = false;
+                    foreach ($actions as $existingAction) {
+                        if ($existingAction['route_name'] === $mapping['action']['route_name']) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+                    if (!$exists) {
+                        $actions[] = $mapping['action'];
+                    }
                     break;
                 }
             }
         }
 
         return $actions;
+    }
+
+    /**
+     * Get all navigation items from sidebar configurations as commands
+     */
+    private function getAllNavigationCommands()
+    {
+        $commands = [];
+        $sidebarProvider = app(\App\Services\SidebarConfigProvider::class);
+
+        // Define all contexts to load
+        $contexts = ['clients', 'tickets', 'email', 'assets', 'financial', 'projects', 'reports', 'settings'];
+
+        foreach ($contexts as $context) {
+            $config = $sidebarProvider->getConfiguration($context);
+
+            if (empty($config['sections'])) {
+                continue;
+            }
+
+            // Extract navigation items from each section
+            foreach ($config['sections'] as $section) {
+                if (!isset($section['items'])) {
+                    continue;
+                }
+
+                foreach ($section['items'] as $item) {
+                    // Skip if no route defined
+                    if (!isset($item['route'])) {
+                        continue;
+                    }
+
+                    // Process route parameters to handle special values like 'current'
+                    $routeParams = $item['params'] ?? $item['route_params'] ?? [];
+                    $processedParams = $this->processRouteParameters($routeParams);
+
+                    // Build command from navigation item
+                    $command = [
+                        'type' => 'navigation',
+                        'title' => $item['name'],
+                        'subtitle' => 'Navigation • ' . ucfirst($context),
+                        'route_name' => $item['route'],
+                        'route_params' => $processedParams,
+                        'icon' => $item['icon'] ?? 'arrow-right',
+                        'keywords' => $this->generateKeywords($item['name'], $context)
+                    ];
+
+                    // Add description if available
+                    if (isset($item['description'])) {
+                        $command['subtitle'] .= ' • ' . $item['description'];
+                    }
+
+                    $commands[] = $command;
+                }
+            }
+        }
+
+        // Add main dashboard
+        $commands[] = [
+            'type' => 'navigation',
+            'title' => 'Dashboard',
+            'subtitle' => 'Navigation • Main',
+            'route_name' => 'dashboard',
+            'route_params' => [],
+            'icon' => 'home',
+            'keywords' => ['dashboard', 'home', 'main', 'overview']
+        ];
+
+        return $commands;
+    }
+
+    /**
+     * Process route parameters to handle special values
+     */
+    private function processRouteParameters($params)
+    {
+        if (empty($params)) {
+            return [];
+        }
+
+        $processed = [];
+        $selectedClient = \App\Services\NavigationService::getSelectedClient();
+
+        foreach ($params as $key => $value) {
+            // Handle 'current' client parameter
+            if ($value === 'current' && in_array($key, ['client', 'client_id'])) {
+                if ($selectedClient) {
+                    $processed[$key] = $selectedClient->id;
+                }
+                // Skip this parameter if no client is selected
+                continue;
+            }
+
+            // Keep other parameters as-is
+            $processed[$key] = $value;
+        }
+
+        return $processed;
+    }
+
+    /**
+     * Generate searchable keywords for a navigation item
+     */
+    private function generateKeywords($name, $context)
+    {
+        $keywords = [];
+
+        // Add the name itself
+        $keywords[] = strtolower($name);
+
+        // Add context
+        $keywords[] = strtolower($context);
+
+        // Add common variations
+        $nameWords = explode(' ', strtolower($name));
+        foreach ($nameWords as $word) {
+            if (strlen($word) > 2) { // Skip short words
+                $keywords[] = $word;
+            }
+        }
+
+        // Add specific keywords for common items
+        $specificKeywords = [
+            'client details' => ['customer', 'account'],
+            'open tickets' => ['issues', 'problems', 'support'],
+            'contacts' => ['people', 'users'],
+            'locations' => ['addresses', 'sites'],
+            'invoices' => ['bills', 'billing'],
+            'quotes' => ['estimates', 'proposals'],
+            'contracts' => ['agreements', 'sla'],
+            'assets' => ['equipment', 'hardware', 'devices'],
+            'projects' => ['tasks', 'work'],
+            'email' => ['mail', 'messages'],
+            'settings' => ['config', 'configuration', 'preferences'],
+            'reports' => ['analytics', 'stats', 'statistics'],
+            'security' => ['permissions', 'access', 'auth'],
+            'users' => ['staff', 'employees', 'team'],
+        ];
+
+        $nameLower = strtolower($name);
+        foreach ($specificKeywords as $item => $itemKeywords) {
+            if (str_contains($nameLower, $item)) {
+                $keywords = array_merge($keywords, $itemKeywords);
+            }
+        }
+
+        return array_unique($keywords);
+    }
+
+    /**
+     * Check if any keyword matches the query
+     */
+    private function matchesKeywords($keywords, $query)
+    {
+        foreach ($keywords as $keyword) {
+            if (str_contains(strtolower($keyword), $query)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get popular/frequently used commands to show when palette opens
+     */
+    private function getPopularCommands()
+    {
+        return [
+            [
+                'type' => 'navigation',
+                'title' => 'Dashboard',
+                'subtitle' => 'Navigation • Main',
+                'route_name' => 'dashboard',
+                'route_params' => [],
+                'icon' => 'home'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Clients',
+                'subtitle' => 'Navigation • View all clients',
+                'route_name' => 'clients.index',
+                'route_params' => [],
+                'icon' => 'user-group'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Tickets',
+                'subtitle' => 'Navigation • Support tickets',
+                'route_name' => 'tickets.index',
+                'route_params' => [],
+                'icon' => 'ticket'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Email Inbox',
+                'subtitle' => 'Navigation • Email',
+                'route_name' => 'email.inbox.index',
+                'route_params' => [],
+                'icon' => 'envelope'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Invoices',
+                'subtitle' => 'Navigation • Financial',
+                'route_name' => 'financial.invoices.index',
+                'route_params' => [],
+                'icon' => 'document-text'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Projects',
+                'subtitle' => 'Navigation • Project management',
+                'route_name' => 'projects.index',
+                'route_params' => [],
+                'icon' => 'folder'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Assets',
+                'subtitle' => 'Navigation • Equipment & inventory',
+                'route_name' => 'assets.index',
+                'route_params' => [],
+                'icon' => 'computer-desktop'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Reports',
+                'subtitle' => 'Navigation • Analytics',
+                'route_name' => 'reports.index',
+                'route_params' => [],
+                'icon' => 'chart-bar'
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Settings',
+                'subtitle' => 'Navigation • System configuration',
+                'route_name' => 'settings.index',
+                'route_params' => [],
+                'icon' => 'cog-6-tooth'
+            ],
+            [
+                'type' => 'action',
+                'title' => 'Create New Ticket',
+                'subtitle' => 'Quick Action',
+                'route_name' => 'tickets.create',
+                'route_params' => [],
+                'icon' => 'plus-circle'
+            ]
+        ];
     }
 
     public function selectNext()
@@ -297,20 +567,23 @@ class CommandPalette extends Component
     public function selectResult($index = null)
     {
         $index = $index ?? $this->selectedIndex;
-        
+
         if (isset($this->results[$index])) {
             $result = $this->results[$index];
-            
-            // Don't close modal here - let redirect handle it
+
+            // Close the modal first
+            $this->close();
+
             // Use redirectRoute with navigate for SPA-like behavior
             if (isset($result['route_name'])) {
+                // Just navigate - let middleware handle any client requirements
                 return $this->redirectRoute(
-                    $result['route_name'], 
-                    $result['route_params'] ?? [], 
+                    $result['route_name'],
+                    $result['route_params'] ?? [],
                     navigate: true
                 );
             }
-            
+
             // Fallback for any results that still have URL
             if (isset($result['url'])) {
                 return $this->redirect($result['url'], navigate: true);

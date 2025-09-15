@@ -145,6 +145,14 @@ class Asset extends Model
     }
 
     /**
+     * Get the contact this asset is assigned to (alias for contact relationship).
+     */
+    public function assignedTo()
+    {
+        return $this->belongsTo(Contact::class, 'contact_id');
+    }
+
+    /**
      * Get the network for the asset.
      */
     public function network()

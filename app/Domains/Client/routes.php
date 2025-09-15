@@ -29,7 +29,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('clients/{client}/edit', \App\Livewire\Clients\EditClient::class)->name('clients.edit');
     
     // Client-specific routes (using session-based client context) - MUST come BEFORE the {client} route
-    Route::prefix('clients')->name('clients.')->group(function () {
+    Route::prefix('clients')->name('clients.')->middleware('require-client')->group(function () {
         Route::get('switch', [\App\Domains\Client\Controllers\ClientController::class, 'switch'])->name('switch');
         Route::match(['get', 'post'], 'tags', [\App\Domains\Client\Controllers\ClientController::class, 'tags'])->name('tags');
         Route::patch('notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes');

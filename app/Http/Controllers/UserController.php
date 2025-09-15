@@ -14,16 +14,20 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Services\UserService;
 use App\Services\RoleService;
+use App\Services\SubscriptionService;
+use App\Exceptions\UserLimitExceededException;
 
 class UserController extends Controller
 {
     protected $userService;
     protected $roleService;
+    protected $subscriptionService;
 
-    public function __construct(UserService $userService, RoleService $roleService)
+    public function __construct(UserService $userService, RoleService $roleService, SubscriptionService $subscriptionService)
     {
         $this->userService = $userService;
         $this->roleService = $roleService;
+        $this->subscriptionService = $subscriptionService;
     }
 
     /**
@@ -165,6 +169,17 @@ class UserController extends Controller
         $this->authorize('create', User::class);
 
         try {
+            // Check subscription limits before creating user
+            $company = Auth::user()->company;
+
+            // If a different company is specified (for super-admins), use that
+            if ($request->has('company_id') && Auth::user()->canAccessCrossTenant()) {
+                $company = Company::findOrFail($request->company_id);
+            }
+
+            // Enforce user limits (will throw exception if limit reached)
+            $this->subscriptionService->enforceUserLimits($company);
+
             $userData = $this->userService->createUser($request->validated());
             
             Log::info('User created', [

@@ -38,13 +38,18 @@ class SubscriptionPlan extends Model
      */
     protected $fillable = [
         'name',
+        'slug',
         'stripe_price_id',
+        'stripe_price_id_yearly',
         'price_monthly',
+        'price_yearly',
         'price_per_user_monthly',
         'pricing_model',
         'minimum_users',
         'base_price',
         'user_limit',
+        'max_users',
+        'max_clients',
         'features',
         'description',
         'is_active',
@@ -56,10 +61,13 @@ class SubscriptionPlan extends Model
      */
     protected $casts = [
         'price_monthly' => 'decimal:2',
+        'price_yearly' => 'decimal:2',
         'price_per_user_monthly' => 'decimal:2',
         'base_price' => 'decimal:2',
         'minimum_users' => 'integer',
         'user_limit' => 'integer',
+        'max_users' => 'integer',
+        'max_clients' => 'integer',
         'features' => 'array',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
@@ -94,7 +102,8 @@ class SubscriptionPlan extends Model
      */
     public function hasUnlimitedUsers(): bool
     {
-        return $this->user_limit === null;
+        // Check both user_limit and max_users fields for compatibility
+        return $this->user_limit === null && $this->max_users === null;
     }
 
     /**
@@ -191,15 +200,26 @@ class SubscriptionPlan extends Model
      */
     public function getUserLimitText(): string
     {
-        if ($this->hasUnlimitedUsers()) {
-            return 'Unlimited users';
-        }
-        
-        if ($this->pricing_model === self::PRICING_PER_USER) {
+        // Check if per-user pricing with minimum
+        if ($this->pricing_model === self::PRICING_PER_USER && $this->minimum_users) {
+            if ($this->hasUnlimitedUsers()) {
+                return 'Unlimited users (minimum ' . $this->minimum_users . ')';
+            }
             return 'Pay per user (minimum ' . $this->minimum_users . ')';
         }
 
-        return 'Up to ' . $this->user_limit . ' users';
+        if ($this->hasUnlimitedUsers()) {
+            return 'Unlimited users';
+        }
+
+        // Use max_users field (which is what we're storing)
+        $limit = $this->max_users ?? $this->user_limit ?? 0;
+
+        if ($limit > 0) {
+            return $limit . ' users included';
+        }
+
+        return 'Up to ' . $limit . ' users';
     }
 
     /**
@@ -282,17 +302,20 @@ class SubscriptionPlan extends Model
      */
     public function getStartingPrice(): string
     {
-        switch ($this->pricing_model) {
-            case self::PRICING_PER_USER:
-                return '$' . number_format($this->price_per_user_monthly ?? 0, 0);
-                
-            case self::PRICING_HYBRID:
-                return '$' . number_format(($this->base_price ?? 0) + ($this->price_per_user_monthly ?? 0), 0);
-                
-            case self::PRICING_FIXED:
-            default:
-                return '$' . number_format($this->price_monthly ?? 0, 0);
+        // Check pricing model
+        if ($this->pricing_model === self::PRICING_PER_USER) {
+            $price = $this->price_per_user_monthly ?? 0;
+            return '$' . number_format($price, 0);
         }
+
+        // Fixed pricing plans
+        $price = $this->price_monthly ?? 0;
+
+        if ($price == 0) {
+            return 'Free';
+        }
+
+        return '$' . number_format($price, 0);
     }
     
     /**
@@ -300,17 +323,17 @@ class SubscriptionPlan extends Model
      */
     public function getPriceExplanation(): string
     {
-        switch ($this->pricing_model) {
-            case self::PRICING_PER_USER:
-                return 'per user/month';
-                
-            case self::PRICING_HYBRID:
-                return 'base + per user/month';
-                
-            case self::PRICING_FIXED:
-            default:
-                return 'per month';
+        // Check pricing model
+        if ($this->pricing_model === self::PRICING_PER_USER) {
+            return 'user/month';
         }
+
+        // For fixed pricing plans
+        if ($this->price_monthly == 0) {
+            return '';
+        }
+
+        return 'month';
     }
 
 }

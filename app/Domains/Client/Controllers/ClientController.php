@@ -153,7 +153,10 @@ class ClientController extends BaseController
             return response()->json($clients);
         }
 
-        return view('clients.index-livewire');
+        // Check for return URL from client selection redirect
+        $returnUrl = session('client_selection_return_url');
+
+        return view('clients.index-livewire', compact('returnUrl'));
     }
 
     /**

@@ -422,7 +422,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // User Management (Admin/Manager Only)
         Route::middleware('role:manager')->group(function () {
             Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\UserController::class, 'store'])->name('store');
+            Route::post('/', [App\Http\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
             Route::get('{user}', [App\Http\Controllers\UserController::class, 'show'])->name('show');
             Route::put('{user}', [App\Http\Controllers\UserController::class, 'update'])->name('update');
             Route::delete('{user}', [App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');

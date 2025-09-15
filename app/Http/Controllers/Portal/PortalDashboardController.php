@@ -7,7 +7,7 @@ use App\Models\Client;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Asset\Models\Asset;
+use App\Models\Asset;
 use App\Domains\Project\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

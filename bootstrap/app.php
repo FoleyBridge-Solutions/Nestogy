@@ -40,6 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'setup-wizard' => \App\Http\Middleware\SetupWizardMiddleware::class,
             'platform-company' => \App\Http\Middleware\PlatformCompanyMiddleware::class,
             'auto-verify-email' => \App\Http\Middleware\AutoVerifyEmailWithoutSMTP::class,
+            'subscription.limits' => \App\Http\Middleware\CheckSubscriptionLimits::class,
+            'require-client' => \App\Http\Middleware\RequireSelectedClient::class,
         ]);
 
         // Add middleware to web group

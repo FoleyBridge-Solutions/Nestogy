@@ -8,6 +8,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSetting;
 use App\Services\StripeSubscriptionService;
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -28,10 +29,12 @@ use Illuminate\Validation\Rules\Password;
 class CompanyRegistrationController extends Controller
 {
     protected StripeSubscriptionService $stripeService;
+    protected SubscriptionService $subscriptionService;
 
-    public function __construct(StripeSubscriptionService $stripeService)
+    public function __construct(StripeSubscriptionService $stripeService, SubscriptionService $subscriptionService)
     {
         $this->stripeService = $stripeService;
+        $this->subscriptionService = $subscriptionService;
     }
 
     /**
@@ -73,6 +76,9 @@ class CompanyRegistrationController extends Controller
             // Step 3: Create the admin user for the tenant company
             $user = $this->createAdminUser($company, $request->all());
 
+            // Step 3.5: Create company subscription record
+            $companySubscription = $this->subscriptionService->createSubscription($company, $plan);
+
             // Step 4: Set up payment method and subscription
             if ($request->has('payment_method_id')) {
                 if ($plan->price_monthly > 0) {
@@ -85,16 +91,22 @@ class CompanyRegistrationController extends Controller
                 } else {
                     // Free plan - setup customer with $1 authorization for identity verification
                     $authResult = $this->setupStripeCustomerWithAuth($client, $request->all());
-                    
+
                     if (!$authResult['success']) {
                         throw new \Exception('Identity verification failed: ' . $authResult['error']);
                     }
-                    
+
                     // Set free plan as active immediately
                     $client->update([
                         'subscription_status' => 'active',
                         'trial_ends_at' => null,
                         'subscription_started_at' => now(),
+                    ]);
+
+                    // Update company subscription to active for free plan
+                    $companySubscription->update([
+                        'status' => 'active',
+                        'trial_ends_at' => null,
                     ]);
                 }
             } else {

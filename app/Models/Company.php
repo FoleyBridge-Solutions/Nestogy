@@ -141,6 +141,14 @@ class Company extends Model
     }
 
     /**
+     * Get the company's subscription.
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(CompanySubscription::class);
+    }
+
+    /**
      * Get the company's users.
      */
     public function users(): HasMany

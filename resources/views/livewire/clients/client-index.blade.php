@@ -1,4 +1,17 @@
 <div class="space-y-6">
+    {{-- Return URL Notification --}}
+    @if($returnUrl)
+        <flux:card class="bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800">
+            <div class="flex items-center gap-3">
+                <flux:icon.information-circle class="size-5 text-indigo-500" />
+                <p class="text-sm text-indigo-700 dark:text-indigo-200">
+                    <strong>Client selection required.</strong> You were redirected here because the page you tried to access requires a client to be selected.
+                    Please select a client below to continue to <span class="font-mono text-xs">{{ parse_url($returnUrl, PHP_URL_PATH) }}</span>
+                </p>
+            </div>
+        </flux:card>
+    @endif
+
     {{-- Client Selection Status --}}
     @if($selectedClient)
         <flux:card class="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">

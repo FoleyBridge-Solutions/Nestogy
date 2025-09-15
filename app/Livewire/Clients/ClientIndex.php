@@ -27,6 +27,7 @@ class ClientIndex extends Component
     public $showConvertModal = false;
     public $clientToDelete = null;
     public $leadToConvert = null;
+    public $returnUrl = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -40,6 +41,7 @@ class ClientIndex extends Component
     {
         $this->selectedClient = NavigationService::getSelectedClient();
         $this->showLeads = request()->has('lead');
+        $this->returnUrl = session('client_selection_return_url');
     }
 
     public function updatingSearch()
@@ -84,7 +86,14 @@ class ClientIndex extends Component
             // Dispatch event to refresh other components
             $this->dispatch('client-selected', clientId: $clientId);
 
-            // Redirect to refresh the entire page with the new client context
+            // Check if there's a return URL from the middleware redirect
+            if ($returnUrl = session('client_selection_return_url')) {
+                session()->forget('client_selection_return_url');
+                return redirect($returnUrl)
+                    ->with('success', "Selected client: {$client->name}");
+            }
+
+            // Otherwise, redirect to refresh the entire page with the new client context
             return redirect()->route('clients.index')
                 ->with('success', "Selected client: {$client->name}");
         }

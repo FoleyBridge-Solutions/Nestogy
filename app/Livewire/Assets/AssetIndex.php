@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Assets;
 
-use App\Domains\Asset\Models\Asset;
+use App\Models\Asset;
 use App\Models\Client;
 use App\Models\User;
 use Livewire\Component;
@@ -122,7 +122,7 @@ class AssetIndex extends Component
                 $query->where('client_id', $this->clientId);
             })
             ->when($this->assignedTo, function ($query) {
-                $query->where('assigned_to', $this->assignedTo);
+                $query->where('contact_id', $this->assignedTo);
             })
             ->when($this->locationId, function ($query) {
                 $query->where('location_id', $this->locationId);

@@ -15,36 +15,37 @@ class SubscriptionPlanSeeder extends Seeder
     {
         $plans = [
             [
-                'name' => 'Starter',
-                'slug' => 'starter',
-                'description' => 'Perfect for small teams getting started with business management',
-                'price_monthly' => 29.00,
-                'price_yearly' => 290.00,
-                'stripe_price_id' => 'price_starter_monthly', // Update with actual Stripe price ID
-                'stripe_price_id_yearly' => 'price_starter_yearly',
-                'max_users' => 5,
-                'max_clients' => 100,
+                'name' => 'Free',
+                'slug' => 'free',
+                'description' => 'Perfect for small MSPs just getting started',
+                'price_monthly' => 0.00,
+                'price_yearly' => 0.00,
+                'pricing_model' => 'fixed', // Fixed pricing (free)
+                'stripe_price_id' => null, // No Stripe ID for free plan
+                'stripe_price_id_yearly' => null,
+                'max_users' => 2, // NOT including client portal users
+                'max_clients' => 25,
                 'features' => [
                     'basic_ticketing',
-                    'client_management', 
+                    'basic_client_management',
+                    'community_support',
+                    'basic_reporting',
                     'basic_invoicing',
-                    'email_support',
-                    '5_users_included',
-                    'basic_reporting'
                 ],
                 'is_active' => true,
                 'sort_order' => 1,
             ],
             [
-                'name' => 'Professional',
-                'slug' => 'professional',
-                'description' => 'Ideal for growing businesses that need advanced features',
+                'name' => 'Pro',
+                'slug' => 'pro',
+                'description' => 'Ideal for growing MSPs with expanding teams',
                 'price_monthly' => 79.00,
                 'price_yearly' => 790.00,
-                'stripe_price_id' => 'price_professional_monthly',
-                'stripe_price_id_yearly' => 'price_professional_yearly',
-                'max_users' => 25,
-                'max_clients' => 500,
+                'pricing_model' => 'fixed', // Fixed pricing
+                'stripe_price_id' => env('STRIPE_PRICE_PRO_MONTHLY', 'price_pro_monthly'),
+                'stripe_price_id_yearly' => env('STRIPE_PRICE_PRO_YEARLY', 'price_pro_yearly'),
+                'max_users' => 10, // NOT including client portal users
+                'max_clients' => 250,
                 'features' => [
                     'advanced_ticketing',
                     'client_management',
@@ -52,11 +53,11 @@ class SubscriptionPlanSeeder extends Seeder
                     'project_management',
                     'asset_tracking',
                     'priority_support',
-                    'api_access',
-                    '25_users_included',
                     'advanced_reporting',
                     'automation_rules',
-                    'custom_fields'
+                    'custom_fields',
+                    'time_tracking',
+                    'contract_management',
                 ],
                 'is_active' => true,
                 'sort_order' => 2,
@@ -64,17 +65,20 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'name' => 'Enterprise',
                 'slug' => 'enterprise',
-                'description' => 'Complete solution for large organizations with complex needs',
-                'price_monthly' => 199.00,
-                'price_yearly' => 1990.00,
-                'stripe_price_id' => 'price_enterprise_monthly',
-                'stripe_price_id_yearly' => 'price_enterprise_yearly',
-                'max_users' => null, // Unlimited
+                'description' => 'Complete solution for established MSPs with large teams',
+                'price_monthly' => 290.00, // Base price for minimum 10 users at $29/user
+                'price_yearly' => 2900.00, // Yearly base price
+                'price_per_user_monthly' => 29.00, // Per user pricing
+                'pricing_model' => 'per_user', // Changed to per-user pricing
+                'minimum_users' => 10, // Minimum 10 users required
+                'stripe_price_id' => env('STRIPE_PRICE_ENTERPRISE_MONTHLY', 'price_enterprise_monthly'),
+                'stripe_price_id_yearly' => env('STRIPE_PRICE_ENTERPRISE_YEARLY', 'price_enterprise_yearly'),
+                'max_users' => null, // Unlimited - NOT including client portal users
                 'max_clients' => null, // Unlimited
                 'features' => [
                     'full_platform_access',
-                    'unlimited_users',
                     'unlimited_clients',
+                    'api_access',
                     'advanced_reporting',
                     'custom_integrations',
                     'dedicated_support',
@@ -85,7 +89,9 @@ class SubscriptionPlanSeeder extends Seeder
                     'custom_training',
                     'data_export',
                     'advanced_permissions',
-                    'audit_logging'
+                    'audit_logging',
+                    'multi_company_support',
+                    'custom_workflows',
                 ],
                 'is_active' => true,
                 'sort_order' => 3,
@@ -100,6 +106,9 @@ class SubscriptionPlanSeeder extends Seeder
         }
 
         $this->command->info('Subscription plans seeded successfully!');
-        $this->command->warn('Remember to update Stripe price IDs in your subscription plans after creating them in Stripe dashboard.');
+        $this->command->comment('Plans configured: Free (2 users), Pro (10 users), Enterprise (unlimited)');
+        if (app()->environment() !== 'production') {
+            $this->command->warn('Remember to update Stripe price IDs in production!');
+        }
     }
 }
