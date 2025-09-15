@@ -98,7 +98,7 @@
 
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <!-- Company Name -->
-                            <div class="sm:col-span-2">
+                            <div class="sm:col-span-12-span-2">
                                 <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Company Name <span class="text-red-500">*</span>
                                 </label>
@@ -139,7 +139,7 @@
                             </div>
 
                             <!-- Address -->
-                            <div class="sm:col-span-2">
+                            <div class="sm:col-span-12-span-2">
                                 <label for="company_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Street Address
                                 </label>
@@ -301,7 +301,7 @@
                             </div>
 
                             <!-- SMTP Password -->
-                            <div class="sm:col-span-2">
+                            <div class="sm:col-span-12-span-2">
                                 <label for="smtp_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Password / App Password
                                 </label>

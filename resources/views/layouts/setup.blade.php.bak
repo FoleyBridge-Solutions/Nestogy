@@ -39,7 +39,7 @@
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
+    <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col-span-12">
         <!-- Simplified Setup Navigation -->
         <flux:header class="px-4! w-full bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
             <flux:brand>
