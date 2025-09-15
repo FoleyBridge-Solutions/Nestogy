@@ -42,10 +42,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'auto-verify-email' => \App\Http\Middleware\AutoVerifyEmailWithoutSMTP::class,
             'subscription.limits' => \App\Http\Middleware\CheckSubscriptionLimits::class,
             'require-client' => \App\Http\Middleware\RequireSelectedClient::class,
+            'log-signup' => \App\Http\Middleware\LogSignupRequests::class,
         ]);
 
         // Add middleware to web group
         $middleware->web(append: [
+            \App\Http\Middleware\LogSignupRequests::class, // Log all signup requests
             \App\Http\Middleware\RememberTokenMiddleware::class,
             \App\Http\Middleware\SetBouncerScope::class, // Ensure Bouncer scope is set
             \App\Http\Middleware\ConfigureCompanyMail::class, // Configure mail for company
