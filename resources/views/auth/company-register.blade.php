@@ -307,9 +307,31 @@
     </div>
 
     <script>
-        // Initialize Stripe
-        const stripe = Stripe('{{ config('services.stripe.key') }}');
-        const elements = stripe.elements();
+        // Global error handler for unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            event.preventDefault();
+        });
+        
+        // Initialize Stripe with error handling
+        let stripe, elements;
+        try {
+            stripe = Stripe('{{ config('services.stripe.key') }}', {
+                betas: [],
+                apiVersion: '2020-08-27',
+                locale: 'en',
+                // Disable some advanced fraud detection features that can cause issues
+                advancedFraudSignals: false
+            });
+            elements = stripe.elements();
+            console.log('Stripe initialized successfully');
+        } catch (error) {
+            console.error('Stripe initialization error:', error);
+            // Show user-friendly error
+            setTimeout(() => {
+                document.getElementById('card-errors').textContent = 'Payment system initialization failed. Please refresh the page and try again.';
+            }, 1000);
+        }
         
         // Current step
         let currentStep = 1;
@@ -319,12 +341,16 @@
         const form = document.getElementById('registrationForm');
         let cardElement;
         let selectedPlan = null;
+        let stripeInitialized = false;
         
         // Initialize the form
         document.addEventListener('DOMContentLoaded', function() {
             initializeForm();
             loadSubscriptionPlans();
-            setupStripeElements();
+            // Delay Stripe elements initialization to avoid race conditions
+            setTimeout(() => {
+                setupStripeElements();
+            }, 1000);
         });
         
         function initializeForm() {
@@ -542,44 +568,61 @@
         }
         
         function setupStripeElements() {
-            const style = {
-                base: {
-                    color: '#32325d',
-                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                    fontSmoothing: 'antialiased',
-                    fontSize: '16px',
-                    '::placeholder': {
-                        color: '#aab7c4'
+            if (!stripe || !elements) {
+                console.error('Stripe not initialized');
+                document.getElementById('card-errors').textContent = 'Payment system not available. Please refresh the page.';
+                return;
+            }
+            
+            try {
+                const style = {
+                    base: {
+                        color: '#32325d',
+                        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                        fontSmoothing: 'antialiased',
+                        fontSize: '16px',
+                        '::placeholder': {
+                            color: '#aab7c4'
+                        }
+                    },
+                    invalid: {
+                        color: '#fa755a',
+                        iconColor: '#fa755a'
                     }
-                },
-                invalid: {
-                    color: '#fa755a',
-                    iconColor: '#fa755a'
-                }
-            };
-            
-            cardElement = elements.create('card', { style: style });
-            cardElement.mount('#card-element');
-            
-            cardElement.on('change', ({ error, complete }) => {
-                const displayError = document.getElementById('card-errors');
-                const submitButton = document.getElementById('submit-form');
+                };
                 
-                if (error) {
-                    displayError.textContent = error.message;
-                    submitButton.disabled = true;
-                } else {
-                    displayError.textContent = '';
-                    submitButton.disabled = !complete || !document.getElementById('terms_accepted').checked;
-                }
-            });
-            
-            // Enable submit when terms are accepted
-            document.getElementById('terms_accepted').addEventListener('change', function() {
-                const submitButton = document.getElementById('submit-form');
-                const cardComplete = document.getElementById('card-errors').textContent === '';
-                submitButton.disabled = !this.checked || !cardComplete;
-            });
+                cardElement = elements.create('card', { 
+                    style: style,
+                    hidePostalCode: true // Reduce complexity
+                });
+                
+                cardElement.mount('#card-element');
+                stripeInitialized = true;
+                
+                cardElement.on('change', ({ error, complete }) => {
+                    const displayError = document.getElementById('card-errors');
+                    const submitButton = document.getElementById('submit-form');
+                    
+                    if (error) {
+                        displayError.textContent = error.message;
+                        submitButton.disabled = true;
+                    } else {
+                        displayError.textContent = '';
+                        submitButton.disabled = !complete || !document.getElementById('terms_accepted').checked;
+                    }
+                });
+                
+                // Enable submit when terms are accepted
+                document.getElementById('terms_accepted').addEventListener('change', function() {
+                    const submitButton = document.getElementById('submit-form');
+                    const cardComplete = document.getElementById('card-errors').textContent === '';
+                    submitButton.disabled = !this.checked || !cardComplete;
+                });
+                
+            } catch (error) {
+                console.error('Stripe elements setup error:', error);
+                document.getElementById('card-errors').textContent = 'Payment form setup failed. Please refresh the page.';
+            }
         }
         
         async function handleFormSubmit(event) {
@@ -594,19 +637,65 @@
             submitText.textContent = 'Processing...';
             submitSpinner.classList.remove('hidden');
             
+            // Add timeout to prevent infinite processing
+            const timeoutId = setTimeout(() => {
+                console.warn('Payment processing timeout - forcing reset');
+                resetSubmitButton();
+                showError('Payment processing timed out. Please try again.');
+            }, 30000); // 30 second timeout
+            
+            // Check if Stripe is properly initialized
+            if (!stripe || !cardElement || !stripeInitialized) {
+                throw new Error('Payment system not ready. Please refresh the page and try again.');
+            }
+            
             try {
-                // Create payment method with Stripe
-                const { paymentMethod, error } = await stripe.createPaymentMethod({
-                    type: 'card',
-                    card: cardElement,
-                    billing_details: {
-                        name: document.getElementById('admin_name').value,
-                        email: document.getElementById('admin_email').value,
-                    },
-                });
+                // Create payment method with Stripe with retry logic
+                let paymentMethod, error;
+                let retryCount = 0;
+                const maxRetries = 2;
+                
+                while (retryCount <= maxRetries) {
+                    try {
+                        const result = await Promise.race([
+                            stripe.createPaymentMethod({
+                                type: 'card',
+                                card: cardElement,
+                                billing_details: {
+                                    name: document.getElementById('admin_name').value,
+                                    email: document.getElementById('admin_email').value,
+                                },
+                            }),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Stripe request timeout')), 20000)
+                            )
+                        ]);
+                        
+                        paymentMethod = result.paymentMethod;
+                        error = result.error;
+                        break; // Success, exit retry loop
+                        
+                    } catch (retryError) {
+                        retryCount++;
+                        console.warn(`Payment attempt ${retryCount} failed:`, retryError.message);
+                        
+                        if (retryCount > maxRetries) {
+                            throw retryError;
+                        }
+                        
+                        // Wait before retry
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                clearTimeout(timeoutId);
                 
                 if (error) {
                     throw new Error(error.message);
+                }
+                
+                if (!paymentMethod) {
+                    throw new Error('Failed to create payment method after retries');
                 }
                 
                 // Add payment method to form
@@ -616,17 +705,34 @@
                 form.submit();
                 
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error('Payment processing error:', error);
                 
-                // Show error
-                const errorElement = document.getElementById('card-errors');
-                errorElement.textContent = error.message;
-                
-                // Re-enable submit button
-                submitButton.disabled = false;
-                submitText.textContent = 'Start Free Trial';
-                submitSpinner.classList.add('hidden');
+                resetSubmitButton();
+                showError(error.message || 'Payment processing failed. Please try again.');
             }
+        }
+        
+        function resetSubmitButton() {
+            const submitButton = document.getElementById('submit-form');
+            const submitText = document.getElementById('submit-text');
+            const submitSpinner = document.getElementById('submit-spinner');
+            
+            submitButton.disabled = false;
+            submitText.textContent = 'Start Free Trial';
+            submitSpinner.classList.add('hidden');
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('card-errors');
+            errorElement.textContent = message;
+            
+            // Auto-clear error after 10 seconds
+            setTimeout(() => {
+                if (errorElement.textContent === message) {
+                    errorElement.textContent = '';
+                }
+            }, 10000);
         }
         
         function displayValidationErrors(errors) {
