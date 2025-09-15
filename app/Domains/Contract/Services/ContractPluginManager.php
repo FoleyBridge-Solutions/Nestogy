@@ -437,11 +437,24 @@ class ContractPluginManager
     }
 
     /**
-     * Clear plugin cache
+     * Clear plugin cache with error handling
      */
     protected function clearPluginCache(string $type): void
     {
-        Cache::forget("contract_plugins_{$type}");
+        try {
+            // Use cache tags for better management if Redis supports them
+            if (config('cache.stores.redis.supports_tags', false)) {
+                Cache::tags(['contract_plugins', "contract_plugins_{$type}"])->flush();
+            } else {
+                Cache::forget("contract_plugins_{$type}");
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't fail the entire request
+            \Illuminate\Support\Facades\Log::warning(
+                "Failed to clear contract plugin cache for type {$type}: " . $e->getMessage(),
+                ['type' => $type, 'exception' => $e]
+            );
+        }
     }
 
     /**

@@ -33,6 +33,16 @@ class ContractPluginServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Performance optimization: Only load contract plugins for contract-related routes
+        if (!$this->shouldLoadContractPlugins()) {
+            return;
+        }
+
+        // Log when contract plugins are being loaded for debugging
+        if (config('app.debug')) {
+            \Illuminate\Support\Facades\Log::debug('Loading contract plugins for route: ' . request()->path());
+        }
+
         $pluginManager = $this->app->make(ContractPluginManager::class);
 
         // Register core plugins
@@ -42,6 +52,67 @@ class ContractPluginServiceProvider extends ServiceProvider
         if (!$this->app->runningInConsole() || $this->app->runningUnitTests()) {
             $pluginManager->discoverPlugins();
         }
+    }
+
+    /**
+     * Determine if contract plugins should be loaded for the current request
+     */
+    protected function shouldLoadContractPlugins(): bool
+    {
+        // Always load in tests, but be more selective in console
+        if ($this->app->runningUnitTests()) {
+            return true;
+        }
+        
+        // For console commands, only load if it's a contract-related command
+        if ($this->app->runningInConsole()) {
+            $command = $_SERVER['argv'][1] ?? '';
+            $contractCommands = ['contracts:', 'plugin:', 'migrate', 'seed', 'tinker'];
+            
+            foreach ($contractCommands as $contractCommand) {
+                if (str_starts_with($command, $contractCommand)) {
+                    return true;
+                }
+            }
+            
+            // Don't load for other console commands unless explicitly needed
+            return false;
+        }
+
+        // Get the current request
+        $request = request();
+        if (!$request) {
+            return false;
+        }
+        
+        $path = $request->path();
+
+        // Check if we're on a contract-related route
+        $contractPaths = [
+            'contracts',
+            'api/contracts',
+            'admin/contracts',
+            'webhooks/contracts',
+        ];
+
+        foreach ($contractPaths as $contractPath) {
+            if ($path === $contractPath || str_starts_with($path, $contractPath . '/')) {
+                return true;
+            }
+        }
+
+        // Check if the route name is contract-related
+        $routeName = $request->route()?->getName();
+        if ($routeName && str_starts_with($routeName, 'contracts.')) {
+            return true;
+        }
+
+        // Check if we're in a contract domain context
+        if ($request->has('contract_id') || $request->has('contract_type')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -72,6 +143,31 @@ class ContractPluginServiceProvider extends ServiceProvider
         $pluginManager->registerPlugin('field', 'sla_terms', SlaTermsFieldType::class);
         $pluginManager->registerPlugin('field', 'pricing_matrix', PricingMatrixFieldType::class);
         $pluginManager->registerPlugin('field', 'conditional_logic', ConditionalLogicFieldType::class);
+    }
+
+    /**
+     * Get the contract plugin manager with lazy loading
+     * This ensures plugins are loaded when actually needed
+     */
+    public static function getPluginManager(): ?ContractPluginManager
+    {
+        try {
+            $app = app();
+            
+            // Check if we should load plugins for current context
+            $provider = $app->getProvider(static::class);
+            if ($provider && !$provider->shouldLoadContractPlugins()) {
+                // Force load plugins now that they're actually needed
+                $provider->boot();
+            }
+
+            return $app->make(ContractPluginManager::class);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                'Failed to get contract plugin manager: ' . $e->getMessage()
+            );
+            return null;
+        }
     }
 }
 

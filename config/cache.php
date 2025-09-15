@@ -75,6 +75,7 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
             'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
+            'supports_tags' => true, // Enable cache tags for Redis
         ],
 
         'dynamodb' => [
