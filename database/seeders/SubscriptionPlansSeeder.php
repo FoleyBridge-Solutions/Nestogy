@@ -15,6 +15,7 @@ class SubscriptionPlansSeeder extends Seeder
         $plans = [
             [
                 'name' => SubscriptionPlan::PLAN_STARTER,
+                'slug' => 'starter',
                 'stripe_price_id' => 'price_starter_monthly',
                 'price_monthly' => 49.00,
                 'user_limit' => 10,
@@ -30,6 +31,7 @@ class SubscriptionPlansSeeder extends Seeder
             ],
             [
                 'name' => SubscriptionPlan::PLAN_PROFESSIONAL,
+                'slug' => 'professional',
                 'stripe_price_id' => 'price_professional_monthly',
                 'price_monthly' => 79.00,
                 'user_limit' => null, // Unlimited
@@ -48,6 +50,7 @@ class SubscriptionPlansSeeder extends Seeder
             ],
             [
                 'name' => SubscriptionPlan::PLAN_ENTERPRISE,
+                'slug' => 'enterprise',
                 'stripe_price_id' => 'price_enterprise_monthly',
                 'price_monthly' => 149.00,
                 'user_limit' => null, // Unlimited
