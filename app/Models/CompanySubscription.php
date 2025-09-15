@@ -189,7 +189,8 @@ class CompanySubscription extends Model
             ->where('status', true)
             ->count();
 
-        $this->update(['current_user_count' => $count]);
+        // Use updateQuietly to prevent triggering model events and avoid infinite loop
+        $this->updateQuietly(['current_user_count' => $count]);
     }
 
     /**
@@ -391,11 +392,9 @@ class CompanySubscription extends Model
             }
         });
 
-        // Update user count after saving
-        static::saved(function ($subscription) {
-            if ($subscription->wasRecentlyCreated) {
-                $subscription->updateUserCount();
-            }
+        // Update user count after creating (but not on every update to prevent loops)
+        static::created(function ($subscription) {
+            $subscription->updateUserCount();
         });
     }
 }
