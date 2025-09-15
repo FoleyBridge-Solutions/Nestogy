@@ -51,6 +51,11 @@ class SetupWizardMiddleware
         if ($request->is('api/*')) {
             return true;
         }
+        
+        // Skip for Livewire routes
+        if ($request->is('livewire/*')) {
+            return true;
+        }
 
         // Skip for assets and static files
         if ($request->is('assets/*', 'images/*', 'css/*', 'js/*', 'storage/*', 'build/*')) {

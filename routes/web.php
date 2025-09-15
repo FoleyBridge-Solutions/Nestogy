@@ -18,7 +18,8 @@ Route::get('/', [\App\Http\Controllers\WelcomeController::class, 'index']);
 // Setup Wizard Routes (when no companies exist)
 Route::prefix('setup')->name('setup.wizard.')->group(function () {
     Route::get('/', [\App\Http\Controllers\SetupWizardController::class, 'index'])->name('index');
-    Route::get('/company', [\App\Http\Controllers\SetupWizardController::class, 'showSetup'])->name('company-form');
+    Route::get('/company', \App\Livewire\Setup\SetupWizard::class)->name('company-form');
+    // Legacy routes for backward compatibility
     Route::post('/company', [\App\Http\Controllers\SetupWizardController::class, 'processSetup'])->name('process');
     Route::post('/test-smtp', [\App\Http\Controllers\SetupWizardController::class, 'testSmtp'])->name('test-smtp');
 });
