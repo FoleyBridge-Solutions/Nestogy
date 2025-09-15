@@ -23,12 +23,6 @@ trait ValidatesSteps
     protected function validateCompanyInfo(): bool
     {
         try {
-            \Log::info('Validating company info', [
-                'company_name' => $this->company_name,
-                'company_email' => $this->company_email,
-                'currency' => $this->currency,
-            ]);
-            
             $this->validate([
                 'company_name' => 'required|string|max:255',
                 'company_email' => 'required|email|max:255',
@@ -48,13 +42,8 @@ trait ValidatesSteps
                 'company_website.url' => 'Please enter a valid website URL.',
             ]);
             
-            \Log::info('Company info validation passed');
             return true;
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Company info validation failed', [
-                'errors' => $e->errors(),
-                'message' => $e->getMessage()
-            ]);
             return false;
         }
     }

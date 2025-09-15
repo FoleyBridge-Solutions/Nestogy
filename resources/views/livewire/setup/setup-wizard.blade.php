@@ -106,9 +106,6 @@
             @endif
 
             @if ($currentStep < $totalSteps)
-                <button type="button" wire:click="testClick" class="bg-green-500 text-white px-4 py-2 rounded mr-2">
-                    TEST CLICK
-                </button>
                 <button type="button" wire:click="nextStep" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Next
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

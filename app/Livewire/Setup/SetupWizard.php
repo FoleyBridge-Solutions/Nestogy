@@ -104,21 +104,13 @@ class SetupWizard extends Component
     
     public function mount()
     {
-        Log::info('SetupWizard mounted');
-        
         // Redirect if companies already exist
-        $companyCount = Company::count();
-        Log::info('Company count', ['count' => $companyCount]);
-        
         if (Company::exists()) {
-            Log::info('Companies exist, redirecting to login');
             return redirect()->route('login');
         }
         
         $this->loadDefaults();
         $this->loadStepData();
-        
-        Log::info('SetupWizard mount complete', ['currentStep' => $this->currentStep]);
     }
     
     public function updated($propertyName)
@@ -133,21 +125,8 @@ class SetupWizard extends Component
         }
     }
     
-    public function testClick()
-    {
-        Log::info('TEST: Button click registered!');
-        session()->flash('success', 'Button click works!');
-    }
-    
     public function nextStep()
     {
-        Log::info('nextStep() called', [
-            'currentStep' => $this->currentStep,
-            'company_name' => $this->company_name,
-            'company_email' => $this->company_email,
-            'currency' => $this->currency,
-        ]);
-        
         try {
             // Simple validation for step 1
             if ($this->currentStep === 1) {
@@ -166,15 +145,9 @@ class SetupWizard extends Component
             
             if ($this->currentStep < $this->totalSteps) {
                 $this->currentStep++;
-                Log::info('Step advanced', ['newStep' => $this->currentStep]);
                 session()->flash('success', 'Step completed successfully!');
             }
         } catch (\Exception $e) {
-            Log::error('Error in nextStep()', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
             session()->flash('error', 'An error occurred: ' . $e->getMessage());
         }
     }
