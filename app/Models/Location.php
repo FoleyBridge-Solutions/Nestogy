@@ -345,11 +345,7 @@ class Location extends Model
             }
         });
 
-        // Update accessed_at when location is retrieved
-        static::retrieved(function ($location) {
-            if (!$location->wasRecentlyCreated) {
-                $location->updateAccessedAt();
-            }
-        });
+        // Note: Auto-update on retrieved removed for performance
+        // accessed_at updates are now handled strategically in controllers when viewing details
     }
 }

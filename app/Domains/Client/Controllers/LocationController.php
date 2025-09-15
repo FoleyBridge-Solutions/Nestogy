@@ -42,18 +42,22 @@ class LocationController extends Controller
         $this->authorize('view', $client);
         $this->authorize('viewAny', Location::class);
 
-        // Query locations for the selected client
-        $query = Location::with('contact')->where('client_id', $client->id);
+        // Query locations for the selected client with optimized column selection
+        $query = Location::select([
+            'id', 'name', 'address', 'city', 'state', 'zip', 'country', 
+            'phone', 'primary', 'client_id', 'contact_id', 'description', 'hours'
+        ])
+        ->with(['contact:id,name,email,phone'])
+        ->where('client_id', $client->id);
 
-        // Apply search filters
+        // Apply search filters with correct column names
         if ($search = $request->get('search')) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('address_line_1', 'like', "%{$search}%")
-                  ->orWhere('address_line_2', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%")
                   ->orWhere('state', 'like', "%{$search}%")
-                  ->orWhere('zip_code', 'like', "%{$search}%")
+                  ->orWhere('zip', 'like', "%{$search}%")
                   ->orWhere('country', 'like', "%{$search}%");
             });
         }
@@ -78,18 +82,25 @@ class LocationController extends Controller
                           ->paginate(20)
                           ->appends($request->query());
 
-        // Get unique states and countries for filters (for this client)
-        $states = Location::where('client_id', $client->id)
-                  ->whereNotNull('state')
-                  ->distinct()
-                  ->orderBy('state')
-                  ->pluck('state');
-
-        $countries = Location::where('client_id', $client->id)
-                     ->whereNotNull('country')
-                     ->distinct()
-                     ->orderBy('country')
-                     ->pluck('country');
+        // Get unique states and countries for filters with caching
+        $cacheKey = "location_filters_client_{$client->id}";
+        $filters = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function() use ($client) {
+            return [
+                'states' => Location::where('client_id', $client->id)
+                    ->whereNotNull('state')
+                    ->distinct()
+                    ->orderBy('state')
+                    ->pluck('state'),
+                'countries' => Location::where('client_id', $client->id)
+                    ->whereNotNull('country')
+                    ->distinct()
+                    ->orderBy('country')
+                    ->pluck('country')
+            ];
+        });
+        
+        $states = $filters['states'];
+        $countries = $filters['countries'];
 
         return view('clients.locations.index', compact('locations', 'client', 'states', 'countries'));
     }
@@ -195,6 +206,9 @@ class LocationController extends Controller
                         ->update(['primary' => false]);
         }
 
+        // Clear cache for location filters
+        \Illuminate\Support\Facades\Cache::forget("location_filters_client_{$client->id}");
+
         return redirect()->route('clients.locations.index')
                         ->with('success', 'Location created successfully.');
     }
@@ -216,6 +230,9 @@ class LocationController extends Controller
         $this->authorize('view', $location);
 
         $location->load('client', 'contact');
+        
+        // Strategic update of accessed_at only when viewing details
+        $location->updateAccessedAt();
 
         return view('clients.locations.show', compact('location', 'client'));
     }
@@ -323,6 +340,9 @@ class LocationController extends Controller
                         ->update(['primary' => false]);
         }
 
+        // Clear cache for location filters
+        \Illuminate\Support\Facades\Cache::forget("location_filters_client_{$client->id}");
+
         return redirect()->route('clients.locations.index')
                         ->with('success', 'Location updated successfully.');
     }
@@ -351,6 +371,9 @@ class LocationController extends Controller
         // }
 
         $location->delete();
+
+        // Clear cache for location filters
+        \Illuminate\Support\Facades\Cache::forget("location_filters_client_{$client->id}");
 
         return redirect()->route('clients.locations.index')
                         ->with('success', 'Location deleted successfully.');
@@ -386,15 +409,14 @@ class LocationController extends Controller
 
         $query = Location::with('contact')->where('client_id', $client->id);
 
-        // Apply same filters as index
+        // Apply same filters as index with correct column names
         if ($search = $request->get('search')) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('address_line_1', 'like', "%{$search}%")
-                  ->orWhere('address_line_2', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%")
                   ->orWhere('state', 'like', "%{$search}%")
-                  ->orWhere('zip_code', 'like', "%{$search}%")
+                  ->orWhere('zip', 'like', "%{$search}%")
                   ->orWhere('country', 'like', "%{$search}%");
             });
         }
@@ -448,11 +470,11 @@ class LocationController extends Controller
                     $location->description,
                     $client->name,
                     $location->contact ? $location->contact->name : '',
-                    $location->address_line_1,
-                    $location->address_line_2,
+                    $location->address,
+                    '', // Second address line (combined in address field)
                     $location->city,
                     $location->state,
-                    $location->zip_code,
+                    $location->zip,
                     $location->country,
                     $location->phone,
                     $location->hours,
