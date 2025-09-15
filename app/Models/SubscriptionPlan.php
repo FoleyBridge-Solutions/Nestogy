@@ -78,8 +78,10 @@ class SubscriptionPlan extends Model
     /**
      * Default plan constants
      */
-    const PLAN_STARTER = 'starter';
-    const PLAN_PROFESSIONAL = 'professional';
+    const PLAN_FREE = 'free';
+    const PLAN_STARTER = 'starter'; // Keep for backward compatibility
+    const PLAN_PRO = 'pro';
+    const PLAN_PROFESSIONAL = 'professional'; // Keep for backward compatibility
     const PLAN_ENTERPRISE = 'enterprise';
     
     /**
