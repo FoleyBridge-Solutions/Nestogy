@@ -3,22 +3,19 @@
 namespace App\Services;
 
 use App\Models\Client;
-use App\Models\Company;
 use App\Models\PaymentMethod;
-use App\Models\SubscriptionPlan;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Customer;
-use Stripe\PaymentMethod as StripePaymentMethod;
-use Stripe\Subscription;
-use Stripe\StripeClient;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\CardException;
+use Stripe\PaymentMethod as StripePaymentMethod;
+use Stripe\StripeClient;
+use Stripe\Subscription;
 
 /**
  * StripeSubscriptionService
- * 
+ *
  * Handles all Stripe-related operations for subscription management including
  * customer creation, payment method storage, subscription management, and billing.
  */
@@ -29,7 +26,7 @@ class StripeSubscriptionService
     public function __construct()
     {
         $secret = config('services.stripe.secret');
-        if (!$secret) {
+        if (! $secret) {
             throw new \Exception('Stripe is not configured. Please set STRIPE_SECRET in your .env file.');
         }
         $this->stripe = new StripeClient($secret);
@@ -60,14 +57,14 @@ class StripeSubscriptionService
 
             Log::info('Stripe customer created', [
                 'customer_id' => $customer->id,
-                'client_id' => $customerData['client_id'] ?? null
+                'client_id' => $customerData['client_id'] ?? null,
             ]);
 
             return $customer;
         } catch (ApiErrorException $e) {
             Log::error('Failed to create Stripe customer', [
                 'error' => $e->getMessage(),
-                'customer_data' => $customerData
+                'customer_data' => $customerData,
             ]);
             throw $e;
         }
@@ -84,14 +81,14 @@ class StripeSubscriptionService
 
             // Attach payment method to customer
             $paymentMethod = $this->attachPaymentMethod(
-                $data['payment_method_id'], 
-                $customer->id, 
+                $data['payment_method_id'],
+                $customer->id,
                 true // Set as default
             );
 
             // Create $1 authorization for identity verification
             $authAmount = $data['authorization_amount'] ?? 100; // $1.00 in cents
-            
+
             $paymentIntent = $this->stripe->paymentIntents->create([
                 'amount' => $authAmount,
                 'currency' => 'usd',
@@ -112,7 +109,7 @@ class StripeSubscriptionService
                 $this->stripe->paymentIntents->cancel($paymentIntent->id);
                 Log::info('Identity verification authorization completed and canceled', [
                     'customer_id' => $customer->id,
-                    'payment_intent_id' => $paymentIntent->id
+                    'payment_intent_id' => $paymentIntent->id,
                 ]);
             }
 
@@ -125,7 +122,7 @@ class StripeSubscriptionService
         } catch (ApiErrorException $e) {
             Log::error('Failed to create customer with authorization', [
                 'error' => $e->getMessage(),
-                'data' => $data
+                'data' => $data,
             ]);
             throw $e;
         }
@@ -154,7 +151,7 @@ class StripeSubscriptionService
             Log::info('Payment method attached to customer', [
                 'payment_method_id' => $paymentMethodId,
                 'customer_id' => $customerId,
-                'set_as_default' => $setAsDefault
+                'set_as_default' => $setAsDefault,
             ]);
 
             return $paymentMethod;
@@ -162,7 +159,7 @@ class StripeSubscriptionService
             Log::error('Failed to attach payment method', [
                 'error' => $e->getMessage(),
                 'payment_method_id' => $paymentMethodId,
-                'customer_id' => $customerId
+                'customer_id' => $customerId,
             ]);
             throw $e;
         }
@@ -195,7 +192,7 @@ class StripeSubscriptionService
                 'subscription_id' => $subscription->id,
                 'customer_id' => $customerId,
                 'price_id' => $priceId,
-                'trial_days' => $trialDays
+                'trial_days' => $trialDays,
             ]);
 
             return $subscription;
@@ -203,7 +200,7 @@ class StripeSubscriptionService
             Log::error('Failed to create subscription', [
                 'error' => $e->getMessage(),
                 'customer_id' => $customerId,
-                'price_id' => $priceId
+                'price_id' => $priceId,
             ]);
             throw $e;
         }
@@ -216,7 +213,7 @@ class StripeSubscriptionService
     {
         try {
             $subscription = $this->stripe->subscriptions->retrieve($subscriptionId);
-            
+
             $subscription = $this->stripe->subscriptions->update($subscriptionId, [
                 'items' => [
                     [
@@ -229,7 +226,7 @@ class StripeSubscriptionService
 
             Log::info('Stripe subscription updated', [
                 'subscription_id' => $subscriptionId,
-                'new_price_id' => $newPriceId
+                'new_price_id' => $newPriceId,
             ]);
 
             return $subscription;
@@ -237,7 +234,7 @@ class StripeSubscriptionService
             Log::error('Failed to update subscription', [
                 'error' => $e->getMessage(),
                 'subscription_id' => $subscriptionId,
-                'new_price_id' => $newPriceId
+                'new_price_id' => $newPriceId,
             ]);
             throw $e;
         }
@@ -259,14 +256,14 @@ class StripeSubscriptionService
 
             Log::info('Stripe subscription canceled', [
                 'subscription_id' => $subscriptionId,
-                'immediately' => $immediately
+                'immediately' => $immediately,
             ]);
 
             return $subscription;
         } catch (ApiErrorException $e) {
             Log::error('Failed to cancel subscription', [
                 'error' => $e->getMessage(),
-                'subscription_id' => $subscriptionId
+                'subscription_id' => $subscriptionId,
             ]);
             throw $e;
         }
@@ -275,17 +272,24 @@ class StripeSubscriptionService
     /**
      * Authorize a payment method with a small amount (e.g., $1).
      */
-    public function authorizePayment(string $paymentMethodId, int $amount = 100): array
+    public function authorizePayment(string $paymentMethodId, int $amount = 100, ?string $customerId = null): array
     {
         try {
-            $intent = $this->stripe->paymentIntents->create([
+            $intentData = [
                 'amount' => $amount, // $1.00 in cents
                 'currency' => 'usd',
                 'payment_method' => $paymentMethodId,
                 'capture_method' => 'manual', // Don't actually capture the payment
                 'confirm' => true,
                 'return_url' => config('app.url'), // Required for some payment methods
-            ]);
+            ];
+
+            // If customer ID is provided, include it (required when payment method belongs to customer)
+            if ($customerId) {
+                $intentData['customer'] = $customerId;
+            }
+
+            $intent = $this->stripe->paymentIntents->create($intentData);
 
             // If successful, void the authorization
             if ($intent->status === 'requires_capture') {
@@ -295,7 +299,7 @@ class StripeSubscriptionService
             Log::info('Payment method authorized and voided', [
                 'payment_method_id' => $paymentMethodId,
                 'amount' => $amount,
-                'intent_id' => $intent->id
+                'intent_id' => $intent->id,
             ]);
 
             return [
@@ -307,14 +311,14 @@ class StripeSubscriptionService
             Log::warning('Payment method authorization failed', [
                 'error' => $e->getMessage(),
                 'payment_method_id' => $paymentMethodId,
-                'amount' => $amount
+                'amount' => $amount,
             ]);
 
             $response = [
                 'success' => false,
                 'error' => $e->getMessage(),
             ];
-            
+
             // Only add decline code for CardException which has this method
             if ($e instanceof CardException) {
                 $response['decline_code'] = $e->getDeclineCode();
@@ -344,9 +348,18 @@ class StripeSubscriptionService
 
             // Optionally authorize payment method
             if ($data['authorize_payment'] ?? false) {
-                $authResult = $this->authorizePayment($data['payment_method_id']);
-                if (!$authResult['success']) {
-                    throw new \Exception('Payment method authorization failed: ' . $authResult['error']);
+                $authResult = $this->authorizePayment($data['payment_method_id'], 100, $customer->id);
+                if (! $authResult['success']) {
+                    throw new \Exception('Payment method authorization failed: '.$authResult['error']);
+                }
+            }
+
+            // Ensure Stripe price exists before creating subscription
+            $plan = \App\Models\SubscriptionPlan::where('stripe_price_id', $data['price_id'])->first();
+            if ($plan && $plan->price_monthly > 0) {
+                $actualPriceId = $this->ensureStripePriceExists($plan);
+                if ($actualPriceId) {
+                    $data['price_id'] = $actualPriceId;
                 }
             }
 
@@ -362,7 +375,7 @@ class StripeSubscriptionService
             Log::info('Complete subscription created successfully', [
                 'customer_id' => $customer->id,
                 'subscription_id' => $subscription->id,
-                'price_id' => $data['price_id']
+                'price_id' => $data['price_id'],
             ]);
 
             return [
@@ -374,10 +387,10 @@ class StripeSubscriptionService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to create complete subscription', [
                 'error' => $e->getMessage(),
-                'data' => $data
+                'data' => $data,
             ]);
 
             throw $e;
@@ -460,7 +473,7 @@ class StripeSubscriptionService
     {
         try {
             $subscription = $this->stripe->subscriptions->retrieve($subscriptionId);
-            
+
             return [
                 'success' => true,
                 'status' => $subscription->status,
@@ -473,7 +486,7 @@ class StripeSubscriptionService
         } catch (ApiErrorException $e) {
             Log::error('Failed to get subscription status', [
                 'error' => $e->getMessage(),
-                'subscription_id' => $subscriptionId
+                'subscription_id' => $subscriptionId,
             ]);
 
             return [
@@ -488,13 +501,13 @@ class StripeSubscriptionService
      */
     public function syncSubscriptionStatus(Client $client): bool
     {
-        if (!$client->stripe_subscription_id) {
+        if (! $client->stripe_subscription_id) {
             return false;
         }
 
         $statusResult = $this->getSubscriptionStatus($client->stripe_subscription_id);
-        
-        if (!$statusResult['success']) {
+
+        if (! $statusResult['success']) {
             return false;
         }
 
@@ -512,7 +525,7 @@ class StripeSubscriptionService
         Log::info('Client subscription status synced with Stripe', [
             'client_id' => $client->id,
             'subscription_id' => $client->stripe_subscription_id,
-            'status' => $subscription->status
+            'status' => $subscription->status,
         ]);
 
         return true;
@@ -534,5 +547,97 @@ class StripeSubscriptionService
         ];
 
         return $mapping[$stripeStatus] ?? 'unpaid';
+    }
+
+    /**
+     * Ensure a Stripe price exists for a subscription plan, creating it if necessary.
+     */
+    public function ensureStripePriceExists(\App\Models\SubscriptionPlan $plan): ?string
+    {
+        // Skip if no Stripe price ID is set
+        if (! $plan->stripe_price_id) {
+            return null;
+        }
+
+        // Skip if this is a free plan (both fixed and per-user)
+        if ($plan->pricing_model === 'fixed' && $plan->price_monthly == 0) {
+            return null;
+        }
+        if ($plan->pricing_model === 'per_user' && $plan->price_per_user_monthly == 0) {
+            return null;
+        }
+
+        try {
+            // Try to retrieve the price first
+            $price = $this->stripe->prices->retrieve($plan->stripe_price_id);
+            Log::info('Stripe price exists', ['price_id' => $price->id]);
+
+            return $price->id;
+        } catch (ApiErrorException $e) {
+            // If price doesn't exist, create it
+            if (strpos($e->getMessage(), 'No such price') !== false) {
+                Log::info('Creating Stripe price for plan', [
+                    'plan' => $plan->name,
+                    'price_id' => $plan->stripe_price_id,
+                ]);
+
+                // First, create or get the product
+                $product = $this->ensureStripeProductExists($plan);
+
+                // Determine the price amount based on pricing model
+                $unitAmount = 0;
+                if ($plan->pricing_model === 'per_user') {
+                    $unitAmount = (int) ($plan->price_per_user_monthly * 100); // Per user price in cents
+                } else {
+                    $unitAmount = (int) ($plan->price_monthly * 100); // Fixed price in cents
+                }
+
+                // Create the price
+                $price = $this->stripe->prices->create([
+                    'product' => $product->id,
+                    'unit_amount' => $unitAmount,
+                    'currency' => 'usd',
+                    'recurring' => [
+                        'interval' => 'month',
+                    ],
+                    'lookup_key' => $plan->stripe_price_id,
+                ]);
+
+                // Update the plan with the actual Stripe price ID
+                $plan->update(['stripe_price_id' => $price->id]);
+
+                Log::info('Stripe price created', [
+                    'price_id' => $price->id,
+                    'amount' => $plan->price_monthly,
+                ]);
+
+                return $price->id;
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Ensure a Stripe product exists for a subscription plan.
+     */
+    protected function ensureStripeProductExists(\App\Models\SubscriptionPlan $plan): \Stripe\Product
+    {
+        $productId = 'prod_'.preg_replace('/[^a-zA-Z0-9_]/', '', strtolower($plan->slug ?: $plan->name));
+
+        try {
+            return $this->stripe->products->retrieve($productId);
+        } catch (ApiErrorException $e) {
+            // Create the product if it doesn't exist
+            return $this->stripe->products->create([
+                'id' => $productId,
+                'name' => $plan->name.' Plan',
+                'description' => $plan->description ?: $plan->name.' subscription plan',
+                'metadata' => [
+                    'plan_id' => (string) $plan->id,
+                    'plan_name' => $plan->name,
+                ],
+            ]);
+        }
     }
 }
