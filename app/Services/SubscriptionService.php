@@ -92,7 +92,7 @@ class SubscriptionService
                 'slug' => 'free',
                 'description' => 'Basic free plan',
                 'price_monthly' => 0,
-                'max_users' => 2,
+                'user_limit' => 2,
                 'max_clients' => 25,
                 'features' => ['basic_features'],
                 'is_active' => true,
@@ -112,7 +112,7 @@ class SubscriptionService
             'company_id' => $company->id,
             'subscription_plan_id' => $plan->id,
             'status' => $plan->price_monthly > 0 ? CompanySubscription::STATUS_TRIALING : CompanySubscription::STATUS_ACTIVE,
-            'max_users' => $plan->max_users,
+            'max_users' => $plan->user_limit,
             'monthly_amount' => $plan->price_monthly,
             'features' => $plan->features,
             'trial_ends_at' => $plan->price_monthly > 0 ? now()->addDays(14) : null,
@@ -146,13 +146,13 @@ class SubscriptionService
             $subscription->changePlan($newPlan);
 
             // Check if downgrading and over limit
-            if ($newPlan->max_users && $subscription->current_user_count > $newPlan->max_users) {
+            if ($newPlan->user_limit && $subscription->current_user_count > $newPlan->user_limit) {
                 Log::warning('Company over user limit after plan change', [
                     'company_id' => $company->id,
                     'old_plan' => $oldPlan?->name,
                     'new_plan' => $newPlan->name,
                     'user_count' => $subscription->current_user_count,
-                    'new_limit' => $newPlan->max_users
+                    'new_limit' => $newPlan->user_limit
                 ]);
             }
         });

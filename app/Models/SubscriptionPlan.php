@@ -48,7 +48,6 @@ class SubscriptionPlan extends Model
         'minimum_users',
         'base_price',
         'user_limit',
-        'max_users',
         'max_clients',
         'features',
         'description',
@@ -66,7 +65,6 @@ class SubscriptionPlan extends Model
         'base_price' => 'decimal:2',
         'minimum_users' => 'integer',
         'user_limit' => 'integer',
-        'max_users' => 'integer',
         'max_clients' => 'integer',
         'features' => 'array',
         'is_active' => 'boolean',
@@ -104,8 +102,8 @@ class SubscriptionPlan extends Model
      */
     public function hasUnlimitedUsers(): bool
     {
-        // Check both user_limit and max_users fields for compatibility
-        return $this->user_limit === null && $this->max_users === null;
+        // Check user_limit field for unlimited users
+        return $this->user_limit === null;
     }
 
     /**
@@ -214,8 +212,8 @@ class SubscriptionPlan extends Model
             return 'Unlimited users';
         }
 
-        // Use max_users field (which is what we're storing)
-        $limit = $this->max_users ?? $this->user_limit ?? 0;
+        // Use user_limit field 
+        $limit = $this->user_limit ?? 0;
 
         if ($limit > 0) {
             return $limit . ' users included';

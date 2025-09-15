@@ -364,7 +364,7 @@ class BillingController extends Controller
         ];
 
         $limits = [
-            'max_users' => $client->subscriptionPlan->max_users,
+            'max_users' => $client->subscriptionPlan->user_limit,
             'max_clients' => $client->subscriptionPlan->max_clients ?? null,
             'max_tickets' => config('saas.limits.max_tickets_per_month'),
             'max_storage_mb' => (config('saas.limits.storage_limit_gb') * 1024),
@@ -387,7 +387,7 @@ class BillingController extends Controller
         }
 
         // Check user limits
-        if ($newPlan->max_users && $company->users()->count() > $newPlan->max_users) {
+        if ($newPlan->user_limit && $company->users()->count() > $newPlan->user_limit) {
             return false;
         }
 
