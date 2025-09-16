@@ -49,88 +49,174 @@ class GenerateRecurringInvoices extends Command
     public function handle()
     {
         $this->info('Starting recurring invoice generation...');
-
-        $companyId = $this->option('company');
-        $contractId = $this->option('contract');
-        $dryRun = $this->option('dry-run');
-        $date = $this->option('date') ? Carbon::parse($this->option('date')) : now();
-
-        if ($dryRun) {
+        
+        $options = $this->parseOptions();
+        
+        if ($options['dryRun']) {
             $this->warn('Running in DRY RUN mode - no invoices will be created');
         }
-
+        
         try {
-            if ($contractId) {
-                // Generate for specific contract
-                $contract = \App\Domains\Contract\Models\Contract::find($contractId);
-
-                if (!$contract) {
-                    $this->error('Contract not found');
-                    return Command::FAILURE;
-                }
-
-                $this->info("Generating invoice for contract: {$contract->contract_number}");
-
-                $invoice = $this->billingService->generateInvoiceFromContract($contract, $dryRun);
-
-                if (!$dryRun && $invoice) {
-                    $this->info("Invoice {$invoice->invoice_number} generated successfully");
-                    $this->displayInvoiceSummary([$invoice]);
-                } elseif ($dryRun) {
-                    $this->info('Invoice preview generated (not saved)');
-                }
-
-            } else {
-                // Generate bulk invoices
-                $this->info('Generating bulk invoices for all due contracts...');
-
-                $result = $this->billingService->generateBulkInvoices($dryRun, $companyId);
-
-                $this->info("Processing complete!");
-                $this->info("Contracts processed: {$result['processed']}");
-                $this->info("Invoices generated: {$result['generated']}");
-
-                if ($result['failed'] > 0) {
-                    $this->warn("Failed generations: {$result['failed']}");
-
-                    if (!empty($result['errors'])) {
-                        $this->error('Errors encountered:');
-                        foreach ($result['errors'] as $error) {
-                            $this->error(" - {$error}");
-                        }
-                    }
-                }
-
-                if (!$dryRun && !empty($result['invoices'])) {
-                    $this->displayInvoiceSummary($result['invoices']);
-
-                    // Send notifications for generated invoices
-                    foreach ($result['invoices'] as $invoice) {
-                        $this->notificationService->notifyInvoiceGenerated($invoice);
-                    }
-                }
-            }
-
-            // Log the generation
-            Log::info('Recurring invoice generation completed', [
-                'company_id' => $companyId,
-                'contract_id' => $contractId,
-                'dry_run' => $dryRun,
-                'date' => $date->toDateString(),
-                'result' => $result ?? null
-            ]);
-
+            $result = $options['contractId'] 
+                ? $this->processSingleContract($options)
+                : $this->processBulkInvoices($options);
+            
+            $this->logGeneration($options, $result);
             return Command::SUCCESS;
-
+            
         } catch (\Exception $e) {
-            $this->error('Failed to generate recurring invoices: ' . $e->getMessage());
-            Log::error('Recurring invoice generation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return Command::FAILURE;
+            return $this->handleError($e);
         }
+    }
+
+    /**
+     * Parse command options into structured array
+     */
+    private function parseOptions(): array
+    {
+        return [
+            'companyId' => $this->option('company'),
+            'contractId' => $this->option('contract'),
+            'dryRun' => $this->option('dry-run'),
+            'date' => $this->option('date') ? Carbon::parse($this->option('date')) : now()
+        ];
+    }
+
+    /**
+     * Process single contract invoice generation
+     */
+    private function processSingleContract(array $options): ?array
+    {
+        $contract = \App\Domains\Contract\Models\Contract::find($options['contractId']);
+        
+        if (!$contract) {
+            throw new \InvalidArgumentException('Contract not found');
+        }
+        
+        $this->info("Generating invoice for contract: {$contract->contract_number}");
+        $invoice = $this->billingService->generateInvoiceFromContract($contract, $options['dryRun']);
+        
+        $this->displaySingleContractResult($invoice, $options['dryRun']);
+        
+        return ['invoice' => $invoice];
+    }
+
+    /**
+     * Display result for single contract processing
+     */
+    private function displaySingleContractResult($invoice, bool $dryRun): void
+    {
+        if ($dryRun) {
+            $this->info('Invoice preview generated (not saved)');
+            return;
+        }
+        
+        if ($invoice) {
+            $this->info("Invoice {$invoice->invoice_number} generated successfully");
+            $this->displayInvoiceSummary([$invoice]);
+        }
+    }
+
+    /**
+     * Process bulk invoice generation
+     */
+    private function processBulkInvoices(array $options): array
+    {
+        $this->info('Generating bulk invoices for all due contracts...');
+        
+        $result = $this->billingService->generateBulkInvoices(
+            $options['dryRun'], 
+            $options['companyId']
+        );
+        
+        $this->displayBulkResults($result);
+        $this->handleBulkErrors($result);
+        $this->processGeneratedInvoices($result, $options['dryRun']);
+        
+        return $result;
+    }
+
+    /**
+     * Display bulk processing results
+     */
+    private function displayBulkResults(array $result): void
+    {
+        $this->info("Processing complete!");
+        $this->info("Contracts processed: {$result['processed']}");
+        $this->info("Invoices generated: {$result['generated']}");
+    }
+
+    /**
+     * Handle bulk processing errors
+     */
+    private function handleBulkErrors(array $result): void
+    {
+        if ($result['failed'] <= 0) {
+            return;
+        }
+        
+        $this->warn("Failed generations: {$result['failed']}");
+        
+        if (empty($result['errors'])) {
+            return;
+        }
+        
+        $this->error('Errors encountered:');
+        foreach ($result['errors'] as $error) {
+            $this->error(" - {$error}");
+        }
+    }
+
+    /**
+     * Process successfully generated invoices
+     */
+    private function processGeneratedInvoices(array $result, bool $dryRun): void
+    {
+        if ($dryRun || empty($result['invoices'])) {
+            return;
+        }
+        
+        $this->displayInvoiceSummary($result['invoices']);
+        $this->sendInvoiceNotifications($result['invoices']);
+    }
+
+    /**
+     * Send notifications for generated invoices
+     */
+    private function sendInvoiceNotifications(array $invoices): void
+    {
+        foreach ($invoices as $invoice) {
+            $this->notificationService->notifyInvoiceGenerated($invoice);
+        }
+    }
+
+    /**
+     * Log the generation process
+     */
+    private function logGeneration(array $options, ?array $result): void
+    {
+        Log::info('Recurring invoice generation completed', [
+            'company_id' => $options['companyId'],
+            'contract_id' => $options['contractId'],
+            'dry_run' => $options['dryRun'],
+            'date' => $options['date']->toDateString(),
+            'result' => $result
+        ]);
+    }
+
+    /**
+     * Handle command errors
+     */
+    private function handleError(\Exception $e): int
+    {
+        $this->error('Failed to generate recurring invoices: ' . $e->getMessage());
+        
+        Log::error('Recurring invoice generation failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return Command::FAILURE;
     }
 
     /**
