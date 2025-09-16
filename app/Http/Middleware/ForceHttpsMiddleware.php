@@ -158,7 +158,19 @@ class ForceHttpsMiddleware
      */
     protected function redirectToHttps(Request $request): Response
     {
-        $httpsUrl = 'https://' . $request->getHost() . $request->getRequestUri();
+        // Validate the host against allowed hosts to prevent open redirects
+        $allowedHosts = $this->getAllowedHosts();
+        $requestHost = $request->getHost();
+        
+        if (!in_array($requestHost, $allowedHosts)) {
+            // If host is not allowed, redirect to app root URL
+            $httpsUrl = URL::secure('/');
+        } else {
+            // Construct secure URL using Laravel's URL helper with validated host
+            $path = $request->path();
+            $query = $request->query();
+            $httpsUrl = URL::secure($path, $query);
+        }
         
         // Log security redirect
         AuditLog::create([
@@ -169,11 +181,38 @@ class ForceHttpsMiddleware
                 'from_url' => $request->fullUrl(),
                 'to_url' => $httpsUrl,
                 'ip' => $request->ip(),
-                'user_agent' => $request->header('User-Agent')
+                'user_agent' => $request->header('User-Agent'),
+                'host_validated' => in_array($requestHost, $allowedHosts),
+                'original_host' => $requestHost
             ]
         ]);
         
         return redirect($httpsUrl, 301);
+    }
+
+    /**
+     * Get list of allowed hosts for redirect validation.
+     */
+    protected function getAllowedHosts(): array
+    {
+        $appUrl = parse_url(config('app.url'));
+        $allowedHosts = [$appUrl['host'] ?? 'localhost'];
+        
+        // Add any additional allowed hosts from configuration
+        $configHosts = config('security.allowed_hosts', []);
+        if (is_array($configHosts)) {
+            $allowedHosts = array_merge($allowedHosts, $configHosts);
+        }
+        
+        // Add common variations (www subdomain)
+        $mainHost = $appUrl['host'] ?? 'localhost';
+        if (!str_starts_with($mainHost, 'www.')) {
+            $allowedHosts[] = 'www.' . $mainHost;
+        } else {
+            $allowedHosts[] = substr($mainHost, 4); // Remove www.
+        }
+        
+        return array_unique($allowedHosts);
     }
 
     /**

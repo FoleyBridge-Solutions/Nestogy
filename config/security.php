@@ -314,6 +314,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | HTTPS Force & Redirect Security
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for HTTPS enforcement and redirect security.
+    |
+    */
+    'force_https' => [
+        'enabled' => env('FORCE_HTTPS_ENABLED', true),
+        'mode' => env('FORCE_HTTPS_MODE', 'selective'), // 'all', 'selective', 'none'
+        'local' => env('FORCE_HTTPS_LOCAL', false), // Force HTTPS in local development
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Hosts
+    |--------------------------------------------------------------------------
+    |
+    | List of allowed hosts for redirect validation to prevent open redirects.
+    | These hosts are considered safe for HTTPS redirects.
+    |
+    */
+    'allowed_hosts' => array_filter(explode(',', env('ALLOWED_HOSTS', ''))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Audit Logging
     |--------------------------------------------------------------------------
     |
