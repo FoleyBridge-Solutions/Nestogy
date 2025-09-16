@@ -14,7 +14,7 @@ class SettingsIndex extends Component
         return [
             'general' => [
                 'name' => 'General',
-                'icon' => 'cog',
+                'icon' => 'cog-6-tooth',
                 'description' => 'Company information and basic settings',
                 'route' => 'settings.general'
             ],
@@ -26,7 +26,7 @@ class SettingsIndex extends Component
             ],
             'billing' => [
                 'name' => 'Billing & Financial',
-                'icon' => 'currency-dollar',
+                'icon' => 'banknotes',
                 'description' => 'Billing, invoicing, and payment settings',
                 'route' => 'settings.billing-financial'
             ],
@@ -50,7 +50,7 @@ class SettingsIndex extends Component
             ],
             'projects' => [
                 'name' => 'Projects',
-                'icon' => 'folder',
+                'icon' => 'rectangle-group',
                 'description' => 'Project management settings',
                 'route' => 'settings.project-management'
             ],
@@ -64,11 +64,11 @@ class SettingsIndex extends Component
                 'name' => 'Contracts',
                 'icon' => 'document-text',
                 'description' => 'Contract templates and clauses',
-                'route' => 'settings.contract-templates'
+                'route' => 'settings.contract-templates.index'
             ],
             'automation' => [
                 'name' => 'Automation',
-                'icon' => 'play',
+                'icon' => 'bolt',
                 'description' => 'Workflows and automation rules',
                 'route' => 'settings.automation-workflows'
             ],
@@ -80,7 +80,7 @@ class SettingsIndex extends Component
             ],
             'data' => [
                 'name' => 'Data Management',
-                'icon' => 'database',
+                'icon' => 'circle-stack',
                 'description' => 'Backup, export, and data retention',
                 'route' => 'settings.data-management'
             ],
