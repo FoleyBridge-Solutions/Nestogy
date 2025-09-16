@@ -322,19 +322,78 @@ export default function billingConfigurator() {
         getFirstBillingDate() {
             const startDate = this.getEffectiveStartDate();
             
+            // One-time billing: Bill immediately on start date
             if (this.billingOptions.model === 'one_time') {
                 return startDate;
             }
             
-            // For subscriptions, align to cycle
-            if (this.billingOptions.cycle === 'monthly') {
-                // Bill on same day each month
-                return startDate;
-            } else if (this.billingOptions.cycle === 'annually') {
-                // Bill on anniversary
+            // Usage-based billing: Bill at end of first cycle
+            if (this.billingOptions.model === 'usage_based') {
+                const firstBillDate = new Date(startDate);
+                if (this.billingOptions.cycle === 'weekly') {
+                    firstBillDate.setDate(firstBillDate.getDate() + 7);
+                } else if (this.billingOptions.cycle === 'monthly') {
+                    firstBillDate.setMonth(firstBillDate.getMonth() + 1);
+                } else if (this.billingOptions.cycle === 'quarterly') {
+                    firstBillDate.setMonth(firstBillDate.getMonth() + 3);
+                } else if (this.billingOptions.cycle === 'semi_annually') {
+                    firstBillDate.setMonth(firstBillDate.getMonth() + 6);
+                } else if (this.billingOptions.cycle === 'annually') {
+                    firstBillDate.setFullYear(firstBillDate.getFullYear() + 1);
+                }
+                return firstBillDate;
+            }
+            
+            // Subscription billing: Consider trial period and billing alignment
+            if (this.billingOptions.model === 'subscription') {
+                const billDate = new Date(startDate);
+                
+                // If there's a trial period, billing starts after trial
+                if (this.subscription.trialDays > 0) {
+                    billDate.setDate(billDate.getDate() + this.subscription.trialDays);
+                }
+                
+                // Align billing date based on cycle
+                if (this.billingOptions.cycle === 'weekly') {
+                    // For weekly billing, start on next Monday if not already Monday
+                    const dayOfWeek = billDate.getDay();
+                    if (dayOfWeek !== 1) { // If not Monday
+                        const daysUntilMonday = (8 - dayOfWeek) % 7;
+                        billDate.setDate(billDate.getDate() + daysUntilMonday);
+                    }
+                } else if (this.billingOptions.cycle === 'monthly') {
+                    // For monthly billing, bill on the 1st of next month if trial period pushes us past mid-month
+                    if (billDate.getDate() > 15) {
+                        billDate.setMonth(billDate.getMonth() + 1, 1);
+                    }
+                } else if (this.billingOptions.cycle === 'quarterly') {
+                    // For quarterly, align to quarter start
+                    const quarter = Math.floor(billDate.getMonth() / 3);
+                    billDate.setMonth(quarter * 3 + 3, 1);
+                } else if (this.billingOptions.cycle === 'semi_annually') {
+                    // For semi-annual, align to January 1st or July 1st
+                    if (billDate.getMonth() < 6) {
+                        billDate.setMonth(6, 1); // July 1st
+                    } else {
+                        billDate.setFullYear(billDate.getFullYear() + 1, 0, 1); // Next January 1st
+                    }
+                } else if (this.billingOptions.cycle === 'annually') {
+                    // For annual, align to year anniversary or January 1st
+                    if (billDate.getMonth() > 5) { // If past mid-year, bill next January
+                        billDate.setFullYear(billDate.getFullYear() + 1, 0, 1);
+                    }
+                }
+                
+                return billDate;
+            }
+            
+            // Hybrid billing: Bill immediately for setup, then follow subscription rules
+            if (this.billingOptions.model === 'hybrid') {
+                // For hybrid model, return immediate billing date (setup fees, etc.)
                 return startDate;
             }
             
+            // Default fallback
             return startDate;
         },
         
