@@ -314,10 +314,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | HTTPS Force & Redirect Security
+    | HTTPS Force Configuration
     |--------------------------------------------------------------------------
     |
-    | Configuration for HTTPS enforcement and redirect security.
+    | Configuration for HTTPS enforcement. Redirects use Laravel's secure
+    | URL generation based on APP_URL configuration.
     |
     */
     'force_https' => [
@@ -325,17 +326,6 @@ return [
         'mode' => env('FORCE_HTTPS_MODE', 'selective'), // 'all', 'selective', 'none'
         'local' => env('FORCE_HTTPS_LOCAL', false), // Force HTTPS in local development
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Allowed Hosts
-    |--------------------------------------------------------------------------
-    |
-    | List of allowed hosts for redirect validation to prevent open redirects.
-    | These hosts are considered safe for HTTPS redirects.
-    |
-    */
-    'allowed_hosts' => array_filter(explode(',', env('ALLOWED_HOSTS', ''))),
 
     /*
     |--------------------------------------------------------------------------
