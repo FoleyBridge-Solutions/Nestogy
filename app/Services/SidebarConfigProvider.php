@@ -628,6 +628,107 @@ class SidebarConfigProvider
                             'description' => 'Overview of financial metrics and KPIs'
                         ]
                     ]
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'BILLING & INVOICING',
+                    'expandable' => true,
+                    'default_expanded' => true,
+                    'items' => [
+                        [
+                            'name' => 'Invoices',
+                            'route' => 'financial.invoices.index',
+                            'icon' => 'document-text',
+                            'key' => 'invoices',
+                            'description' => 'Manage customer invoices'
+                        ],
+                        [
+                            'name' => 'Payments',
+                            'route' => 'financial.payments.index',
+                            'icon' => 'credit-card',
+                            'key' => 'payments',
+                            'description' => 'Track payment history'
+                        ],
+                        [
+                            'name' => 'Recurring Billing',
+                            'route' => 'financial.recurring.index',
+                            'icon' => 'arrow-path',
+                            'key' => 'recurring',
+                            'description' => 'Manage subscriptions'
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'PHYSICAL MAIL',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'Mail History',
+                            'route' => 'mail.index',
+                            'icon' => 'envelope',
+                            'key' => 'mail-history',
+                            'description' => 'View all sent physical mail'
+                        ],
+                        [
+                            'name' => 'Send Mail',
+                            'route' => 'mail.send',
+                            'icon' => 'paper-airplane',
+                            'key' => 'send-mail',
+                            'description' => 'Send letters and documents'
+                        ],
+                        [
+                            'name' => 'Mail Templates',
+                            'route' => 'mail.templates',
+                            'icon' => 'document-duplicate',
+                            'key' => 'mail-templates',
+                            'description' => 'Manage mail templates'
+                        ],
+                        [
+                            'name' => 'Mail Contacts',
+                            'route' => 'mail.contacts',
+                            'icon' => 'user-group',
+                            'key' => 'mail-contacts',
+                            'description' => 'Manage mailing addresses'
+                        ],
+                        [
+                            'name' => 'Tracking',
+                            'route' => 'mail.tracking',
+                            'icon' => 'map-pin',
+                            'key' => 'mail-tracking',
+                            'description' => 'Track mail delivery status'
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'ACCOUNTING',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'Chart of Accounts',
+                            'route' => 'financial.accounts.index',
+                            'icon' => 'list-bullet',
+                            'key' => 'accounts',
+                            'description' => 'Manage GL accounts'
+                        ],
+                        [
+                            'name' => 'Journal Entries',
+                            'route' => 'financial.journal.index',
+                            'icon' => 'book-open',
+                            'key' => 'journal',
+                            'description' => 'View journal entries'
+                        ],
+                        [
+                            'name' => 'Tax Settings',
+                            'route' => 'financial.tax.index',
+                            'icon' => 'calculator',
+                            'key' => 'tax',
+                            'description' => 'Configure tax rates'
+                        ]
+                    ]
                 ]
             ]
         ];
@@ -720,6 +821,7 @@ class SidebarConfigProvider
                         ['name' => 'Billing & Financial', 'route' => 'settings.billing-financial', 'icon' => 'credit-card', 'key' => 'billing-financial'],
                         ['name' => 'Accounting Integration', 'route' => 'settings.accounting', 'icon' => 'book-open', 'key' => 'accounting'],
                         ['name' => 'Payment Gateways', 'route' => 'settings.payment-gateways', 'icon' => 'banknotes', 'key' => 'payment-gateways'],
+                        ['name' => 'Physical Mail (PostGrid)', 'route' => 'settings.physical-mail', 'icon' => 'paper-airplane', 'key' => 'physical-mail'],
                     ],
                 ],
                 [

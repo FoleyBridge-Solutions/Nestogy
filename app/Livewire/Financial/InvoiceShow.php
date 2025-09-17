@@ -290,6 +290,15 @@ class InvoiceShow extends Component
         ]);
     }
     
+    public function sendPhysicalMail()
+    {
+        $this->authorize('update', $this->invoice);
+        
+        $this->dispatch('sendPhysicalMail', [
+            'invoice_id' => $this->invoice->id
+        ]);
+    }
+    
     #[Computed]
     public function statusColor()
     {

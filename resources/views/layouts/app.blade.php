@@ -134,6 +134,10 @@
                             href="{{ route('email.inbox.index') }}" 
                             class="max-lg:hidden"
                             aria-label="Email" />
+            <flux:navbar.item icon="paper-airplane" 
+                            href="{{ route('mail.index') }}" 
+                            class="max-lg:hidden"
+                            aria-label="Physical Mail" />
             <flux:navbar.item icon="cog-6-tooth" 
                             href="{{ route('settings.index') }}" 
                             class="max-lg:hidden"

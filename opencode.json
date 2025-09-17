@@ -10,6 +10,11 @@
       "type": "local",
       "command": ["node", "/root/.augment/mcp-servers/livewire-mcp-server/build/index.js"],
       "enabled": true
+    },
+    "postgrid": {
+      "type": "remote",
+      "url": "https://postgrid.readme.io/mcp",
+      "enabled": true
     }
   }
 }

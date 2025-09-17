@@ -148,7 +148,7 @@ class DomainRouteManager
         } else {
             // Routes define their own middleware/prefix/name, just include the file
             try {
-                require $routeFile;
+                require_once $routeFile;
                 $this->registeredDomains[$domainName] = $config;
             } catch (\Exception $e) {
                 if (app()->environment('local')) {

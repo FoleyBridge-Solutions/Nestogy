@@ -51,6 +51,17 @@
                             Send by Email
                         </button>
                         
+                        <button
+                            type="button"
+                            wire:click="sendPhysicalMail"
+                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        >
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"></path>
+                            </svg>
+                            Send by Physical Mail
+                        </button>
+                        
                         @can('update', $invoice)
                             @if($invoice->status === 'Draft')
                                 <flux:menu.item icon="paper-airplane" wire:click="markAsSent">
@@ -510,6 +521,10 @@
                         Send by Email
                     </flux:button>
                     
+                    <flux:button size="sm" variant="ghost" class="w-full" wire:click="sendPhysicalMail" icon="envelope-open">
+                        Send by Physical Mail
+                    </flux:button>
+                    
                     <flux:button size="sm" variant="ghost" class="w-full" wire:click="printInvoice" icon="printer">
                         Print Invoice
                     </flux:button>
@@ -674,4 +689,7 @@
             </form>
         </div>
     </flux:modal>
+    
+    <!-- Physical Mail Modal -->
+    @livewire('physical-mail.send-mail-modal')
 </div>

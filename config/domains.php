@@ -208,4 +208,20 @@ return [
             'bundles' => true,
         ],
     ],
+
+    'PhysicalMail' => [
+        'enabled' => true,
+        'apply_grouping' => false,  // Routes file defines its own groups
+        'priority' => 75,
+        'description' => 'Physical mail service via PostGrid',
+        'tags' => ['mail', 'postgrid', 'letters', 'postcards', 'checks'],
+        'features' => [
+            'letters' => true,
+            'postcards' => true,
+            'checks' => true,
+            'bulk_mail' => true,
+            'tracking' => true,
+            'webhooks' => true,
+        ],
+    ],
 ];

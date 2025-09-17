@@ -703,3 +703,9 @@ Route::prefix('client-portal')->name('client.')->group(function () {
         Route::post('notifications/{notification}/read', [\App\Domains\Client\Controllers\ClientPortalController::class, 'markNotificationAsRead'])->name('notifications.read');
     });
 });
+
+// Physical Mail Settings Route
+Route::middleware(['auth', 'verified'])->get('/settings/physical-mail', function() {
+    return view('settings.physical-mail');
+})->name('settings.physical-mail');
+

@@ -13,6 +13,7 @@ use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
 use App\Models\Recurring;
 use App\Traits\BelongsToCompany;
+use App\Domains\PhysicalMail\Traits\HasPhysicalMail;
 
 /**
  * Invoice Model
@@ -40,7 +41,7 @@ use App\Traits\BelongsToCompany;
  */
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use HasFactory, SoftDeletes, BelongsToCompany, HasPhysicalMail;
 
     /**
      * The table associated with the model.
@@ -666,5 +667,184 @@ class Invoice extends Model
                 $invoice->update(['status' => self::STATUS_OVERDUE]);
             }
         });
+    }
+
+    // Physical Mail Implementation Methods
+
+    /**
+     * Get the mailing address for this invoice
+     */
+    protected function getMailingAddress(): array
+    {
+        return [
+            'firstName' => $this->client->contact_first_name ?? '',
+            'lastName' => $this->client->contact_last_name ?? '',
+            'companyName' => $this->client->name,
+            'addressLine1' => $this->client->address,
+            'addressLine2' => $this->client->address2,
+            'city' => $this->client->city,
+            'provinceOrState' => $this->client->state,
+            'postalOrZip' => $this->client->zip_code,
+            'country' => $this->client->country_code ?? 'US',
+        ];
+    }
+
+    /**
+     * Get the mail template ID for invoices
+     */
+    protected function getMailTemplate(): ?string
+    {
+        return config('physical_mail.templates.invoice');
+    }
+
+    /**
+     * Get merge variables for the mail template
+     */
+    protected function getMailMergeVariables(): array
+    {
+        return [
+            'invoice_number' => $this->getFormattedNumber(),
+            'invoice_date' => $this->date->format('F j, Y'),
+            'due_date' => $this->due->format('F j, Y'),
+            'amount_due' => number_format($this->getBalance(), 2),
+            'total_amount' => number_format($this->amount, 2),
+            'client_name' => $this->client->name,
+            'client_email' => $this->client->email,
+            'payment_terms' => $this->getPaymentTerms(),
+            'invoice_url' => $this->getPublicUrl(),
+        ];
+    }
+
+    /**
+     * Get the mail type for invoices
+     */
+    protected function getMailType(): string
+    {
+        return 'Letter';
+    }
+
+    /**
+     * Get the client ID for this mailing
+     */
+    protected function getMailClientId(): ?string
+    {
+        return $this->client_id;
+    }
+
+    /**
+     * Get payment terms description
+     */
+    private function getPaymentTerms(): string
+    {
+        $days = $this->due->diffInDays($this->date);
+        
+        return match($days) {
+            0 => 'Due upon receipt',
+            30 => 'Net 30',
+            60 => 'Net 60',
+            90 => 'Net 90',
+            default => "Net {$days}",
+        };
+    }
+    
+    /**
+     * Render invoice HTML for physical mail
+     */
+    public function renderForPhysicalMail(): string
+    {
+        $html = '<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">';
+        
+        // Header
+        $html .= '<div style="border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px;">';
+        $html .= '<h1 style="color: #333; margin: 0;">INVOICE</h1>';
+        $html .= '<div style="float: right; text-align: right;">';
+        $html .= '<strong>Invoice #:</strong> ' . $this->getFormattedNumber() . '<br>';
+        $html .= '<strong>Date:</strong> ' . $this->date->format('F j, Y') . '<br>';
+        $html .= '<strong>Due Date:</strong> ' . $this->due->format('F j, Y');
+        $html .= '</div>';
+        $html .= '<div style="clear: both;"></div>';
+        $html .= '</div>';
+        
+        // From and To sections
+        $html .= '<div style="margin-bottom: 30px;">';
+        $html .= '<div style="width: 48%; float: left;">';
+        $html .= '<strong>From:</strong><br>';
+        $html .= config('nestogy.company_name') . '<br>';
+        $html .= config('nestogy.company_address_line1') . '<br>';
+        $html .= config('nestogy.company_city') . ', ' . config('nestogy.company_state') . ' ' . config('nestogy.company_postal_code');
+        $html .= '</div>';
+        
+        $html .= '<div style="width: 48%; float: right;">';
+        $html .= '<strong>Bill To:</strong><br>';
+        $html .= $this->client->name . '<br>';
+        if ($this->client->address) {
+            $html .= $this->client->address . '<br>';
+        }
+        if ($this->client->city) {
+            $html .= $this->client->city . ', ' . $this->client->state . ' ' . $this->client->zip_code;
+        }
+        $html .= '</div>';
+        $html .= '<div style="clear: both;"></div>';
+        $html .= '</div>';
+        
+        // Line items table
+        $html .= '<table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">';
+        $html .= '<thead>';
+        $html .= '<tr style="background-color: #f0f0f0;">';
+        $html .= '<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Description</th>';
+        $html .= '<th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Quantity</th>';
+        $html .= '<th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Rate</th>';
+        $html .= '<th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Amount</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+        
+        foreach ($this->items as $item) {
+            $html .= '<tr>';
+            $html .= '<td style="padding: 10px; border: 1px solid #ddd;">' . $item->description . '</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">' . $item->quantity . '</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$' . number_format($item->price, 2) . '</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$' . number_format($item->quantity * $item->price, 2) . '</td>';
+            $html .= '</tr>';
+        }
+        
+        // Totals
+        $html .= '<tr>';
+        $html .= '<td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Subtotal:</strong></td>';
+        $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$' . number_format($this->amount - $this->discount_amount, 2) . '</td>';
+        $html .= '</tr>';
+        
+        if ($this->discount_amount > 0) {
+            $html .= '<tr>';
+            $html .= '<td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Discount:</strong></td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">-$' . number_format($this->discount_amount, 2) . '</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '<tr style="background-color: #f0f0f0;">';
+        $html .= '<td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Total Due:</strong></td>';
+        $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd; font-size: 1.2em;"><strong>$' . number_format($this->amount, 2) . '</strong></td>';
+        $html .= '</tr>';
+        
+        $html .= '</tbody>';
+        $html .= '</table>';
+        
+        // Notes
+        if ($this->note) {
+            $html .= '<div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 3px solid #333;">';
+            $html .= '<strong>Notes:</strong><br>';
+            $html .= nl2br(e($this->note));
+            $html .= '</div>';
+        }
+        
+        // Payment terms
+        $html .= '<div style="margin-top: 30px; text-align: center; color: #666;">';
+        $html .= '<p><strong>Payment Terms:</strong> ' . $this->getPaymentTerms() . '</p>';
+        $html .= '<p>Thank you for your business!</p>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
+        return $html;
     }
 }
