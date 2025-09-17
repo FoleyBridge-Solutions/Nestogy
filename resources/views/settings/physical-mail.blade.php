@@ -218,7 +218,7 @@
 function testConnection() {
     const resultDiv = document.getElementById('test-result');
     resultDiv.classList.remove('hidden');
-    resultDiv.innerHTML = '<flux:spinner /> Testing connection...';
+    resultDiv.innerHTML = '<div class="flex items-center gap-2"><div class="animate-spin h-4 w-4 border-2 border-zinc-500 border-t-transparent rounded-full"></div> Testing connection...</div>';
     
     fetch('/api/physical-mail/test-connection', {
         method: 'GET',
