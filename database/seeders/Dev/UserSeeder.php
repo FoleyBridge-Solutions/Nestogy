@@ -70,19 +70,77 @@ class UserSeeder extends Seeder
     }
 
     /**
-     * Create users for MSP companies
+     * Create users for MSP companies based on their size
      */
     private function createMSPUsers(Company $company): void
     {
-        $this->command->info("  Creating enhanced user dataset for {$company->name}...");
+        $companySize = $company->size ?? 'medium';
+        $this->command->info("  Creating users for {$company->name} ({$companySize} company)...");
 
         // Extract domain from company email
-        $emailDomain = str_replace(['info@', 'www.'], '', $company->email);
+        $emailDomain = str_replace(['info@', 'www.', 'dave@', 'support@'], '', $company->email);
         
         $userCount = 0;
         
-        // Admin users (3-5)
-        $adminCount = rand(3, 5);
+        // Determine user counts based on company size
+        switch($companySize) {
+            case 'solo':
+                $adminCount = 1;
+                $techCount = 0;
+                $accountingCount = 0;
+                $salesCount = 0;
+                $marketingCount = 0;
+                $pmCount = 0;
+                break;
+                
+            case 'small': // 2-10 employees
+                $totalEmployees = $company->employee_count ?? 5;
+                $adminCount = 1;
+                $techCount = max(1, $totalEmployees - 1); // Everyone else is tech
+                $accountingCount = 0;
+                $salesCount = 0;
+                $marketingCount = 0;
+                $pmCount = 0;
+                break;
+                
+            case 'medium': // 25-50 employees
+                $adminCount = rand(2, 3);
+                $techCount = rand(15, 25);
+                $accountingCount = rand(2, 3);
+                $salesCount = rand(2, 4);
+                $marketingCount = rand(1, 2);
+                $pmCount = rand(2, 3);
+                break;
+                
+            case 'large': // 100-200 employees
+                $adminCount = rand(5, 8);
+                $techCount = rand(50, 80);
+                $accountingCount = rand(5, 10);
+                $salesCount = rand(8, 15);
+                $marketingCount = rand(3, 5);
+                $pmCount = rand(5, 8);
+                break;
+                
+            case 'enterprise': // 500+ employees
+                $adminCount = rand(10, 15);
+                $techCount = rand(100, 150);
+                $accountingCount = rand(15, 25);
+                $salesCount = rand(20, 30);
+                $marketingCount = rand(8, 12);
+                $pmCount = rand(10, 15);
+                break;
+                
+            default:
+                $adminCount = rand(3, 5);
+                $techCount = rand(10, 20);
+                $accountingCount = rand(3, 5);
+                $salesCount = rand(2, 4);
+                $marketingCount = rand(1, 2);
+                $pmCount = rand(2, 3);
+                break;
+        }
+        
+        // Create Admin users
         for ($i = 1; $i <= $adminCount; $i++) {
             $email = $i == 1 ? "admin@{$emailDomain}" : "admin{$i}@{$emailDomain}";
             $user = User::updateOrCreate(
@@ -94,6 +152,8 @@ class UserSeeder extends Seeder
                     'status' => true,
                     'email_verified_at' => now(),
                     'phone' => fake()->phoneNumber(),
+                    'title' => fake()->randomElement(['IT Director', 'Operations Manager', 'Admin', 'Owner']),
+                    'department' => 'Management',
                     'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
                     'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                 ]
@@ -102,140 +162,147 @@ class UserSeeder extends Seeder
             $this->createUserSettings($user, User::ROLE_ADMIN);
             $userCount++;
         }
-        $this->command->info("    ✓ Created {$adminCount} administrators");
-
-        // Technician users (10-20)
-        $techCount = rand(10, 20);
-        $techLevels = ['Jr. Tech', 'Tech', 'Sr. Tech', 'Lead Tech'];
-        for ($i = 1; $i <= $techCount; $i++) {
-            $email = "tech{$i}@{$emailDomain}";
-            $level = fake()->randomElement($techLevels);
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'company_id' => $company->id,
-                    'name' => fake()->name() . " ({$level})",
-                    'password' => Hash::make('password123'),
-                    'status' => fake()->randomElement([true, true, true, true, false]), // 80% active
-                    'email_verified_at' => now(),
-                    'phone' => fake()->phoneNumber(),
-                    'title' => $level,
-                    'department' => 'Technical Support',
-                    'created_at' => fake()->dateTimeBetween('-2 years', '-1 week'),
-                    'updated_at' => fake()->dateTimeBetween('-1 week', 'now'),
-                ]
-            );
-            $user->assign('tech');
-            $this->createUserSettings($user, User::ROLE_TECH);
-            $userCount++;
+        if ($adminCount > 0) {
+            $this->command->info("    ✓ Created {$adminCount} administrator(s)");
         }
-        $this->command->info("    ✓ Created {$techCount} technicians");
 
-        // Accounting/Finance users (3-5)
-        $accountingCount = rand(3, 5);
-        $accountingTitles = ['Billing Specialist', 'Accountant', 'Finance Manager', 'AR Specialist'];
-        for ($i = 1; $i <= $accountingCount; $i++) {
-            $email = $i == 1 ? "accounting@{$emailDomain}" : "accounting{$i}@{$emailDomain}";
-            $title = fake()->randomElement($accountingTitles);
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'company_id' => $company->id,
-                    'name' => fake()->name() . " ({$title})",
-                    'password' => Hash::make('password123'),
-                    'status' => true,
-                    'email_verified_at' => now(),
-                    'phone' => fake()->phoneNumber(),
-                    'title' => $title,
-                    'department' => 'Finance',
-                    'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
-                    'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
-                ]
-            );
-            $user->assign('accountant');
-            $this->createUserSettings($user, User::ROLE_ACCOUNTANT);
-            $userCount++;
+        // Create Technician users
+        if ($techCount > 0) {
+            $techLevels = ['Jr. Tech', 'Tech', 'Sr. Tech', 'Lead Tech', 'Tech Specialist'];
+            for ($i = 1; $i <= $techCount; $i++) {
+                $email = "tech{$i}@{$emailDomain}";
+                $level = fake()->randomElement($techLevels);
+                $user = User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'company_id' => $company->id,
+                        'name' => fake()->name() . " ({$level})",
+                        'password' => Hash::make('password123'),
+                        'status' => fake()->randomElement([true, true, true, true, false]), // 80% active
+                        'email_verified_at' => now(),
+                        'phone' => fake()->phoneNumber(),
+                        'title' => $level,
+                        'department' => 'Technical Support',
+                        'created_at' => fake()->dateTimeBetween('-2 years', '-1 week'),
+                        'updated_at' => fake()->dateTimeBetween('-1 week', 'now'),
+                    ]
+                );
+                $user->assign('tech');
+                $this->createUserSettings($user, User::ROLE_TECH);
+                $userCount++;
+            }
+            $this->command->info("    ✓ Created {$techCount} technicians");
         }
-        $this->command->info("    ✓ Created {$accountingCount} accounting staff");
 
-        // Sales team (2-4)
-        $salesCount = rand(2, 4);
-        $salesTitles = ['Sales Representative', 'Account Manager', 'Business Development', 'Sales Manager'];
-        for ($i = 1; $i <= $salesCount; $i++) {
-            $email = $i == 1 ? "sales@{$emailDomain}" : "sales{$i}@{$emailDomain}";
-            $title = fake()->randomElement($salesTitles);
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'company_id' => $company->id,
-                    'name' => fake()->name() . " ({$title})",
-                    'password' => Hash::make('password123'),
-                    'status' => true,
-                    'email_verified_at' => now(),
-                    'phone' => fake()->phoneNumber(),
-                    'title' => $title,
-                    'department' => 'Sales',
-                    'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
-                    'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
-                ]
-            );
-            $user->assign('sales');
-            $this->createUserSettings($user, User::ROLE_TECH);
-            $userCount++;
+        // Create Accounting/Finance users
+        if ($accountingCount > 0) {
+            $accountingTitles = ['Billing Specialist', 'Accountant', 'Finance Manager', 'AR Specialist'];
+            for ($i = 1; $i <= $accountingCount; $i++) {
+                $email = $i == 1 ? "accounting@{$emailDomain}" : "accounting{$i}@{$emailDomain}";
+                $title = fake()->randomElement($accountingTitles);
+                $user = User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'company_id' => $company->id,
+                        'name' => fake()->name() . " ({$title})",
+                        'password' => Hash::make('password123'),
+                        'status' => true,
+                        'email_verified_at' => now(),
+                        'phone' => fake()->phoneNumber(),
+                        'title' => $title,
+                        'department' => 'Finance',
+                        'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
+                        'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
+                    ]
+                );
+                $user->assign('accountant');
+                $this->createUserSettings($user, User::ROLE_ACCOUNTANT);
+                $userCount++;
+            }
+            $this->command->info("    ✓ Created {$accountingCount} accounting staff");
         }
-        $this->command->info("    ✓ Created {$salesCount} sales staff");
 
-        // Marketing team (1-2)
-        $marketingCount = rand(1, 2);
-        $marketingTitles = ['Marketing Specialist', 'Marketing Manager'];
-        for ($i = 1; $i <= $marketingCount; $i++) {
-            $email = $i == 1 ? "marketing@{$emailDomain}" : "marketing{$i}@{$emailDomain}";
-            $title = fake()->randomElement($marketingTitles);
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'company_id' => $company->id,
-                    'name' => fake()->name() . " ({$title})",
-                    'password' => Hash::make('password123'),
-                    'status' => true,
-                    'email_verified_at' => now(),
-                    'phone' => fake()->phoneNumber(),
-                    'title' => $title,
-                    'department' => 'Marketing',
-                    'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
-                    'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
-                ]
-            );
-            $user->assign('marketing');
-            $this->createUserSettings($user, User::ROLE_TECH);
-            $userCount++;
+        // Create Sales team
+        if ($salesCount > 0) {
+            $salesTitles = ['Sales Representative', 'Account Manager', 'Business Development', 'Sales Manager'];
+            for ($i = 1; $i <= $salesCount; $i++) {
+                $email = $i == 1 ? "sales@{$emailDomain}" : "sales{$i}@{$emailDomain}";
+                $title = fake()->randomElement($salesTitles);
+                $user = User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'company_id' => $company->id,
+                        'name' => fake()->name() . " ({$title})",
+                        'password' => Hash::make('password123'),
+                        'status' => true,
+                        'email_verified_at' => now(),
+                        'phone' => fake()->phoneNumber(),
+                        'title' => $title,
+                        'department' => 'Sales',
+                        'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
+                        'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
+                    ]
+                );
+                $user->assign('sales');
+                $this->createUserSettings($user, User::ROLE_TECH);
+                $userCount++;
+            }
+            $this->command->info("    ✓ Created {$salesCount} sales staff");
         }
-        $this->command->info("    ✓ Created {$marketingCount} marketing staff");
+
+        // Create Marketing team
+        if ($marketingCount > 0) {
+            $marketingTitles = ['Marketing Specialist', 'Marketing Manager', 'Content Creator'];
+            for ($i = 1; $i <= $marketingCount; $i++) {
+                $email = $i == 1 ? "marketing@{$emailDomain}" : "marketing{$i}@{$emailDomain}";
+                $title = fake()->randomElement($marketingTitles);
+                $user = User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'company_id' => $company->id,
+                        'name' => fake()->name() . " ({$title})",
+                        'password' => Hash::make('password123'),
+                        'status' => true,
+                        'email_verified_at' => now(),
+                        'phone' => fake()->phoneNumber(),
+                        'title' => $title,
+                        'department' => 'Marketing',
+                        'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
+                        'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
+                    ]
+                );
+                $user->assign('marketing');
+                $this->createUserSettings($user, User::ROLE_TECH);
+                $userCount++;
+            }
+            $this->command->info("    ✓ Created {$marketingCount} marketing staff");
+        }
         
-        // Project Managers (2-3)
-        $pmCount = rand(2, 3);
-        for ($i = 1; $i <= $pmCount; $i++) {
-            $email = "pm{$i}@{$emailDomain}";
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'company_id' => $company->id,
-                    'name' => fake()->name() . " (Project Manager)",
-                    'password' => Hash::make('password123'),
-                    'status' => true,
-                    'email_verified_at' => now(),
-                    'phone' => fake()->phoneNumber(),
-                    'title' => 'Project Manager',
-                    'department' => 'Operations',
-                    'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
-                    'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
-                ]
-            );
-            $user->assign('tech');
-            $this->createUserSettings($user, User::ROLE_TECH);
-            $userCount++;
+        // Create Project Managers
+        if ($pmCount > 0) {
+            for ($i = 1; $i <= $pmCount; $i++) {
+                $email = "pm{$i}@{$emailDomain}";
+                $user = User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'company_id' => $company->id,
+                        'name' => fake()->name() . " (Project Manager)",
+                        'password' => Hash::make('password123'),
+                        'status' => true,
+                        'email_verified_at' => now(),
+                        'phone' => fake()->phoneNumber(),
+                        'title' => 'Project Manager',
+                        'department' => 'Operations',
+                        'created_at' => fake()->dateTimeBetween('-2 years', '-1 month'),
+                        'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
+                    ]
+                );
+                $user->assign('tech');
+                $this->createUserSettings($user, User::ROLE_TECH);
+                $userCount++;
+            }
+            $this->command->info("    ✓ Created {$pmCount} project managers");
         }
-        $this->command->info("    ✓ Created {$pmCount} project managers");
         
         $this->command->info("    ✓ Total users created for {$company->name}: {$userCount}");
     }

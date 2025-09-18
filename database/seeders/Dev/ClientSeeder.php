@@ -20,13 +20,31 @@ class ClientSeeder extends Seeder
         $companies = Company::where('id', '>', 1)->get();
         
         foreach ($companies as $company) {
-            $this->command->info("  Creating clients for {$company->name}...");
+            $companySize = $company->size ?? 'medium';
+            $this->command->info("  Creating clients for {$company->name} ({$companySize} company)...");
             
             // Get default SLA for this company
             $defaultSla = SLA::where('company_id', $company->id)->first();
             
-            // Create 30-50 clients per company for more realistic data
-            $numClients = rand(30, 50);
+            // Determine number of clients based on company size
+            switch($companySize) {
+                case 'solo':
+                    $numClients = rand(5, 15);  // Solo operators have fewer clients
+                    break;
+                case 'small':
+                    $numClients = rand(20, 40);  // Small shops manage 20-40 clients
+                    break;
+                case 'medium':
+                    $numClients = rand(50, 100); // Medium MSPs manage 50-100 clients
+                    break;
+                case 'large':
+                    $numClients = rand(100, 200); // Large MSPs manage 100-200 clients
+                    break;
+                case 'enterprise':
+                    $numClients = rand(200, 500); // Enterprise MSPs manage hundreds of clients
+                    break;
+                default:
+                    $numClients = rand(30, 50);
             
             // Create a mix of client sizes and statuses
             $clientTypes = [
