@@ -11,7 +11,7 @@
         <div class="mt-4">
             <flux:button onclick="addContact()" icon="plus">
                 Add Contact
-            </flux:button>
+            </button>
         </div>
     </div>
 
@@ -25,16 +25,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @foreach($clients as $client)
             <flux:card>
-                <flux:card.header>
-                    <flux:card.title>{{ $client->name }}</flux:card.title>
+                <div>
+                    <flux:heading size="lg">{{ $client->name }}</flux:heading>
                     @if($client->is_active)
                         <flux:badge variant="green">Active</flux:badge>
                     @else
                         <flux:badge variant="zinc">Inactive</flux:badge>
                     @endif
-                </flux:card.header>
+                </div>
                 
-                <flux:card.body>
+                <div>
                     <div class="space-y-2">
                         @if($client->contact_name)
                             <div class="flex items-start gap-2">
@@ -92,35 +92,35 @@
                             {{ $mailCount }} {{ Str::plural('letter', $mailCount) }} sent
                         </flux:text>
                     @endif
-                </flux:card.body>
+                </div>
                 
-                <flux:card.footer class="flex gap-2">
-                    <flux:button size="sm" variant="secondary" 
+                <div class="flex gap-2">
+                    <flux:button size="sm" variant="filled" 
                         onclick="sendMailTo('{{ $client->id }}', '{{ $client->name }}')">
                         Send Mail
-                    </flux:button>
+                    </button>
                     <flux:button size="sm" variant="ghost" 
                         onclick="editContact('{{ $client->id }}')">
                         Edit
-                    </flux:button>
+                    </button>
                     <flux:button size="sm" variant="ghost" 
                         onclick="viewHistory('{{ $client->id }}')">
                         History
-                    </flux:button>
-                </flux:card.footer>
+                    </button>
+                </div>
             </flux:card>
         @endforeach
         
         @if($clients->isEmpty())
             <div class="col-span-full">
                 <flux:card>
-                    <flux:card.body class="text-center py-12">
+                    <div class="text-center py-12">
                         <svg class="w-16 h-16 mx-auto text-zinc-300 mb-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
                         </svg>
                         <flux:text size="lg" class="text-zinc-500 mb-2">No contacts with addresses</flux:text>
                         <flux:text size="sm" class="text-zinc-400">Add client addresses to use them for physical mail</flux:text>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
             </div>
         @endif
@@ -129,33 +129,33 @@
     <!-- Address Book Import -->
     <div class="mt-12">
         <flux:card>
-            <flux:card.header>
-                <flux:card.title>Import Addresses</flux:card.title>
-                <flux:card.description>
+            <div>
+                <flux:heading size="lg">Import Addresses</flux:heading>
+                <flux:text class="mt-2">
                     Import addresses from CSV file or other sources
-                </flux:card.description>
-            </flux:card.header>
-            <flux:card.body>
+                </flux:text>
+            </div>
+            <div>
                 <div class="flex items-center gap-4">
-                    <flux:button variant="secondary" onclick="importCSV()">
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                         </svg>
                         Import CSV
-                    </flux:button>
+                    </button>
                     
-                    <flux:button variant="secondary" onclick="syncClients()">
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
                         </svg>
                         Sync from CRM
-                    </flux:button>
+                    </button>
                     
                     <flux:text size="sm" class="text-zinc-500">
                         Download <a href="#" class="text-blue-500 hover:underline">sample CSV template</a>
                     </flux:text>
                 </div>
-            </flux:card.body>
+            </div>
         </flux:card>
     </div>
 </div>

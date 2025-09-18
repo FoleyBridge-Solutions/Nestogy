@@ -248,4 +248,80 @@ class PhysicalMailController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Display the physical mail dashboard (web view)
+     */
+    public function webIndex(Request $request)
+    {
+        $stats = [
+            'total' => PhysicalMailOrder::count(),
+            'month' => PhysicalMailOrder::whereMonth('created_at', now()->month)->count(),
+            'pending' => PhysicalMailOrder::whereIn('status', ['pending', 'processing'])->count(),
+            'delivered' => PhysicalMailOrder::where('status', 'delivered')->count(),
+        ];
+        
+        $recentOrders = PhysicalMailOrder::with(['client', 'createdBy'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $activeDomain = 'clients';
+        $activeSection = 'physical-mail';
+        
+        return view('physical-mail.index', compact('stats', 'recentOrders', 'activeDomain', 'activeSection'));
+    }
+    
+    /**
+     * Display the send mail form (web view)
+     */
+    public function webSend(Request $request)
+    {
+        $activeDomain = 'clients';
+        $activeSection = 'physical-mail';
+        
+        return view('physical-mail.send', compact('activeDomain', 'activeSection'));
+    }
+    
+    /**
+     * Display the tracking page (web view)
+     */
+    public function webTracking(Request $request)
+    {
+        $orders = PhysicalMailOrder::with(['client', 'createdBy'])
+            ->whereNotNull('tracking_number')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        
+        $activeDomain = 'clients';
+        $activeSection = 'physical-mail';
+        
+        return view('physical-mail.tracking', compact('orders', 'activeDomain', 'activeSection'));
+    }
+    
+    /**
+     * Display the templates page (web view)
+     */
+    public function webTemplates(Request $request)
+    {
+        $templates = collect(); // TODO: Load from database when template model is created
+        
+        $activeDomain = 'clients';
+        $activeSection = 'physical-mail';
+        
+        return view('physical-mail.templates', compact('templates', 'activeDomain', 'activeSection'));
+    }
+    
+    /**
+     * Display the contacts page (web view)
+     */
+    public function webContacts(Request $request)
+    {
+        $contacts = collect(); // TODO: Load from database when contact model is created
+        
+        $activeDomain = 'clients';
+        $activeSection = 'physical-mail';
+        
+        return view('physical-mail.contacts', compact('contacts', 'activeDomain', 'activeSection'));
+    }
 }

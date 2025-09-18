@@ -14,7 +14,7 @@ class ClientSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('Creating clients for each company...');
+        $this->command->info('Creating enhanced client dataset...');
         
         // Skip the root company (ID 1)
         $companies = Company::where('id', '>', 1)->get();
@@ -25,24 +25,60 @@ class ClientSeeder extends Seeder
             // Get default SLA for this company
             $defaultSla = SLA::where('company_id', $company->id)->first();
             
-            // Create 8-12 clients per company
-            $numClients = rand(8, 12);
+            // Create 30-50 clients per company for more realistic data
+            $numClients = rand(30, 50);
             
-            Client::factory()
-                ->count($numClients)
-                ->forCompany($company)
-                ->state(function (array $attributes) use ($defaultSla) {
-                    return [
-                        'sla_id' => $defaultSla?->id,
-                        'hourly_rate' => fake()->randomElement([125, 150, 175, 200, 225]),
-                        'status' => fake()->randomElement(['active', 'active', 'active', 'inactive', 'suspended']),
-                    ];
-                })
-                ->create();
+            // Create a mix of client sizes and statuses
+            $clientTypes = [
+                ['size' => 'enterprise', 'rate_range' => [200, 300], 'count' => (int)($numClients * 0.15)],
+                ['size' => 'medium', 'rate_range' => [150, 200], 'count' => (int)($numClients * 0.35)],
+                ['size' => 'small', 'rate_range' => [100, 150], 'count' => (int)($numClients * 0.50)],
+            ];
             
-            $this->command->info("    ✓ Created {$numClients} clients");
+            $totalCreated = 0;
+            foreach ($clientTypes as $type) {
+                for ($i = 0; $i < $type['count']; $i++) {
+                    $createdDate = fake()->dateTimeBetween('-2 years', 'now');
+                    
+                    // Older clients more likely to be active
+                    $daysSinceCreation = now()->diffInDays($createdDate);
+                    if ($daysSinceCreation > 365) {
+                        $status = fake()->randomElement(['active', 'active', 'active', 'active', 'inactive']);
+                    } elseif ($daysSinceCreation > 90) {
+                        $status = fake()->randomElement(['active', 'active', 'active', 'suspended', 'inactive']);
+                    } else {
+                        $status = fake()->randomElement(['active', 'active', 'suspended']);
+                    }
+                    
+                    Client::factory()
+                        ->forCompany($company)
+                        ->state([
+                            'sla_id' => $defaultSla?->id,
+                            'hourly_rate' => fake()->numberBetween($type['rate_range'][0], $type['rate_range'][1]),
+                            'status' => $status,
+                            'created_at' => $createdDate,
+                            'updated_at' => fake()->dateTimeBetween($createdDate, 'now'),
+                            'notes' => fake()->optional(0.3)->paragraph(),
+                            'industry' => fake()->randomElement([
+                                'Healthcare', 'Finance', 'Manufacturing', 'Retail', 'Education',
+                                'Technology', 'Legal', 'Real Estate', 'Non-Profit', 'Government',
+                                'Construction', 'Hospitality', 'Transportation', 'Energy'
+                            ]),
+                            'employee_count' => match($type['size']) {
+                                'enterprise' => fake()->numberBetween(500, 5000),
+                                'medium' => fake()->numberBetween(50, 500),
+                                'small' => fake()->numberBetween(1, 50),
+                            },
+                        ])
+                        ->create();
+                    
+                    $totalCreated++;
+                }
+            }
+            
+            $this->command->info("    ✓ Created {$totalCreated} clients with varied sizes and histories");
         }
         
-        $this->command->info('Clients created successfully.');
+        $this->command->info('Enhanced client dataset created successfully.');
     }
 }

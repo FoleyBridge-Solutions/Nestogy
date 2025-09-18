@@ -49,14 +49,20 @@ class FluxSidebar extends Component
         $resolvedParams = [];
         
         foreach ($params as $key => $value) {
-            if ($value === 'current' && $selectedClient) {
-                // Handle client context
-                if (in_array($key, ['client', 'client_id'])) {
+            // Skip client-related parameters - we use session-based client selection
+            // as per the architectural decision documented in CLAUDE.md
+            if (in_array($key, ['client', 'client_id'])) {
+                // For routes that require a 'client' parameter (like clients.show),
+                // we still need to pass it, but not 'client_id' which is for filtering
+                if ($key === 'client' && $value === 'current' && $selectedClient) {
                     $resolvedParams[$key] = $selectedClient->id;
                 }
-            } else {
-                $resolvedParams[$key] = $value;
+                // Skip 'client_id' parameters entirely - these are handled via session
+                continue;
             }
+            
+            // Keep non-client parameters as-is
+            $resolvedParams[$key] = $value;
         }
         
         return $resolvedParams;

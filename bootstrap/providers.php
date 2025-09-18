@@ -10,6 +10,7 @@ return [
     App\Providers\DynamicRouteServiceProvider::class,
     App\Providers\ContractPluginServiceProvider::class,
     App\Providers\SidebarServiceProvider::class,
+    App\Providers\PhysicalMailServiceProvider::class,
     Flux\FluxServiceProvider::class,
     FluxPro\FluxProServiceProvider::class,
 ];

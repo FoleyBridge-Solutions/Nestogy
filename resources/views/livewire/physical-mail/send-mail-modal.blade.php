@@ -111,14 +111,14 @@
                                 <flux:field>
                                     <flux:label for="template">Select Template</flux:label>
                                     <flux:select wire:model="templateId" id="template">
-                                        <flux:option value="">Choose a template...</flux:option>
+                                        <flux:select.option value="">Choose a template...</flux:select.option>
                                         @foreach ($templates as $template)
-                                            <flux:option value="{{ $template->id }}">
+                                            <flux:select.option value="{{ $template->id }}">
                                                 {{ $template->name }}
                                                 @if ($template->description)
                                                     - {{ $template->description }}
                                                 @endif
-                                            </flux:option>
+                                            </flux:select.option>
                                         @endforeach
                                     </flux:select>
                                 </flux:field>
@@ -170,10 +170,10 @@
                     </flux:fieldset>
                     
                     <flux:card>
-                        <flux:card.header>
-                            <flux:card.title>Estimated Cost</flux:card.title>
-                        </flux:card.header>
-                        <flux:card.body>
+                        <div>
+                            <flux:heading size="lg">Estimated Cost</flux:heading>
+                        </div>
+                        <div>
                             <div class="space-y-1 text-sm">
                                 <div class="flex justify-between">
                                     <span>Base Letter (1-2 pages)</span>
@@ -208,7 +208,7 @@
                                     <span>${{ number_format($this->calculateEstimatedCost(), 2) }}</span>
                                 </div>
                             </div>
-                        </flux:card.body>
+                        </div>
                     </flux:card>
                 </flux:tab.panel>
             </flux:tabs>

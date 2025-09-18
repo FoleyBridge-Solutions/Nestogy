@@ -61,6 +61,13 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
+        // Debug logging to trace any redirects
+        \Log::info('InvoiceController@index accessed', [
+            'url' => $request->fullUrl(),
+            'user_id' => Auth::id(),
+            'session_client' => session('selected_client_id'),
+        ]);
+        
         // Get the selected client from session
         $client = $this->getSelectedClient();
         

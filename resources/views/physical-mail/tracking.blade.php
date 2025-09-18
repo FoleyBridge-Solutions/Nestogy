@@ -11,23 +11,23 @@
 
     <!-- Filters -->
     <flux:card class="mb-6">
-        <flux:card.body>
+        <div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <flux:select name="status">
-                    <flux:option value="">All Statuses</flux:option>
-                    <flux:option value="pending">Pending</flux:option>
-                    <flux:option value="processing">Processing</flux:option>
-                    <flux:option value="printed">Printed</flux:option>
-                    <flux:option value="mailed">Mailed</flux:option>
-                    <flux:option value="in_transit">In Transit</flux:option>
-                    <flux:option value="delivered">Delivered</flux:option>
-                    <flux:option value="returned">Returned</flux:option>
+                    <flux:select.option value="">All Statuses</flux:select.option>
+                    <flux:select.option value="pending">Pending</flux:select.option>
+                    <flux:select.option value="processing">Processing</flux:select.option>
+                    <flux:select.option value="printed">Printed</flux:select.option>
+                    <flux:select.option value="mailed">Mailed</flux:select.option>
+                    <flux:select.option value="in_transit">In Transit</flux:select.option>
+                    <flux:select.option value="delivered">Delivered</flux:select.option>
+                    <flux:select.option value="returned">Returned</flux:select.option>
                 </flux:select>
                 
                 <flux:select name="client">
-                    <flux:option value="">All Clients</flux:option>
+                    <flux:select.option value="">All Clients</flux:select.option>
                     @foreach(\App\Models\Client::orderBy('name')->get() as $client)
-                        <flux:option value="{{ $client->id }}">{{ $client->name }}</flux:option>
+                        <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
                     @endforeach
                 </flux:select>
                 
@@ -36,27 +36,27 @@
             </div>
             
             <div class="mt-4 flex gap-2">
-                <flux:button variant="secondary" onclick="applyFilters()">
+                <button type="button" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
                     Apply Filters
-                </flux:button>
+                </button>
                 <flux:button variant="ghost" onclick="resetFilters()">
                     Reset
-                </flux:button>
+                </button>
             </div>
-        </flux:card.body>
+        </div>
     </flux:card>
 
     <!-- Tracking Map View (Placeholder) -->
     <flux:card class="mb-6">
-        <flux:card.header>
-            <flux:card.title>Delivery Map</flux:card.title>
+        <div>
+            <flux:heading size="lg">Delivery Map</flux:heading>
             <flux:text size="sm" class="text-zinc-500">Visual representation of mail in transit</flux:text>
-        </flux:card.header>
-        <flux:card.body>
+        </div>
+        <div>
             <div class="h-64 bg-zinc-100 rounded-lg flex items-center justify-center">
                 <flux:text class="text-zinc-400">Map view coming soon</flux:text>
             </div>
-        </flux:card.body>
+        </div>
     </flux:card>
 
     <!-- Tracking List -->
@@ -68,26 +68,26 @@
     @endphp
 
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>Mail Items</flux:card.title>
+        <div>
+            <flux:heading size="lg">Mail Items</flux:heading>
             <flux:badge variant="neutral">{{ $orders->total() }} items</flux:badge>
-        </flux:card.header>
+        </div>
         
         <flux:table>
-            <flux:columns>
-                <flux:column>Tracking #</flux:column>
-                <flux:column>Client</flux:column>
-                <flux:column>Type</flux:column>
-                <flux:column>Sent Date</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column>Est. Delivery</flux:column>
-                <flux:column>Actions</flux:column>
-            </flux:columns>
+            <flux:table.columns>
+                <flux:table.column>Tracking #</flux:table.column>
+                <flux:table.column>Client</flux:table.column>
+                <flux:table.column>Type</flux:table.column>
+                <flux:table.column>Sent Date</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Est. Delivery</flux:table.column>
+                <flux:table.column>Actions</flux:table.column>
+            </flux:table.columns>
             
-            <flux:rows>
+            <flux:table.rows>
                 @foreach($orders as $order)
-                    <flux:row>
-                        <flux:cell>
+                    <flux:table.row>
+                        <flux:table.cell>
                             @if($order->tracking_number)
                                 <a href="#" onclick="showTracking('{{ $order->id }}')" class="text-blue-500 hover:underline">
                                     {{ $order->tracking_number }}
@@ -95,23 +95,23 @@
                             @else
                                 <flux:text size="sm" class="text-zinc-400">{{ Str::limit($order->postgrid_id ?? 'Pending', 12) }}</flux:text>
                             @endif
-                        </flux:cell>
-                        <flux:cell>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             @if($order->client)
                                 {{ $order->client->name }}
                             @else
                                 <span class="text-zinc-400">—</span>
                             @endif
-                        </flux:cell>
-                        <flux:cell>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             <flux:badge variant="neutral">
                                 {{ ucfirst($order->mailable_type) }}
                             </flux:badge>
-                        </flux:cell>
-                        <flux:cell>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             {{ $order->created_at->format('M d, Y') }}
-                        </flux:cell>
-                        <flux:cell>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             @php
                                 $statusInfo = [
                                     'pending' => ['color' => 'yellow', 'icon' => 'clock'],
@@ -127,8 +127,8 @@
                             <flux:badge variant="{{ $info['color'] }}">
                                 {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                             </flux:badge>
-                        </flux:cell>
-                        <flux:cell>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             @if($order->estimated_delivery_date)
                                 {{ $order->estimated_delivery_date->format('M d, Y') }}
                             @elseif(in_array($order->status, ['mailed', 'in_transit']))
@@ -136,34 +136,34 @@
                             @else
                                 <span class="text-zinc-400">—</span>
                             @endif
-                        </flux:cell>
-                        <flux:cell>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             <div class="flex gap-2">
                                 <flux:button size="sm" variant="ghost" icon="eye" 
                                     onclick="showDetails('{{ $order->id }}')">
-                                </flux:button>
+                                </button>
                                 @if($order->pdf_url)
                                     <flux:button size="sm" variant="ghost" icon="document" 
                                         onclick="window.open('{{ $order->pdf_url }}', '_blank')">
-                                    </flux:button>
+                                    </button>
                                 @endif
                                 @if($order->status === 'pending' && config('physical_mail.postgrid.test_mode'))
                                     <flux:button size="sm" variant="ghost" icon="arrow-path" 
                                         onclick="progressTest('{{ $order->id }}')"
                                         title="Progress test order">
-                                    </flux:button>
+                                    </button>
                                 @endif
                             </div>
-                        </flux:cell>
-                    </flux:row>
+                        </flux:table.cell>
+                    </flux:table.row>
                 @endforeach
-            </flux:rows>
+            </flux:table.rows>
         </flux:table>
         
         @if($orders->hasPages())
-            <flux:card.footer>
+            <div>
                 {{ $orders->links() }}
-            </flux:card.footer>
+            </div>
         @endif
     </flux:card>
 </div>

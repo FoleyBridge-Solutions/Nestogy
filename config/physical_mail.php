@@ -7,10 +7,13 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure PostGrid API keys and settings for physical mail delivery.
+    | These are fallback values - actual settings are stored per company in database.
     |
     */
     'postgrid' => [
-        'test_mode' => env('APP_ENV') !== 'production' || env('POSTGRID_TEST_MODE', true),
+        // Use test mode in all non-production environments
+        // Can be overridden with POSTGRID_TEST_MODE env variable
+        'test_mode' => env('POSTGRID_TEST_MODE', env('APP_ENV') !== 'production'),
         'test_key' => env('POSTGRID_TEST_KEY'),
         'live_key' => env('POSTGRID_LIVE_KEY'),
         'webhook_secret' => env('POSTGRID_WEBHOOK_SECRET'),

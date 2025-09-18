@@ -19,71 +19,67 @@ class DevDatabaseSeeder extends Seeder
             return;
         }
 
-        $this->command->info('Starting Nestogy Development Database Seeding...');
+        $this->command->info('Starting Nestogy Enhanced Development Database Seeding...');
+        $this->command->info('This will create comprehensive test data with 2+ years of history.');
         $this->command->newLine();
 
         DB::beginTransaction();
 
         try {
-            // Foundation seeders (Agent 1)
-            $this->callWithProgressBar('Companies', CompanySeeder::class);
+            // Foundation seeders - Enhanced with more data
+            $this->callWithProgressBar('Companies (5-10)', CompanySeeder::class);
             $this->callWithProgressBar('Settings', SettingsSeeder::class);
             $this->callWithProgressBar('Roles and Permissions', RolesAndPermissionsSeeder::class);
-            $this->callWithProgressBar('Users', UserSeeder::class);
+            $this->callWithProgressBar('Users (50-100)', UserSeeder::class);
             $this->callWithProgressBar('Categories', CategorySeeder::class);
-            $this->callWithProgressBar('Vendors', VendorSeeder::class);
+            $this->callWithProgressBar('Vendors (20-30)', VendorSeeder::class);
             
             // SLA must be before Clients as clients reference SLAs
             if (class_exists(SLASeeder::class)) {
                 $this->callWithProgressBar('SLA Levels', SLASeeder::class);
             }
             
-            $this->callWithProgressBar('Clients', ClientSeeder::class);
-            $this->callWithProgressBar('Locations', LocationSeeder::class);
-            $this->callWithProgressBar('Contacts', ContactSeeder::class);
-            // $this->callWithProgressBar('Networks', NetworkSeeder::class); // Not created yet
-            // $this->callWithProgressBar('Tax Configuration', TaxSeeder::class); // Not created yet
-
-            // Operational seeders
-            if (class_exists(AssetSeeder::class)) {
-                $this->callWithProgressBar('Assets', AssetSeeder::class);
+            $this->callWithProgressBar('Clients (100-200)', ClientSeeder::class);
+            $this->callWithProgressBar('Locations (200-400)', LocationSeeder::class);
+            $this->callWithProgressBar('Contacts (500-1000)', ContactSeeder::class);
+            if (class_exists(NetworkSeeder::class)) {
+                $this->callWithProgressBar('Networks', NetworkSeeder::class);
             }
-            // if (class_exists(AssetWarrantySeeder::class)) {
-            //     $this->callWithProgressBar('Asset Warranties', AssetWarrantySeeder::class);
-            // }
-            // if (class_exists(ContractTemplateSeeder::class)) {
-            //     $this->callWithProgressBar('Contract Templates', ContractTemplateSeeder::class);
-            // }
-            
-            // Contract has complex dependencies - needs more work
-            // if (class_exists(ContractSeeder::class)) {
-            //     $this->callWithProgressBar('Contracts', ContractSeeder::class);
-            // }
-            // if (class_exists(ContractScheduleSeeder::class)) {
-            //     $this->callWithProgressBar('Contract Schedules', ContractScheduleSeeder::class);
-            // }
+            if (class_exists(TaxSeeder::class)) {
+                $this->callWithProgressBar('Tax Configuration', TaxSeeder::class);
+            }
+            if (class_exists(ProductSeeder::class)) {
+                $this->callWithProgressBar('Products & Services (50-100)', ProductSeeder::class);
+            }
+
+            // Operational seeders - Enhanced with historical data
+            if (class_exists(AssetSeeder::class)) {
+                $this->callWithProgressBar('Assets (500-1000)', AssetSeeder::class);
+            }
+            if (class_exists(AssetWarrantySeeder::class)) {
+                $this->callWithProgressBar('Asset Warranties', AssetWarrantySeeder::class);
+            }
+            if (class_exists(ContractTemplateSeeder::class)) {
+                $this->callWithProgressBar('Contract Templates', ContractTemplateSeeder::class);
+            }
+            if (class_exists(ContractSeeder::class)) {
+                $this->callWithProgressBar('Contracts (200-400)', ContractSeeder::class);
+            }
             if (class_exists(TicketSeeder::class)) {
-                $this->callWithProgressBar('Tickets', TicketSeeder::class);
+                $this->callWithProgressBar('Tickets (2000-5000 with 2yr history)', TicketSeeder::class);
             }
             if (class_exists(TicketReplySeeder::class)) {
-                $this->callWithProgressBar('Ticket Replies', TicketReplySeeder::class);
+                $this->callWithProgressBar('Ticket Replies (5000-10000)', TicketReplySeeder::class);
             }
             if (class_exists(ProjectSeeder::class)) {
-                $this->callWithProgressBar('Projects', ProjectSeeder::class);
+                $this->callWithProgressBar('Projects (50-100)', ProjectSeeder::class);
             }
-            // if (class_exists(ProjectTaskSeeder::class)) {
-            //     $this->callWithProgressBar('Project Tasks', ProjectTaskSeeder::class);
-            // }
-            // ContractSeeder has a service dependency issue
-            // if (class_exists(ContractSeeder::class)) {
-            //     $this->callWithProgressBar('Contracts', ContractSeeder::class);
-            // }
+            if (class_exists(ProjectTaskSeeder::class)) {
+                $this->callWithProgressBar('Project Tasks', ProjectTaskSeeder::class);
+            }
             if (class_exists(InvoiceSeeder::class)) {
-                $this->callWithProgressBar('Invoices', InvoiceSeeder::class);
+                $this->callWithProgressBar('Invoices (2yr history)', InvoiceSeeder::class);
             }
-            // if (class_exists(InvoiceItemSeeder::class)) {
-            //     $this->callWithProgressBar('Invoice Items', InvoiceItemSeeder::class);
-            // }
             if (class_exists(PaymentSeeder::class)) {
                 $this->callWithProgressBar('Payments', PaymentSeeder::class);
             }
@@ -91,22 +87,31 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('Recurring Invoices', RecurringInvoiceSeeder::class);
             }
             if (class_exists(LeadSeeder::class)) {
-                $this->callWithProgressBar('Leads', LeadSeeder::class);
+                $this->callWithProgressBar('Leads (100-200)', LeadSeeder::class);
             }
             if (class_exists(QuoteSeeder::class)) {
-                $this->callWithProgressBar('Quotes', QuoteSeeder::class);
+                $this->callWithProgressBar('Quotes (100-200)', QuoteSeeder::class);
             }
             if (class_exists(ExpenseSeeder::class)) {
-                $this->callWithProgressBar('Expenses', ExpenseSeeder::class);
+                $this->callWithProgressBar('Expenses (2yr history)', ExpenseSeeder::class);
             }
             if (class_exists(KnowledgeBaseSeeder::class)) {
-                $this->callWithProgressBar('Knowledge Base', KnowledgeBaseSeeder::class);
+                $this->callWithProgressBar('Knowledge Base Articles (50-100)', KnowledgeBaseSeeder::class);
             }
             if (class_exists(IntegrationSeeder::class)) {
                 $this->callWithProgressBar('Integrations', IntegrationSeeder::class);
             }
             if (class_exists(ReportTemplateSeeder::class)) {
                 $this->callWithProgressBar('Report Templates', ReportTemplateSeeder::class);
+            }
+            if (class_exists(EmailSeeder::class)) {
+                $this->callWithProgressBar('Emails (500-1000)', EmailSeeder::class);
+            }
+            if (class_exists(ActivityLogSeeder::class)) {
+                $this->callWithProgressBar('Activity Logs (2yr history)', ActivityLogSeeder::class);
+            }
+            if (class_exists(NotificationSeeder::class)) {
+                $this->callWithProgressBar('Notifications', NotificationSeeder::class);
             }
 
             // Commit transaction
@@ -153,9 +158,33 @@ class DevDatabaseSeeder extends Seeder
                 ['Locations', \App\Models\Location::count()],
                 ['Vendors', \App\Models\Vendor::count()],
                 ['Categories', \App\Models\Category::count()],
+                ['Assets', \App\Models\Asset::count()],
+                ['Tickets', \App\Models\Ticket::count()],
+                ['Ticket Replies', \App\Models\TicketReply::count()],
+                ['Projects', \App\Models\Project::count()],
+                ['Invoices', \App\Models\Invoice::count()],
+                ['Payments', \App\Models\Payment::count()],
+                ['Leads', \App\Models\Lead::count()],
+                ['Quotes', \App\Models\Quote::count()],
+                ['Expenses', \App\Models\Expense::count()],
                 ['Networks', \App\Models\Network::count() ?? 0],
                 ['Tax Jurisdictions', \App\Models\TaxJurisdiction::count() ?? 0],
             ]
         );
+        
+        // Display date range of data
+        $oldestTicket = \App\Models\Ticket::oldest('created_at')->first();
+        $newestTicket = \App\Models\Ticket::latest('created_at')->first();
+        $oldestInvoice = \App\Models\Invoice::oldest('date')->first();
+        $newestInvoice = \App\Models\Invoice::latest('date')->first();
+        
+        $this->command->newLine();
+        $this->command->info('Data Date Ranges:');
+        if ($oldestTicket) {
+            $this->command->info("  Tickets: {$oldestTicket->created_at->format('Y-m-d')} to {$newestTicket->created_at->format('Y-m-d')}");
+        }
+        if ($oldestInvoice) {
+            $this->command->info("  Invoices: {$oldestInvoice->date->format('Y-m-d')} to {$newestInvoice->date->format('Y-m-d')}");
+        }
     }
 }

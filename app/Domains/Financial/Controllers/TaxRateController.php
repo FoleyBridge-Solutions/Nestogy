@@ -55,4 +55,17 @@ class TaxRateController extends Controller
         // TODO: Implement delete tax rate logic
         return redirect()->route('financial.tax-rates.index');
     }
+    
+    public function reports()
+    {
+        // TODO: Implement tax reports logic
+        return view('financial.tax.reports', [
+            'reports' => collect(),
+            'stats' => [
+                'total_collected' => 0,
+                'total_due' => 0,
+                'filings_pending' => 0
+            ]
+        ]);
+    }
 }

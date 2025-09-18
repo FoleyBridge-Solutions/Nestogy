@@ -11,7 +11,7 @@
                 <div class="flex items-center">
                     <flux:button href="{{ route('settings.permissions.index') }}" variant="ghost" icon="arrow-left" class="mr-4">
                         Back
-                    </flux:button>
+                    </button>
                     <div>
                         <flux:heading>Permission Matrix</flux:heading>
                         <flux:subheading>View and manage role permissions in a matrix format</flux:subheading>
@@ -20,10 +20,10 @@
                 <div class="flex gap-3">
                     <flux:button onclick="toggleEditMode()" variant="ghost" icon="pencil">
                         <span id="edit-mode-text">Enable Edit Mode</span>
-                    </flux:button>
+                    </button>
                     <flux:button onclick="saveAllChanges()" variant="primary" icon="check" class="hidden" id="save-button">
                         Save All Changes
-                    </flux:button>
+                    </button>
                 </div>
             </div>
         </div>

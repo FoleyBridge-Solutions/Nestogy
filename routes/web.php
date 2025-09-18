@@ -82,6 +82,21 @@ Route::get('/dashboard', \App\Livewire\Dashboard\MainDashboard::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Debug route to test financial access
+Route::get('/test-financial', function() {
+    if (!auth()->check()) {
+        return 'Not authenticated';
+    }
+    
+    $client = \App\Services\NavigationService::getSelectedClient();
+    $invoicesUrl = '/financial/invoices'; // Direct URL instead of route helper
+    
+    return 'Authenticated as: ' . auth()->user()->email . 
+           '<br>Selected client: ' . ($client ? $client->name : 'None') .
+           '<br><a href="' . $invoicesUrl . '">Go to Invoices (Direct URL)</a>' .
+           '<br>Direct URL: ' . $invoicesUrl;
+})->middleware(['auth']);
+
 Route::get('/dashboard-enhanced', function () {
     return view('dashboard-enhanced');
 })->middleware(['auth', 'verified'])->name('dashboard.enhanced');

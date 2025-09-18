@@ -13,10 +13,10 @@
             <flux:button href="{{ route('mail.send') }}" icon="paper-airplane">
                 Send New Mail
             </flux:button>
-            <flux:button variant="secondary" href="{{ route('mail.templates') }}" icon="document-text">
+            <flux:button variant="filled" href="{{ route('mail.templates') }}" icon="document-text">
                 Templates
             </flux:button>
-            <flux:button variant="secondary" href="{{ route('mail.tracking') }}" icon="map">
+            <flux:button variant="filled" href="{{ route('mail.tracking') }}" icon="map">
                 Tracking
             </flux:button>
         </div>
@@ -34,7 +34,7 @@
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <flux:card>
-            <flux:card.body>
+            <div>
                 <div class="flex items-center justify-between">
                     <div>
                         <flux:text size="sm" class="text-zinc-500">Total Sent</flux:text>
@@ -46,11 +46,11 @@
                         </svg>
                     </div>
                 </div>
-            </flux:card.body>
+            </div>
         </flux:card>
 
         <flux:card>
-            <flux:card.body>
+            <div>
                 <div class="flex items-center justify-between">
                     <div>
                         <flux:text size="sm" class="text-zinc-500">This Month</flux:text>
@@ -62,11 +62,11 @@
                         </svg>
                     </div>
                 </div>
-            </flux:card.body>
+            </div>
         </flux:card>
 
         <flux:card>
-            <flux:card.body>
+            <div>
                 <div class="flex items-center justify-between">
                     <div>
                         <flux:text size="sm" class="text-zinc-500">In Transit</flux:text>
@@ -79,11 +79,11 @@
                         </svg>
                     </div>
                 </div>
-            </flux:card.body>
+            </div>
         </flux:card>
 
         <flux:card>
-            <flux:card.body>
+            <div>
                 <div class="flex items-center justify-between">
                     <div>
                         <flux:text size="sm" class="text-zinc-500">Delivered</flux:text>
@@ -95,7 +95,7 @@
                         </svg>
                     </div>
                 </div>
-            </flux:card.body>
+            </div>
         </flux:card>
     </div>
 
@@ -105,91 +105,107 @@
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
+        
+        $statusColors = [
+            'pending' => 'yellow',
+            'processing' => 'blue',
+            'printed' => 'cyan',
+            'mailed' => 'purple',
+            'delivered' => 'green',
+            'cancelled' => 'zinc',
+            'failed' => 'red',
+        ];
     @endphp
 
     <flux:card>
-        <flux:card.header>
-            <flux:card.title>Recent Mail Orders</flux:card.title>
-        </flux:card.header>
+        <div>
+            <flux:heading size="lg">Recent Mail Orders</flux:heading>
+        </div>
         
-        <flux:table>
-            <flux:columns>
-                <flux:column>Date</flux:column>
-                <flux:column>Client</flux:column>
-                <flux:column>Type</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column>Tracking</flux:column>
-                <flux:column>Actions</flux:column>
-            </flux:columns>
-            
-            <flux:rows>
-                @forelse($recentOrders as $order)
-                    <flux:row>
-                        <flux:cell>{{ $order->created_at->format('M d, Y') }}</flux:cell>
-                        <flux:cell>
-                            @if($order->client)
-                                {{ $order->client->name }}
-                            @else
-                                <span class="text-zinc-400">—</span>
-                            @endif
-                        </flux:cell>
-                        <flux:cell>
-                            <flux:badge variant="neutral">
-                                {{ ucfirst($order->mailable_type) }}
-                            </flux:badge>
-                        </flux:cell>
-                        <flux:cell>
-                            @php
-                                $statusColors = [
-                                    'pending' => 'yellow',
-                                    'processing' => 'blue',
-                                    'printed' => 'cyan',
-                                    'mailed' => 'purple',
-                                    'delivered' => 'green',
-                                    'cancelled' => 'zinc',
-                                    'failed' => 'red',
-                                ];
-                            @endphp
-                            <flux:badge variant="{{ $statusColors[$order->status] ?? 'neutral' }}">
-                                {{ ucfirst($order->status) }}
-                            </flux:badge>
-                        </flux:cell>
-                        <flux:cell>
-                            @if($order->tracking_number)
-                                <a href="#" class="text-blue-500 hover:underline">
-                                    {{ $order->tracking_number }}
-                                </a>
-                            @else
-                                <span class="text-zinc-400">—</span>
-                            @endif
-                        </flux:cell>
-                        <flux:cell>
-                            <div class="flex gap-2">
-                                <flux:button size="sm" variant="ghost" icon="eye" 
-                                    onclick="viewOrder('{{ $order->id }}')">
-                                </flux:button>
-                                @if($order->pdf_url)
-                                    <flux:button size="sm" variant="ghost" icon="document" 
-                                        onclick="window.open('{{ $order->pdf_url }}', '_blank')">
-                                    </flux:button>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if($recentOrders->count() > 0)
+                        @foreach($recentOrders as $order)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $order->created_at->format('M d, Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if($order->client)
+                                    {{ $order->client->name }}
+                                @else
+                                    <span class="text-zinc-400">—</span>
                                 @endif
-                                @if($order->canBeCancelled())
-                                    <flux:button size="sm" variant="ghost" icon="x-mark" 
-                                        onclick="cancelOrder('{{ $order->id }}')">
-                                    </flux:button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ ucfirst($order->mailable_type) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $statusColors[$order->status] ?? 'gray' }}-100 text-{{ $statusColors[$order->status] ?? 'gray' }}-800">
+                                    {{ ucfirst($order->status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if($order->tracking_number)
+                                    <a href="#" class="text-blue-500 hover:underline">
+                                        {{ $order->tracking_number }}
+                                    </a>
+                                @else
+                                    <span class="text-zinc-400">—</span>
                                 @endif
-                            </div>
-                        </flux:cell>
-                    </flux:row>
-                @empty
-                    <flux:row>
-                        <flux:cell colspan="6" class="text-center text-zinc-400 py-8">
-                            No mail orders yet. <a href="{{ route('mail.send') }}" class="text-blue-500 hover:underline">Send your first mail</a>
-                        </flux:cell>
-                    </flux:row>
-                @endforelse
-            </flux:rows>
-        </flux:table>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex gap-2">
+                                    <button type="button" class="text-gray-400 hover:text-gray-600" 
+                                        onclick="viewOrder('{{ $order->id }}')">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                    @if($order->pdf_url)
+                                        <button type="button" class="text-gray-400 hover:text-gray-600" 
+                                            onclick="window.open('{{ $order->pdf_url }}', '_blank')">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                    @if(in_array($order->status ?? '', ['pending', 'ready']))
+                                        <button type="button" class="text-gray-400 hover:text-red-600" 
+                                            onclick="cancelOrder('{{ $order->id }}')">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-zinc-400">
+                                No mail orders yet. <a href="{{ route('mail.send') }}" class="text-blue-500 hover:underline">Send your first mail</a>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </flux:card>
 </div>
 

@@ -14,7 +14,7 @@
                 </div>
                 <div class="flex gap-3">
                     <flux:dropdown align="end">
-                        <flux:button variant="ghost" icon="download">Export</flux:button>
+                        <flux:button variant="ghost" icon="download">Export</button>
                         <flux:menu>
                             <flux:menu.item href="{{ route('settings.permissions.export') }}" icon="download">
                                 Export Configuration
@@ -32,11 +32,11 @@
                     
                     <flux:button href="{{ route('settings.permissions.matrix') }}" variant="ghost" icon="table-cells">
                         Permission Matrix
-                    </flux:button>
+                    </button>
                     
                     <flux:button href="{{ route('settings.roles.create') }}" variant="primary" icon="plus">
                         Create Role
-                    </flux:button>
+                    </button>
                 </div>
             </div>
         </div>
@@ -48,7 +48,7 @@
             
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <flux:badge color="blue" size="lg">{{ $stats['total_users'] }}</flux:badge>
+                        <flux:badge size="lg">{{ $stats['total_users'] }}</flux:badge>
                     </div>
                     <div class="ml-5">
                         <flux:text variant="muted" size="sm">Total Users</flux:text>
@@ -167,7 +167,7 @@
                             </flux:table.cell>
                             <flux:table.cell>
                                 @if($user->abilities->count() > 0)
-                                    <flux:badge color="zinc" size="sm">{{ $user->abilities->count() }} permissions</flux:badge>
+                                    <flux:badge size="sm">{{ $user->abilities->count() }} permissions</flux:badge>
                                 @else
                                     <flux:text variant="muted" size="sm">No direct permissions</flux:text>
                                 @endif
@@ -241,7 +241,7 @@
                                 <flux:text size="sm">{{ $role->description ?? 'No description' }}</flux:text>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge color="zinc" size="sm">{{ $role->abilities->count() }} permissions</flux:badge>
+                                <flux:badge size="sm">{{ $role->abilities->count() }} permissions</flux:badge>
                             </flux:table.cell>
                             <flux:table.cell>
                                 <flux:text size="sm">{{ $role->users->count() }} users</flux:text>
@@ -337,7 +337,7 @@
                         </div>
                         
                         <div class="flex justify-end">
-                            <flux:button type="submit" variant="primary">Apply Changes</flux:button>
+                            <flux:button type="submit" variant="primary">Apply Changes</button>
                         </div>
                     </form>
                 

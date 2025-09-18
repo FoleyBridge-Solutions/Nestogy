@@ -15,46 +15,52 @@
             <div class="lg:col-span-2">
                 <!-- Mail Type -->
                 <flux:card class="mb-6">
-                    <flux:card.header>
-                        <flux:card.title>Mail Type</flux:card.title>
-                    </flux:card.header>
-                    <flux:card.body>
-                        <flux:radio.group name="type" value="letter">
-                            <div class="grid grid-cols-2 gap-4">
-                                <flux:radio value="letter">
-                                    <flux:label>Letter</flux:label>
-                                    <flux:description>Standard business letter (8.5" x 11")</flux:description>
-                                </flux:radio>
-                                <flux:radio value="postcard">
-                                    <flux:label>Postcard</flux:label>
-                                    <flux:description>Marketing postcard (6" x 4.25")</flux:description>
-                                </flux:radio>
-                                <flux:radio value="cheque">
-                                    <flux:label>Check</flux:label>
-                                    <flux:description>Business check with stub</flux:description>
-                                </flux:radio>
-                                <flux:radio value="self_mailer">
-                                    <flux:label>Self Mailer</flux:label>
-                                    <flux:description>Folded mailer, no envelope</flux:description>
-                                </flux:radio>
-                            </div>
+                    <div>
+                        <flux:heading size="lg">Mail Type</flux:heading>
+                    </div>
+                    <div>
+                        <flux:radio.group name="type" label="Select Mail Type">
+                            <flux:radio 
+                                name="type" 
+                                value="letter" 
+                                label="Letter" 
+                                description="Standard business letter (8.5 x 11)"
+                            />
+                            <flux:radio 
+                                name="type" 
+                                value="postcard" 
+                                label="Postcard" 
+                                description="Marketing postcard (6 x 4.25)"
+                            />
+                            <flux:radio 
+                                name="type" 
+                                value="cheque" 
+                                label="Check" 
+                                description="Business check with stub"
+                            />
+                            <flux:radio 
+                                name="type" 
+                                value="self_mailer" 
+                                label="Self Mailer" 
+                                description="Folded mailer, no envelope"
+                            />
                         </flux:radio.group>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
 
                 <!-- Recipient -->
                 <flux:card class="mb-6">
-                    <flux:card.header>
-                        <flux:card.title>Recipient</flux:card.title>
-                    </flux:card.header>
-                    <flux:card.body class="space-y-4">
+                    <div>
+                        <flux:heading size="lg">Recipient</flux:heading>
+                    </div>
+                    <div class="space-y-4">
                         <!-- Client Selection -->
                         <flux:field>
                             <flux:label>Select Client</flux:label>
                             <flux:select name="client_id" onchange="loadClientAddress(this.value)">
-                                <flux:option value="">Choose a client...</flux:option>
+                                <flux:select.option value="">Choose a client...</flux:select.option>
                                 @foreach(\App\Models\Client::orderBy('name')->get() as $client)
-                                    <flux:option value="{{ $client->id }}">{{ $client->name }}</flux:option>
+                                    <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
                                 @endforeach
                             </flux:select>
                         </flux:field>
@@ -77,15 +83,15 @@
                                 <flux:input name="to[postalOrZip]" placeholder="ZIP Code" required />
                             </div>
                         </div>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
 
                 <!-- Content -->
                 <flux:card class="mb-6">
-                    <flux:card.header>
-                        <flux:card.title>Content</flux:card.title>
-                    </flux:card.header>
-                    <flux:card.body class="space-y-4">
+                    <div>
+                        <flux:heading size="lg">Content</flux:heading>
+                    </div>
+                    <div class="space-y-4">
                         <!-- Template or Custom -->
                         <flux:tabs>
                             <flux:tab name="template">Use Template</flux:tab>
@@ -94,9 +100,9 @@
                             
                             <flux:tab.panel name="template">
                                 <flux:select name="template_id">
-                                    <flux:option value="">Choose a template...</flux:option>
+                                    <flux:select.option value="">Choose a template...</flux:select.option>
                                     @foreach(\App\Domains\PhysicalMail\Models\PhysicalMailTemplate::orderBy('name')->get() as $template)
-                                        <flux:option value="{{ $template->id }}">{{ $template->name }}</flux:option>
+                                        <flux:select.option value="{{ $template->id }}">{{ $template->name }}</flux:select.option>
                                     @endforeach
                                 </flux:select>
                                 
@@ -132,7 +138,7 @@
                                 </flux:text>
                             </flux:tab.panel>
                         </flux:tabs>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
             </div>
 
@@ -140,16 +146,16 @@
             <div class="lg:col-span-1">
                 <!-- Mailing Options -->
                 <flux:card class="mb-6">
-                    <flux:card.header>
-                        <flux:card.title>Mailing Options</flux:card.title>
-                    </flux:card.header>
-                    <flux:card.body class="space-y-4">
+                    <div>
+                        <flux:heading size="lg">Mailing Options</flux:heading>
+                    </div>
+                    <div class="space-y-4">
                         <!-- Mailing Class -->
                         <flux:field>
                             <flux:label>Mailing Class</flux:label>
                             <flux:select name="mailing_class">
-                                <flux:option value="first_class" selected>First Class</flux:option>
-                                <flux:option value="standard_class">Standard Class</flux:option>
+                                <flux:select.option value="first_class" selected>First Class</flux:select.option>
+                                <flux:select.option value="standard_class">Standard Class</flux:select.option>
                             </flux:select>
                         </flux:field>
 
@@ -157,10 +163,10 @@
                         <flux:field>
                             <flux:label>Extra Services</flux:label>
                             <flux:select name="extra_service">
-                                <flux:option value="">None</flux:option>
-                                <flux:option value="certified">Certified Mail</flux:option>
-                                <flux:option value="certified_return_receipt">Certified with Return Receipt</flux:option>
-                                <flux:option value="registered">Registered Mail</flux:option>
+                                <flux:select.option value="">None</flux:select.option>
+                                <flux:select.option value="certified">Certified Mail</flux:select.option>
+                                <flux:select.option value="certified_return_receipt">Certified with Return Receipt</flux:select.option>
+                                <flux:select.option value="registered">Registered Mail</flux:select.option>
                             </flux:select>
                         </flux:field>
 
@@ -179,15 +185,15 @@
                             <flux:input type="date" name="send_date" min="{{ now()->format('Y-m-d') }}" />
                             <flux:description>Leave blank to send immediately</flux:description>
                         </flux:field>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
 
                 <!-- Cost Estimate -->
                 <flux:card class="mb-6">
-                    <flux:card.header>
-                        <flux:card.title>Cost Estimate</flux:card.title>
-                    </flux:card.header>
-                    <flux:card.body>
+                    <div>
+                        <flux:heading size="lg">Cost Estimate</flux:heading>
+                    </div>
+                    <div>
                         <div class="space-y-2">
                             <div class="flex justify-between">
                                 <flux:text size="sm">Base Cost:</flux:text>
@@ -210,7 +216,7 @@
                         <flux:text size="xs" class="text-zinc-400 mt-4">
                             * Estimated cost. Actual cost may vary based on PostGrid pricing.
                         </flux:text>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
 
                 <!-- Actions -->
@@ -218,7 +224,7 @@
                     <flux:button type="button" onclick="sendMail()" class="w-full">
                         Send Mail
                     </flux:button>
-                    <flux:button variant="secondary" onclick="previewMail()" class="w-full">
+                    <flux:button variant="filled" onclick="previewMail()" class="w-full">
                         Preview
                     </flux:button>
                     <flux:button variant="ghost" href="{{ route('mail.index') }}" class="w-full">

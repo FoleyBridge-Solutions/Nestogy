@@ -19,13 +19,22 @@ class PhysicalMailService
 {
     
     public function __construct(
-        private PostGridClient $postgrid,
-        private PhysicalMailContactService $contactService,
-        private PhysicalMailTemplateService $templateService,
-        private PhysicalMailTemplateBuilder $templateBuilder,
-        private PhysicalMailContentAnalyzer $contentAnalyzer
+        private ?PostGridClient $postgrid = null,
+        private ?PhysicalMailContactService $contactService = null,
+        private ?PhysicalMailTemplateService $templateService = null,
+        private ?PhysicalMailTemplateBuilder $templateBuilder = null,
+        private ?PhysicalMailContentAnalyzer $contentAnalyzer = null
     ) {
-        // Constructor dependencies are injected automatically
+        // Initialize with company-aware client if not provided
+        if (!$this->postgrid) {
+            $this->postgrid = new CompanyAwarePostGridClient();
+        }
+        
+        // Initialize other services if not provided
+        $this->contactService = $this->contactService ?: app(PhysicalMailContactService::class);
+        $this->templateService = $this->templateService ?: app(PhysicalMailTemplateService::class);
+        $this->templateBuilder = $this->templateBuilder ?: app(PhysicalMailTemplateBuilder::class);
+        $this->contentAnalyzer = $this->contentAnalyzer ?: app(PhysicalMailContentAnalyzer::class);
     }
     
 

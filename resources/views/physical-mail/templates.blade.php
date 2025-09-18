@@ -11,7 +11,7 @@
         <div class="mt-4">
             <flux:button onclick="createTemplate()" icon="plus">
                 Create Template
-            </flux:button>
+            </button>
         </div>
     </div>
 
@@ -22,14 +22,14 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($templates as $template)
             <flux:card>
-                <flux:card.header>
-                    <flux:card.title>{{ $template->name }}</flux:card.title>
+                <div>
+                    <flux:heading size="lg">{{ $template->name }}</flux:heading>
                     <flux:badge variant="{{ $template->is_active ? 'green' : 'zinc' }}">
                         {{ $template->is_active ? 'Active' : 'Inactive' }}
                     </flux:badge>
-                </flux:card.header>
+                </div>
                 
-                <flux:card.body>
+                <div>
                     <flux:text size="sm" class="text-zinc-600 line-clamp-3">
                         {{ $template->description }}
                     </flux:text>
@@ -60,32 +60,32 @@
                             <flux:text size="sm">Created: {{ $template->created_at->format('M d, Y') }}</flux:text>
                         </div>
                     </div>
-                </flux:card.body>
+                </div>
                 
-                <flux:card.footer class="flex gap-2">
-                    <flux:button size="sm" variant="secondary" onclick="editTemplate('{{ $template->id }}')">
+                <div class="flex gap-2">
+                    <flux:button size="sm" variant="filled" onclick="editTemplate('{{ $template->id }}')">
                         Edit
-                    </flux:button>
+                    </button>
                     <flux:button size="sm" variant="ghost" onclick="previewTemplate('{{ $template->id }}')">
                         Preview
-                    </flux:button>
+                    </button>
                     <flux:button size="sm" variant="ghost" onclick="duplicateTemplate('{{ $template->id }}')">
                         Duplicate
-                    </flux:button>
-                </flux:card.footer>
+                    </button>
+                </div>
             </flux:card>
         @endforeach
         
         @if($templates->isEmpty())
             <div class="col-span-full">
                 <flux:card>
-                    <flux:card.body class="text-center py-12">
+                    <div class="text-center py-12">
                         <svg class="w-16 h-16 mx-auto text-zinc-300 mb-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clip-rule="evenodd" />
                         </svg>
                         <flux:text size="lg" class="text-zinc-500 mb-2">No templates yet</flux:text>
                         <flux:text size="sm" class="text-zinc-400">Create your first template to get started</flux:text>
-                    </flux:card.body>
+                    </div>
                 </flux:card>
             </div>
         @endif
@@ -98,51 +98,51 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <flux:card>
-                <flux:card.header>
-                    <flux:card.title>Invoice Cover Letter</flux:card.title>
-                </flux:card.header>
-                <flux:card.body>
+                <div>
+                    <flux:heading size="lg">Invoice Cover Letter</flux:heading>
+                </div>
+                <div>
                     <flux:text size="sm" class="text-zinc-600">
                         Professional cover letter to accompany invoices with payment instructions and contact information.
                     </flux:text>
-                </flux:card.body>
-                <flux:card.footer>
-                    <flux:button size="sm" variant="secondary" onclick="usePrebuiltTemplate('invoice-cover')">
+                </div>
+                <div>
+                    <flux:button size="sm" variant="filled" onclick="usePrebuiltTemplate('invoice-cover')">
                         Use Template
-                    </flux:button>
-                </flux:card.footer>
+                    </button>
+                </div>
             </flux:card>
             
             <flux:card>
-                <flux:card.header>
-                    <flux:card.title>Payment Reminder</flux:card.title>
-                </flux:card.header>
-                <flux:card.body>
+                <div>
+                    <flux:heading size="lg">Payment Reminder</flux:heading>
+                </div>
+                <div>
                     <flux:text size="sm" class="text-zinc-600">
                         Friendly reminder for overdue payments with account details and payment options.
                     </flux:text>
-                </flux:card.body>
-                <flux:card.footer>
-                    <flux:button size="sm" variant="secondary" onclick="usePrebuiltTemplate('payment-reminder')">
+                </div>
+                <div>
+                    <flux:button size="sm" variant="filled" onclick="usePrebuiltTemplate('payment-reminder')">
                         Use Template
-                    </flux:button>
-                </flux:card.footer>
+                    </button>
+                </div>
             </flux:card>
             
             <flux:card>
-                <flux:card.header>
-                    <flux:card.title>Service Update</flux:card.title>
-                </flux:card.header>
-                <flux:card.body>
+                <div>
+                    <flux:heading size="lg">Service Update</flux:heading>
+                </div>
+                <div>
                     <flux:text size="sm" class="text-zinc-600">
                         Inform clients about service changes, maintenance schedules, or system updates.
                     </flux:text>
-                </flux:card.body>
-                <flux:card.footer>
-                    <flux:button size="sm" variant="secondary" onclick="usePrebuiltTemplate('service-update')">
+                </div>
+                <div>
+                    <flux:button size="sm" variant="filled" onclick="usePrebuiltTemplate('service-update')">
                         Use Template
-                    </flux:button>
-                </flux:card.footer>
+                    </button>
+                </div>
             </flux:card>
         </div>
     </div>

@@ -30,10 +30,10 @@ Route::post('/api/webhooks/postgrid', [WebhookController::class, 'handle'])->nam
 // Web routes for physical mail management
 Route::middleware(['web', 'auth'])->prefix('mail')->name('mail.')->group(function () {
     
-    // Dashboard views
-    Route::view('/', 'physical-mail.index')->name('index');
-    Route::view('/send', 'physical-mail.send')->name('send');
-    Route::view('/templates', 'physical-mail.templates')->name('templates');
-    Route::view('/contacts', 'physical-mail.contacts')->name('contacts');
-    Route::view('/tracking', 'physical-mail.tracking')->name('tracking');
+    // Dashboard views with controller methods
+    Route::get('/', [PhysicalMailController::class, 'webIndex'])->name('index');
+    Route::get('/send', [PhysicalMailController::class, 'webSend'])->name('send');
+    Route::get('/templates', [PhysicalMailController::class, 'webTemplates'])->name('templates');
+    Route::get('/contacts', [PhysicalMailController::class, 'webContacts'])->name('contacts');
+    Route::get('/tracking', [PhysicalMailController::class, 'webTracking'])->name('tracking');
 });

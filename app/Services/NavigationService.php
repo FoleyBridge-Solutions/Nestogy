@@ -73,6 +73,13 @@ class NavigationService
             ],
             'patterns' => ['settings', 'users', 'admin'],
         ],
+        'physical-mail' => [
+            'routes' => [
+                'mail.*',
+                'physical-mail.*',
+            ],
+            'patterns' => ['mail', 'physical-mail'],
+        ],
     ];
 
     /**

@@ -251,26 +251,22 @@ class TeamPerformance extends Component
     
     protected function calculateTimeMetrics($user, $periodStart)
     {
-        try {
-            // Try to get time entries if TimeEntry model exists
-            if (class_exists('\App\Models\TimeEntry')) {
-                $timeEntries = \App\Models\TimeEntry::where('user_id', $user->id)
-                    ->where('created_at', '>=', $periodStart)
-                    ->get();
+        // Get actual time entries
+        $timeEntries = \App\Models\TimeEntry::where('user_id', $user->id)
+            ->where('date', '>=', $periodStart->format('Y-m-d'))
+            ->get();
 
-                $totalHours = $timeEntries->sum('hours');
-                $billableHours = $timeEntries->where('billable', true)->sum('hours');
+        if ($timeEntries->count() > 0) {
+            $totalHours = $timeEntries->sum('hours');
+            $billableHours = $timeEntries->where('billable', true)->sum('hours');
 
-                return [
-                    'total_hours' => $totalHours,
-                    'billable_hours' => $billableHours
-                ];
-            }
-        } catch (\Exception $e) {
-            // TimeEntry model not available or error occurred
+            return [
+                'total_hours' => round($totalHours, 1),
+                'billable_hours' => round($billableHours, 1)
+            ];
         }
 
-        // Fallback: estimate based on ticket activity and complexity
+        // Fallback: estimate based on ticket activity if no time entries
         $tickets = $user->assignedTickets()
             ->where('created_at', '>=', $periodStart)
             ->get();
@@ -303,26 +299,52 @@ class TeamPerformance extends Component
         $billableHours = $totalHours * 0.75; // Assume 75% utilization is typical
 
         return [
-            'total_hours' => $totalHours,
-            'billable_hours' => $billableHours
+            'total_hours' => round($totalHours, 1),
+            'billable_hours' => round($billableHours, 1)
         ];
     }
 
     protected function calculateRevenueGenerated($user, $periodStart)
     {
-        try {
-            // Calculate revenue from invoices created by this user
-            $revenue = \App\Models\Invoice::where('created_by', $user->id)
-                ->where('created_at', '>=', $periodStart)
-                ->where('status', 'paid')
-                ->sum('amount');
-
-            return $revenue;
-        } catch (\Exception $e) {
-            // Fallback: estimate based on billable hours
-            $timeMetrics = $this->calculateTimeMetrics($user, $periodStart);
-            return $timeMetrics['billable_hours'] * 75; // Assume $75/hour average
+        // Calculate revenue from time entries with rates
+        $timeEntries = \App\Models\TimeEntry::where('user_id', $user->id)
+            ->where('date', '>=', $periodStart->format('Y-m-d'))
+            ->where('billable', true)
+            ->get();
+        
+        if ($timeEntries->count() > 0) {
+            $revenue = 0;
+            foreach ($timeEntries as $entry) {
+                // Use the rate from the time entry, or default to 75
+                $rate = $entry->rate ?? 75;
+                $revenue += $entry->hours * $rate;
+            }
+            return round($revenue, 2);
         }
+        
+        // Alternative: Try to calculate from invoices related to user's tickets
+        $ticketIds = $user->assignedTickets()
+            ->where('created_at', '>=', $periodStart)
+            ->pluck('id');
+        
+        if ($ticketIds->count() > 0) {
+            // Check if invoices are linked to tickets through line items or other relationships
+            $invoiceRevenue = \App\Models\Invoice::whereHas('lineItems', function($query) use ($ticketIds) {
+                    $query->where('related_type', 'ticket')
+                          ->whereIn('related_id', $ticketIds);
+                })
+                ->where('status', 'paid')
+                ->where('date', '>=', $periodStart)
+                ->sum('amount');
+            
+            if ($invoiceRevenue > 0) {
+                return round($invoiceRevenue, 2);
+            }
+        }
+        
+        // Final fallback: estimate based on billable hours
+        $timeMetrics = $this->calculateTimeMetrics($user, $periodStart);
+        return round($timeMetrics['billable_hours'] * 75, 2); // Assume $75/hour average
     }
 
     protected function calculateUserCustomerSatisfaction($user, $periodStart)

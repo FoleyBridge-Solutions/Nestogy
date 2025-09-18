@@ -11,7 +11,7 @@
                 <div class="flex items-center">
                     <flux:button href="{{ route('settings.permissions.index') }}" variant="ghost" icon="arrow-left" class="mr-4">
                         Back
-                    </flux:button>
+                    </button>
                     <flux:avatar size="lg" src="{{ $user->avatar_url }}" />
                     <div class="ml-4">
                         <flux:heading>{{ $user->name }}</flux:heading>
@@ -21,10 +21,10 @@
                 <div class="flex gap-3">
                     <flux:button onclick="resetPermissions()" variant="ghost" icon="arrow-path">
                         Reset to Default
-                    </flux:button>
+                    </button>
                     <flux:button form="permissions-form" type="submit" variant="primary" icon="check">
                         Save Changes
-                    </flux:button>
+                    </button>
                 </div>
             </div>
         </div>
@@ -153,10 +153,10 @@
                     <div class="flex gap-2">
                         <flux:button type="button" onclick="selectAllPermissions()" variant="ghost" size="sm">
                             Select All
-                        </flux:button>
+                        </button>
                         <flux:button type="button" onclick="deselectAllPermissions()" variant="ghost" size="sm">
                             Deselect All
-                        </flux:button>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -168,7 +168,7 @@
                         <flux:accordion.trigger>
                             <div class="flex items-center justify-between w-full">
                                 <span>{{ $category }}</span>
-                                <flux:badge color="zinc" size="sm">
+                                <flux:badge size="sm">
                                     <span class="permission-count" data-category="{{ $category }}">0</span> / {{ count($abilities) }}
                                 </flux:badge>
                             </div>
@@ -190,7 +190,7 @@
                                         <flux:text size="xs" variant="muted">{{ $ability['description'] }}</flux:text>
                                         @if(isset($effectivePermissions[$ability['name']]))
                                             @if($effectivePermissions[$ability['name']]['source'] === 'role')
-                                            <flux:badge color="blue" size="xs" class="mt-1">
+                                            <flux:badge size="xs" class="mt-1">
                                                 From role: {{ $effectivePermissions[$ability['name']]['role'] }}
                                             </flux:badge>
                                             @endif
@@ -220,7 +220,7 @@
                         <flux:icon name="check-circle" class="w-4 h-4 text-green-500" />
                         <flux:text size="xs">{{ explode('.', $permissionName)[1] ?? $permissionName }}</flux:text>
                         @if($permission['source'] === 'role')
-                        <flux:badge color="blue" size="xs">R</flux:badge>
+                        <flux:badge size="xs">R</flux:badge>
                         @else
                         <flux:badge color="green" size="xs">D</flux:badge>
                         @endif

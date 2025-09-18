@@ -18,7 +18,7 @@
             <flux:button variant="ghost" size="sm" href="{{ route('settings.index') }}">
                 <flux:icon.chevron-left class="w-4 h-4 mr-2" />
                 Back to Settings
-            </flux:button>
+            </button>
         </div>
     </flux:card>
 
@@ -251,11 +251,11 @@
         <div class="flex justify-end gap-3">
             <flux:button variant="ghost" href="{{ route('settings.index') }}">
                 Cancel
-            </flux:button>
+            </button>
             <flux:button type="submit" variant="primary">
                 <flux:icon.check class="w-4 h-4 mr-2" />
                 Save Configuration
-            </flux:button>
+            </button>
         </div>
     </form>
 </div>

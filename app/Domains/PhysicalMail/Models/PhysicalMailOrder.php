@@ -3,6 +3,7 @@
 namespace App\Domains\PhysicalMail\Models;
 
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,7 @@ class PhysicalMailOrder extends Model
     protected $table = 'physical_mail_orders';
 
     protected $fillable = [
+        'company_id',
         'client_id',
         'mailable_type',
         'mailable_id',
@@ -50,6 +52,14 @@ class PhysicalMailOrder extends Model
     }
 
     /**
+     * Get the company for this order
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
      * Get the client for this order
      */
     public function client(): BelongsTo
@@ -63,6 +73,14 @@ class PhysicalMailOrder extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    
+    /**
+     * Alias for createdBy relationship for backward compatibility
+     */
+    public function user(): BelongsTo
+    {
+        return $this->createdBy();
     }
 
     /**
