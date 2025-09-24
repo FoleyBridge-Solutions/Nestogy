@@ -11,6 +11,7 @@ use App\Models\AnalyticsSnapshot;
 use App\Models\KpiCalculation;
 use App\Models\RevenueMetric;
 use App\Models\DashboardWidget;
+use App\Models\Setting;
 use App\Domains\Financial\Services\FinancialAnalyticsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -30,6 +31,7 @@ class DashboardDataService
     protected FinancialAnalyticsService $analyticsService;
     protected int $cacheTimeout = 300; // 5 minutes default cache
     protected string $cachePrefix = 'dashboard_data';
+    protected ?string $revenueRecognitionMethod = null;
     
     public function __construct(int $companyId)
     {
@@ -418,18 +420,28 @@ class DashboardDataService
 
     private function getTotalRevenue(Carbon $startDate, Carbon $endDate): array
     {
-        $current = Invoice::where('company_id', $this->companyId)
-            ->where('status', Invoice::STATUS_PAID)
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        
-        $previousStart = $startDate->copy()->subMonth();
-        $previousEnd = $endDate->copy()->subMonth();
-        
-        $previous = Invoice::where('company_id', $this->companyId)
-            ->where('status', Invoice::STATUS_PAID)
-            ->whereBetween('date', [$previousStart, $previousEnd])
-            ->sum('amount');
+        $method = $this->getRevenueRecognitionMethod();
+
+        if ($method === 'cash') {
+            $current = $this->sumPaymentsBetween($startDate, $endDate);
+
+            $previousStart = $startDate->copy()->subMonth();
+            $previousEnd = $endDate->copy()->subMonth();
+            $previous = $this->sumPaymentsBetween($previousStart, $previousEnd);
+        } else {
+            $current = Invoice::where('company_id', $this->companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->sum('amount');
+
+            $previousStart = $startDate->copy()->subMonth();
+            $previousEnd = $endDate->copy()->subMonth();
+
+            $previous = Invoice::where('company_id', $this->companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$previousStart, $previousEnd])
+                ->sum('amount');
+        }
         
         $growth = $previous > 0 ? (($current - $previous) / $previous) * 100 : 0;
         
@@ -589,10 +601,14 @@ class DashboardDataService
     
     // Real data methods for additional metrics
     private function getCashBalance(): array { 
-        // Calculate based on paid invoices minus expenses (if expense table exists)
-        $totalRevenue = Invoice::where('company_id', $this->companyId)
-            ->where('status', Invoice::STATUS_PAID)
-            ->sum('amount');
+        // Calculate based on revenue recognition preference
+        $totalRevenue = $this->getRevenueRecognitionMethod() === 'cash'
+            ? Payment::where('company_id', $this->companyId)
+                ->where('status', 'completed')
+                ->sum('amount')
+            : Invoice::where('company_id', $this->companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->sum('amount');
             
         return ['value' => $totalRevenue, 'format' => 'currency']; 
     }
@@ -621,10 +637,23 @@ class DashboardDataService
     }
     
     private function getAverageDealSize(Carbon $startDate, Carbon $endDate): array { 
-        $avgDealSize = Invoice::where('company_id', $this->companyId)
-            ->where('status', Invoice::STATUS_PAID)
-            ->whereBetween('date', [$startDate, $endDate])
-            ->avg('amount');
+        $method = $this->getRevenueRecognitionMethod();
+
+        if ($method === 'cash') {
+            $totalRevenue = $this->sumPaymentsBetween($startDate, $endDate);
+            $transactionCount = Payment::where('company_id', $this->companyId)
+                ->where('status', 'completed')
+                ->whereNotNull('payment_date')
+                ->whereBetween('payment_date', [$startDate, $endDate])
+                ->count();
+
+            $avgDealSize = $transactionCount > 0 ? $totalRevenue / $transactionCount : 0;
+        } else {
+            $avgDealSize = Invoice::where('company_id', $this->companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->avg('amount');
+        }
             
         return ['value' => round($avgDealSize ?? 0, 0), 'format' => 'currency']; 
     }
@@ -663,10 +692,12 @@ class DashboardDataService
     private function getServiceBreakdownData(DashboardWidget $widget): array { return []; }
     private function getTrendAnalysisData(DashboardWidget $widget): array { return []; }
     private function getTotalCashInflow(Carbon $startDate, Carbon $endDate): float { 
-        return Invoice::where('company_id', $this->companyId)
-            ->where('status', Invoice::STATUS_PAID)
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
+        return $this->getRevenueRecognitionMethod() === 'cash'
+            ? $this->sumPaymentsBetween($startDate, $endDate)
+            : Invoice::where('company_id', $this->companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->sum('amount');
     }
     
     private function getTotalCashOutflow(Carbon $startDate, Carbon $endDate): float { 
@@ -982,5 +1013,26 @@ class DashboardDataService
         if ($score > -0.1) return '#64748b'; // slate-500
         if ($score > -0.5) return '#f97316'; // orange-500
         return '#ef4444'; // red-500
+    }
+
+    protected function getRevenueRecognitionMethod(): string
+    {
+        if ($this->revenueRecognitionMethod !== null) {
+            return $this->revenueRecognitionMethod;
+        }
+
+        $settings = Setting::where('company_id', $this->companyId)->first();
+        $method = data_get($settings?->revenue_recognition_settings, 'method');
+
+        return $this->revenueRecognitionMethod = in_array($method, ['cash', 'accrual'], true) ? $method : 'accrual';
+    }
+
+    protected function sumPaymentsBetween(Carbon $startDate, Carbon $endDate): float
+    {
+        return Payment::where('company_id', $this->companyId)
+            ->where('status', 'completed')
+            ->whereNotNull('payment_date')
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->sum('amount');
     }
 }

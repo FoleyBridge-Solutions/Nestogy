@@ -23,7 +23,8 @@ class DevDatabaseSeeder extends Seeder
         $this->command->info('This will create comprehensive test data with 2+ years of history.');
         $this->command->newLine();
 
-        DB::beginTransaction();
+        // Removed transaction for debugging
+        // DB::beginTransaction();
 
         try {
             // Foundation seeders - Enhanced with more data
@@ -115,7 +116,7 @@ class DevDatabaseSeeder extends Seeder
             }
 
             // Commit transaction
-            DB::commit();
+            // DB::commit();
 
             $this->command->newLine();
             $this->command->info('✓ Development database seeding completed successfully!');
@@ -126,8 +127,9 @@ class DevDatabaseSeeder extends Seeder
             $this->displaySummary();
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            // DB::rollBack();
             $this->command->error('Seeding failed: ' . $e->getMessage());
+            $this->command->error('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }

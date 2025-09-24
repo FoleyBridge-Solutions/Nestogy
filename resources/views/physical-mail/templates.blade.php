@@ -6,7 +6,12 @@
 <div class="container-fluid">
     <div class="mb-6">
         <flux:heading size="xl">Mail Templates</flux:heading>
-        <flux:text class="text-zinc-500">Manage reusable templates for physical mail</flux:text>
+        <flux:text class="text-zinc-500">
+            Manage reusable templates for physical mail
+            @if(isset($selectedClient) && $selectedClient)
+                for {{ $selectedClient->name }}
+            @endif
+        </flux:text>
         
         <div class="mt-4">
             <flux:button onclick="createTemplate()" icon="plus">

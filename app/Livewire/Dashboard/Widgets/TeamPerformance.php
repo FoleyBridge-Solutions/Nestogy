@@ -14,15 +14,19 @@ use Carbon\Carbon;
 class TeamPerformance extends Component
 {
     public Collection $teamMembers;
+    public Collection $allTeamMembers;
     public bool $loading = true;
     public string $period = 'week'; // week, month, quarter
     public string $metric = 'tickets'; // tickets, hours, revenue
     public string $sortBy = 'performance_score';
     public string $sortDirection = 'desc';
+    public int $limit = 3;
+    public int $loadCount = 0;
     
     public function mount()
     {
         $this->teamMembers = collect();
+        $this->allTeamMembers = collect();
         $this->loadTeamPerformance();
     }
     
@@ -48,7 +52,8 @@ class TeamPerformance extends Component
         // Sort team members
         $teamData = $teamData->sortBy($this->sortBy, SORT_REGULAR, $this->sortDirection === 'desc');
         
-        $this->teamMembers = $teamData;
+        $this->allTeamMembers = $teamData;
+        $this->teamMembers = $teamData->take($this->limit);
         $this->loading = false;
     }
     
@@ -422,6 +427,22 @@ class TeamPerformance extends Component
         } catch (\Exception $e) {
             return 'stable';
         }
+    }
+
+    public function loadMore()
+    {
+        $this->loadCount++;
+        
+        // Progressive loading: 3 → 10 → 20 → 30...
+        if ($this->loadCount === 1) {
+            $this->limit = 10;  // First load: show 10 total
+        } elseif ($this->loadCount === 2) {
+            $this->limit = 20;  // Second load: show 20 total
+        } else {
+            $this->limit += 10; // Subsequent loads: add 10 more
+        }
+        
+        $this->loadTeamPerformance();
     }
 
     public function render()

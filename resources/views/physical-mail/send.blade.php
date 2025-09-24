@@ -57,12 +57,22 @@
                         <!-- Client Selection -->
                         <flux:field>
                             <flux:label>Select Client</flux:label>
-                            <flux:select name="client_id" onchange="loadClientAddress(this.value)">
-                                <flux:select.option value="">Choose a client...</flux:select.option>
-                                @foreach(\App\Models\Client::orderBy('name')->get() as $client)
-                                    <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
-                                @endforeach
-                            </flux:select>
+                            @if(isset($selectedClient) && $selectedClient)
+                                <input type="hidden" name="client_id" value="{{ $selectedClient->id }}">
+                                <div class="px-3 py-2 bg-gray-100 rounded-lg">
+                                    <flux:text class="font-medium">{{ $selectedClient->name }}</flux:text>
+                                    <flux:text size="sm" class="text-gray-500 block">
+                                        Client is selected from session
+                                    </flux:text>
+                                </div>
+                            @else
+                                <flux:select name="client_id" onchange="loadClientAddress(this.value)">
+                                    <flux:select.option value="">Choose a client...</flux:select.option>
+                                    @foreach(\App\Models\Client::orderBy('name')->get() as $client)
+                                        <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                            @endif
                         </flux:field>
 
                         <!-- Manual Address -->
@@ -279,6 +289,13 @@ function updateCostEstimate() {
 // Update cost when options change
 document.querySelector('[name="color"]').addEventListener('change', updateCostEstimate);
 document.querySelector('[name="extra_service"]').addEventListener('change', updateCostEstimate);
+
+// Auto-load selected client address if preselected
+@if(isset($selectedClient) && $selectedClient)
+    document.addEventListener('DOMContentLoaded', function() {
+        loadClientAddress('{{ $selectedClient->id }}');
+    });
+@endif
 
 function sendMail() {
     const form = document.getElementById('sendMailForm');

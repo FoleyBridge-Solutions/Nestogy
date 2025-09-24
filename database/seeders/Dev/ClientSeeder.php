@@ -45,6 +45,8 @@ class ClientSeeder extends Seeder
                     break;
                 default:
                     $numClients = rand(30, 50);
+                    break;
+            }
             
             // Create a mix of client sizes and statuses
             $clientTypes = [

@@ -1,22 +1,4 @@
 <div>
-    <!-- Time Filter -->
-    <div class="flex justify-end mb-4">
-        <flux:tab.group>
-            <flux:tabs wire:model.live="period" variant="pills" size="sm">
-                <flux:tab name="month">Month</flux:tab>
-                <flux:tab name="quarter">Quarter</flux:tab>
-                <flux:tab name="year">Year</flux:tab>
-                <flux:tab name="all">All Time</flux:tab>
-            </flux:tabs>
-            
-            <!-- Hidden panels - content is controlled by Livewire period property -->
-            <flux:tab.panel name="month" class="hidden"></flux:tab.panel>
-            <flux:tab.panel name="quarter" class="hidden"></flux:tab.panel>
-            <flux:tab.panel name="year" class="hidden"></flux:tab.panel>
-            <flux:tab.panel name="all" class="hidden"></flux:tab.panel>
-        </flux:tab.group>
-    </div>
-    
     <!-- KPI Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" wire:poll.30s="loadKpis">
     @forelse($kpis as $kpi)
@@ -132,7 +114,20 @@
                     </div>
                     
                     <!-- Trend Indicator -->
-                    <flux:tooltip content="{{ $kpi['trendValue'] . ' ' . $kpi['description'] }}">
+                    @php
+                        $tooltip = trim(($kpi['trendValue'] ?? '') . ' ' . ($kpi['description'] ?? ''));
+                        if (array_key_exists('previousValue', $kpi)) {
+                            $formattedPrevious = match($kpi['format'] ?? null) {
+                                'currency' => '$' . number_format($kpi['previousValue'] ?? 0, 2),
+                                'percentage' => number_format($kpi['previousValue'] ?? 0, 1) . '%',
+                                'hours' => number_format($kpi['previousValue'] ?? 0, 1) . ' hrs',
+                                'rating' => number_format($kpi['previousValue'] ?? 0, 2),
+                                default => number_format($kpi['previousValue'] ?? 0)
+                            };
+                            $tooltip = trim($tooltip . ' · Prev: ' . $formattedPrevious);
+                        }
+                    @endphp
+                    <flux:tooltip content="{{ $tooltip }}">
                         <div class="flex items-center gap-1">
                             @if($kpi['trend'] === 'up')
                                 <flux:icon.arrow-trending-up class="size-4 text-green-500" />

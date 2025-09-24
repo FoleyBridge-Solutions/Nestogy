@@ -109,6 +109,8 @@ class SidebarConfigProvider
                 return $this->getReportsConfig();
             case 'settings':
                 return $this->getSettingsConfig();
+            case 'physical-mail':
+                return $this->getPhysicalMailConfig();
             default:
                 return [];
         }
@@ -554,6 +556,111 @@ class SidebarConfigProvider
             'title' => 'Email Management',
             'icon' => 'envelope',
             'sections' => $sections
+        ];
+    }
+    
+    /**
+     * Get physical mail sidebar configuration
+     */
+    protected function getPhysicalMailConfig(): array
+    {
+        $user = auth()->user();
+        $selectedClient = NavigationService::getSelectedClient();
+        
+        // Get physical mail statistics (with safe fallback)
+        $totalMails = 0;
+        $pendingMails = 0;
+        
+        if ($user && $user->company_id) {
+            try {
+                $query = \App\Domains\PhysicalMail\Models\PhysicalMailOrder::query();
+                
+                // Filter by selected client if present
+                if ($selectedClient) {
+                    $query->where('client_id', $selectedClient->id);
+                }
+                
+                $totalMails = (clone $query)->count();
+                $pendingMails = (clone $query)->whereIn('status', ['pending', 'processing'])->count();
+            } catch (\Exception $e) {
+                // Silently handle any issues with querying the model
+                $totalMails = 0;
+                $pendingMails = 0;
+            }
+        }
+
+        return [
+            'title' => 'Physical Mail',
+            'icon' => 'paper-airplane',
+            'sections' => [
+                [
+                    'type' => 'primary',
+                    'items' => [
+                        [
+                            'name' => 'Dashboard',
+                            'route' => 'mail.index',
+                            'icon' => 'chart-pie',
+                            'key' => 'dashboard',
+                            'description' => 'Overview of physical mail activity'
+                        ],
+                        [
+                            'name' => 'Send Mail',
+                            'route' => 'mail.send',
+                            'icon' => 'plus-circle',
+                            'key' => 'send',
+                            'description' => 'Send new physical mail'
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'MAIL MANAGEMENT',
+                    'expandable' => true,
+                    'default_expanded' => true,
+                    'items' => [
+                        [
+                            'name' => 'Tracking',
+                            'route' => 'mail.tracking',
+                            'icon' => 'map-pin',
+                            'key' => 'tracking',
+                            'badge' => $pendingMails > 0 ? $pendingMails : null,
+                            'badge_type' => 'warning',
+                            'description' => 'Track delivery status'
+                        ],
+                        [
+                            'name' => 'Templates',
+                            'route' => 'mail.templates',
+                            'icon' => 'document-text',
+                            'key' => 'templates',
+                            'description' => 'Manage mail templates'
+                        ],
+                        [
+                            'name' => 'Contacts',
+                            'route' => 'mail.contacts',
+                            'icon' => 'user-group',
+                            'key' => 'contacts',
+                            'description' => 'Manage mailing addresses'
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'STATISTICS',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'Total Sent',
+                            'route' => 'mail.index',
+                            'icon' => 'chart-bar',
+                            'key' => 'stats-total',
+                            'badge' => $totalMails,
+                            'badge_type' => 'info',
+                            'description' => 'All time mail count'
+                        ]
+                    ]
+                ]
+            ]
         ];
     }
     

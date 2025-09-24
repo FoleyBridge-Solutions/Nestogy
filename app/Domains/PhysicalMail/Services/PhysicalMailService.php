@@ -10,6 +10,7 @@ use App\Domains\PhysicalMail\Models\PhysicalMailLetter;
 use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
 use App\Domains\PhysicalMail\Models\PhysicalMailTemplate;
 use App\Domains\PhysicalMail\Services\PostGridClient;
+use App\Domains\PhysicalMail\Services\GeocodingService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,8 @@ class PhysicalMailService
         private ?PhysicalMailContactService $contactService = null,
         private ?PhysicalMailTemplateService $templateService = null,
         private ?PhysicalMailTemplateBuilder $templateBuilder = null,
-        private ?PhysicalMailContentAnalyzer $contentAnalyzer = null
+        private ?PhysicalMailContentAnalyzer $contentAnalyzer = null,
+        private ?GeocodingService $geocodingService = null
     ) {
         // Initialize with company-aware client if not provided
         if (!$this->postgrid) {
@@ -35,6 +37,7 @@ class PhysicalMailService
         $this->templateService = $this->templateService ?: app(PhysicalMailTemplateService::class);
         $this->templateBuilder = $this->templateBuilder ?: app(PhysicalMailTemplateBuilder::class);
         $this->contentAnalyzer = $this->contentAnalyzer ?: app(PhysicalMailContentAnalyzer::class);
+        $this->geocodingService = $this->geocodingService ?: app(GeocodingService::class);
     }
     
 
@@ -86,22 +89,41 @@ class PhysicalMailService
         // Generate idempotency key if not provided
         $data['idempotency_key'] = $data['idempotency_key'] ?? (string) Str::uuid();
         
+        // Geocode the destination address
+        $locationData = [];
+        if (isset($data['to']) && is_array($data['to'])) {
+            $geocoded = $this->geocodingService->geocodeAddress($data['to']);
+            if ($geocoded) {
+                $locationData = [
+                    'latitude' => $geocoded['latitude'],
+                    'longitude' => $geocoded['longitude'],
+                    'formatted_address' => $geocoded['formatted_address'],
+                    'to_address_line1' => $data['to']['addressLine1'] ?? null,
+                    'to_address_line2' => $data['to']['addressLine2'] ?? null,
+                    'to_city' => $data['to']['city'] ?? null,
+                    'to_state' => $data['to']['provinceOrState'] ?? $data['to']['state'] ?? null,
+                    'to_postal_code' => $data['to']['postalOrZip'] ?? $data['to']['postalCode'] ?? null,
+                    'to_country' => $data['to']['country'] ?? 'US',
+                ];
+            }
+        }
+        
         // Remove non-model fields
-        $orderData = [
+        $orderData = array_merge([
             'client_id' => $data['client_id'] ?? Auth::user()?->company?->currentClient?->id,
             'status' => 'pending',
             'mailing_class' => $data['mailing_class'] ?? config('physical_mail.defaults.mailing_class'),
             'send_date' => $data['send_date'] ?? now(),
             'metadata' => $data['metadata'] ?? [],
             'created_by' => Auth::id(),
-        ];
+        ], $locationData);
         
         unset($data['client_id'], $data['mailing_class'], $data['send_date'], $data['metadata'], $data['to'], $data['from']);
         
         // Create mailable
         $mailable = $modelClass::create($data);
         
-        // Create order record
+        // Create order record with location data
         $mailable->order()->create($orderData);
         
         return $mailable;

@@ -186,6 +186,16 @@
             @endforeach
         </div>
         
+        <!-- Load More -->
+        @if($teamMembers->count() >= $limit && $allTeamMembers->count() > $limit)
+            <div class="mt-4">
+                <flux:button variant="ghost" size="sm" class="w-full" wire:click="loadMore" wire:loading.attr="disabled">
+                    <flux:icon.arrow-down class="size-4" wire:loading.class="animate-bounce" />
+                    Load More Team Members
+                </flux:button>
+            </div>
+        @endif
+        
         <!-- Summary Stats -->
         <div class="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -235,7 +245,7 @@
     @endif
     
     <!-- Loading Overlay -->
-    <div wire:loading wire:target="loadTeamPerformance,setPeriod,sort" class="absolute inset-0 bg-white/70 dark:bg-zinc-900/70 flex items-center justify-center rounded-lg">
+    <div wire:loading wire:target="loadTeamPerformance,setPeriod,sort,loadMore" class="absolute inset-0 bg-white/70 dark:bg-zinc-900/70 flex items-center justify-center rounded-lg">
         <div class="flex items-center gap-2 bg-white dark:bg-zinc-800 px-4 py-2 rounded-lg shadow-lg">
             <flux:icon.arrow-path class="size-5 animate-spin text-purple-500" />
             <flux:text>Analyzing performance...</flux:text>

@@ -16,6 +16,7 @@ class FinancialKpis extends Component
 {
     public array $kpis = [];
     public bool $loading = true;
+    protected ?string $revenueRecognitionMethod = null;
     
     public function mount()
     {
@@ -50,11 +51,8 @@ class FinancialKpis extends Component
         $arr = $mrr * 12;
         
         // Total Revenue This Month
-        $monthlyRevenue = Payment::where('company_id', $companyId)
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->sum('amount') ?? 0;
-        
+        [$monthlyRevenue, $previousRevenue] = $this->calculateMonthlyRevenue($companyId);
+
         // Outstanding Invoices
         $outstanding = Invoice::where('company_id', $companyId)
             ->whereIn('status', ['Sent', 'Viewed', 'Partial'])
@@ -62,7 +60,8 @@ class FinancialKpis extends Component
         
         // Average Invoice Value
         $avgInvoice = Invoice::where('company_id', $companyId)
-            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereMonth('date', Carbon::now()->month)
+            ->whereYear('date', Carbon::now()->year)
             ->avg('amount') ?? 0;
         
         // Customer Count
@@ -86,10 +85,13 @@ class FinancialKpis extends Component
         
         // Collection Rate
         $totalInvoiced = Invoice::where('company_id', $companyId)
-            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereMonth('date', Carbon::now()->month)
+            ->whereYear('date', Carbon::now()->year)
             ->sum('amount') ?? 1;
         $totalCollected = Payment::where('company_id', $companyId)
-            ->whereMonth('created_at', Carbon::now()->month)
+            ->where('status', 'completed')
+            ->whereNotNull('payment_date')
+            ->whereMonth('payment_date', Carbon::now()->month)
             ->sum('amount') ?? 0;
         $collectionRate = $totalInvoiced > 0 ? ($totalCollected / $totalInvoiced) * 100 : 0;
         
@@ -97,11 +99,7 @@ class FinancialKpis extends Component
         $lastMonthMRR = $this->calculateLastMonthMRR($companyId);
         $mrrTrend = $this->calculateTrend($mrr, $lastMonthMRR);
         
-        $lastMonthRevenue = Payment::where('company_id', $companyId)
-            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
-            ->whereYear('created_at', Carbon::now()->subMonth()->year)
-            ->sum('amount') ?? 0;
-        $revenueTrend = $this->calculateTrend($monthlyRevenue, $lastMonthRevenue);
+        $revenueTrend = $this->calculateTrend($monthlyRevenue, $previousRevenue);
         
         $lastMonthOutstanding = Invoice::where('company_id', $companyId)
             ->whereIn('status', ['Sent', 'Viewed', 'Partial'])
@@ -130,7 +128,7 @@ class FinancialKpis extends Component
             ['label' => 'ARR', 'value' => $arr, 'format' => 'currency', 'icon' => 'arrow-trending-up', 'color' => 'blue', 
              'trend' => $mrrTrend >= 0 ? 'up' : 'down', 'trendValue' => ($mrrTrend >= 0 ? '+' : '') . $mrrTrend . '%'],
             ['label' => 'Monthly Revenue', 'value' => $monthlyRevenue, 'format' => 'currency', 'icon' => 'currency-dollar', 'color' => 'purple', 
-             'trend' => $revenueTrend >= 0 ? 'up' : 'down', 'trendValue' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%'],
+             'trend' => $revenueTrend >= 0 ? 'up' : 'down', 'trendValue' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%', 'previousValue' => $previousRevenue],
             ['label' => 'Outstanding', 'value' => $outstanding, 'format' => 'currency', 'icon' => 'clock', 'color' => 'orange', 
              'trend' => $outstandingTrend <= 0 ? 'down' : 'up', 'trendValue' => ($outstandingTrend >= 0 ? '+' : '') . $outstandingTrend . '%'],
             ['label' => 'Avg Invoice', 'value' => $avgInvoice, 'format' => 'currency', 'icon' => 'document-text', 'color' => 'indigo', 
@@ -201,11 +199,62 @@ class FinancialKpis extends Component
             ->sum('amount') ?? 1;
             
         $totalCollected = Payment::where('company_id', $companyId)
-            ->whereMonth('created_at', $lastMonth->month)
-            ->whereYear('created_at', $lastMonth->year)
+            ->where('status', 'completed')
+            ->whereNotNull('payment_date')
+            ->whereMonth('payment_date', $lastMonth->month)
+            ->whereYear('payment_date', $lastMonth->year)
             ->sum('amount') ?? 0;
             
         return $totalInvoiced > 0 ? ($totalCollected / $totalInvoiced) * 100 : 0;
+    }
+
+    protected function calculateMonthlyRevenue(int $companyId): array
+    {
+        $method = $this->getRevenueRecognitionMethod();
+        $now = Carbon::now();
+
+        $currentStart = $now->copy()->startOfMonth();
+        $currentEnd = $now->copy()->endOfMonth();
+        $previousStart = $now->copy()->subMonth()->startOfMonth();
+        $previousEnd = $now->copy()->subMonth()->endOfMonth();
+
+        if ($method === 'cash') {
+            $current = Payment::where('company_id', $companyId)
+                ->where('status', 'completed')
+                ->whereNotNull('payment_date')
+                ->whereBetween('payment_date', [$currentStart, $currentEnd])
+                ->sum('amount');
+
+            $previous = Payment::where('company_id', $companyId)
+                ->where('status', 'completed')
+                ->whereNotNull('payment_date')
+                ->whereBetween('payment_date', [$previousStart, $previousEnd])
+                ->sum('amount');
+        } else {
+            $current = Invoice::where('company_id', $companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$currentStart, $currentEnd])
+                ->sum('amount');
+
+            $previous = Invoice::where('company_id', $companyId)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$previousStart, $previousEnd])
+                ->sum('amount');
+        }
+
+        return [(float) $current, (float) $previous];
+    }
+
+    protected function getRevenueRecognitionMethod(): string
+    {
+        if ($this->revenueRecognitionMethod !== null) {
+            return $this->revenueRecognitionMethod;
+        }
+
+        $settings = optional(Auth::user()->company->setting);
+        $method = data_get($settings?->revenue_recognition_settings, 'method');
+
+        return $this->revenueRecognitionMethod = in_array($method, ['cash', 'accrual'], true) ? $method : 'accrual';
     }
 
     public function render()

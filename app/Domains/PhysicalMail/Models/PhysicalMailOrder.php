@@ -34,6 +34,15 @@ class PhysicalMailOrder extends Model
         'pdf_url',
         'metadata',
         'created_by',
+        'latitude',
+        'longitude',
+        'formatted_address',
+        'to_address_line1',
+        'to_address_line2',
+        'to_city',
+        'to_state',
+        'to_postal_code',
+        'to_country',
     ];
 
     protected $casts = [
@@ -41,6 +50,8 @@ class PhysicalMailOrder extends Model
         'send_date' => 'datetime',
         'imb_date' => 'datetime',
         'cost' => 'decimal:2',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     /**

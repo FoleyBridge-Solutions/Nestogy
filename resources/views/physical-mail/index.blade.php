@@ -7,7 +7,14 @@
     <!-- Header with Actions -->
     <div class="mb-6">
         <flux:heading size="xl">Physical Mail Dashboard</flux:heading>
-        <flux:text class="text-zinc-500">Manage and track all physical mail sent to clients</flux:text>
+        <flux:text class="text-zinc-500">
+            Manage and track all physical mail
+            @if(isset($selectedClient) && $selectedClient)
+                for {{ $selectedClient->name }}
+            @else
+                sent to clients
+            @endif
+        </flux:text>
         
         <div class="mt-4 flex gap-2">
             <flux:button href="{{ route('mail.send') }}" icon="paper-airplane">

@@ -139,7 +139,7 @@ class ProductSeeder extends Seeder
                         'type' => $productData['type'],
                         'category_id' => $category->id,
                         'vendor_id' => $vendors->isNotEmpty() ? $vendors->random()->id : null,
-                        'price' => $price,
+                        'base_price' => $price,
                         'cost' => $price * fake()->randomFloat(2, 0.4, 0.7), // 40-70% of price
                         'recurring_type' => $productData['recurring'],
                         'taxable' => fake()->boolean(80),

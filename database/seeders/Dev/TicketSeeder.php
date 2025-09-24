@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Client;
 use App\Models\User;
 use App\Models\Contact;
+use Carbon\Carbon;
 
 class TicketSeeder extends Seeder
 {

@@ -56,6 +56,7 @@ class Product extends Model
         'tax_id',
         'tax_profile_id',
         'category_id',
+        'vendor_id',
         'tax_inclusive',
         'tax_rate',
         'unit_type',
@@ -76,6 +77,10 @@ class Product extends Model
         'warranty_period',
         'tags',
         'is_active',
+        'active',
+        'taxable',
+        'recurring_type',
+        'stock_quantity',
         'sort_order',
         'short_description',
     ];

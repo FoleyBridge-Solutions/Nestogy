@@ -6,7 +6,12 @@
 <div class="container-fluid">
     <div class="mb-6">
         <flux:heading size="xl">Mail Contacts</flux:heading>
-        <flux:text class="text-zinc-500">Manage frequently used mailing addresses</flux:text>
+        <flux:text class="text-zinc-500">
+            Manage frequently used mailing addresses
+            @if(isset($selectedClient) && $selectedClient)
+                for {{ $selectedClient->name }}
+            @endif
+        </flux:text>
         
         <div class="mt-4">
             <flux:button onclick="addContact()" icon="plus">
@@ -17,9 +22,14 @@
 
     <!-- Contact List -->
     @php
-        $clients = \App\Models\Client::whereNotNull('address')
-            ->orderBy('name')
-            ->get();
+        $query = \App\Models\Client::whereNotNull('address');
+        
+        // Filter by selected client if present
+        if (isset($selectedClient) && $selectedClient) {
+            $query->where('id', $selectedClient->id);
+        }
+        
+        $clients = $query->orderBy('name')->get();
     @endphp
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

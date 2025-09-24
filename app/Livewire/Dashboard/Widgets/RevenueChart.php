@@ -129,7 +129,7 @@ class RevenueChart extends Component
     protected function getDayRevenue($date, $companyId)
     {
         $query = Payment::where('company_id', $companyId)
-            ->whereDate('created_at', $date);
+            ->whereDate('payment_date', $date);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);
@@ -141,7 +141,7 @@ class RevenueChart extends Component
     protected function getDayInvoices($date, $companyId)
     {
         $query = Invoice::where('company_id', $companyId)
-            ->whereDate('created_at', $date);
+            ->whereDate('date', $date);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);
@@ -153,7 +153,7 @@ class RevenueChart extends Component
     protected function getDayPayments($date, $companyId)
     {
         $query = Payment::where('company_id', $companyId)
-            ->whereDate('created_at', $date);
+            ->whereDate('payment_date', $date);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);
@@ -165,8 +165,8 @@ class RevenueChart extends Component
     protected function getMonthRevenue($month, $companyId)
     {
         $query = Payment::where('company_id', $companyId)
-            ->whereYear('created_at', $month->year)
-            ->whereMonth('created_at', $month->month);
+            ->whereYear('payment_date', $month->year)
+            ->whereMonth('payment_date', $month->month);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);
@@ -178,8 +178,8 @@ class RevenueChart extends Component
     protected function getMonthInvoices($month, $companyId)
     {
         $query = Invoice::where('company_id', $companyId)
-            ->whereYear('created_at', $month->year)
-            ->whereMonth('created_at', $month->month);
+            ->whereYear('date', $month->year)
+            ->whereMonth('date', $month->month);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);
@@ -191,8 +191,8 @@ class RevenueChart extends Component
     protected function getMonthPayments($month, $companyId)
     {
         $query = Payment::where('company_id', $companyId)
-            ->whereYear('created_at', $month->year)
-            ->whereMonth('created_at', $month->month);
+            ->whereYear('payment_date', $month->year)
+            ->whereMonth('payment_date', $month->month);
             
         if ($this->clientId) {
             $query->where('client_id', $this->clientId);

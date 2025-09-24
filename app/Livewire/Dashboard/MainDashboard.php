@@ -18,6 +18,7 @@ class MainDashboard extends Component
     public array $metrics = [];
     public bool $darkMode = false;
     public int $refreshInterval = 30; // seconds
+    public string $kpiPeriod = 'month';
     
     protected function getListeners()
     {
@@ -129,11 +130,11 @@ class MainDashboard extends Component
             
             try {
                 $service = new DashboardDataService($companyId);
-                
+
                 $data = match($this->view) {
                     'executive' => $service->getExecutiveDashboardData(now()->startOfMonth(), now()->endOfMonth()),
-                    'operations' => method_exists($service, 'getOperationsDashboardData') 
-                        ? $service->getOperationsDashboardData() 
+                    'operations' => method_exists($service, 'getOperationsDashboardData')
+                        ? $service->getOperationsDashboardData()
                         : ['view' => 'operations'],
                     'financial' => method_exists($service, 'getFinancialDashboardData')
                         ? $service->getFinancialDashboardData(now()->startOfMonth(), now()->endOfMonth())
@@ -157,6 +158,20 @@ class MainDashboard extends Component
         });
         
         $this->dispatch('dashboard-data-loaded', $this->metrics);
+    }
+
+    public function setKpiPeriod(string $period): void
+    {
+        if (!in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
+            return;
+        }
+
+        if ($this->kpiPeriod === $period) {
+            return;
+        }
+
+        $this->kpiPeriod = $period;
+        $this->dispatch('set-kpi-period', period: $period);
     }
 
     public function updatedView($value)

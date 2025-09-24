@@ -5,6 +5,7 @@ namespace App\Domains\PhysicalMail\Controllers;
 use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
 use App\Http\Controllers\Controller;
 use App\Domains\PhysicalMail\Services\PhysicalMailService;
+use App\Services\NavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -27,15 +28,87 @@ class PhysicalMailController extends Controller
             'date_from' => 'sometimes|date',
             'date_to' => 'sometimes|date',
             'per_page' => 'sometimes|integer|min:1|max:100',
+            'include_locations' => 'sometimes|boolean',
         ]);
 
-        $clientId = $validated['client_id'] ?? Auth::user()->company->currentClient?->id;
+        // Get selected client from session if no explicit client_id provided
+        if (!isset($validated['client_id'])) {
+            $selectedClient = NavigationService::getSelectedClient();
+            if ($selectedClient) {
+                $validated['client_id'] = $selectedClient->id;
+            }
+        }
         
-        if (!$clientId) {
-            return response()->json(['error' => 'No client selected'], 400);
+        // If requesting location data for map view
+        if ($request->boolean('include_locations')) {
+            $query = PhysicalMailOrder::with(['client', 'createdBy'])
+                ->whereNotNull('tracking_number')
+                ->whereNotIn('status', ['cancelled', 'failed']);
+                
+            if (isset($validated['status'])) {
+                $query->where('status', $validated['status']);
+            }
+            
+            if (isset($validated['client_id'])) {
+                $query->where('client_id', $validated['client_id']);
+            }
+            
+            if (isset($validated['date_from'])) {
+                $query->where('created_at', '>=', $validated['date_from']);
+            }
+            
+            if (isset($validated['date_to'])) {
+                $query->where('created_at', '<=', $validated['date_to']);
+            }
+            
+            $orders = $query->limit(100)->get();
+            
+            // Transform for map display
+            $mapData = $orders->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'tracking_number' => $order->tracking_number,
+                    'status' => $order->status,
+                    'client' => [
+                        'name' => $order->client?->name ?? 'Unknown',
+                    ],
+                    'address' => $order->formatted_address ?? 
+                        ($order->to_city ? "{$order->to_address_line1}, {$order->to_city}, {$order->to_state}" : 'Unknown location'),
+                    'lat' => $order->latitude,
+                    'lng' => $order->longitude,
+                ];
+            });
+            
+            return response()->json(['data' => $mapData]);
         }
 
-        $orders = $this->mailService->getByClient($clientId, $validated);
+        // Use provided client_id, or session client, or return all if none
+        $clientId = $validated['client_id'] ?? null;
+        
+        if ($clientId) {
+            $orders = $this->mailService->getByClient($clientId, $validated);
+        } else {
+            // Return all orders for the company if no specific client
+            $query = PhysicalMailOrder::where('company_id', Auth::user()->company_id);
+            
+            if (isset($validated['status'])) {
+                $query->where('status', $validated['status']);
+            }
+            
+            if (isset($validated['mailable_type'])) {
+                $query->where('mailable_type', $validated['mailable_type']);
+            }
+            
+            if (isset($validated['date_from'])) {
+                $query->where('created_at', '>=', $validated['date_from']);
+            }
+            
+            if (isset($validated['date_to'])) {
+                $query->where('created_at', '<=', $validated['date_to']);
+            }
+            
+            $orders = $query->paginate($validated['per_page'] ?? 20);
+        }
 
         return response()->json($orders);
     }
@@ -254,22 +327,31 @@ class PhysicalMailController extends Controller
      */
     public function webIndex(Request $request)
     {
+        // Get selected client from session
+        $selectedClient = NavigationService::getSelectedClient();
+        
+        // Build base query with optional client filtering
+        $baseQuery = PhysicalMailOrder::query();
+        if ($selectedClient) {
+            $baseQuery->where('client_id', $selectedClient->id);
+        }
+        
         $stats = [
-            'total' => PhysicalMailOrder::count(),
-            'month' => PhysicalMailOrder::whereMonth('created_at', now()->month)->count(),
-            'pending' => PhysicalMailOrder::whereIn('status', ['pending', 'processing'])->count(),
-            'delivered' => PhysicalMailOrder::where('status', 'delivered')->count(),
+            'total' => (clone $baseQuery)->count(),
+            'month' => (clone $baseQuery)->whereMonth('created_at', now()->month)->count(),
+            'pending' => (clone $baseQuery)->whereIn('status', ['pending', 'processing'])->count(),
+            'delivered' => (clone $baseQuery)->where('status', 'delivered')->count(),
         ];
         
-        $recentOrders = PhysicalMailOrder::with(['client', 'createdBy'])
+        $recentOrders = (clone $baseQuery)->with(['client', 'createdBy'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
         
-        $activeDomain = 'clients';
-        $activeSection = 'physical-mail';
+        $activeDomain = 'physical-mail';
+        $activeSection = 'dashboard';
         
-        return view('physical-mail.index', compact('stats', 'recentOrders', 'activeDomain', 'activeSection'));
+        return view('physical-mail.index', compact('stats', 'recentOrders', 'activeDomain', 'activeSection', 'selectedClient'));
     }
     
     /**
@@ -277,10 +359,13 @@ class PhysicalMailController extends Controller
      */
     public function webSend(Request $request)
     {
-        $activeDomain = 'clients';
-        $activeSection = 'physical-mail';
+        // Get selected client from session
+        $selectedClient = NavigationService::getSelectedClient();
         
-        return view('physical-mail.send', compact('activeDomain', 'activeSection'));
+        $activeDomain = 'physical-mail';
+        $activeSection = 'send';
+        
+        return view('physical-mail.send', compact('activeDomain', 'activeSection', 'selectedClient'));
     }
     
     /**
@@ -288,15 +373,23 @@ class PhysicalMailController extends Controller
      */
     public function webTracking(Request $request)
     {
-        $orders = PhysicalMailOrder::with(['client', 'createdBy'])
-            ->whereNotNull('tracking_number')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        // Get selected client from session
+        $selectedClient = NavigationService::getSelectedClient();
         
-        $activeDomain = 'clients';
-        $activeSection = 'physical-mail';
+        // Build query with optional client filtering
+        $query = PhysicalMailOrder::with(['client', 'createdBy'])
+            ->whereNotNull('tracking_number');
+            
+        if ($selectedClient) {
+            $query->where('client_id', $selectedClient->id);
+        }
         
-        return view('physical-mail.tracking', compact('orders', 'activeDomain', 'activeSection'));
+        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+        
+        $activeDomain = 'physical-mail';
+        $activeSection = 'tracking';
+        
+        return view('physical-mail.tracking', compact('orders', 'activeDomain', 'activeSection', 'selectedClient'));
     }
     
     /**
@@ -304,12 +397,15 @@ class PhysicalMailController extends Controller
      */
     public function webTemplates(Request $request)
     {
+        // Get selected client from session
+        $selectedClient = NavigationService::getSelectedClient();
+        
         $templates = collect(); // TODO: Load from database when template model is created
         
-        $activeDomain = 'clients';
-        $activeSection = 'physical-mail';
+        $activeDomain = 'physical-mail';
+        $activeSection = 'templates';
         
-        return view('physical-mail.templates', compact('templates', 'activeDomain', 'activeSection'));
+        return view('physical-mail.templates', compact('templates', 'activeDomain', 'activeSection', 'selectedClient'));
     }
     
     /**
@@ -317,11 +413,14 @@ class PhysicalMailController extends Controller
      */
     public function webContacts(Request $request)
     {
+        // Get selected client from session
+        $selectedClient = NavigationService::getSelectedClient();
+        
         $contacts = collect(); // TODO: Load from database when contact model is created
         
-        $activeDomain = 'clients';
-        $activeSection = 'physical-mail';
+        $activeDomain = 'physical-mail';
+        $activeSection = 'contacts';
         
-        return view('physical-mail.contacts', compact('contacts', 'activeDomain', 'activeSection'));
+        return view('physical-mail.contacts', compact('contacts', 'activeDomain', 'activeSection', 'selectedClient'));
     }
 }

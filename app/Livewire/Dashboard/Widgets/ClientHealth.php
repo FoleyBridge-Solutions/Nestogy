@@ -24,7 +24,8 @@ class ClientHealth extends Component
     public string $sortBy = 'health_score'; // health_score, name, revenue, tickets
     public string $sortDirection = 'desc';
     public string $filter = 'all'; // all, at_risk, healthy, critical
-    public int $limit = 10;
+    public int $limit = 3;
+    public int $loadCount = 0;
     
     public function mount()
     {
@@ -227,7 +228,17 @@ class ClientHealth extends Component
     
     public function loadMore()
     {
-        $this->limit += 10;
+        $this->loadCount++;
+        
+        // Progressive loading: 3 → 10 → 20 → 30...
+        if ($this->loadCount === 1) {
+            $this->limit = 10;  // First load: show 10 total
+        } elseif ($this->loadCount === 2) {
+            $this->limit = 20;  // Second load: show 20 total
+        } else {
+            $this->limit += 10; // Subsequent loads: add 10 more
+        }
+        
         $this->loadClientHealth();
     }
     

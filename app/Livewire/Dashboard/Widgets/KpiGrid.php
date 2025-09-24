@@ -23,20 +23,30 @@ class KpiGrid extends Component
     public array $kpis = [];
     public bool $loading = true;
     public string $period = 'month'; // month, quarter, year, all
+    protected ?string $revenueRecognitionMethod = null;
     
-    public function mount()
+    public function mount(string $period = 'month')
     {
+        if (in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
+            $this->period = $period;
+        }
         $this->trackLoadTime('mount');
         $this->loadKpis();
     }
     
-    public function updatedPeriod($value)
+    #[On('set-kpi-period')]
+    public function setPeriod(string $period): void
     {
-        if (in_array($value, ['month', 'quarter', 'year', 'all'])) {
+        if (!in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
+            return;
+        }
+
+        if ($this->period !== $period) {
+            $this->period = $period;
             $this->loadKpis();
         }
     }
-    
+
     #[On('dashboard-data-loaded')]
     public function handleDataLoad($data)
     {
@@ -52,28 +62,27 @@ class KpiGrid extends Component
         $this->loading = true;
         $companyId = Auth::user()->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+        $method = $this->getRevenueRecognitionMethod();
+
         // Get date range based on selected period
-        list($startDate, $endDate, $previousStartDate, $previousEndDate) = $this->getDateRanges();
-        
-        // Calculate main KPIs
-        $totalRevenue = Invoice::where($baseQuery)
-            ->where('status', 'paid')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
-        
-        // Previous period revenue for comparison
-        $previousRevenue = Invoice::where($baseQuery)
-            ->where('status', 'paid')
-            ->whereBetween('date', [$previousStartDate, $previousEndDate])
-            ->sum('amount');
-        
-        // Last month revenue for comparison
-        $lastMonthRevenue = Payment::where($baseQuery)
-            ->whereMonth('created_at', now()->subMonth()->month)
-            ->whereYear('created_at', now()->subMonth()->year)
-            ->sum('amount');
-        
+        [$startDate, $endDate, $previousStartDate, $previousEndDate] = $this->getDateRanges();
+
+        // Calculate revenue based on recognition method
+        if ($method === 'cash') {
+            $totalRevenue = $this->sumPaymentsBetween($companyId, $startDate, $endDate);
+            $previousRevenue = $this->sumPaymentsBetween($companyId, $previousStartDate, $previousEndDate);
+        } else {
+            $totalRevenue = Invoice::where($baseQuery)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->sum('amount');
+
+            $previousRevenue = Invoice::where($baseQuery)
+                ->where('status', Invoice::STATUS_PAID)
+                ->whereBetween('date', [$previousStartDate, $previousEndDate])
+                ->sum('amount');
+        }
+
         $revenueChange = $this->calculatePercentageChange($totalRevenue, $previousRevenue);
             
         // Pending Invoices
@@ -106,13 +115,13 @@ class KpiGrid extends Component
             
         // Overdue Invoices (current as of end date)
         $overdueInvoices = Invoice::where($baseQuery)
-            ->where('status', 'sent')
+            ->whereIn('status', ['overdue', 'Overdue'])
             ->where('due_date', '<', $endDate)
             ->sum('amount');
-        
+
         // Previous period's overdue for comparison
         $previousOverdue = Invoice::where($baseQuery)
-            ->where('status', 'sent')
+            ->whereIn('status', ['overdue', 'Overdue'])
             ->where('due_date', '<', $previousEndDate)
             ->sum('amount');
         
@@ -154,7 +163,8 @@ class KpiGrid extends Component
                 'color' => 'green',
                 'trend' => $revenueChange >= 0 ? 'up' : 'down',
                 'trendValue' => ($revenueChange >= 0 ? '+' : '') . $revenueChange . '%',
-                'description' => $comparisonLabel
+                'description' => $comparisonLabel,
+                'previousValue' => $previousRevenue,
             ],
             [
                 'label' => 'Pending Invoices',
@@ -194,7 +204,8 @@ class KpiGrid extends Component
                 'color' => 'red',
                 'trend' => $overdueChange < 0 ? 'down' : ($overdueChange > 0 ? 'up' : 'stable'),
                 'trendValue' => ($overdueChange >= 0 ? '+' : '') . $overdueChange . '%',
-                'description' => $comparisonLabel
+                'description' => $comparisonLabel,
+                'previousValue' => $previousOverdue,
             ],
             [
                 'label' => 'Avg Resolution',
@@ -204,7 +215,8 @@ class KpiGrid extends Component
                 'color' => 'indigo',
                 'trend' => $resolutionChange < 0 ? 'up' : ($resolutionChange > 0 ? 'down' : 'stable'),
                 'trendValue' => ($resolutionChange > 0 ? '+' : '') . $resolutionChange . ' hrs',
-                'description' => $comparisonLabel
+                'description' => $comparisonLabel,
+                'previousValue' => $previousAvgResolution,
             ],
             [
                 'label' => 'Satisfaction',
@@ -214,7 +226,8 @@ class KpiGrid extends Component
                 'color' => 'yellow',
                 'trend' => $satisfactionChange > 0 ? 'up' : ($satisfactionChange < 0 ? 'down' : 'stable'),
                 'trendValue' => ($satisfactionChange >= 0 ? '+' : '') . $satisfactionChange,
-                'description' => 'out of 5.0'
+                'description' => 'out of 5.0',
+                'previousValue' => $previousSatisfaction,
             ],
             [
                 'label' => 'Team Utilization',
@@ -230,6 +243,27 @@ class KpiGrid extends Component
         
         $this->kpis = $kpis;
         $this->loading = false;
+    }
+
+    protected function getRevenueRecognitionMethod(): string
+    {
+        if ($this->revenueRecognitionMethod !== null) {
+            return $this->revenueRecognitionMethod;
+        }
+
+        $settings = optional(Auth::user()->company->setting);
+        $method = data_get($settings?->revenue_recognition_settings, 'method');
+
+        return $this->revenueRecognitionMethod = in_array($method, ['cash', 'accrual'], true) ? $method : 'accrual';
+    }
+
+    protected function sumPaymentsBetween(int $companyId, Carbon $startDate, Carbon $endDate): float
+    {
+        return Payment::where('company_id', $companyId)
+            ->where('status', 'completed')
+            ->whereNotNull('payment_date')
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->sum('amount');
     }
 
     protected function calculatePercentageChange($current, $previous)

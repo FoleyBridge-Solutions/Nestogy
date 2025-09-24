@@ -1,10 +1,17 @@
 <div class="min-h-screen px-4 sm:px-6 lg:px-8 py-6 max-w-[1920px] mx-auto">
     
     <!-- Dashboard Header -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading size="2xl" class="flex items-center gap-3">
+    <flux:tab.group wire:model.live="view">
+        <div class="flex flex-wrap items-center gap-4 justify-between mb-6">
+            <flux:tabs variant="segmented" class="flex flex-nowrap shrink-0">
+                <flux:tab name="executive" icon="chart-bar">Executive</flux:tab>
+                <flux:tab name="operations" icon="cog-6-tooth">Operations</flux:tab>
+                <flux:tab name="financial" icon="currency-dollar">Financial</flux:tab>
+                <flux:tab name="support" icon="chat-bubble-oval-left">Support</flux:tab>
+            </flux:tabs>
+
+            <div class="flex-1 flex justify-center">
+                <flux:heading size="2xl" class="flex items-center gap-3 text-center">
                     @switch($view)
                         @case('executive')
                             <flux:icon.chart-bar class="size-8 text-blue-500" />
@@ -24,43 +31,46 @@
                             @break
                     @endswitch
                 </flux:heading>
-                
-                <flux:text class="mt-1 text-zinc-500">
-                    Last updated: {{ now()->format('g:i:s A') }}
+            </div>
+
+            <div class="flex flex-col items-end gap-2">
+                <div class="flex items-center gap-3">
+                    @if($view === 'executive')
+                        <div class="flex items-center gap-2 text-xs shrink-0">
+                            @foreach(['month' => 'Month', 'quarter' => 'Quarter', 'year' => 'Year', 'all' => 'All'] as $periodValue => $periodLabel)
+                                <flux:button
+                                    size="xs"
+                                    variant="{{ $kpiPeriod === $periodValue ? 'primary' : 'ghost' }}"
+                                    wire:click="setKpiPeriod('{{ $periodValue }}')">
+                                    {{ $periodLabel }}
+                                </flux:button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <flux:dropdown position="bottom" align="end" class="shrink-0">
+                        <flux:button variant="ghost" icon="ellipsis-vertical" size="sm" />
+                        
+                        <flux:menu>
+                            <flux:menu.item icon="arrow-path" wire:click="loadDashboardData">
+                                Refresh Data
+                            </flux:menu.item>
+                            
+                            <flux:menu.separator />
+                            
+                            <flux:menu.item icon="cog-6-tooth" @click="$wire.dispatch('open-settings')">
+                                Dashboard Settings
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+
+                <flux:text class="text-sm text-zinc-500 whitespace-nowrap">
+                    Last updated {{ now()->format('g:i:s A') }}
                 </flux:text>
             </div>
-            
-            <!-- Header Actions -->
-            <div class="flex items-center gap-3">
-                <!-- Actions Dropdown -->
-                <flux:dropdown position="bottom" align="end">
-                    <flux:button variant="ghost" icon="ellipsis-vertical" size="sm" />
-                    
-                    <flux:menu>
-                        <flux:menu.item icon="arrow-path" wire:click="loadDashboardData">
-                            Refresh Data
-                        </flux:menu.item>
-                        
-                        <flux:menu.separator />
-                        
-                        <flux:menu.item icon="cog-6-tooth" @click="$wire.dispatch('open-settings')">
-                            Dashboard Settings
-                        </flux:menu.item>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
         </div>
-    </div>
-    
-    <!-- Tab Navigation and Content -->
-    <flux:tab.group wire:model.live="view">
-        <flux:tabs variant="segmented" class="mb-6">
-            <flux:tab name="executive" icon="chart-bar">Executive</flux:tab>
-            <flux:tab name="operations" icon="cog-6-tooth">Operations</flux:tab>
-            <flux:tab name="financial" icon="currency-dollar">Financial</flux:tab>
-            <flux:tab name="support" icon="chat-bubble-oval-left">Support</flux:tab>
-        </flux:tabs>
-        
+
         <!-- Executive Panel -->
         <flux:tab.panel name="executive">
             <div class="grid grid-cols-12 gap-6">
@@ -76,6 +86,7 @@
                             @case('kpi-grid')
                                 {{-- KPI Grid loads immediately as it's above the fold --}}
                                 <livewire:dashboard.widgets.kpi-grid 
+                                    :period="$kpiPeriod"
                                     wire:key="kpi-grid-exec" />
                                 @break
                             @case('revenue-chart')
