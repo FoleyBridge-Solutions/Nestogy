@@ -71,13 +71,13 @@
             <flux:table>
                 <div class="mb-4">
                     <flux:table.row>
-                        <flux:table.head>Client</flux:table.head>
-                        <flux:table.head>Service</flux:table.head>
-                        <flux:table.head>Amount</flux:table.head>
-                        <flux:table.head>Frequency</flux:table.head>
-                        <flux:table.head>Next Billing</flux:table.head>
-                        <flux:table.head>Status</flux:table.head>
-                        <flux:table.head>Actions</flux:table.head>
+                        <flux:table.columns>Client</flux:table.columns>
+                        <flux:table.columns>Service</flux:table.columns>
+                        <flux:table.columns>Amount</flux:table.columns>
+                        <flux:table.columns>Frequency</flux:table.columns>
+                        <flux:table.columns>Next Billing</flux:table.columns>
+                        <flux:table.columns>Status</flux:table.columns>
+                        <flux:table.columns>Actions</flux:table.columns>
                     </flux:table.row>
                 </div>
                 <flux:table.body>

@@ -63,13 +63,13 @@
             <flux:table>
                 <div class="mb-4">
                     <flux:table.row>
-                        <flux:table.head>Invoice #</flux:table.head>
-                        <flux:table.head>Client</flux:table.head>
-                        <flux:table.head>Amount Due</flux:table.head>
-                        <flux:table.head>Due Date</flux:table.head>
-                        <flux:table.head>Days Overdue</flux:table.head>
-                        <flux:table.head>Status</flux:table.head>
-                        <flux:table.head>Actions</flux:table.head>
+                        <flux:table.columns>Invoice #</flux:table.columns>
+                        <flux:table.columns>Client</flux:table.columns>
+                        <flux:table.columns>Amount Due</flux:table.columns>
+                        <flux:table.columns>Due Date</flux:table.columns>
+                        <flux:table.columns>Days Overdue</flux:table.columns>
+                        <flux:table.columns>Status</flux:table.columns>
+                        <flux:table.columns>Actions</flux:table.columns>
                     </flux:table.row>
                 </div>
                 <flux:table.body>

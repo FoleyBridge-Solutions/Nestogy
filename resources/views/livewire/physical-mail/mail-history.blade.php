@@ -65,18 +65,18 @@
     <!-- Mail History Table -->
     <flux:card>
         <flux:table>
-            <flux:table.head>
+            <flux:table.columns>
                 <flux:table.row>
-                    <flux:table.heading>Date</flux:table.heading>
-                    <flux:table.heading>Recipient</flux:table.heading>
-                    <flux:table.heading>Type</flux:table.heading>
-                    <flux:table.heading>Description</flux:table.heading>
-                    <flux:table.heading>Status</flux:table.heading>
-                    <flux:table.heading>Tracking</flux:table.heading>
-                    <flux:table.heading>Cost</flux:table.heading>
-                    <flux:table.heading class="text-right">Actions</flux:table.heading>
+                    <flux:table.column>Date</flux:table.column>
+                    <flux:table.column>Recipient</flux:table.column>
+                    <flux:table.column>Type</flux:table.column>
+                    <flux:table.column>Description</flux:table.column>
+                    <flux:table.column>Status</flux:table.column>
+                    <flux:table.column>Tracking</flux:table.column>
+                    <flux:table.column>Cost</flux:table.column>
+                    <flux:table.column class="text-right">Actions</flux:table.column>
                 </flux:table.row>
-            </flux:table.head>
+            </flux:table.columns>
             
             <flux:table.body>
                 @forelse($orders as $order)

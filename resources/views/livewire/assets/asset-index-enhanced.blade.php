@@ -396,23 +396,23 @@
             <flux:table>
                 <div class="mb-4">
                     <flux:table.row>
-                        <flux:table.head>
+                        <flux:table.columns>
                             <flux:checkbox wire:model.live="selectAll" />
-                        </flux:table.head>
-                        <flux:table.head>Status</flux:table.head>
-                        <flux:table.head sortable wire:click="sortBy('name')">
+                        </flux:table.columns>
+                        <flux:table.columns>Status</flux:table.columns>
+                        <flux:table.header sortable wire:click="sortBy('name')">
                             Name
                             @if($sortField === 'name')
                                 <flux:icon.chevron-{{ $sortDirection === 'asc' ? 'up' : 'down' }} class="size-3 inline" />
                             @endif
-                        </flux:table.head>
-                        <flux:table.head>Type</flux:table.head>
-                        <flux:table.head>Client</flux:table.head>
-                        <flux:table.head>User</flux:table.head>
-                        <flux:table.head>Performance</flux:table.head>
-                        <flux:table.head>Alerts</flux:table.head>
-                        <flux:table.head>Last Seen</flux:table.head>
-                        <flux:table.head></flux:table.head>
+                        </flux:table.columns>
+                        <flux:table.columns>Type</flux:table.columns>
+                        <flux:table.columns>Client</flux:table.columns>
+                        <flux:table.columns>User</flux:table.columns>
+                        <flux:table.columns>Performance</flux:table.columns>
+                        <flux:table.columns>Alerts</flux:table.columns>
+                        <flux:table.columns>Last Seen</flux:table.columns>
+                        <flux:table.columns></flux:table.columns>
                     </flux:table.row>
                 </div>
                 <flux:table.body>
