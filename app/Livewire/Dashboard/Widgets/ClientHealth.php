@@ -352,7 +352,7 @@ class ClientHealth extends Component
                 'detail' => 'No contact for ' . $clientData['days_since_contact'] . ' days',
                 'calculation' => 'Fixed 10 points (>60 days)',
                 'amount' => 10,
-                'icon' => 'user-x',
+                'icon' => 'user-minus',
                 'color' => 'gray'
             ];
         }
