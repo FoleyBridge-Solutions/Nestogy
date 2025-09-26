@@ -72,7 +72,7 @@
                         <flux:table.columns>Actions</flux:table.columns>
                     </flux:table.row>
                 </div>
-                <flux:table.body>
+                <flux:table.rows>
                     @forelse($overdueInvoices as $invoice)
                     <flux:table.row>
                         <flux:table.cell>
@@ -128,7 +128,7 @@
                         </flux:table.cell>
                     </flux:table.row>
                     @endforelse
-                </flux:table.body>
+                </flux:table.rows>
             </flux:table>
             
             <div class="mt-4">

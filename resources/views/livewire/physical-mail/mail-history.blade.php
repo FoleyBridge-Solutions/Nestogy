@@ -78,7 +78,7 @@
                 </flux:table.row>
             </flux:table.columns>
             
-            <flux:table.body>
+            <flux:table.rows>
                 @forelse($orders as $order)
                     <flux:table.row wire:key="order-{{ $order->id }}">
                         <flux:table.cell>
@@ -204,7 +204,7 @@
                         </flux:table.cell>
                     </flux:table.row>
                 @endforelse
-            </flux:table.body>
+            </flux:table.rows>
         </flux:table>
         
         @if($orders->hasPages())

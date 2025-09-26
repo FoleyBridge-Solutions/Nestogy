@@ -80,7 +80,7 @@
                         <flux:table.columns>Actions</flux:table.columns>
                     </flux:table.row>
                 </div>
-                <flux:table.body>
+                <flux:table.rows>
                     @forelse($schedules ?? [] as $schedule)
                     <flux:table.row>
                         <flux:table.cell>{{ $schedule->client->name }}</flux:table.cell>
@@ -124,7 +124,7 @@
                         </flux:table.cell>
                     </flux:table.row>
                     @endforelse
-                </flux:table.body>
+                </flux:table.rows>
             </flux:table>
         
     </flux:card>

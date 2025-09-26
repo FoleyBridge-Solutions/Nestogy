@@ -415,7 +415,7 @@
                         <flux:table.columns></flux:table.columns>
                     </flux:table.row>
                 </div>
-                <flux:table.body>
+                <flux:table.rows>
                     @forelse($assets as $asset)
                         <flux:table.row class="hover:bg-gray-50">
                             <flux:table.cell>
@@ -525,7 +525,7 @@
                             </flux:table.cell>
                         </flux:table.row>
                     @endforelse
-                </flux:table.body>
+                </flux:table.rows>
             </flux:table>
         </flux:card>
     @else
