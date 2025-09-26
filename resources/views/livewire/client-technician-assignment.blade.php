@@ -98,7 +98,7 @@
                     
                     <flux:table.rows>
                         @foreach($technicians as $tech)
-                            <flux:row>
+                            <div class="flex gap-4">
                                 <flux:table.cell>
                                     <div>
                                         <div class="font-medium">{{ $tech['name'] }}</div>
@@ -155,7 +155,7 @@
                                         icon="trash"
                                     />
                                 </flux:table.cell>
-                            </flux:row>
+                            </div>
                         @endforeach
                     </flux:table.rows>
                 </flux:table>

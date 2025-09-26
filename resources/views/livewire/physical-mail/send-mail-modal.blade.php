@@ -1,10 +1,10 @@
 <div>
     <flux:modal wire:model="show" name="send-physical-mail" class="max-w-4xl">
-        <flux:modal.header>
-            <flux:modal.heading>Send Physical Mail</flux:modal.heading>
-        </flux:modal.header>
+        <div class="space-y-2">
+            <flux:heading size="lg">Send Physical Mail</flux:heading>
+        </div>
         
-        <flux:modal.body class="space-y-6">
+        <div class="space-y-6">
             @if ($invoice)
                 <flux:callout type="info">
                     Sending Invoice #{{ $invoice->invoice_number }} for ${{ number_format($invoice->total, 2) }}
@@ -12,11 +12,11 @@
             @endif
             
             <flux:tabs>
-                <flux:tab.list>
+                <flux:tabs>
                     <flux:tab name="recipient">Recipient</flux:tab>
                     <flux:tab name="content">Content</flux:tab>
                     <flux:tab name="options">Mail Options</flux:tab>
-                </flux:tab.list>
+                </flux:tabs>
                 
                 <flux:tab.panel name="recipient" class="space-y-4">
                     <flux:fieldset>
@@ -212,9 +212,9 @@
                     </flux:card>
                 </flux:tab.panel>
             </flux:tabs>
-        </flux:modal.body>
+        </div>
         
-        <flux:modal.footer>
+        <div class="flex gap-2 pt-4">
             <flux:button variant="ghost" wire:click="closeModal">
                 Cancel
             </flux:button>
@@ -222,6 +222,6 @@
                 <flux:icon name="paper-airplane" class="mr-2" />
                 Send Physical Mail
             </flux:button>
-        </flux:modal.footer>
+        </div>
     </flux:modal>
 </div>

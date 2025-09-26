@@ -311,11 +311,11 @@
                                     @endif
                                 @elseif($portal_access_method === 'send_invitation')
                                     <flux:callout type="info" class="mt-4">
-                                        <flux:callout.title>Invitation Email</flux:callout.title>
-                                        <flux:callout.description>
+                                        <flux:heading size="sm">Invitation Email</flux:heading>
+                                        <flux:text>
                                             An invitation email will be sent to {{ $email ?: 'the contact' }} after creation.
                                             They will have 72 hours to set their own password.
-                                        </flux:callout.description>
+                                        </flux:text>
                                     </flux:callout>
                                 @endif
                             @endif

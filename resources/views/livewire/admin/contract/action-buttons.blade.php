@@ -86,17 +86,17 @@
 
     {{-- Action Button Modal --}}
     <flux:modal wire:model="showModal" name="action-button-modal" class="max-w-2xl">
-        <flux:modal.header>
+        <div class="space-y-2">
             <flux:heading>{{ $editingButton ? 'Edit' : 'Add' }} Action Button</flux:heading>
-        </flux:modal.header>
+        </div>
         
-        <flux:modal.body>
+        <div class="space-y-6">
             <!-- Modal content will go here -->
-        </flux:modal.body>
+        </div>
         
-        <flux:modal.footer>
+        <div class="flex gap-2 pt-4">
             <flux:button variant="ghost" wire:click="$set('showModal', false)">Cancel</flux:button>
             <flux:button variant="primary" wire:click="saveButton">Save</flux:button>
-        </flux:modal.footer>
+        </div>
     </flux:modal>
 </div>

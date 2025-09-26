@@ -400,7 +400,7 @@
                             <flux:checkbox wire:model.live="selectAll" />
                         </flux:table.columns>
                         <flux:table.columns>Status</flux:table.columns>
-                        <flux:table.header sortable wire:click="sortBy('name')">
+                        <flux:table.column sortable wire:click="sortBy('name')">
                             Name
                             @if($sortField === 'name')
                                 <flux:icon.chevron-{{ $sortDirection === 'asc' ? 'up' : 'down' }} class="size-3 inline" />
@@ -582,10 +582,10 @@
     {{-- Quick View Modal --}}
     <flux:modal wire:model="showQuickView" max-width="4xl">
         @if($quickViewAsset)
-            <flux:modal.header>
-                <flux:modal.title>{{ $quickViewAsset->name }} - Quick View</flux:modal.title>
-            </flux:modal.header>
-            <flux:modal.body>
+            <div class="space-y-2">
+                <flux:heading size="lg">{{ $quickViewAsset->name }} - Quick View</flux:heading>
+            </div>
+            <div class="space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Left Column - System Info --}}
                     <div class="space-y-4">
@@ -695,11 +695,11 @@
                         </div>
                     </div>
                 </div>
-            </flux:modal.body>
-            <flux:modal.footer>
+            </div>
+            <div class="flex gap-2 pt-4">
                 <flux:button variant="ghost" wire:click="$set('showQuickView', false)">Close</flux:button>
                 <flux:button variant="primary" href="{{ route('assets.show', $quickViewAsset) }}">View Full Details</flux:button>
-            </flux:modal.footer>
+            </div>
         @endif
     </flux:modal>
 </div>

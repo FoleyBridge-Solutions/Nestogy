@@ -27,16 +27,16 @@
             />
             
             <flux:select wire:model.live="statusFilter" placeholder="All Statuses">
-                <flux:option value="">All Statuses</flux:option>
+                <flux:select.option value="">All Statuses</flux:select.option>
                 @foreach($statuses as $value => $label)
-                    <flux:option value="{{ $value }}">{{ $label }}</flux:option>
+                    <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                 @endforeach
             </flux:select>
             
             <flux:select wire:model.live="typeFilter" placeholder="All Types">
-                <flux:option value="">All Types</flux:option>
+                <flux:select.option value="">All Types</flux:select.option>
                 @foreach($types as $value => $label)
-                    <flux:option value="{{ $value }}">{{ $label }}</flux:option>
+                    <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                 @endforeach
             </flux:select>
             
