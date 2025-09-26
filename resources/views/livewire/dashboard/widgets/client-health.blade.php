@@ -1,3 +1,4 @@
+<div>
 <flux:card class="h-full">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
@@ -7,7 +8,7 @@
                 Client Health Monitor
             </flux:heading>
             <flux:text size="sm" class="text-zinc-500 mt-1">
-                Track client engagement and satisfaction metrics
+                Track client engagement and satisfaction metrics • Click scores for details
             </flux:text>
         </div>
         
@@ -89,9 +90,11 @@
                         <!-- Client Info -->
                         <div class="flex-1">
                             <div class="flex items-center gap-3">
-                                <!-- Health Score Circle -->
-                                <div class="relative">
-                                    <svg class="w-12 h-12 -rotate-90">
+                                <!-- Health Score Circle (Clickable) -->
+                                <div class="relative cursor-pointer transition-all hover:scale-110 group" 
+                                     @click="$wire.showScoreDetails({{ $client['id'] }})"
+                                     title="Click to see score breakdown">
+                                    <svg class="w-12 h-12 -rotate-90 group-hover:drop-shadow-lg">
                                         <circle cx="24" cy="24" r="20" stroke-width="4" 
                                             class="fill-none stroke-zinc-200 dark:stroke-zinc-700" />
                                         <circle cx="24" cy="24" r="20" stroke-width="4"
@@ -106,6 +109,10 @@
                                     </svg>
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <span class="text-xs font-bold">{{ $client['health_score'] }}</span>
+                                    </div>
+                                    <!-- Info Icon Indicator -->
+                                    <div class="absolute -top-1 -right-1 bg-blue-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <flux:icon.information-circle class="size-3 text-white" />
                                     </div>
                                 </div>
                                 
@@ -236,4 +243,167 @@
             <flux:text>Analyzing health...</flux:text>
         </div>
     </div>
+    
 </flux:card>
+
+<!-- Health Score Details Modal (Outside the card) -->
+<flux:modal wire:model.live="showScoreModal" name="score-details-modal" class="md:w-[600px]">
+    @if($selectedClientDetails)
+            <div class="space-y-6">
+                <!-- Header -->
+                <div>
+                    <flux:heading size="lg" class="flex items-center gap-2">
+                        <flux:icon.chart-bar class="size-5 text-blue-500" />
+                        Health Score Breakdown
+                    </flux:heading>
+                    <flux:text class="mt-1">
+                        {{ $selectedClientDetails['client_name'] }}
+                    </flux:text>
+                </div>
+                
+                <!-- Score Summary -->
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <flux:text size="sm" class="text-gray-500">Current Health Score</flux:text>
+                            <div class="flex items-center gap-3 mt-1">
+                                <flux:heading size="xl" class="
+                                    @if($selectedClientDetails['total_score'] >= 80) text-green-600
+                                    @elseif($selectedClientDetails['total_score'] >= 60) text-blue-600
+                                    @elseif($selectedClientDetails['total_score'] >= 40) text-orange-600
+                                    @else text-red-600
+                                    @endif
+                                ">
+                                    {{ $selectedClientDetails['total_score'] }}/100
+                                </flux:heading>
+                                <flux:badge size="sm" color="{{ match($selectedClientDetails['health_status']) {
+                                    'healthy' => 'green',
+                                    'stable' => 'blue',
+                                    'at_risk' => 'orange',
+                                    'critical' => 'red',
+                                    default => 'zinc'
+                                } }}">
+                                    {{ ucfirst(str_replace('_', ' ', $selectedClientDetails['health_status'])) }}
+                                </flux:badge>
+                            </div>
+                        </div>
+                        
+                        <!-- Visual Score -->
+                        <div class="relative">
+                            <svg class="w-20 h-20 -rotate-90">
+                                <circle cx="40" cy="40" r="36" stroke-width="6" 
+                                    class="fill-none stroke-gray-200 dark:stroke-gray-700" />
+                                <circle cx="40" cy="40" r="36" stroke-width="6"
+                                    stroke-dasharray="{{ 226 * ($selectedClientDetails['total_score'] / 100) }} 226"
+                                    class="fill-none transition-all duration-500
+                                        @if($selectedClientDetails['total_score'] >= 80) stroke-green-500
+                                        @elseif($selectedClientDetails['total_score'] >= 60) stroke-blue-500
+                                        @elseif($selectedClientDetails['total_score'] >= 40) stroke-orange-500
+                                        @else stroke-red-500
+                                        @endif
+                                    " />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-bold">{{ $selectedClientDetails['total_score'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Calculation Breakdown -->
+                <div>
+                    <flux:heading size="base" class="mb-3">Score Calculation</flux:heading>
+                    
+                    <!-- Base Score -->
+                    <div class="flex items-center justify-between py-2 border-b dark:border-gray-700">
+                        <div class="flex items-center gap-2">
+                            <flux:icon.check-circle class="size-4 text-green-500" />
+                            <flux:text>Base Score</flux:text>
+                        </div>
+                        <flux:text class="font-medium text-green-600">+{{ $selectedClientDetails['base_score'] }}</flux:text>
+                    </div>
+                    
+                    <!-- Deductions -->
+                    @if(count($selectedClientDetails['deductions']) > 0)
+                        @foreach($selectedClientDetails['deductions'] as $deduction)
+                            <div class="flex items-center justify-between py-3 border-b dark:border-gray-700">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon name="{{ $deduction['icon'] }}" class="size-4 text-{{ $deduction['color'] }}-500" />
+                                        <flux:text class="font-medium">{{ $deduction['reason'] }}</flux:text>
+                                    </div>
+                                    <flux:text size="sm" class="text-gray-500 mt-1">
+                                        {{ $deduction['detail'] }}
+                                    </flux:text>
+                                    <flux:text size="xs" class="text-gray-400">
+                                        Formula: {{ $deduction['calculation'] }}
+                                    </flux:text>
+                                </div>
+                                <flux:text class="font-medium text-red-600">-{{ $deduction['amount'] }}</flux:text>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="py-3 text-center">
+                            <flux:icon.check-circle class="size-8 text-green-500 mx-auto mb-2" />
+                            <flux:text class="text-green-600">No deductions - Perfect score!</flux:text>
+                        </div>
+                    @endif
+                    
+                    <!-- Total -->
+                    <div class="flex items-center justify-between pt-3">
+                        <flux:text class="font-semibold text-lg">Final Score</flux:text>
+                        <flux:heading size="lg" class="
+                            @if($selectedClientDetails['total_score'] >= 80) text-green-600
+                            @elseif($selectedClientDetails['total_score'] >= 60) text-blue-600
+                            @elseif($selectedClientDetails['total_score'] >= 40) text-orange-600
+                            @else text-red-600
+                            @endif
+                        ">
+                            {{ $selectedClientDetails['total_score'] }}/100
+                        </flux:heading>
+                    </div>
+                </div>
+                
+                <!-- Key Metrics -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                    <flux:heading size="sm" class="mb-3">Current Metrics</flux:heading>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <flux:text size="xs" class="text-gray-500">Open Tickets</flux:text>
+                            <flux:text class="font-medium">{{ $selectedClientDetails['metrics']['open_tickets'] }}</flux:text>
+                        </div>
+                        <div>
+                            <flux:text size="xs" class="text-gray-500">Critical Tickets</flux:text>
+                            <flux:text class="font-medium">{{ $selectedClientDetails['metrics']['critical_tickets'] }}</flux:text>
+                        </div>
+                        <div>
+                            <flux:text size="xs" class="text-gray-500">Avg Resolution</flux:text>
+                            <flux:text class="font-medium">{{ $selectedClientDetails['metrics']['avg_resolution_time'] }}h</flux:text>
+                        </div>
+                        <div>
+                            <flux:text size="xs" class="text-gray-500">Days Since Contact</flux:text>
+                            <flux:text class="font-medium">{{ $selectedClientDetails['metrics']['days_since_contact'] }}</flux:text>
+                        </div>
+                        <div>
+                            <flux:text size="xs" class="text-gray-500">Monthly Revenue</flux:text>
+                            <flux:text class="font-medium">${{ number_format($selectedClientDetails['metrics']['monthly_revenue'], 2) }}</flux:text>
+                        </div>
+                        <div>
+                            <flux:text size="xs" class="text-gray-500">Revenue Change</flux:text>
+                            <flux:text class="font-medium {{ $selectedClientDetails['metrics']['revenue_change'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $selectedClientDetails['metrics']['revenue_change'] > 0 ? '+' : '' }}{{ $selectedClientDetails['metrics']['revenue_change'] }}%
+                            </flux:text>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex justify-end gap-2">
+                    <flux:modal.close>
+                        <flux:button variant="primary">Close</flux:button>
+                    </flux:modal.close>
+                </div>
+        </div>
+    @endif
+</flux:modal>
+</div>

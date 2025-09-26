@@ -79,8 +79,8 @@ class CompanySeeder extends Seeder
                 'time_rounding_method' => 'up',
                 'can_create_subsidiaries' => false,
                 'billing_type' => 'independent',
-                'size' => 'large', // Large MSP - 100+ employees
-                'employee_count' => 150,
+                'size' => 'medium', // Mid-market MSP - 25-50 employees
+                'employee_count' => 35,
             ],
             [
                 'id' => 3,
@@ -112,8 +112,8 @@ class CompanySeeder extends Seeder
                 'time_rounding_method' => 'up',
                 'can_create_subsidiaries' => false,
                 'billing_type' => 'independent',
-                'size' => 'medium', // Medium MSP - 25-50 employees
-                'employee_count' => 35,
+                'size' => 'medium', // Mid-market MSP - 20-30 employees
+                'employee_count' => 25,
             ],
             [
                 'id' => 4,
@@ -145,8 +145,8 @@ class CompanySeeder extends Seeder
                 'time_rounding_method' => 'up',
                 'can_create_subsidiaries' => false,
                 'billing_type' => 'independent',
-                'size' => 'large', // Another large MSP
-                'employee_count' => 200,
+                'size' => 'medium-large', // Upper mid-market MSP
+                'employee_count' => 50,
             ],
             [
                 'id' => 5,
@@ -211,8 +211,8 @@ class CompanySeeder extends Seeder
                 'time_rounding_method' => 'up',
                 'can_create_subsidiaries' => false,
                 'billing_type' => 'independent',
-                'size' => 'medium', // Specialized medium MSP
-                'employee_count' => 45,
+                'size' => 'medium', // Specialized mid-market MSP
+                'employee_count' => 30,
             ],
             [
                 'id' => 7,
@@ -277,8 +277,8 @@ class CompanySeeder extends Seeder
                 'time_rounding_method' => 'up',
                 'can_create_subsidiaries' => false,
                 'billing_type' => 'independent',
-                'size' => 'enterprise', // Enterprise MSP
-                'employee_count' => 500,
+                'size' => 'medium', // Mid-market MSP
+                'employee_count' => 40,
             ],
             [
                 'id' => 9,
@@ -343,8 +343,8 @@ class CompanySeeder extends Seeder
                 'time_rounding_method' => 'up',
                 'can_create_subsidiaries' => false,
                 'billing_type' => 'independent',
-                'size' => 'enterprise', // Large enterprise MSP
-                'employee_count' => 750,
+                'size' => 'large', // Upper mid-market/aspirational target
+                'employee_count' => 75,
             ],
         ];
 

@@ -938,6 +938,7 @@ class SidebarConfigProvider
                         ['name' => 'Performance & Optimization', 'route' => 'settings.performance-optimization', 'icon' => 'rocket-launch', 'key' => 'performance-optimization'],
                         ['name' => 'Reporting & Analytics', 'route' => 'settings.reporting-analytics', 'icon' => 'chart-bar', 'key' => 'reporting-analytics'],
                         ['name' => 'Notifications & Alerts', 'route' => 'settings.notifications-alerts', 'icon' => 'bell', 'key' => 'notifications-alerts'],
+                        ['name' => 'Mail Queue Monitor', 'route' => 'mail-queue.index', 'icon' => 'envelope', 'key' => 'mail-queue'],
                         ['name' => 'Mobile & Remote Access', 'route' => 'settings.mobile-remote', 'icon' => 'device-phone-mobile', 'key' => 'mobile-remote'],
                     ],
                 ],

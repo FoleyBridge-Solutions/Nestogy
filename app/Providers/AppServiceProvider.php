@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 use Illuminate\Support\Facades\Blade;
+use App\Models\Company;
+use App\Observers\CompanyObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -80,6 +82,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register model observers
+        Company::observe(CompanyObserver::class);
+        
         // Force HTTPS in production
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');

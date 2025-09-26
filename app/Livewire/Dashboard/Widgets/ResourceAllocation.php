@@ -18,6 +18,7 @@ class ResourceAllocation extends Component
     public array $allocationSummary = [];
     public bool $loading = true;
     public string $view = 'workload'; // workload, availability, projects
+    public bool $showAllMembers = false;
     
     public function mount()
     {
@@ -167,6 +168,11 @@ class ResourceAllocation extends Component
             
         // Estimate 0.5 hour per ticket update
         return min(8, $ticketActivity * 0.5);
+    }
+    
+    public function toggleShowAllMembers()
+    {
+        $this->showAllMembers = !$this->showAllMembers;
     }
 
     public function render()

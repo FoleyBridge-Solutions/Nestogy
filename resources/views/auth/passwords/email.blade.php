@@ -35,21 +35,19 @@
                     </p>
 
                     @if (session('status'))
-                        <flux:alert variant="success" icon="check-circle" class="mb-6">
-                            <flux:alert.content>{{ session('status') }}</flux:alert.content>
-                        </flux:alert>
+                        <flux:callout type="success" icon="check-circle" class="mb-6">
+                            {{ session('status') }}
+                        </flux:callout>
                     @endif
 
                     @if ($errors->any())
-                        <flux:alert variant="danger" class="mb-6">
-                            <flux:alert.content>
-                                <ul class="mb-0 list-disc list-inside">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </flux:alert.content>
-                        </flux:alert>
+                        <flux:callout type="danger" class="mb-6">
+                            <ul class="mb-0 list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </flux:callout>
                     @endif
 
                     <form method="POST" action="{{ route('auth.password.email') }}">

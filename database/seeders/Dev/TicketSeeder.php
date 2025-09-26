@@ -56,11 +56,13 @@ class TicketSeeder extends Seeder
                     $ticketsPerMonth = 0.5;
                     $monthsActive = 12; // They were active for 1 year
                 } else {
-                    // Active clients have ongoing tickets
+                    // Active clients have ongoing tickets - more realistic volumes
                     $ticketsPerMonth = match(true) {
-                        $employeeCount > 500 => rand(15, 30),  // Enterprise
-                        $employeeCount > 50 => rand(5, 15),    // Medium
-                        default => rand(1, 5),                 // Small
+                        $employeeCount > 500 => rand(8, 15),   // Large clients
+                        $employeeCount > 100 => rand(4, 8),    // Medium-large clients  
+                        $employeeCount > 50 => rand(2, 5),     // Medium clients
+                        $employeeCount > 20 => rand(1, 3),     // Small-medium clients
+                        default => rand(0.5, 2),               // Small clients
                     };
                     $monthsActive = 24; // Full 2 years
                 }
@@ -138,24 +140,16 @@ class TicketSeeder extends Seeder
                                 Carbon::parse($createdAt)->addMinutes($responseTime) : null,
                             'resolved_at' => in_array($status, ['resolved', 'closed']) ? 
                                 Carbon::parse($createdAt)->addMinutes($resolutionTime) : null,
-                            'due_date' => Carbon::parse($createdAt)->addHours(
-                                match($priority) {
-                                    'critical' => 4,
-                                    'high' => 8,
-                                    'medium' => 24,
-                                    'low' => 72,
-                                }
-                            ),
                             'satisfaction_rating' => in_array($status, ['resolved', 'closed']) ? 
                                 fake()->optional(0.4)->numberBetween(1, 5) : null,
                             'time_spent' => in_array($status, ['resolved', 'closed']) ? 
                                 fake()->numberBetween(15, 480) : 0,  // minutes
                             'billable' => fake()->boolean(70),
-                            'tags' => fake()->randomElements([
+                            'tags' => json_encode(fake()->randomElements([
                                 'password-reset', 'email-issue', 'printer', 'network', 'software',
                                 'hardware', 'vpn', 'backup', 'security', 'performance', 'login',
                                 'microsoft-365', 'server', 'database', 'website'
-                            ], rand(0, 3)),
+                            ], rand(0, 3))),
                         ])
                         ->create();
                     

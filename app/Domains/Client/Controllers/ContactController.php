@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Vendor;
 use App\Services\NavigationService;
+use App\Services\PortalInvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -680,5 +681,100 @@ class ContactController extends Controller
         $contact->save();
         
         return response()->json(['message' => 'Failed login attempts reset successfully']);
+    }
+    
+    /**
+     * Send portal invitation to contact
+     */
+    public function sendInvitation(Request $request, Contact $contact)
+    {
+        // Get client from navigation service
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client || $contact->client_id !== $client->id) {
+            return response()->json(['error' => 'Contact not found for this client'], 404);
+        }
+        
+        // Check permissions
+        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+            return response()->json(['error' => 'Insufficient permissions'], 403);
+        }
+        
+        // Send invitation
+        $invitationService = app(PortalInvitationService::class);
+        $result = $invitationService->sendInvitation($contact, auth()->user());
+        
+        if (!$result['success']) {
+            return response()->json(['error' => $result['message']], 400);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Invitation sent successfully',
+            'expires_at' => $result['data']['expires_at'],
+        ]);
+    }
+    
+    /**
+     * Resend portal invitation to contact
+     */
+    public function resendInvitation(Request $request, Contact $contact)
+    {
+        // Get client from navigation service
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client || $contact->client_id !== $client->id) {
+            return response()->json(['error' => 'Contact not found for this client'], 404);
+        }
+        
+        // Check permissions
+        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+            return response()->json(['error' => 'Insufficient permissions'], 403);
+        }
+        
+        // Resend invitation
+        $invitationService = app(PortalInvitationService::class);
+        $result = $invitationService->resendInvitation($contact, auth()->user());
+        
+        if (!$result['success']) {
+            return response()->json(['error' => $result['message']], 400);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Invitation resent successfully',
+            'expires_at' => $result['data']['expires_at'],
+        ]);
+    }
+    
+    /**
+     * Revoke portal invitation for contact
+     */
+    public function revokeInvitation(Request $request, Contact $contact)
+    {
+        // Get client from navigation service
+        $client = app(NavigationService::class)->getSelectedClient();
+        
+        if (!$client || $contact->client_id !== $client->id) {
+            return response()->json(['error' => 'Contact not found for this client'], 404);
+        }
+        
+        // Check permissions
+        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+            return response()->json(['error' => 'Insufficient permissions'], 403);
+        }
+        
+        // Revoke invitation
+        $invitationService = app(PortalInvitationService::class);
+        $result = $invitationService->revokeInvitation($contact, auth()->user());
+        
+        if (!$result['success']) {
+            return response()->json(['error' => $result['message']], 400);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Invitation revoked successfully',
+        ]);
     }
 }

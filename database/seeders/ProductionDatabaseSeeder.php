@@ -27,6 +27,7 @@ class ProductionDatabaseSeeder extends Seeder
             // - ProjectTemplateSeeder
             // - DocumentTemplateSeeder
             // - LeadSourceSeeder
+            // - QuickActionsSeeder
         ]);
     }
 }

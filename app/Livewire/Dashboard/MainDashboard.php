@@ -70,22 +70,22 @@ class MainDashboard extends Component
         // Store all widget configurations with lazy loading info
         $widgetConfigs = [
             'executive' => [
-                ['type' => 'kpi-grid', 'size' => 'full'],
                 ['type' => 'alert-panel', 'size' => 'full'],
+                ['type' => 'kpi-grid', 'size' => 'full'],
                 ['type' => 'revenue-chart', 'size' => 'half'],
                 ['type' => 'ticket-chart', 'size' => 'half'],
                 ['type' => 'team-performance', 'size' => 'half'],
                 ['type' => 'quick-actions', 'size' => 'half'],
-                ['type' => 'client-health', 'size' => 'full'],
-                ['type' => 'activity-feed', 'size' => 'full'],
+                ['type' => 'client-health', 'size' => 'half'],
+                ['type' => 'activity-feed', 'size' => 'half'],
             ],
             'operations' => [
+                ['type' => 'sla-monitor', 'size' => 'full'],
                 ['type' => 'ticket-queue', 'size' => 'full'],
-                ['type' => 'sla-monitor', 'size' => 'half'],
                 ['type' => 'resource-allocation', 'size' => 'half'],
                 ['type' => 'ticket-chart', 'size' => 'half'],
                 ['type' => 'response-times', 'size' => 'half'],
-                ['type' => 'activity-feed', 'size' => 'full'],
+                ['type' => 'activity-feed', 'size' => 'half'],
             ],
             'financial' => [
                 ['type' => 'financial-kpis', 'size' => 'full'],

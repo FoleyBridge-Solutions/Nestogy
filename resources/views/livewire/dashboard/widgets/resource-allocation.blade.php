@@ -47,123 +47,121 @@
     </div>
     
     <!-- Team Members List -->
-    <div class="flex-1 overflow-y-auto space-y-3">
+    <div class="flex-1 overflow-y-auto space-y-2">
         @if($teamMembers && count($teamMembers) > 0)
             @php
                 $sortedMembers = collect($teamMembers)->sortByDesc('workload_score');
+                $displayLimit = $showAllMembers ? $sortedMembers->count() : 5;
+                $displayMembers = $sortedMembers->take($displayLimit);
+                $remainingCount = $sortedMembers->count() - 5;
             @endphp
-            @foreach($sortedMembers as $member)
-            <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex items-start gap-3 flex-1">
-                        <!-- Avatar -->
-                        @php
-                            $avatarColor = match($member['utilization']) {
-                                'available' => 'bg-green-100 dark:bg-green-900/30',
-                                'moderate' => 'bg-blue-100 dark:bg-blue-900/30',
-                                'busy' => 'bg-amber-100 dark:bg-amber-900/30',
-                                'overloaded' => 'bg-red-100 dark:bg-red-900/30',
-                                default => 'bg-zinc-100 dark:bg-zinc-900/30'
-                            };
-                            $textColor = match($member['utilization']) {
-                                'available' => 'text-green-600',
-                                'moderate' => 'text-blue-600',
-                                'busy' => 'text-amber-600',
-                                'overloaded' => 'text-red-600',
-                                default => 'text-zinc-600'
-                            };
-                        @endphp
-                        <div class="w-10 h-10 rounded-full {{ $avatarColor }} flex items-center justify-center">
-                            <flux:text class="font-semibold {{ $textColor }}">
-                                {{ substr($member['name'], 0, 1) }}
-                            </flux:text>
+            
+            @foreach($displayMembers as $member)
+            <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-2 hover:shadow-sm transition-all">
+                <div class="flex items-center gap-3">
+                    <!-- Compact Avatar -->
+                    @php
+                        $avatarColor = match($member['utilization']) {
+                            'available' => 'bg-green-500',
+                            'moderate' => 'bg-blue-500',
+                            'busy' => 'bg-amber-500',
+                            'overloaded' => 'bg-red-500',
+                            default => 'bg-zinc-500'
+                        };
+                    @endphp
+                    <div class="w-8 h-8 rounded-full {{ $avatarColor }} flex items-center justify-center flex-shrink-0">
+                        <flux:text size="xs" class="font-bold text-white">
+                            {{ substr($member['name'], 0, 1) }}
+                        </flux:text>
+                    </div>
+                    
+                    <!-- Compact Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <flux:text class="font-medium text-sm truncate">{{ $member['name'] }}</flux:text>
+                            @php
+                                $badgeColor = match($member['utilization']) {
+                                    'available' => 'green',
+                                    'moderate' => 'blue',
+                                    'busy' => 'amber',
+                                    'overloaded' => 'red',
+                                    default => 'zinc'
+                                };
+                            @endphp
+                            <flux:badge size="xs" color="{{ $badgeColor }}" class="flex-shrink-0">
+                                {{ ucfirst($member['utilization']) }}
+                            </flux:badge>
                         </div>
                         
-                        <!-- Info -->
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2">
-                                <flux:text class="font-medium">{{ $member['name'] }}</flux:text>
-                                @php
-                                    $badgeColor = match($member['utilization']) {
-                                        'available' => 'green',
-                                        'moderate' => 'blue',
-                                        'busy' => 'amber',
-                                        'overloaded' => 'red',
-                                        default => 'zinc'
-                                    };
-                                @endphp
-                                <flux:badge size="xs" color="{{ $badgeColor }}">
-                                    {{ ucfirst($member['utilization']) }}
-                                </flux:badge>
-                            </div>
-                            
-                            <flux:text size="xs" class="text-zinc-500">{{ $member['role'] }}</flux:text>
+                        <div class="flex items-center gap-3 mt-1">
+                            <flux:text size="xs" class="text-zinc-500 truncate">
+                                {{ $member['role'] }}
+                            </flux:text>
                             
                             @if($view === 'workload')
-                                <!-- Tickets Breakdown -->
-                                <div class="flex items-center gap-3 mt-2">
-                                    <flux:text size="xs" class="text-zinc-500">
-                                        Tickets: {{ $member['tickets']['total'] }}
+                                <flux:text size="xs" class="text-zinc-600">
+                                    <span class="font-medium">{{ $member['tickets']['total'] }}</span> tickets
+                                </flux:text>
+                                @if($member['tickets']['critical'] > 0)
+                                    <flux:text size="xs" class="text-red-600 font-medium">
+                                        {{ $member['tickets']['critical'] }} critical
                                     </flux:text>
-                                    @if($member['tickets']['critical'] > 0)
-                                        <flux:badge size="xs" color="red">{{ $member['tickets']['critical'] }} Critical</flux:badge>
-                                    @endif
-                                    @if($member['tickets']['high'] > 0)
-                                        <flux:badge size="xs" color="orange">{{ $member['tickets']['high'] }} High</flux:badge>
-                                    @endif
-                                </div>
-                                
-                                <!-- Capacity Bar -->
-                                <div class="mt-2">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <flux:text size="xs" class="text-zinc-500">Capacity</flux:text>
-                                        <flux:text size="xs" class="font-medium">{{ round($member['capacity_percentage']) }}%</flux:text>
-                                    </div>
-                                    @php
-                                        $barColor = $member['capacity_percentage'] > 80 ? 'bg-red-500' :
-                                            ($member['capacity_percentage'] > 60 ? 'bg-amber-500' :
-                                            ($member['capacity_percentage'] > 40 ? 'bg-blue-500' : 'bg-green-500'));
-                                    @endphp
-                                    <div class="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                                        <div class="h-full transition-all duration-300 {{ $barColor }}" style="width: {{ min(100, $member['capacity_percentage']) }}%"></div>
-                                    </div>
-                                </div>
+                                @endif
+                                @if($member['tickets']['high'] > 0)
+                                    <flux:text size="xs" class="text-orange-600 font-medium">
+                                        {{ $member['tickets']['high'] }} high
+                                    </flux:text>
+                                @endif
                             @elseif($view === 'availability')
-                                <!-- Today's Hours -->
-                                <div class="flex items-center gap-4 mt-2">
-                                    <div>
-                                        <flux:text size="xs" class="text-zinc-500">Today</flux:text>
-                                        <flux:text size="sm" class="font-medium">{{ $member['today_hours'] }}h logged</flux:text>
-                                    </div>
-                                    <div>
-                                        <flux:text size="xs" class="text-zinc-500">Status</flux:text>
-                                        <flux:text size="sm" class="font-medium">
-                                            {{ $member['available'] ? 'Can take more' : 'At capacity' }}
-                                        </flux:text>
-                                    </div>
-                                </div>
+                                <flux:text size="xs" class="text-zinc-600">
+                                    {{ $member['today_hours'] }}h today
+                                </flux:text>
+                                <flux:text size="xs" class="text-zinc-500">
+                                    {{ $member['available'] ? 'Available' : 'At capacity' }}
+                                </flux:text>
                             @elseif($view === 'projects')
-                                <!-- Projects Info -->
-                                <div class="mt-2">
-                                    <flux:text size="sm">
-                                        {{ $member['projects'] }} active {{ Str::plural('project', $member['projects']) }}
-                                    </flux:text>
-                                </div>
+                                <flux:text size="xs" class="text-zinc-600">
+                                    {{ $member['projects'] }} {{ Str::plural('project', $member['projects']) }}
+                                </flux:text>
                             @endif
                         </div>
                     </div>
                     
-                    <!-- Actions -->
-                    <div>
-                        @if($member['utilization'] === 'overloaded')
-                            <flux:button variant="ghost" size="xs" wire:click="reallocateTicket({{ $member['id'] }})">
-                                Reallocate
-                            </flux:button>
-                        @endif
+                    <!-- Capacity Indicator -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="text-right">
+                            <flux:text size="xs" class="text-zinc-500">Capacity</flux:text>
+                            <flux:text class="font-bold text-sm
+                                @if($member['capacity_percentage'] > 80) text-red-600
+                                @elseif($member['capacity_percentage'] > 60) text-amber-600
+                                @elseif($member['capacity_percentage'] > 40) text-blue-600
+                                @else text-green-600
+                                @endif">
+                                {{ round($member['capacity_percentage']) }}%
+                            </flux:text>
+                        </div>
                     </div>
                 </div>
             </div>
             @endforeach
+            
+            @if($remainingCount > 0 && !$showAllMembers)
+                <button 
+                    wire:click="toggleShowAllMembers"
+                    class="w-full py-2 px-3 text-xs font-medium text-zinc-600 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition-all border-2 border-dashed border-zinc-300 dark:border-zinc-600"
+                >
+                    <flux:icon.chevron-down class="size-3 inline mr-1" />
+                    Show {{ $remainingCount }} more team members
+                </button>
+            @elseif($showAllMembers && $sortedMembers->count() > 5)
+                <button 
+                    wire:click="toggleShowAllMembers"
+                    class="w-full py-2 px-3 text-xs font-medium text-zinc-600 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition-all border-2 border-dashed border-zinc-300 dark:border-zinc-600"
+                >
+                    <flux:icon.chevron-up class="size-3 inline mr-1" />
+                    Show less
+                </button>
+            @endif
         @else
             <!-- Empty State -->
             <div class="flex items-center justify-center h-32">
@@ -180,9 +178,9 @@
     </div>
     
     <!-- Footer Actions -->
-    <div class="pt-3 border-t border-zinc-200 dark:border-zinc-700">
+    <div class="pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-700">
         <div class="flex items-center justify-between">
-            <flux:text size="sm" class="text-zinc-500">
+            <flux:text size="xs" class="text-zinc-500">
                 {{ $allocationSummary['total_members'] ?? 0 }} team members • 
                 {{ $allocationSummary['total_tickets'] ?? 0 }} tickets • 
                 {{ $allocationSummary['total_projects'] ?? 0 }} projects

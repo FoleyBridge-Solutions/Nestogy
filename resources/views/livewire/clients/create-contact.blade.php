@@ -274,30 +274,49 @@
 
                             @if($has_portal_access)
                                 <flux:field>
-                                    <flux:label>Authentication Method</flux:label>
-                                    <flux:select wire:model="auth_method">
-                                        <flux:select.option value="password">Password</flux:select.option>
-                                        <flux:select.option value="pin">PIN Code</flux:select.option>
-                                        <flux:select.option value="none">No Authentication</flux:select.option>
-                                    </flux:select>
-                                    @error('auth_method')<flux:error>{{ $message }}</flux:error>@enderror
+                                    <flux:label>Portal Access Method</flux:label>
+                                    <flux:radio.group wire:model.live="portal_access_method">
+                                        <flux:radio value="manual_password" label="Set password manually" />
+                                        <flux:radio value="send_invitation" label="Send invitation email" />
+                                    </flux:radio.group>
+                                    <flux:description>Choose how to set up portal access for this contact</flux:description>
                                 </flux:field>
+                                
+                                @if($portal_access_method === 'manual_password')
+                                    <flux:field>
+                                        <flux:label>Authentication Method</flux:label>
+                                        <flux:select wire:model="auth_method">
+                                            <flux:select.option value="password">Password</flux:select.option>
+                                            <flux:select.option value="pin">PIN Code</flux:select.option>
+                                            <flux:select.option value="none">No Authentication</flux:select.option>
+                                        </flux:select>
+                                        @error('auth_method')<flux:error>{{ $message }}</flux:error>@enderror
+                                    </flux:field>
 
-                                @if($auth_method === 'password')
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <flux:field>
-                                            <flux:label>Password</flux:label>
-                                            <flux:input type="password" wire:model="password" placeholder="••••••••" />
-                                            <flux:description>Leave blank to auto-generate</flux:description>
-                                            @error('password')<flux:error>{{ $message }}</flux:error>@enderror
-                                        </flux:field>
+                                    @if($auth_method === 'password')
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <flux:field>
+                                                <flux:label>Password</flux:label>
+                                                <flux:input type="password" wire:model="password" placeholder="••••••••" />
+                                                <flux:description>Minimum 8 characters</flux:description>
+                                                @error('password')<flux:error>{{ $message }}</flux:error>@enderror
+                                            </flux:field>
 
-                                        <flux:field>
-                                            <flux:label>Confirm Password</flux:label>
-                                            <flux:input type="password" wire:model="password_confirmation" placeholder="••••••••" />
-                                            @error('password_confirmation')<flux:error>{{ $message }}</flux:error>@enderror
-                                        </flux:field>
-                                    </div>
+                                            <flux:field>
+                                                <flux:label>Confirm Password</flux:label>
+                                                <flux:input type="password" wire:model="password_confirmation" placeholder="••••••••" />
+                                                @error('password_confirmation')<flux:error>{{ $message }}</flux:error>@enderror
+                                            </flux:field>
+                                        </div>
+                                    @endif
+                                @elseif($portal_access_method === 'send_invitation')
+                                    <flux:callout type="info" class="mt-4">
+                                        <flux:callout.title>Invitation Email</flux:callout.title>
+                                        <flux:callout.description>
+                                            An invitation email will be sent to {{ $email ?: 'the contact' }} after creation.
+                                            They will have 72 hours to set their own password.
+                                        </flux:callout.description>
+                                    </flux:callout>
                                 @endif
                             @endif
                         </div>

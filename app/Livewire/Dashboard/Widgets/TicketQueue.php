@@ -17,6 +17,7 @@ class TicketQueue extends Component
     public string $status = 'open'; // open, in_progress, waiting, all
     public string $sortBy = 'priority'; // priority, created_at, updated_at
     public int $limit = 15;
+    public array $expandedPriorities = []; // Track which priorities are expanded
     
     public function mount()
     {
@@ -180,6 +181,18 @@ class TicketQueue extends Component
     {
         $this->limit += 15;
         $this->loadQueue();
+    }
+    
+    public function loadMoreForPriority($priority)
+    {
+        // Toggle expanded state for this priority
+        if (in_array($priority, $this->expandedPriorities)) {
+            // Collapse - remove from expanded array
+            $this->expandedPriorities = array_diff($this->expandedPriorities, [$priority]);
+        } else {
+            // Expand - add to expanded array
+            $this->expandedPriorities[] = $priority;
+        }
     }
 
     public function render()

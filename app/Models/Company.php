@@ -179,6 +179,14 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\ContractConfiguration::class);
     }
+    
+    /**
+     * Get the company's mail settings.
+     */
+    public function mailSettings(): HasOne
+    {
+        return $this->hasOne(CompanyMailSettings::class);
+    }
 
     /**
      * Get the client record in Company 1 for billing (for tenant companies).

@@ -24,10 +24,8 @@
         <server name="APP_ENV" value="testing"/>
         <server name="BCRYPT_ROUNDS" value="4"/>
         <server name="CACHE_DRIVER" value="array"/>
-        <server name="DB_CONNECTION" value="mysql"/>
-        <server name="DB_HOST" value="127.0.0.1"/>
-        <server name="DB_PORT" value="3306"/>
-        <server name="DB_DATABASE" value="nestogy_testing"/>
+        <server name="DB_CONNECTION" value="sqlite"/>
+        <server name="DB_DATABASE" value=":memory:"/>
         <server name="DB_USERNAME" value="nestogy_user"/>
         <server name="DB_PASSWORD" value="o9hFMfinJK1Rms60"/>
         <server name="MAIL_MAILER" value="array"/>

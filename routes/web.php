@@ -251,199 +251,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
     });
     
-    // Settings routes
-    Route::prefix('settings')->name('settings.')->group(function () {
-        // Main settings page
-        Route::get('/', [\App\Http\Controllers\SettingsController::class, 'index'])->name('index');
-        Route::put('/', [\App\Http\Controllers\SettingsController::class, 'update'])->name('update');
-        
-        // General Settings
-        Route::get('/general', [\App\Http\Controllers\SettingsController::class, 'general'])->name('general');
-        Route::put('/general', [\App\Http\Controllers\SettingsController::class, 'updateGeneral'])->name('general.update');
-        
-        // Security Settings
-        Route::get('/security', [\App\Http\Controllers\SettingsController::class, 'security'])->name('security');
-        Route::put('/security', [\App\Http\Controllers\SettingsController::class, 'updateSecurity'])->name('security.update');
-        
-        // Email & Communication Settings
-        Route::get('/email', [\App\Http\Controllers\SettingsController::class, 'email'])->name('email');
-        Route::put('/email', [\App\Http\Controllers\SettingsController::class, 'updateEmail'])->name('email.update');
-        Route::post('/email/test-connection', [\App\Http\Controllers\SettingsController::class, 'testEmailConnection'])->name('email.test-connection');
-        Route::get('/email/provider-presets', [\App\Http\Controllers\SettingsController::class, 'getEmailProviderPresets'])->name('email.provider-presets');
-        Route::get('/email/config-status', [\App\Http\Controllers\SettingsController::class, 'getMailConfigStatus'])->name('email.config-status');
-        Route::post('/email/send-test', [\App\Http\Controllers\SettingsController::class, 'sendRealTestEmail'])->name('email.send-test');
-
-        // Company Email Provider Settings
-        Route::get('/company-email-provider', [\App\Http\Controllers\Settings\CompanyEmailProviderController::class, 'show'])->name('company-email-provider');
-        Route::put('/company-email-provider', [\App\Http\Controllers\Settings\CompanyEmailProviderController::class, 'update'])->name('company-email-provider.update');
-        Route::post('/company-email-provider/test-connection', [\App\Http\Controllers\Settings\CompanyEmailProviderController::class, 'testConnection'])->name('company-email-provider.test-connection');
-        
-        // User Management Settings
-        Route::get('/user-management', [\App\Http\Controllers\SettingsController::class, 'userManagement'])->name('user-management');
-        Route::put('/user-management', [\App\Http\Controllers\SettingsController::class, 'updateUserManagement'])->name('user-management.update');
-        
-        // Billing & Financial Settings
-        Route::get('/billing-financial', [\App\Http\Controllers\SettingsController::class, 'billingFinancial'])->name('billing-financial');
-        Route::put('/billing-financial', [\App\Http\Controllers\SettingsController::class, 'updateBillingFinancial'])->name('billing-financial.update');
-        
-        // RMM & Monitoring Settings
-        Route::get('/rmm-monitoring', [\App\Http\Controllers\SettingsController::class, 'rmmMonitoring'])->name('rmm-monitoring');
-        Route::put('/rmm-monitoring', [\App\Http\Controllers\SettingsController::class, 'updateRmmMonitoring'])->name('rmm-monitoring.update');
-        
-        // Roles & Permissions Management
-        Route::prefix('roles')->name('roles.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\RoleController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
-            Route::post('/apply-template', [\App\Http\Controllers\RoleController::class, 'applyTemplate'])->name('apply-template');
-            Route::post('/{role}/duplicate', [\App\Http\Controllers\RoleController::class, 'duplicate'])->name('duplicate');
-            Route::get('/{role}', [\App\Http\Controllers\RoleController::class, 'show'])->name('show');
-            Route::get('/{role}/edit', [\App\Http\Controllers\RoleController::class, 'edit'])->name('edit');
-            Route::put('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
-            Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
-        });
-        
-        // Permissions Management
-        Route::prefix('permissions')->name('permissions.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\PermissionController::class, 'index'])->name('index');
-            Route::get('/matrix', [\App\Http\Controllers\PermissionController::class, 'matrix'])->name('matrix');
-            Route::post('/matrix', [\App\Http\Controllers\PermissionController::class, 'updateMatrix'])->name('matrix.update');
-            Route::get('/user/{user}', [\App\Http\Controllers\PermissionController::class, 'userPermissions'])->name('user');
-            Route::put('/user/{user}', [\App\Http\Controllers\PermissionController::class, 'updateUserPermissions'])->name('user.update');
-            Route::post('/bulk-assign', [\App\Http\Controllers\PermissionController::class, 'bulkAssign'])->name('bulk-assign');
-            Route::get('/export', [\App\Http\Controllers\PermissionController::class, 'export'])->name('export');
-            Route::post('/import', [\App\Http\Controllers\PermissionController::class, 'import'])->name('import');
-        });
-        
-        // Ticketing & Service Desk Settings
-        Route::get('/ticketing-service-desk', [\App\Http\Controllers\SettingsController::class, 'ticketingServiceDesk'])->name('ticketing-service-desk');
-        Route::put('/ticketing-service-desk', [\App\Http\Controllers\SettingsController::class, 'updateTicketingServiceDesk'])->name('ticketing-service-desk.update');
-        
-        // Contract Clauses Management
-        Route::get('/contract-clauses', [\App\Http\Controllers\SettingsController::class, 'contractClauses'])->name('contract-clauses');
-        Route::post('/contract-clauses', [\App\Http\Controllers\SettingsController::class, 'storeContractClause'])->name('contract-clauses.store');
-        Route::get('/contract-clauses/{clause}/edit', [\App\Http\Controllers\SettingsController::class, 'editContractClause'])->name('contract-clauses.edit');
-        Route::put('/contract-clauses/{clause}', [\App\Http\Controllers\SettingsController::class, 'updateContractClause'])->name('contract-clauses.update');
-        Route::delete('/contract-clauses/{clause}', [\App\Http\Controllers\SettingsController::class, 'destroyContractClause'])->name('contract-clauses.destroy');
-        Route::post('/contract-clauses/{clause}/duplicate', [\App\Http\Controllers\SettingsController::class, 'duplicateContractClause'])->name('contract-clauses.duplicate');
-        Route::post('/contract-clauses/{clause}/update-content', [\App\Http\Controllers\SettingsController::class, 'updateContractClauseContent'])->name('contract-clauses.update-content');
-        Route::post('/contract-clauses/bulk-action', [\App\Http\Controllers\SettingsController::class, 'bulkActionContractClauses'])->name('contract-clauses.bulk-action');
-        
-        // Contract Templates CRUD
-        Route::resource('contract-templates', \App\Domains\Contract\Controllers\ContractTemplateController::class)->names('contract-templates');
-        
-        // Additional Contract Template Actions
-        Route::post('/contract-templates/{template}/toggle-default', [\App\Domains\Contract\Controllers\ContractTemplateController::class, 'toggleDefault'])->name('contract-templates.toggle-default');
-        Route::post('/contract-templates/{template}/create-version', [\App\Domains\Contract\Controllers\ContractTemplateController::class, 'createVersion'])->name('contract-templates.create-version');
-        Route::post('/contract-templates/{template}/duplicate', [\App\Domains\Contract\Controllers\ContractTemplateController::class, 'duplicate'])->name('contract-templates.duplicate');
-        Route::get('/contract-templates/{template}/validate', [\App\Domains\Contract\Controllers\ContractTemplateController::class, 'validate'])->name('contract-templates.validate');
-        Route::get('/contract-templates/{template}/statistics', [\App\Domains\Contract\Controllers\ContractTemplateController::class, 'statistics'])->name('contract-templates.statistics');
-
-        // Template Clause Management
-        Route::get('/template-clauses/{template}', [\App\Http\Controllers\SettingsController::class, 'templateClauses'])->name('template-clauses');
-        Route::post('/template-clauses/{template}/attach', [\App\Http\Controllers\SettingsController::class, 'attachTemplateClauses'])->name('template-clauses.attach');
-        Route::delete('/template-clauses/{template}/{clause}', [\App\Http\Controllers\SettingsController::class, 'detachTemplateClause'])->name('template-clauses.detach');
-        Route::post('/template-clauses/{template}/reorder', [\App\Http\Controllers\SettingsController::class, 'reorderTemplateClauses'])->name('template-clauses.reorder');
-        Route::put('/template-clauses/{template}/{clause}', [\App\Http\Controllers\SettingsController::class, 'updateTemplateClause'])->name('template-clauses.update');
-        Route::post('/template-clauses/{template}/bulk-attach', [\App\Http\Controllers\SettingsController::class, 'bulkAttachTemplateClauses'])->name('template-clauses.bulk-attach');
-        Route::get('/template-clauses/{template}/preview', [\App\Http\Controllers\SettingsController::class, 'previewTemplateWithClauses'])->name('template-clauses.preview');
-        
-        // SLA Management Routes
-        Route::resource('slas', \App\Domains\Ticket\Controllers\SLAController::class)->only(['store', 'show', 'edit', 'update', 'destroy']);
-        Route::get('/slas/{sla}/edit', [\App\Domains\Ticket\Controllers\SLAController::class, 'edit'])->name('slas.edit');
-        Route::get('/slas/clients', [\App\Domains\Ticket\Controllers\SLAController::class, 'clientAssignments'])->name('slas.clients');
-        Route::post('/slas/{sla}/set-default', [\App\Domains\Ticket\Controllers\SLAController::class, 'setDefault'])->name('slas.set-default');
-        Route::post('/slas/{sla}/toggle-active', [\App\Domains\Ticket\Controllers\SLAController::class, 'toggleActive'])->name('slas.toggle-active');
-        
-        // Compliance & Audit Settings
-        Route::get('/compliance-audit', [\App\Http\Controllers\SettingsController::class, 'complianceAudit'])->name('compliance-audit');
-        Route::put('/compliance-audit', [\App\Http\Controllers\SettingsController::class, 'updateComplianceAudit'])->name('compliance-audit.update');
-        
-        // Legacy integrations route
-        Route::get('/integrations', [\App\Http\Controllers\SettingsController::class, 'integrations'])->name('integrations');
-        Route::put('/integrations', [\App\Http\Controllers\SettingsController::class, 'updateIntegrations'])->name('integrations.update');
-        
-        // Missing Settings Categories
-        Route::get('/accounting', [\App\Http\Controllers\SettingsController::class, 'accounting'])->name('accounting');
-        Route::put('/accounting', [\App\Http\Controllers\SettingsController::class, 'updateAccounting'])->name('accounting.update');
-        
-        Route::get('/payment-gateways', [\App\Http\Controllers\SettingsController::class, 'paymentGateways'])->name('payment-gateways');
-        Route::put('/payment-gateways', [\App\Http\Controllers\SettingsController::class, 'updatePaymentGateways'])->name('payment-gateways.update');
-        
-        Route::get('/project-management', [\App\Http\Controllers\SettingsController::class, 'projectManagement'])->name('project-management');
-        Route::put('/project-management', [\App\Http\Controllers\SettingsController::class, 'updateProjectManagement'])->name('project-management.update');
-        
-        Route::get('/asset-inventory', [\App\Http\Controllers\SettingsController::class, 'assetInventory'])->name('asset-inventory');
-        Route::put('/asset-inventory', [\App\Http\Controllers\SettingsController::class, 'updateAssetInventory'])->name('asset-inventory.update');
-        
-        Route::get('/client-portal', [\App\Http\Controllers\SettingsController::class, 'clientPortal'])->name('client-portal');
-        Route::put('/client-portal', [\App\Http\Controllers\SettingsController::class, 'updateClientPortal'])->name('client-portal.update');
-        
-        Route::get('/automation-workflows', [\App\Http\Controllers\SettingsController::class, 'automationWorkflows'])->name('automation-workflows');
-        Route::put('/automation-workflows', [\App\Http\Controllers\SettingsController::class, 'updateAutomationWorkflows'])->name('automation-workflows.update');
-        
-        Route::get('/api-webhooks', [\App\Http\Controllers\SettingsController::class, 'apiWebhooks'])->name('api-webhooks');
-        Route::put('/api-webhooks', [\App\Http\Controllers\SettingsController::class, 'updateApiWebhooks'])->name('api-webhooks.update');
-        
-        Route::get('/performance-optimization', [\App\Http\Controllers\SettingsController::class, 'performanceOptimization'])->name('performance-optimization');
-        Route::put('/performance-optimization', [\App\Http\Controllers\SettingsController::class, 'updatePerformanceOptimization'])->name('performance-optimization.update');
-        
-        Route::get('/reporting-analytics', [\App\Http\Controllers\SettingsController::class, 'reportingAnalytics'])->name('reporting-analytics');
-        Route::put('/reporting-analytics', [\App\Http\Controllers\SettingsController::class, 'updateReportingAnalytics'])->name('reporting-analytics.update');
-        
-        Route::get('/notifications-alerts', [\App\Http\Controllers\SettingsController::class, 'notificationsAlerts'])->name('notifications-alerts');
-        Route::put('/notifications-alerts', [\App\Http\Controllers\SettingsController::class, 'updateNotificationsAlerts'])->name('notifications-alerts.update');
-        
-        Route::get('/mobile-remote', [\App\Http\Controllers\SettingsController::class, 'mobileRemote'])->name('mobile-remote');
-        Route::put('/mobile-remote', [\App\Http\Controllers\SettingsController::class, 'updateMobileRemote'])->name('mobile-remote.update');
-        
-        Route::get('/training-documentation', [\App\Http\Controllers\SettingsController::class, 'trainingDocumentation'])->name('training-documentation');
-        Route::put('/training-documentation', [\App\Http\Controllers\SettingsController::class, 'updateTrainingDocumentation'])->name('training-documentation.update');
-        
-        Route::get('/knowledge-base', [\App\Http\Controllers\SettingsController::class, 'knowledgeBase'])->name('knowledge-base');
-        Route::put('/knowledge-base', [\App\Http\Controllers\SettingsController::class, 'updateKnowledgeBase'])->name('knowledge-base.update');
-        
-        Route::get('/backup-recovery', [\App\Http\Controllers\SettingsController::class, 'backupRecovery'])->name('backup-recovery');
-        Route::put('/backup-recovery', [\App\Http\Controllers\SettingsController::class, 'updateBackupRecovery'])->name('backup-recovery.update');
-        
-        Route::get('/data-management', [\App\Http\Controllers\SettingsController::class, 'dataManagement'])->name('data-management');
-        Route::put('/data-management', [\App\Http\Controllers\SettingsController::class, 'updateDataManagement'])->name('data-management.update');
-        
-        // Settings Management
-        Route::get('/templates', [\App\Http\Controllers\SettingsController::class, 'templates'])->name('templates');
-        Route::post('/apply-template', [\App\Http\Controllers\SettingsController::class, 'applyTemplate'])->name('apply-template');
-        Route::get('/export', [\App\Http\Controllers\SettingsController::class, 'export'])->name('export');
-        Route::post('/import', [\App\Http\Controllers\SettingsController::class, 'import'])->name('import');
-        
-        // Color Customization Routes
-        Route::put('/colors', [\App\Http\Controllers\SettingsController::class, 'updateColors'])->name('colors.update');
-        Route::post('/colors/preset', [\App\Http\Controllers\SettingsController::class, 'applyColorPreset'])->name('colors.preset');
-        Route::post('/colors/reset', [\App\Http\Controllers\SettingsController::class, 'resetColors'])->name('colors.reset');
-        
-        // Lazy Loading Demo
-        Route::get('/lazy-demo', function () {
-            return view('settings.lazy-demo');
-        })->name('lazy-demo');
-        
-        // AJAX API endpoints for lazy loading
-        Route::prefix('api')->name('api.')->group(function () {
-            Route::get('/content/{section}', [\App\Http\Controllers\SettingsController::class, 'getContent'])->name('content');
-            Route::get('/content/{section}/{tab}', [\App\Http\Controllers\SettingsController::class, 'getTabContent'])->name('tab-content');
-            Route::get('/section/{section}', [\App\Http\Controllers\SettingsController::class, 'getSectionData'])->name('section');
-            Route::get('/tabs/{section}', [\App\Http\Controllers\SettingsController::class, 'getTabsConfiguration'])->name('tabs');
-            Route::get('/navigation-tree', [\App\Http\Controllers\SettingsController::class, 'getNavigationTree'])->name('navigation-tree');
-        });
-
-        // Platform-only routes (Company 1 users only)
-        Route::middleware(['platform-company'])->prefix('platform')->name('platform.')->group(function () {
-            // Subscription plan management
-            Route::get('/subscription-plans', [\App\Http\Controllers\SettingsController::class, 'getSubscriptionPlans'])->name('subscription-plans.index');
-            Route::post('/subscription-plans', [\App\Http\Controllers\SettingsController::class, 'storeSubscriptionPlan'])->name('subscription-plans.store');
-            Route::put('/subscription-plans/{plan}', [\App\Http\Controllers\SettingsController::class, 'updateSubscriptionPlan'])->name('subscription-plans.update');
-            Route::delete('/subscription-plans/{plan}', [\App\Http\Controllers\SettingsController::class, 'deleteSubscriptionPlan'])->name('subscription-plans.destroy');
-        });
+    // Mail Queue Management
+    Route::prefix('mail-queue')->name('mail-queue.')->middleware(['auth'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\MailQueueController::class, 'index'])->name('index');
+        Route::get('/{mailQueue}', [\App\Http\Controllers\MailQueueController::class, 'show'])->name('show');
+        Route::post('/{mailQueue}/retry', [\App\Http\Controllers\MailQueueController::class, 'retry'])->name('retry');
+        Route::delete('/{mailQueue}/cancel', [\App\Http\Controllers\MailQueueController::class, 'cancel'])->name('cancel');
+        Route::post('/process', [\App\Http\Controllers\MailQueueController::class, 'process'])->name('process');
+        Route::get('/export/csv', [\App\Http\Controllers\MailQueueController::class, 'export'])->name('export');
     });
     
+    // Include unified settings routes
+    require __DIR__.'/settings.php';
+        // Main settings page
     // Admin routes (Company 1 super-admins only)
     Route::prefix('admin')->name('admin.')->middleware('can:manage-subscriptions')->group(function () {
         Route::prefix('subscriptions')->name('subscriptions.')->group(function () {
@@ -659,11 +479,26 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
     Route::post('stripe', [\App\Http\Controllers\Api\Webhooks\StripeWebhookController::class, 'handle'])->name('stripe');
 });
 
+// Email Tracking Routes (public)
+Route::prefix('email')->name('email.')->group(function () {
+    Route::get('/track/open/{token}', [\App\Http\Controllers\EmailTrackingController::class, 'trackOpen'])->name('track.open');
+    Route::get('/track/click/{token}', [\App\Http\Controllers\EmailTrackingController::class, 'trackClick'])->name('track.click');
+    Route::get('/view/{uuid}', [\App\Http\Controllers\EmailTrackingController::class, 'viewEmail'])->name('view');
+    Route::get('/unsubscribe/{token}', [\App\Http\Controllers\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
+});
+
 // Public routes for client portal
 Route::prefix('client-portal')->name('client.')->group(function () {
     // Guest routes (login, etc.)
     Route::get('login', [\App\Domains\Client\Controllers\ClientPortalController::class, 'showLogin'])->name('login');
     Route::post('login', [\App\Domains\Client\Controllers\ClientPortalController::class, 'login'])->name('login.submit');
+    
+    // Invitation routes
+    Route::prefix('invitation')->name('invitation.')->group(function () {
+        Route::get('{token}', [\App\Http\Controllers\Portal\PortalInvitationController::class, 'show'])->name('show');
+        Route::post('{token}/accept', [\App\Http\Controllers\Portal\PortalInvitationController::class, 'accept'])->name('accept');
+        Route::get('expired', [\App\Http\Controllers\Portal\PortalInvitationController::class, 'expired'])->name('expired');
+    });
     
     // Authenticated client routes
     Route::middleware('auth:client')->group(function () {

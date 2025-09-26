@@ -11,8 +11,16 @@
             </flux:text>
         </div>
         
-        <!-- Timeline Period Selector (only shown for timeline view) -->
+        <!-- Controls -->
         <div class="flex items-center gap-2">
+            <!-- Ticket Filter Dropdown -->
+            <flux:select wire:model.live="ticketFilter" size="sm">
+                <flux:select.option value="current">Current Tickets</flux:select.option>
+                <flux:select.option value="all">All Tickets</flux:select.option>
+                <flux:select.option value="historical">Historical Tickets</flux:select.option>
+            </flux:select>
+            
+            <!-- Timeline Period Selector (only shown for timeline view) -->
             @if($view === 'timeline')
                 <flux:select wire:model.live="period" size="sm">
                     <flux:select.option value="week">7 Days</flux:select.option>

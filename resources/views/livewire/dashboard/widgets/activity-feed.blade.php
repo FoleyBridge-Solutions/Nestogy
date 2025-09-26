@@ -1,4 +1,4 @@
-<flux:card class="h-full flex flex-col-span-12">
+<flux:card class="h-full flex flex-col">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
         <div>

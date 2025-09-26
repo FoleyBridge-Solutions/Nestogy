@@ -18,6 +18,7 @@ class TicketChart extends Component
     public ?array $chartData = [];
     public string $view = 'status'; // status, priority, category, timeline
     public string $period = 'week'; // week, month, quarter
+    public string $ticketFilter = 'current'; // current, all, historical
     public bool $loading = true;
     public array $stats = [];
     
@@ -62,7 +63,17 @@ class TicketChart extends Component
     {
         $query = Ticket::where('company_id', $companyId);
         
-        $statusCounts = $query->selectRaw('status, count(*) as count')
+        // Apply ticket filter using model constants
+        if ($this->ticketFilter === 'current') {
+            // Current tickets: only active statuses
+            $query->whereIn('status', Ticket::ACTIVE_STATUSES);
+        } elseif ($this->ticketFilter === 'historical') {
+            // Historical tickets: only closed, resolved, and cancelled
+            $query->whereIn('status', Ticket::HISTORICAL_STATUSES);
+        }
+        // 'all' filter shows everything - no additional filtering
+        
+        $statusCounts = $query->selectRaw('LOWER(status) as status, count(*) as count')
             ->groupBy('status')
             ->get();
             
@@ -70,14 +81,18 @@ class TicketChart extends Component
         $statusConfig = [
             'open' => ['label' => 'Open', 'color' => 'blue', 'order' => 1],
             'in-progress' => ['label' => 'In Progress', 'color' => 'yellow', 'order' => 2],
+            'in_progress' => ['label' => 'In_progress', 'color' => 'yellow', 'order' => 2], // Handle underscore variant
             'waiting' => ['label' => 'Waiting', 'color' => 'orange', 'order' => 3],
             'on-hold' => ['label' => 'On Hold', 'color' => 'purple', 'order' => 4],
             'resolved' => ['label' => 'Resolved', 'color' => 'green', 'order' => 5],
             'closed' => ['label' => 'Closed', 'color' => 'gray', 'order' => 6],
+            'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'order' => 7],
+            'canceled' => ['label' => 'Cancelled', 'color' => 'red', 'order' => 7], // Handle alternate spelling
         ];
         
         foreach ($statusCounts as $status) {
-            $config = $statusConfig[$status->status] ?? ['label' => ucfirst($status->status), 'color' => 'gray', 'order' => 99];
+            $statusKey = strtolower($status->status);
+            $config = $statusConfig[$statusKey] ?? ['label' => ucfirst($status->status), 'color' => 'gray', 'order' => 99];
             $data[] = [
                 'name' => $config['label'],
                 'value' => (int)$status->count,
@@ -139,6 +154,12 @@ class TicketChart extends Component
     {
         $query = Ticket::where('company_id', $companyId);
         
+        // Apply ticket filter using model constants
+        if ($this->ticketFilter === 'current') {
+            $query->whereIn('status', Ticket::ACTIVE_STATUSES);
+        } elseif ($this->ticketFilter === 'historical') {
+            $query->whereIn('status', Ticket::HISTORICAL_STATUSES);
+        }
         
         $categoryCounts = $query->selectRaw('category, count(*) as count')
             ->groupBy('category')
@@ -192,22 +213,34 @@ class TicketChart extends Component
     
     protected function calculateStats($companyId)
     {
-        $query = Ticket::where('company_id', $companyId);
+        $baseQuery = Ticket::where('company_id', $companyId);
         
+        // Apply ticket filter for main stats using model constants
+        if ($this->ticketFilter === 'current') {
+            $query = (clone $baseQuery)->whereIn('status', Ticket::ACTIVE_STATUSES);
+        } elseif ($this->ticketFilter === 'historical') {
+            $query = (clone $baseQuery)->whereIn('status', Ticket::HISTORICAL_STATUSES);
+        } else {
+            $query = clone $baseQuery;
+        }
         
-        // Total tickets
-        $totalTickets = (clone $query)->count();
+        // Total tickets (filtered)
+        $totalTickets = $query->count();
         
-        // Open tickets
-        $openTickets = (clone $query)->whereIn('status', ['open', 'in-progress', 'waiting'])->count();
+        // Open tickets (only relevant for current and all)
+        $openTickets = $this->ticketFilter !== 'historical' 
+            ? (clone $baseQuery)->whereIn('status', ['open', 'Open', 'in-progress', 'In-Progress', 'In Progress', 'in_progress', 'In_progress', 'waiting', 'Waiting'])->count()
+            : 0;
         
-        // In progress tickets
-        $inProgressTickets = (clone $query)->where('status', 'in-progress')->count();
+        // In progress tickets (only relevant for current and all)
+        $inProgressTickets = $this->ticketFilter !== 'historical'
+            ? (clone $baseQuery)->whereIn('status', ['in-progress', 'In-Progress', 'In Progress', 'in_progress', 'In_progress'])->count()
+            : 0;
         
-        // Critical tickets
-        $criticalTickets = (clone $query)
-            ->where('priority', 'critical')
-            ->whereIn('status', ['open', 'in-progress'])
+        // Critical tickets (always from active tickets only)
+        $criticalTickets = (clone $baseQuery)
+            ->whereIn('priority', ['critical', 'Critical'])
+            ->whereIn('status', Ticket::ACTIVE_STATUSES)
             ->count();
         
         // Average resolution time (in hours) - fallback if resolved_at doesn't exist
@@ -226,12 +259,16 @@ class TicketChart extends Component
                 ->avg_hours ?? 0;
         }
         
-        // Today's tickets
-        $todaysTickets = (clone $query)->whereDate('created_at', today())->count();
+        // Today's tickets (always from base query - shows all new tickets today)
+        $todaysTickets = (clone $baseQuery)->whereDate('created_at', today())->count();
         
-        // Resolution rate
-        $resolvedTickets = (clone $query)->whereIn('status', ['resolved', 'closed'])->count();
-        $resolutionRate = $totalTickets > 0 ? round(($resolvedTickets / $totalTickets) * 100, 1) : 0;
+        // Resolved tickets (always count from base query for accurate stats)
+        $resolvedTickets = (clone $baseQuery)->whereIn('status', Ticket::HISTORICAL_STATUSES)->count();
+        
+        // Resolution rate (based on filtered tickets if not historical view)
+        $resolutionRate = $this->ticketFilter === 'historical' && $totalTickets > 0 
+            ? 100 // All historical tickets are resolved by definition
+            : ($totalTickets > 0 ? round(($resolvedTickets / ((clone $baseQuery)->count())) * 100, 1) : 0);
         
         $this->stats = [
             'total' => $totalTickets,
@@ -261,6 +298,16 @@ class TicketChart extends Component
     public function updatedPeriod($value)
     {
         if (in_array($value, ['week', 'month', 'quarter'])) {
+            $this->loadChartData();
+        }
+    }
+    
+    /**
+     * Livewire lifecycle hook for when ticketFilter property changes
+     */
+    public function updatedTicketFilter($value)
+    {
+        if (in_array($value, ['current', 'all', 'historical'])) {
             $this->loadChartData();
         }
     }

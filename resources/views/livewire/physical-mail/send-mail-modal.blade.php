@@ -6,9 +6,9 @@
         
         <flux:modal.body class="space-y-6">
             @if ($invoice)
-                <flux:alert variant="info">
+                <flux:callout type="info">
                     Sending Invoice #{{ $invoice->invoice_number }} for ${{ number_format($invoice->total, 2) }}
-                </flux:alert>
+                </flux:callout>
             @endif
             
             <flux:tabs>

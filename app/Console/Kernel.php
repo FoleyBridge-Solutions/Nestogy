@@ -43,6 +43,26 @@ class Kernel extends ConsoleKernel
             ->at('02:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/ticket-auto-close.log'));
+        
+        // Update expired portal invitations
+        $schedule->command('portal:update-expired-invitations')
+            ->hourly()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/portal-invitations.log'));
+        
+        // Process mail queue
+        $schedule->command('mail:process-queue --limit=50')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/mail-queue.log'));
+        
+        // Retry failed emails
+        $schedule->command('mail:process-queue --retry --limit=20')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/mail-queue-retry.log'));
 
         // Invoice Reminders - Send reminders for overdue invoices
         $schedule->command('invoices:send-reminders')

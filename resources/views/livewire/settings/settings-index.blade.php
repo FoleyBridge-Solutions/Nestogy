@@ -47,7 +47,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {{-- General --}}
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.general') }}'">
+            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.category.show', ['company', 'general']) }}'">
                 <div class="p-4">
                     <div class="flex items-start gap-3">
                         <div class="p-2 bg-green-100 rounded-lg">
@@ -62,22 +62,22 @@
             </flux:card>
 
             {{-- Email --}}
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.email') }}'">
+            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.category.show', ['communication', 'email']) }}'">
                 <div class="p-4">
                     <div class="flex items-start gap-3">
                         <div class="p-2 bg-blue-100 rounded-lg">
                             <flux:icon name="envelope" class="size-5 text-blue-600" />
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-medium text-sm mb-1">Email</h3>
-                            <p class="text-xs text-gray-500">Email configuration and templates</p>
+                            <h3 class="font-medium text-sm mb-1">Email Configuration</h3>
+                            <p class="text-xs text-gray-500">SMTP and mail provider settings</p>
                         </div>
                     </div>
                 </div>
             </flux:card>
 
             {{-- Billing & Financial --}}
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.billing-financial') }}'">
+            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.category.show', ['financial', 'billing']) }}'">
                 <div class="p-4">
                     <div class="flex items-start gap-3">
                         <div class="p-2 bg-purple-100 rounded-lg">
@@ -92,7 +92,7 @@
             </flux:card>
 
             {{-- Integrations --}}
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.integrations') }}'">
+            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.domain.index', 'integrations') }}'">
                 <div class="p-4">
                     <div class="flex items-start gap-3">
                         <div class="p-2 bg-orange-100 rounded-lg">
@@ -107,7 +107,7 @@
             </flux:card>
 
             {{-- Security --}}
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.security') }}'">
+            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.domain.index', 'security') }}'">
                 <div class="p-4">
                     <div class="flex items-start gap-3">
                         <div class="p-2 bg-red-100 rounded-lg">
@@ -122,7 +122,7 @@
             </flux:card>
 
             {{-- Tickets --}}
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.ticketing-service-desk') }}'">
+            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='{{ route('settings.category.show', ['operations', 'tickets']) }}'">
                 <div class="p-4">
                     <div class="flex items-start gap-3">
                         <div class="p-2 bg-yellow-100 rounded-lg">

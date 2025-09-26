@@ -127,6 +127,27 @@ class Ticket extends Model
     const STATUS_CLOSED = 'Closed';
     const STATUS_ON_HOLD = 'On Hold';
     const STATUS_WAITING = 'Waiting';
+    const STATUS_RESOLVED = 'Resolved';
+    const STATUS_CANCELLED = 'Cancelled';
+    const STATUS_CANCELED = 'Canceled'; // Alternate spelling
+
+    /**
+     * Status groupings for filtering
+     */
+    const ACTIVE_STATUSES = [
+        'open', 'Open',
+        'in-progress', 'In-Progress', 'In Progress',
+        'in_progress', 'In_progress',
+        'waiting', 'Waiting',
+        'on-hold', 'On-Hold', 'On Hold'
+    ];
+
+    const HISTORICAL_STATUSES = [
+        'resolved', 'Resolved',
+        'closed', 'Closed',
+        'cancelled', 'Cancelled',
+        'canceled', 'Canceled'
+    ];
 
     /**
      * Source constants

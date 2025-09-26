@@ -40,6 +40,7 @@ class CommunicationLog extends Model
         'sales' => 'Sales',
         'billing' => 'Billing',
         'technical' => 'Technical',
+        'portal_invitation' => 'Portal Invitation',
         'other' => 'Other',
     ];
 

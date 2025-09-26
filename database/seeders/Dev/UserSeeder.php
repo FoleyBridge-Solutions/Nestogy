@@ -96,47 +96,51 @@ class UserSeeder extends Seeder
             case 'small': // 2-10 employees
                 $totalEmployees = $company->employee_count ?? 5;
                 $adminCount = 1;
-                $techCount = max(1, $totalEmployees - 1); // Everyone else is tech
-                $accountingCount = 0;
+                $techCount = max(1, min(3, $totalEmployees - 1)); // 1-3 techs for small
+                $accountingCount = ($totalEmployees > 5) ? 1 : 0;
                 $salesCount = 0;
                 $marketingCount = 0;
                 $pmCount = 0;
                 break;
                 
-            case 'medium': // 25-50 employees
+            case 'medium': // 20-40 employees (realistic mid-market)
+                $totalEmployees = $company->employee_count ?? 30;
+                $adminCount = rand(1, 2);
+                $techCount = rand(8, 15); // Realistic: 8-15 techs for mid-market
+                $accountingCount = rand(1, 2);
+                $salesCount = rand(2, 3);
+                $marketingCount = rand(0, 1);
+                $pmCount = rand(1, 2);
+                break;
+                
+            case 'medium-large': // 40-60 employees
+                $totalEmployees = $company->employee_count ?? 50;
                 $adminCount = rand(2, 3);
-                $techCount = rand(15, 25);
+                $techCount = rand(15, 22); // 15-22 techs for larger mid-market
                 $accountingCount = rand(2, 3);
-                $salesCount = rand(2, 4);
-                $marketingCount = rand(1, 2);
+                $salesCount = rand(3, 4);
+                $marketingCount = 1;
                 $pmCount = rand(2, 3);
                 break;
                 
-            case 'large': // 100-200 employees
-                $adminCount = rand(5, 8);
-                $techCount = rand(50, 80);
-                $accountingCount = rand(5, 10);
-                $salesCount = rand(8, 15);
-                $marketingCount = rand(3, 5);
-                $pmCount = rand(5, 8);
-                break;
-                
-            case 'enterprise': // 500+ employees
-                $adminCount = rand(10, 15);
-                $techCount = rand(100, 150);
-                $accountingCount = rand(15, 25);
-                $salesCount = rand(20, 30);
-                $marketingCount = rand(8, 12);
-                $pmCount = rand(10, 15);
+            case 'large': // 60-100 employees (aspirational target)
+                $totalEmployees = $company->employee_count ?? 75;
+                $adminCount = rand(3, 4);
+                $techCount = rand(25, 35); // 25-35 techs for upper mid-market
+                $accountingCount = rand(3, 4);
+                $salesCount = rand(4, 6);
+                $marketingCount = rand(1, 2);
+                $pmCount = rand(3, 4);
                 break;
                 
             default:
-                $adminCount = rand(3, 5);
-                $techCount = rand(10, 20);
-                $accountingCount = rand(3, 5);
-                $salesCount = rand(2, 4);
-                $marketingCount = rand(1, 2);
-                $pmCount = rand(2, 3);
+                // Default to medium for any unspecified size
+                $adminCount = rand(1, 2);
+                $techCount = rand(8, 15);
+                $accountingCount = rand(1, 2);
+                $salesCount = rand(2, 3);
+                $marketingCount = rand(0, 1);
+                $pmCount = rand(1, 2);
                 break;
         }
         

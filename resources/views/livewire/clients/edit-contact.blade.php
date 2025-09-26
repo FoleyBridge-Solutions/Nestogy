@@ -263,6 +263,68 @@
                             </flux:field>
 
                             @if($has_portal_access)
+                                {{-- Show invitation status if exists --}}
+                                @if($contact->invitation_status)
+                                    <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900 mb-2">Portal Invitation Status</h4>
+                                                @if($contact->invitation_status === 'sent')
+                                                    <flux:badge variant="warning">Invitation Pending</flux:badge>
+                                                    <p class="text-sm text-gray-600 mt-2">
+                                                        Sent: {{ $contact->invitation_sent_at ? $contact->invitation_sent_at->diffForHumans() : 'Unknown' }}<br>
+                                                        Expires: {{ $contact->invitation_expires_at ? $contact->invitation_expires_at->diffForHumans() : 'Unknown' }}
+                                                    </p>
+                                                @elseif($contact->invitation_status === 'accepted')
+                                                    <flux:badge variant="success">Active - Invitation Accepted</flux:badge>
+                                                    <p class="text-sm text-gray-600 mt-2">
+                                                        Accepted: {{ $contact->invitation_accepted_at ? $contact->invitation_accepted_at->diffForHumans() : 'Unknown' }}
+                                                    </p>
+                                                @elseif($contact->invitation_status === 'expired')
+                                                    <flux:badge variant="danger">Invitation Expired</flux:badge>
+                                                    <p class="text-sm text-gray-600 mt-2">
+                                                        The invitation has expired. You can send a new one.
+                                                    </p>
+                                                @elseif($contact->invitation_status === 'revoked')
+                                                    <flux:badge variant="gray">Invitation Revoked</flux:badge>
+                                                @endif
+                                            </div>
+                                            <div class="space-x-2">
+                                                @if($contact->invitation_status === 'sent')
+                                                    <flux:button wire:click="resendInvitation" variant="outline" size="sm">
+                                                        Resend Invitation
+                                                    </flux:button>
+                                                    <flux:button wire:click="revokeInvitation" variant="danger" size="sm">
+                                                        Revoke
+                                                    </flux:button>
+                                                @elseif($contact->invitation_status === 'expired')
+                                                    <flux:button wire:click="sendInvitation" variant="primary" size="sm">
+                                                        Send New Invitation
+                                                    </flux:button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- No invitation sent yet, show option to send --}}
+                                    @if(!$contact->password_hash)
+                                        <div class="mb-6 p-4 border rounded-lg bg-blue-50">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h4 class="font-medium text-blue-900 mb-2">Send Portal Invitation</h4>
+                                                    <p class="text-sm text-blue-700">
+                                                        Send an invitation email allowing the contact to set their own password.
+                                                    </p>
+                                                </div>
+                                                <flux:button wire:click="sendInvitation" variant="primary" size="sm">
+                                                    Send Invitation
+                                                </flux:button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
+                                
+                                {{-- Manual password management --}}
                                 <flux:field>
                                     <flux:label>Authentication Method</flux:label>
                                     <flux:select wire:model="auth_method">
@@ -288,6 +350,11 @@
                                             @error('password_confirmation')<flux:error>{{ $message }}</flux:error>@enderror
                                         </flux:field>
                                     </div>
+                                    @if($contact->password_hash)
+                                        <p class="text-sm text-gray-600">
+                                            <strong>Note:</strong> Contact already has a password set. Enter new password to change it.
+                                        </p>
+                                    @endif
                                 @endif
                             @endif
                         </div>

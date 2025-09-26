@@ -24,8 +24,10 @@ class ClientHealth extends Component
     public string $sortBy = 'health_score'; // health_score, name, revenue, tickets
     public string $sortDirection = 'desc';
     public string $filter = 'all'; // all, at_risk, healthy, critical
-    public int $limit = 3;
+    public int $limit = 7;
     public int $loadCount = 0;
+    public ?array $selectedClientDetails = null;
+    public bool $showScoreModal = false;
     
     public function mount()
     {
@@ -240,6 +242,137 @@ class ClientHealth extends Component
         }
         
         $this->loadClientHealth();
+    }
+    
+    public function showScoreDetails($clientId)
+    {
+        $client = $this->clients->firstWhere('id', $clientId);
+        if ($client) {
+            $this->selectedClientDetails = $this->getDetailedScoreBreakdown($client);
+            $this->showScoreModal = true;
+            \Log::info('Modal opened for client: ' . $client['name']);
+        } else {
+            \Log::warning('Client not found with ID: ' . $clientId);
+        }
+    }
+    
+    public function closeScoreModal()
+    {
+        $this->showScoreModal = false;
+        $this->selectedClientDetails = null;
+    }
+    
+    protected function getDetailedScoreBreakdown($clientData)
+    {
+        $breakdown = [
+            'client_name' => $clientData['name'],
+            'total_score' => $clientData['health_score'],
+            'health_status' => $clientData['health_status'],
+            'base_score' => 100,
+            'deductions' => [],
+            'metrics' => [
+                'critical_tickets' => $clientData['critical_tickets'],
+                'open_tickets' => $clientData['open_tickets'],
+                'avg_resolution_time' => $clientData['avg_resolution_time'],
+                'monthly_revenue' => $clientData['monthly_revenue'],
+                'revenue_change' => $clientData['revenue_change'],
+                'overdue_amount' => $clientData['overdue_amount'],
+                'days_since_contact' => $clientData['days_since_contact'],
+            ]
+        ];
+        
+        // Critical tickets deduction
+        if ($clientData['critical_tickets'] > 0) {
+            $deduction = $clientData['critical_tickets'] * 10;
+            $breakdown['deductions'][] = [
+                'reason' => 'Critical Tickets',
+                'detail' => $clientData['critical_tickets'] . ' critical ticket(s) open',
+                'calculation' => $clientData['critical_tickets'] . ' × 10 points',
+                'amount' => $deduction,
+                'icon' => 'exclamation-triangle',
+                'color' => 'red'
+            ];
+        }
+        
+        // Open tickets deduction
+        if ($clientData['open_tickets'] > 0) {
+            $deduction = min($clientData['open_tickets'] * 2, 20);
+            $breakdown['deductions'][] = [
+                'reason' => 'Open Tickets',
+                'detail' => $clientData['open_tickets'] . ' open ticket(s)',
+                'calculation' => 'Min(' . $clientData['open_tickets'] . ' × 2, 20) points',
+                'amount' => $deduction,
+                'icon' => 'ticket',
+                'color' => 'orange'
+            ];
+        }
+        
+        // Overdue payments deduction
+        if ($clientData['overdue_amount'] > 0) {
+            $deduction = min(($clientData['overdue_amount'] / 1000) * 5, 25);
+            $breakdown['deductions'][] = [
+                'reason' => 'Overdue Payments',
+                'detail' => '$' . number_format($clientData['overdue_amount'], 2) . ' overdue',
+                'calculation' => 'Min($' . number_format($clientData['overdue_amount']/1000, 1) . 'k × 5, 25) points',
+                'amount' => round($deduction, 1),
+                'icon' => 'currency-dollar',
+                'color' => 'red'
+            ];
+        }
+        
+        // Get the actual client model for payment delay calculation
+        $client = $clientData['client'];
+        $now = Carbon::now();
+        $thirtyDaysAgo = $now->copy()->subDays(30);
+        
+        $paymentDelay = $client->payments()
+            ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
+            ->where('payments.created_at', '>=', $thirtyDaysAgo)
+            ->selectRaw('AVG(payments.created_at::date - invoices.due_date::date) as avg_delay')
+            ->first()
+            ->avg_delay ?? 0;
+            
+        // Payment delays deduction
+        if ($paymentDelay > 0) {
+            $deduction = min($paymentDelay * 2, 15);
+            $breakdown['deductions'][] = [
+                'reason' => 'Payment Delays',
+                'detail' => 'Average ' . round($paymentDelay) . ' days late',
+                'calculation' => 'Min(' . round($paymentDelay) . ' × 2, 15) points',
+                'amount' => round($deduction, 1),
+                'icon' => 'clock',
+                'color' => 'yellow'
+            ];
+        }
+        
+        // Inactivity deduction
+        if ($clientData['days_since_contact'] > 60) {
+            $breakdown['deductions'][] = [
+                'reason' => 'Inactivity',
+                'detail' => 'No contact for ' . $clientData['days_since_contact'] . ' days',
+                'calculation' => 'Fixed 10 points (>60 days)',
+                'amount' => 10,
+                'icon' => 'user-x',
+                'color' => 'gray'
+            ];
+        }
+        
+        // Declining revenue deduction
+        if ($clientData['revenue_change'] < -20) {
+            $breakdown['deductions'][] = [
+                'reason' => 'Declining Revenue',
+                'detail' => number_format(abs($clientData['revenue_change']), 1) . '% revenue decrease',
+                'calculation' => 'Fixed 15 points (>20% decline)',
+                'amount' => 15,
+                'icon' => 'arrow-trending-down',
+                'color' => 'red'
+            ];
+        }
+        
+        // Calculate total deductions
+        $breakdown['total_deductions'] = array_sum(array_column($breakdown['deductions'], 'amount'));
+        
+        return $breakdown;
     }
     
     public function render()

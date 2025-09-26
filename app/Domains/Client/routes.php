@@ -53,6 +53,10 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
             Route::put('permissions', [\App\Domains\Client\Controllers\ContactController::class, 'updatePermissions'])->name('permissions.update');
             Route::post('lock', [\App\Domains\Client\Controllers\ContactController::class, 'lockAccount'])->name('lock');
             Route::post('unlock', [\App\Domains\Client\Controllers\ContactController::class, 'unlockAccount'])->name('unlock');
+            // Portal invitation routes
+            Route::post('send-invitation', [\App\Domains\Client\Controllers\ContactController::class, 'sendInvitation'])->name('send-invitation');
+            Route::post('resend-invitation', [\App\Domains\Client\Controllers\ContactController::class, 'resendInvitation'])->name('resend-invitation');
+            Route::post('revoke-invitation', [\App\Domains\Client\Controllers\ContactController::class, 'revokeInvitation'])->name('revoke-invitation');
         });
         // Locations routes (using session-based client context)
         Route::get('locations/export', [\App\Domains\Client\Controllers\LocationController::class, 'export'])->name('locations.export');

@@ -496,25 +496,25 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     
     // Settings API (Admin Only)
     Route::prefix('settings')->name('api.settings.')->middleware('role:admin')->group(function () {
-        Route::get('/', [App\Http\Controllers\SettingsController::class, 'index'])->name('index');
-        Route::put('/', [App\Http\Controllers\SettingsController::class, 'update'])->name('update');
+        Route::get('/', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'index'])->name('index');
+        Route::put('/', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'update'])->name('update');
         
-        Route::get('company', [App\Http\Controllers\SettingsController::class, 'company'])->name('company');
-        Route::put('company', [App\Http\Controllers\SettingsController::class, 'updateCompany'])->name('company.update');
+        Route::get('company', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'company'])->name('company');
+        Route::put('company', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'updateCompany'])->name('company.update');
         
-        Route::get('email', [App\Http\Controllers\SettingsController::class, 'email'])->name('email');
-        Route::put('email', [App\Http\Controllers\SettingsController::class, 'updateEmail'])->name('email.update');
-        Route::post('email/test', [App\Http\Controllers\SettingsController::class, 'testEmail'])->name('email.test');
+        Route::get('email', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'email'])->name('email');
+        Route::put('email', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'updateEmail'])->name('email.update');
+        Route::post('email/test', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'testEmail'])->name('email.test');
         
-        Route::get('integrations', [App\Http\Controllers\SettingsController::class, 'integrations'])->name('integrations');
-        Route::put('integrations', [App\Http\Controllers\SettingsController::class, 'updateIntegrations'])->name('integrations.update');
+        Route::get('integrations', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'integrations'])->name('integrations');
+        Route::put('integrations', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'updateIntegrations'])->name('integrations.update');
         
-        Route::post('backup', [App\Http\Controllers\SettingsController::class, 'createBackup'])->name('backup.create');
-        Route::get('logs', [App\Http\Controllers\SettingsController::class, 'logs'])->name('logs');
+        Route::post('backup', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'createBackup'])->name('backup.create');
+        Route::get('logs', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'logs'])->name('logs');
         
         // Billing Settings
-        Route::get('billing-defaults', [App\Http\Controllers\SettingsController::class, 'billingDefaults'])->name('billing-defaults');
-        Route::get('tax', [App\Http\Controllers\SettingsController::class, 'taxSettings'])->name('tax');
+        Route::get('billing-defaults', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'billingDefaults'])->name('billing-defaults');
+        Route::get('tax', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'taxSettings'])->name('tax');
     });
     
     // RMM Integration Management API (Admin Only)

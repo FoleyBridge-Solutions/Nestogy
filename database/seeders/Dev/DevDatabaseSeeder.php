@@ -19,19 +19,19 @@ class DevDatabaseSeeder extends Seeder
             return;
         }
 
-        $this->command->info('Starting Nestogy Enhanced Development Database Seeding...');
-        $this->command->info('This will create comprehensive test data with 2+ years of history.');
+        $this->command->info('Starting Nestogy Mid-Market MSP Development Database Seeding...');
+        $this->command->info('Creating realistic test data for mid-market MSPs (10-75 employees) with 2 years of history.');
         $this->command->newLine();
 
         // Removed transaction for debugging
         // DB::beginTransaction();
 
         try {
-            // Foundation seeders - Enhanced with more data
-            $this->callWithProgressBar('Companies (5-10)', CompanySeeder::class);
+            // Foundation seeders - Realistic mid-market MSP data
+            $this->callWithProgressBar('Companies (10 mid-market MSPs)', CompanySeeder::class);
             $this->callWithProgressBar('Settings', SettingsSeeder::class);
             $this->callWithProgressBar('Roles and Permissions', RolesAndPermissionsSeeder::class);
-            $this->callWithProgressBar('Users (50-100)', UserSeeder::class);
+            $this->callWithProgressBar('Users (20-40 per company)', UserSeeder::class);
             $this->callWithProgressBar('Categories', CategorySeeder::class);
             $this->callWithProgressBar('Vendors (20-30)', VendorSeeder::class);
             
@@ -40,9 +40,9 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('SLA Levels', SLASeeder::class);
             }
             
-            $this->callWithProgressBar('Clients (100-200)', ClientSeeder::class);
-            $this->callWithProgressBar('Locations (200-400)', LocationSeeder::class);
-            $this->callWithProgressBar('Contacts (500-1000)', ContactSeeder::class);
+            $this->callWithProgressBar('Clients (30-80 per MSP)', ClientSeeder::class);
+            $this->callWithProgressBar('Locations (1-3 per client)', LocationSeeder::class);
+            $this->callWithProgressBar('Contacts (2-5 per client)', ContactSeeder::class);
             if (class_exists(NetworkSeeder::class)) {
                 $this->callWithProgressBar('Networks', NetworkSeeder::class);
             }
@@ -53,9 +53,9 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('Products & Services (50-100)', ProductSeeder::class);
             }
 
-            // Operational seeders - Enhanced with historical data
+            // Operational seeders - Realistic volumes with historical data
             if (class_exists(AssetSeeder::class)) {
-                $this->callWithProgressBar('Assets (500-1000)', AssetSeeder::class);
+                $this->callWithProgressBar('Assets (50-200 per client)', AssetSeeder::class);
             }
             if (class_exists(AssetWarrantySeeder::class)) {
                 $this->callWithProgressBar('Asset Warranties', AssetWarrantySeeder::class);
@@ -64,16 +64,16 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('Contract Templates', ContractTemplateSeeder::class);
             }
             if (class_exists(ContractSeeder::class)) {
-                $this->callWithProgressBar('Contracts (200-400)', ContractSeeder::class);
+                $this->callWithProgressBar('Contracts (1 per client)', ContractSeeder::class);
             }
             if (class_exists(TicketSeeder::class)) {
-                $this->callWithProgressBar('Tickets (2000-5000 with 2yr history)', TicketSeeder::class);
+                $this->callWithProgressBar('Tickets (200-500/month per MSP)', TicketSeeder::class);
             }
             if (class_exists(TicketReplySeeder::class)) {
-                $this->callWithProgressBar('Ticket Replies (5000-10000)', TicketReplySeeder::class);
+                $this->callWithProgressBar('Ticket Replies (2-5 per ticket)', TicketReplySeeder::class);
             }
             if (class_exists(ProjectSeeder::class)) {
-                $this->callWithProgressBar('Projects (50-100)', ProjectSeeder::class);
+                $this->callWithProgressBar('Projects (5-15 per MSP)', ProjectSeeder::class);
             }
             if (class_exists(ProjectTaskSeeder::class)) {
                 $this->callWithProgressBar('Project Tasks', ProjectTaskSeeder::class);
@@ -88,16 +88,16 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('Recurring Invoices', RecurringInvoiceSeeder::class);
             }
             if (class_exists(LeadSeeder::class)) {
-                $this->callWithProgressBar('Leads (100-200)', LeadSeeder::class);
+                $this->callWithProgressBar('Leads (10-30 per MSP)', LeadSeeder::class);
             }
             if (class_exists(QuoteSeeder::class)) {
-                $this->callWithProgressBar('Quotes (100-200)', QuoteSeeder::class);
+                $this->callWithProgressBar('Quotes (10-30 per MSP)', QuoteSeeder::class);
             }
             if (class_exists(ExpenseSeeder::class)) {
                 $this->callWithProgressBar('Expenses (2yr history)', ExpenseSeeder::class);
             }
             if (class_exists(KnowledgeBaseSeeder::class)) {
-                $this->callWithProgressBar('Knowledge Base Articles (50-100)', KnowledgeBaseSeeder::class);
+                $this->callWithProgressBar('Knowledge Base Articles (20-50 per MSP)', KnowledgeBaseSeeder::class);
             }
             if (class_exists(IntegrationSeeder::class)) {
                 $this->callWithProgressBar('Integrations', IntegrationSeeder::class);
@@ -106,7 +106,7 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('Report Templates', ReportTemplateSeeder::class);
             }
             if (class_exists(EmailSeeder::class)) {
-                $this->callWithProgressBar('Emails (500-1000)', EmailSeeder::class);
+                $this->callWithProgressBar('Emails (100-300 per MSP)', EmailSeeder::class);
             }
             if (class_exists(ActivityLogSeeder::class)) {
                 $this->callWithProgressBar('Activity Logs (2yr history)', ActivityLogSeeder::class);
@@ -120,7 +120,7 @@ class DevDatabaseSeeder extends Seeder
 
             $this->command->newLine();
             $this->command->info('✓ Development database seeding completed successfully!');
-            $this->command->info('Database is now populated with comprehensive test data.');
+            $this->command->info('Database populated with realistic mid-market MSP test data.');
             $this->command->newLine();
 
             // Display summary

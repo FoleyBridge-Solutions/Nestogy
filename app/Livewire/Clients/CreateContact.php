@@ -44,6 +44,10 @@ class CreateContact extends Component
     public bool $has_portal_access = false;
 
     public string $auth_method = 'password';
+    
+    public string $portal_access_method = 'manual_password';
+    
+    public bool $send_invitation = false;
 
     public string $password = '';
 
@@ -237,12 +241,28 @@ class CreateContact extends Component
         ];
 
         // Handle password if portal access is enabled
-        if ($this->has_portal_access && $this->password) {
-            $contactData['password_hash'] = bcrypt($this->password);
-            $contactData['password_changed_at'] = now();
+        if ($this->has_portal_access) {
+            if ($this->portal_access_method === 'manual_password' && $this->password) {
+                $contactData['password_hash'] = bcrypt($this->password);
+                $contactData['password_changed_at'] = now();
+            } elseif ($this->portal_access_method === 'send_invitation') {
+                $this->send_invitation = true;
+            }
         }
 
         $contact = Contact::create($contactData);
+        
+        // Send invitation if requested
+        if ($this->send_invitation && $this->has_portal_access) {
+            $invitationService = app(\App\Services\PortalInvitationService::class);
+            $result = $invitationService->sendInvitation($contact, auth()->user());
+            
+            if (!$result['success']) {
+                session()->flash('warning', 'Contact created but invitation failed: ' . $result['message']);
+            } else {
+                session()->flash('success', 'Contact created and invitation sent successfully.');
+            }
+        }
 
         // If this is set as primary, unset other primary contacts for this client
         if ($contact->primary) {
@@ -250,8 +270,11 @@ class CreateContact extends Component
                 ->where('id', '!=', $contact->id)
                 ->update(['primary' => false]);
         }
-
-        session()->flash('success', 'Contact created successfully.');
+        
+        // Only show the default success message if we haven't already shown a more specific one
+        if (!session()->has('success') && !session()->has('warning')) {
+            session()->flash('success', 'Contact created successfully.');
+        }
 
         return redirect()->route('clients.contacts.index');
     }

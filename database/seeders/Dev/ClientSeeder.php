@@ -26,25 +26,25 @@ class ClientSeeder extends Seeder
             // Get default SLA for this company
             $defaultSla = SLA::where('company_id', $company->id)->first();
             
-            // Determine number of clients based on company size
+            // Determine number of clients based on company size - more realistic ratios
             switch($companySize) {
                 case 'solo':
-                    $numClients = rand(5, 15);  // Solo operators have fewer clients
+                    $numClients = rand(3, 8);  // Solo operators have very few clients
                     break;
                 case 'small':
-                    $numClients = rand(20, 40);  // Small shops manage 20-40 clients
+                    $numClients = rand(10, 20);  // Small shops manage 10-20 clients
                     break;
                 case 'medium':
-                    $numClients = rand(50, 100); // Medium MSPs manage 50-100 clients
+                    $numClients = rand(30, 60); // Mid-market MSPs manage 30-60 clients
+                    break;
+                case 'medium-large':
+                    $numClients = rand(50, 80); // Larger mid-market manage 50-80 clients
                     break;
                 case 'large':
-                    $numClients = rand(100, 200); // Large MSPs manage 100-200 clients
-                    break;
-                case 'enterprise':
-                    $numClients = rand(200, 500); // Enterprise MSPs manage hundreds of clients
+                    $numClients = rand(70, 100); // Upper mid-market manage 70-100 clients
                     break;
                 default:
-                    $numClients = rand(30, 50);
+                    $numClients = rand(25, 45);
                     break;
             }
             

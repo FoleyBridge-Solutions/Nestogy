@@ -94,6 +94,13 @@ class Contact extends Authenticatable
         'must_change_password',
         'session_timeout_minutes',
         'allowed_ip_addresses',
+        // Portal invitation fields
+        'invitation_token',
+        'invitation_sent_at',
+        'invitation_expires_at',
+        'invitation_accepted_at',
+        'invitation_sent_by',
+        'invitation_status',
         // Communication preferences
         'preferred_contact_method',
         'best_time_to_contact',
@@ -171,6 +178,10 @@ class Contact extends Authenticatable
         'is_after_hours_contact' => 'boolean',
         'out_of_office_start' => 'date',
         'out_of_office_end' => 'date',
+        // Portal invitation fields
+        'invitation_sent_at' => 'datetime',
+        'invitation_expires_at' => 'datetime',
+        'invitation_accepted_at' => 'datetime',
     ];
 
     /**
@@ -717,5 +728,45 @@ class Contact extends Authenticatable
                !$this->isLocked() && 
                $this->client && 
                ($this->client->status === 'active' || !$this->client->trashed());
+    }
+    
+    /**
+     * Check if the invitation is valid.
+     */
+    public function hasValidInvitation(): bool
+    {
+        return $this->invitation_status === 'sent' &&
+               $this->invitation_token &&
+               $this->invitation_expires_at &&
+               $this->invitation_expires_at->isFuture();
+    }
+    
+    /**
+     * Check if the invitation has expired.
+     */
+    public function isInvitationExpired(): bool
+    {
+        return $this->invitation_expires_at && 
+               $this->invitation_expires_at->isPast();
+    }
+    
+    /**
+     * Get the user who sent the invitation.
+     */
+    public function invitationSentBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invitation_sent_by');
+    }
+    
+    /**
+     * Mark invitation as accepted.
+     */
+    public function acceptInvitation(): void
+    {
+        $this->update([
+            'invitation_accepted_at' => now(),
+            'invitation_status' => 'accepted',
+            'invitation_token' => null, // Clear token after use
+        ]);
     }
 }
