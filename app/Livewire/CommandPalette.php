@@ -22,6 +22,7 @@ class CommandPalette extends Component
     public $search = '';
     public $results = [];
     public $selectedIndex = 0;
+    public $currentRoute = null;
 
     protected $listeners = ['openCommandPalette' => 'open'];
     
@@ -29,12 +30,16 @@ class CommandPalette extends Component
     {
         // Initialize with empty results - they'll be populated when opened
         $this->results = [];
+        // Store the current route name for filtering
+        $this->currentRoute = request()->route() ? request()->route()->getName() : null;
     }
 
     public function open()
     {
         $this->isOpen = true;
         $this->search = '';
+        // Update current route when opening
+        $this->currentRoute = request()->route() ? request()->route()->getName() : null;
         $this->results = $this->getPopularCommands();
         $this->selectedIndex = 0;
     }
@@ -65,7 +70,7 @@ class CommandPalette extends Component
         $results = [];
         $limit = 5;
         $user = Auth::user();
-        $currentRouteName = request()->route() ? request()->route()->getName() : null;
+        $currentRouteName = $this->currentRoute;
 
         try {
             // Search Clients - bypass global scope and filter manually
@@ -270,8 +275,8 @@ class CommandPalette extends Component
             return $actions;
         }
         
-        // Get the current route name to filter out
-        $currentRouteName = request()->route() ? request()->route()->getName() : null;
+        // Use the stored current route
+        $currentRouteName = $this->currentRoute;
         
         // Use QuickActionService to search for quick actions
         $quickActions = QuickActionService::searchActions($query, $user);
@@ -530,8 +535,8 @@ class CommandPalette extends Component
         $user = Auth::user();
         $commands = [];
         
-        // Get the current route name to filter out
-        $currentRouteName = request()->route() ? request()->route()->getName() : null;
+        // Use the stored current route
+        $currentRouteName = $this->currentRoute;
         
         if ($user) {
             // Get ALL favorite quick actions first - these should be the primary items shown

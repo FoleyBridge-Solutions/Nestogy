@@ -130,6 +130,10 @@ class QuickActionService
             return true;
         })->map(function ($action) {
             $config = $action->getActionConfig();
+            // Standardize route field for consistency
+            if ($action->type === 'route' && isset($config['target'])) {
+                $config['route'] = $config['target'];
+            }
             return array_merge($config, [
                 'id' => 'custom_' . $action->id,
                 'type' => 'custom',
