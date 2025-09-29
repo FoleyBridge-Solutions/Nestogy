@@ -415,7 +415,13 @@
                     You can also favorite actions to pin them to the top.
                 </flux:text>
                 
-                @if(count($customActions) > 0)
+                @php
+                    $customActions = collect($actions)->filter(function ($action) {
+                        return ($action['type'] ?? '') === 'custom';
+                    });
+                @endphp
+                
+                @if($customActions->count() > 0)
                     <div>
                         <flux:heading size="sm" class="mb-3">Your Custom Actions</flux:heading>
                         <div class="space-y-2">

@@ -11,6 +11,8 @@ use App\Models\Invoice;
 use App\Domains\Project\Models\Project;
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Knowledge\Models\KbArticle;
+use App\Services\QuickActionService;
+use App\Models\CustomQuickAction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -255,10 +257,47 @@ class CommandPalette extends Component
     private function getQuickActions($query)
     {
         $actions = [];
-        $queryLower = strtolower($query);
+        $user = Auth::user();
+        
+        if (!$user) {
+            return $actions;
+        }
+        
+        // Use QuickActionService to search for quick actions
+        $quickActions = QuickActionService::searchActions($query, $user);
+        
+        foreach ($quickActions as $action) {
+            $formattedAction = [
+                'type' => 'quick_action',
+                'id' => $action['id'] ?? null,
+                'title' => $action['title'],
+                'subtitle' => 'Quick Action • ' . ($action['description'] ?? ''),
+                'icon' => $action['icon'] ?? 'bolt',
+                'action_data' => $action,
+            ];
+            
+            // Add route information if available
+            if (isset($action['route'])) {
+                $formattedAction['route_name'] = $action['route'];
+                $formattedAction['route_params'] = $action['parameters'] ?? [];
+            }
+            
+            // Add custom action ID if it's a custom action
+            if (isset($action['custom_id'])) {
+                $formattedAction['custom_id'] = $action['custom_id'];
+            }
+            
+            // Add action key for system actions
+            if (isset($action['action'])) {
+                $formattedAction['action_key'] = $action['action'];
+            }
+            
+            $actions[] = $formattedAction;
+        }
 
-        // Get all navigation items from sidebar configurations
+        // Get all navigation items from sidebar configurations  
         $navigationActions = $this->getAllNavigationCommands();
+        $queryLower = strtolower($query);
 
         // Filter navigation items based on query
         foreach ($navigationActions as $action) {
@@ -269,14 +308,14 @@ class CommandPalette extends Component
             }
         }
 
-        // Quick action mappings for create/new actions
+        // Quick action mappings for create/new actions (these are hardcoded for common actions)
         $quickActionMappings = [
-            ['keywords' => ['new ticket', 'create ticket'], 'action' => ['title' => 'Create New Ticket', 'subtitle' => 'Quick Action', 'route_name' => 'tickets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
-            ['keywords' => ['new client', 'add client'], 'action' => ['title' => 'Add New Client', 'subtitle' => 'Quick Action', 'route_name' => 'clients.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
-            ['keywords' => ['new invoice', 'create invoice'], 'action' => ['title' => 'Create Invoice', 'subtitle' => 'Quick Action', 'route_name' => 'financial.invoices.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
-            ['keywords' => ['new project', 'create project'], 'action' => ['title' => 'Create New Project', 'subtitle' => 'Quick Action', 'route_name' => 'projects.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
-            ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => 'Quick Action', 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'action']],
-            ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'action']],
+            ['keywords' => ['new ticket', 'create ticket'], 'action' => ['title' => 'Create New Ticket', 'subtitle' => 'Quick Action', 'route_name' => 'tickets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new client', 'add client'], 'action' => ['title' => 'Add New Client', 'subtitle' => 'Quick Action', 'route_name' => 'clients.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new invoice', 'create invoice'], 'action' => ['title' => 'Create Invoice', 'subtitle' => 'Quick Action', 'route_name' => 'financial.invoices.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new project', 'create project'], 'action' => ['title' => 'Create New Project', 'subtitle' => 'Quick Action', 'route_name' => 'projects.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => 'Quick Action', 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'quick_action']],
         ];
 
         foreach ($quickActionMappings as $mapping) {
@@ -285,7 +324,9 @@ class CommandPalette extends Component
                     // Check if not already added
                     $exists = false;
                     foreach ($actions as $existingAction) {
-                        if ($existingAction['route_name'] === $mapping['action']['route_name']) {
+                        if (isset($existingAction['route_name']) && 
+                            isset($mapping['action']['route_name']) &&
+                            $existingAction['route_name'] === $mapping['action']['route_name']) {
                             $exists = true;
                             break;
                         }
@@ -466,7 +507,45 @@ class CommandPalette extends Component
      */
     private function getPopularCommands()
     {
-        return [
+        $user = Auth::user();
+        $commands = [];
+        
+        if ($user) {
+            // Get popular quick actions from the service
+            $popularActions = QuickActionService::getPopularActions($user);
+            
+            foreach ($popularActions as $action) {
+                $command = [
+                    'type' => 'quick_action',
+                    'id' => $action['id'] ?? null,
+                    'title' => $action['title'],
+                    'subtitle' => ($action['is_favorite'] ?? false) ? '⭐ Favorite Quick Action • ' . ($action['description'] ?? '') : 'Quick Action • ' . ($action['description'] ?? ''),
+                    'icon' => $action['icon'] ?? 'bolt',
+                    'action_data' => $action,
+                ];
+                
+                // Add route information if available
+                if (isset($action['route'])) {
+                    $command['route_name'] = $action['route'];
+                    $command['route_params'] = $action['parameters'] ?? [];
+                }
+                
+                // Add custom action ID if it's a custom action
+                if (isset($action['custom_id'])) {
+                    $command['custom_id'] = $action['custom_id'];
+                }
+                
+                // Add action key for system actions
+                if (isset($action['action'])) {
+                    $command['action_key'] = $action['action'];
+                }
+                
+                $commands[] = $command;
+            }
+        }
+        
+        // Add standard navigation commands
+        $navigationCommands = [
             [
                 'type' => 'navigation',
                 'title' => 'Dashboard',
@@ -538,16 +617,11 @@ class CommandPalette extends Component
                 'route_name' => 'settings.index',
                 'route_params' => [],
                 'icon' => 'cog-6-tooth'
-            ],
-            [
-                'type' => 'action',
-                'title' => 'Create New Ticket',
-                'subtitle' => 'Quick Action',
-                'route_name' => 'tickets.create',
-                'route_params' => [],
-                'icon' => 'plus-circle'
             ]
         ];
+        
+        // Merge commands, limiting total to reasonable number
+        return array_merge($commands, $navigationCommands);
     }
 
     public function selectNext()
@@ -573,6 +647,63 @@ class CommandPalette extends Component
 
             // Close the modal first
             $this->close();
+
+            // Handle quick actions
+            if ($result['type'] === 'quick_action' && isset($result['action_data'])) {
+                $action = $result['action_data'];
+                
+                // Handle custom actions
+                if (isset($action['custom_id'])) {
+                    $customAction = CustomQuickAction::find($action['custom_id']);
+                    
+                    if ($customAction && $customAction->canBeExecutedBy(Auth::user())) {
+                        $customAction->recordUsage();
+                        
+                        if ($customAction->type === 'route') {
+                            return $this->redirectRoute(
+                                $customAction->target,
+                                $customAction->parameters ?? [],
+                                navigate: true
+                            );
+                        } elseif ($customAction->type === 'url') {
+                            $url = $customAction->target;
+                            if (!empty($customAction->parameters)) {
+                                $url .= '?' . http_build_query($customAction->parameters);
+                            }
+                            
+                            if ($customAction->open_in === 'new_tab') {
+                                $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
+                                return;
+                            } else {
+                                return $this->redirect($url, navigate: true);
+                            }
+                        }
+                    }
+                }
+                // Handle system actions with special dispatch events
+                elseif (isset($action['action'])) {
+                    switch ($action['action']) {
+                        case 'remoteAccess':
+                            $this->dispatch('open-remote-access');
+                            break;
+                        case 'clientPortal':
+                            $this->dispatch('open-client-portal');
+                            break;
+                        default:
+                            $this->dispatch('quick-action-executed', ['action' => $action['action']]);
+                            break;
+                    }
+                    return;
+                }
+                // Handle route-based system actions
+                elseif (isset($action['route'])) {
+                    return $this->redirectRoute(
+                        $action['route'],
+                        $action['parameters'] ?? [],
+                        navigate: true
+                    );
+                }
+            }
 
             // Use redirectRoute with navigate for SPA-like behavior
             if (isset($result['route_name'])) {

@@ -4,16 +4,13 @@ namespace App\Livewire\Dashboard\Widgets;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use App\Services\QuickActionService;
 use App\Models\CustomQuickAction;
-use App\Models\QuickActionFavorite;
-use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class QuickActions extends Component
 {
     public string $view = 'executive';
     public array $actions = [];
-    public array $customActions = [];
-    public array $favoriteActions = [];
     public bool $showManageModal = false;
     public bool $showCreateModal = false;
     
@@ -41,201 +38,22 @@ class QuickActions extends Component
     {
         $user = Auth::user();
         
-        // Load custom actions
-        $this->loadCustomActions();
-        
-        // Load favorites
-        $this->loadFavorites();
-        
-        $actionSets = [
-            'executive' => [
-                [
-                    'title' => 'Email Inbox',
-                    'description' => 'Check your email messages',
-                    'icon' => 'envelope',
-                    'color' => 'blue',
-                    'route' => 'email.inbox.index',
-                    'permission' => 'view-email',
-                ],
-            ],
-            'operations' => [
-                [
-                    'title' => 'Remote Access',
-                    'description' => 'Connect to client systems',
-                    'icon' => 'globe-alt',
-                    'color' => 'red',
-                    'action' => 'remoteAccess',
-                    'permission' => 'remote-access',
-                ],
-            ],
-            'financial' => [],
-            'support' => [
-                [
-                    'title' => 'Client Portal',
-                    'description' => 'Access client portal',
-                    'icon' => 'building-office',
-                    'color' => 'purple',
-                    'action' => 'clientPortal',
-                    'permission' => 'access-client-portal',
-                ],
-            ],
-        ];
-        
-        $actions = $actionSets[$this->view] ?? $actionSets['executive'];
-        
-        // Filter actions based on permissions and route availability
-        $this->actions = collect($actions)->filter(function ($action) use ($user) {
-            // Check permissions
-            if (isset($action['permission']) && !$user->can($action['permission'])) {
-                return false;
-            }
-            
-            // Check if route exists
-            if (isset($action['route'])) {
-                try {
-                    route($action['route']);
-                } catch (\Exception $e) {
-                    // Route doesn't exist, skip this action
-                    return false;
-                }
-            }
-            
-            return true;
-        })->values()->toArray();
-        
-        // Merge with custom actions
-        $this->actions = array_merge($this->actions, $this->customActions);
-        
-        // Sort by favorites first, then by position
-        $this->sortActionsByFavorites();
-    }
-    
-    protected function loadCustomActions()
-    {
-        $user = Auth::user();
-        
-        $customActions = CustomQuickAction::active()
-            ->visibleTo($user)
-            ->orderBy('position')
-            ->get();
-            
-        $this->customActions = $customActions->filter(function ($action) use ($user) {
-            // Check if user has permission to execute this action
-            if ($action->permission && !$user->can($action->permission)) {
-                return false;
-            }
-            
-            // Check if route exists for route-based actions
-            if ($action->type === 'route') {
-                try {
-                    route($action->target);
-                } catch (\Exception $e) {
-                    // Route doesn't exist, skip this action
-                    return false;
-                }
-            }
-            
-            return true;
-        })->map(function ($action) {
-            return $action->getActionConfig();
-        })->toArray();
-    }
-    
-    protected function loadFavorites()
-    {
-        $user = Auth::user();
-        
-        $favorites = QuickActionFavorite::where('user_id', $user->id)
-            ->orderBy('position')
-            ->get();
-            
-        $this->favoriteActions = $favorites->pluck('system_action')
-            ->merge($favorites->pluck('custom_quick_action_id'))
-            ->filter()
+        // Use the QuickActionService to get actions
+        $this->actions = QuickActionService::getActionsForUser($user, $this->view)
+            ->take(12) // Limit for dashboard display
             ->toArray();
-    }
-    
-    protected function sortActionsByFavorites()
-    {
-        $favorited = [];
-        $regular = [];
-        
-        foreach ($this->actions as $action) {
-            $isFavorite = false;
-            
-            // Check if it's a favorited system action
-            if (isset($action['route'])) {
-                $isFavorite = in_array($action['route'], $this->favoriteActions);
-            } elseif (isset($action['action'])) {
-                $isFavorite = in_array($action['action'], $this->favoriteActions);
-            } elseif (isset($action['custom_id'])) {
-                $isFavorite = in_array($action['custom_id'], $this->favoriteActions);
-            }
-            
-            if ($isFavorite) {
-                $action['is_favorite'] = true;
-                $favorited[] = $action;
-            } else {
-                $action['is_favorite'] = false;
-                $regular[] = $action;
-            }
-        }
-        
-        $this->actions = array_merge($favorited, $regular);
     }
     
     public function toggleFavorite($actionIdentifier)
     {
         $user = Auth::user();
         
-        // Determine if this is a custom action (numeric ID) or system action (string)
-        if (is_numeric($actionIdentifier)) {
-            // Custom action
-            $favorite = QuickActionFavorite::where('user_id', $user->id)
-                ->where('custom_quick_action_id', $actionIdentifier)
-                ->first();
-                
-            if ($favorite) {
-                $favorite->delete();
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => 'Removed from favorites',
-                ]);
-            } else {
-                QuickActionFavorite::create([
-                    'user_id' => $user->id,
-                    'custom_quick_action_id' => $actionIdentifier,
-                    'position' => QuickActionFavorite::where('user_id', $user->id)->count(),
-                ]);
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => 'Added to favorites',
-                ]);
-            }
-        } else {
-            // System action
-            $favorite = QuickActionFavorite::where('user_id', $user->id)
-                ->where('system_action', $actionIdentifier)
-                ->first();
-                
-            if ($favorite) {
-                $favorite->delete();
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => 'Removed from favorites',
-                ]);
-            } else {
-                QuickActionFavorite::create([
-                    'user_id' => $user->id,
-                    'system_action' => $actionIdentifier,
-                    'position' => QuickActionFavorite::where('user_id', $user->id)->count(),
-                ]);
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => 'Added to favorites',
-                ]);
-            }
-        }
+        $isFavorite = QuickActionService::toggleFavorite($actionIdentifier, $user);
+        
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => $isFavorite ? 'Added to favorites' : 'Removed from favorites',
+        ]);
         
         $this->loadActions();
     }
@@ -303,51 +121,23 @@ class QuickActions extends Component
             }
         }
         
-        $data = [
-            'company_id' => $user->company_id,
-            'user_id' => $this->actionForm['visibility'] === 'private' ? $user->id : null,
-            'title' => $this->actionForm['title'],
-            'description' => $this->actionForm['description'],
-            'icon' => $this->actionForm['icon'],
-            'color' => $this->actionForm['color'],
-            'type' => $this->actionForm['type'],
-            'target' => $this->actionForm['target'],
-            'parameters' => $this->actionForm['parameters'],
-            'open_in' => $this->actionForm['open_in'],
-            'visibility' => $this->actionForm['visibility'],
-        ];
-        
-        if ($this->actionForm['id']) {
-            // Update existing
-            $action = CustomQuickAction::find($this->actionForm['id']);
-            if ($action) {
-                // Allow editing if user created it OR if user is super-admin and it's a company action
-                $canEdit = $action->user_id === $user->id || 
-                          (Bouncer::is($user)->an('super-admin') && $action->visibility === 'company');
-                
-                if ($canEdit) {
-                    $action->update($data);
-                } else {
-                    $this->dispatch('notify', [
-                        'type' => 'error',
-                        'message' => 'You do not have permission to edit this action',
-                    ]);
-                    return;
-                }
-            }
-        } else {
-            // Create new
-            CustomQuickAction::create($data);
+        try {
+            QuickActionService::saveCustomAction($this->actionForm, $user);
+            
+            $this->showCreateModal = false;
+            $this->resetActionForm();
+            $this->loadActions();
+            
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Quick action saved successfully',
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
-        
-        $this->showCreateModal = false;
-        $this->resetActionForm();
-        $this->loadActions();
-        
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Quick action saved successfully',
-        ]);
     }
     
     public function recordUsage($customId)
@@ -360,33 +150,18 @@ class QuickActions extends Component
     
     public function deleteCustomAction($actionId)
     {
-        $user = Auth::user();
-        $action = CustomQuickAction::find($actionId);
-        
-        if (!$action) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Action not found',
-            ]);
-            return;
-        }
-        
-        // Allow deletion if user created it OR if user is super-admin and it's a company action
-        $canDelete = $action->user_id === $user->id || 
-                    (Bouncer::is($user)->an('super-admin') && $action->visibility === 'company');
-        
-        if ($canDelete) {
-            $action->delete();
+        try {
+            QuickActionService::deleteCustomAction($actionId, Auth::user());
             $this->loadActions();
             
             $this->dispatch('notify', [
                 'type' => 'success',
                 'message' => 'Quick action deleted',
             ]);
-        } else {
+        } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'You do not have permission to delete this action',
+                'message' => $e->getMessage(),
             ]);
         }
     }
@@ -409,75 +184,61 @@ class QuickActions extends Component
     
     public function executeAction($actionKey, $customId = null)
     {
-        // Handle custom action execution
-        if ($customId) {
-            $customAction = CustomQuickAction::find($customId);
+        try {
+            // Use the service to find and execute the action
+            $actionIdentifier = $customId ?? $actionKey;
+            $action = QuickActionService::executeAction($actionIdentifier, Auth::user());
             
-            if (!$customAction) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => 'Action not found',
-                ]);
-                return;
-            }
-            
-            if (!$customAction->canBeExecutedBy(Auth::user())) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => 'You do not have permission to execute this action',
-                ]);
-                return;
-            }
-            
-            $customAction->recordUsage();
-            
-            try {
-                if ($customAction->type === 'route') {
-                    return redirect()->route($customAction->target, $customAction->parameters ?? []);
-                } elseif ($customAction->type === 'url') {
-                    $url = $customAction->target;
-                    if (!empty($customAction->parameters)) {
-                        $url .= '?' . http_build_query($customAction->parameters);
-                    }
-                    
-                    if ($customAction->open_in === 'new_tab') {
-                        $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
-                    } else {
-                        return redirect()->away($url);
+            // Handle custom action execution
+            if (isset($action['custom_id'])) {
+                $customAction = CustomQuickAction::find($action['custom_id']);
+                
+                if ($customAction) {
+                    if ($customAction->type === 'route') {
+                        return redirect()->route($customAction->target, $customAction->parameters ?? []);
+                    } elseif ($customAction->type === 'url') {
+                        $url = $customAction->target;
+                        if (!empty($customAction->parameters)) {
+                            $url .= '?' . http_build_query($customAction->parameters);
+                        }
+                        
+                        if ($customAction->open_in === 'new_tab') {
+                            $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
+                        } else {
+                            return redirect()->away($url);
+                        }
                     }
                 }
-            } catch (\Exception $e) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => 'Failed to execute action: ' . $e->getMessage(),
-                ]);
+                return;
             }
-            return;
-        }
-        
-        // Handle system actions
-        $action = collect($this->actions)->firstWhere('action', $actionKey);
-        
-        if (!$action) {
-            return;
-        }
-        
-        switch ($actionKey) {
-            case 'exportReports':
-                $this->dispatch('export-reports');
-                break;
-                
-            case 'remoteAccess':
-                $this->dispatch('open-remote-access');
-                break;
-                
-            case 'clientPortal':
-                $this->dispatch('open-client-portal');
-                break;
-                
-            default:
-                $this->dispatch('quick-action-executed', ['action' => $actionKey]);
-                break;
+            
+            // Handle system actions
+            if (isset($action['route'])) {
+                return redirect()->route($action['route'], $action['parameters'] ?? []);
+            } elseif (isset($action['action'])) {
+                switch ($action['action']) {
+                    case 'exportReports':
+                        $this->dispatch('export-reports');
+                        break;
+                        
+                    case 'remoteAccess':
+                        $this->dispatch('open-remote-access');
+                        break;
+                        
+                    case 'clientPortal':
+                        $this->dispatch('open-client-portal');
+                        break;
+                        
+                    default:
+                        $this->dispatch('quick-action-executed', ['action' => $action['action']]);
+                        break;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to execute action: ' . $e->getMessage(),
+            ]);
         }
     }
     
