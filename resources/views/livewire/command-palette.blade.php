@@ -2,7 +2,7 @@
     {{-- Trigger Button --}}
     <flux:tooltip content="Search (⌘K)">
         <flux:button
-            wire:click="open"
+            wire:click="open('{{ Route::currentRouteName() }}')"
             variant="ghost"
             size="sm"
             icon="magnifying-glass"

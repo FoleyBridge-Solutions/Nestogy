@@ -126,7 +126,9 @@
                 document.addEventListener('keydown', function(e) {
                     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                         e.preventDefault();
-                        Livewire.dispatch('openCommandPalette');
+                        Livewire.dispatch('openCommandPalette', { 
+                            currentRoute: '{{ Route::currentRouteName() }}' 
+                        });
                     }
                 });
             </script>

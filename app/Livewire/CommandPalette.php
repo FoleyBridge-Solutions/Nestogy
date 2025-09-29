@@ -24,22 +24,51 @@ class CommandPalette extends Component
     public $selectedIndex = 0;
     public $currentRoute = null;
 
-    protected $listeners = ['openCommandPalette' => 'open'];
+    protected $listeners = ['openCommandPalette' => 'handleOpen'];
+    
+    public function handleOpen($data = [])
+    {
+        $currentRoute = $data['currentRoute'] ?? null;
+        $this->open($currentRoute);
+    }
     
     public function mount()
     {
         // Initialize with empty results - they'll be populated when opened
         $this->results = [];
         // Store the current route name for filtering
+        // This will be the initial page route, not livewire.update
         $this->currentRoute = request()->route() ? request()->route()->getName() : null;
     }
+    
+    public function setCurrentRoute($routeName)
+    {
+        $this->currentRoute = $routeName;
+    }
 
-    public function open()
+    public function open($currentRoute = null)
     {
         $this->isOpen = true;
         $this->search = '';
-        // Update current route when opening
-        $this->currentRoute = request()->route() ? request()->route()->getName() : null;
+        
+        // If a route is passed, use it. Otherwise try to detect it.
+        if ($currentRoute) {
+            $this->currentRoute = $currentRoute;
+        } else {
+            // During Livewire updates, this will be 'livewire.update', so we keep the existing route
+            $detectedRoute = request()->route() ? request()->route()->getName() : null;
+            if ($detectedRoute !== 'livewire.update' && $detectedRoute !== 'livewire.message') {
+                $this->currentRoute = $detectedRoute;
+            }
+        }
+        
+        // DEBUG: Log what route we're on
+        logger()->info('CommandPalette::open', [
+            'current_route' => $this->currentRoute,
+            'passed_route' => $currentRoute,
+            'detected_route' => request()->route() ? request()->route()->getName() : null,
+        ]);
+        
         $this->results = $this->getPopularCommands();
         $this->selectedIndex = 0;
     }
@@ -547,6 +576,11 @@ class CommandPalette extends Component
             $favoriteActions = $allActions->filter(function ($action) use ($favoriteIds, $currentRouteName) {
                 // Skip if this action leads to the current page
                 if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
+                    logger()->info('Filtering out action because it matches current route', [
+                        'action_title' => $action['title'] ?? 'unknown',
+                        'action_route' => $action['route'],
+                        'current_route' => $currentRouteName
+                    ]);
                     return false;
                 }
                 
