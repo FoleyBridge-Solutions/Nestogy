@@ -65,6 +65,7 @@ class CommandPalette extends Component
         $results = [];
         $limit = 5;
         $user = Auth::user();
+        $currentRouteName = request()->route() ? request()->route()->getName() : null;
 
         try {
             // Search Clients - bypass global scope and filter manually
@@ -269,10 +270,18 @@ class CommandPalette extends Component
             return $actions;
         }
         
+        // Get the current route name to filter out
+        $currentRouteName = request()->route() ? request()->route()->getName() : null;
+        
         // Use QuickActionService to search for quick actions
         $quickActions = QuickActionService::searchActions($query, $user);
         
         foreach ($quickActions as $action) {
+            // Skip if this action leads to the current page
+            if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
+                continue;
+            }
+            
             $formattedAction = [
                 'type' => 'quick_action',
                 'id' => $action['id'] ?? null,
@@ -307,6 +316,11 @@ class CommandPalette extends Component
 
         // Filter navigation items based on query
         foreach ($navigationActions as $action) {
+            // Skip if this navigation leads to the current page
+            if ($currentRouteName && isset($action['route_name']) && $action['route_name'] === $currentRouteName) {
+                continue;
+            }
+            
             // Check if title or keywords match the query
             if (str_contains(strtolower($action['title']), $queryLower) ||
                 (isset($action['keywords']) && $this->matchesKeywords($action['keywords'], $queryLower))) {
@@ -516,13 +530,21 @@ class CommandPalette extends Component
         $user = Auth::user();
         $commands = [];
         
+        // Get the current route name to filter out
+        $currentRouteName = request()->route() ? request()->route()->getName() : null;
+        
         if ($user) {
             // Get ALL favorite quick actions first - these should be the primary items shown
             $allActions = QuickActionService::getActionsForUser($user);
             $favoriteIds = QuickActionService::getFavoriteIdentifiers($user);
             
             // Filter to get only favorites and format them for display
-            $favoriteActions = $allActions->filter(function ($action) use ($favoriteIds) {
+            $favoriteActions = $allActions->filter(function ($action) use ($favoriteIds, $currentRouteName) {
+                // Skip if this action leads to the current page
+                if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
+                    return false;
+                }
+                
                 // Check various identifiers to see if this action is favorited
                 $actionId = $action['id'] ?? null;
                 $route = $action['route'] ?? null;
@@ -570,6 +592,11 @@ class CommandPalette extends Component
                 $popularActions = QuickActionService::getPopularActions($user);
                 
                 foreach ($popularActions as $action) {
+                    // Skip if this action leads to the current page
+                    if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
+                        continue;
+                    }
+                    
                     $command = [
                         'type' => 'quick_action',
                         'id' => $action['id'] ?? null,
@@ -662,9 +689,14 @@ class CommandPalette extends Component
                 ]
             ];
             
-            // Filter out navigation items that are already in favorites
+            // Filter out navigation items that are already in favorites or lead to current page
             foreach ($allNavigationCommands as $navCommand) {
                 $isDuplicate = false;
+                
+                // Skip if this navigation item leads to the current page
+                if ($currentRouteName && isset($navCommand['route_name']) && $navCommand['route_name'] === $currentRouteName) {
+                    continue;
+                }
                 
                 // Check if route already exists in favorites
                 if (isset($navCommand['route_name']) && in_array($navCommand['route_name'], $existingRoutes)) {
