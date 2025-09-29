@@ -4,7 +4,7 @@ namespace App\Livewire\Dashboard\Widgets;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use App\Services\QuickActionService;
+use App\Domains\Core\Services\QuickActionService;
 use App\Models\CustomQuickAction;
 
 class QuickActions extends Component
@@ -41,6 +41,26 @@ class QuickActions extends Component
         // Use the QuickActionService to get actions
         $this->actions = QuickActionService::getActionsForUser($user, $this->view)
             ->take(12) // Limit for dashboard display
+            ->toArray();
+    }
+    
+    public function getAllCustomActions()
+    {
+        $user = Auth::user();
+        
+        // Get ALL custom actions visible to the user (not limited)
+        return CustomQuickAction::active()
+            ->visibleTo($user)
+            ->orderBy('position')
+            ->get()
+            ->map(function ($action) {
+                $config = $action->getActionConfig();
+                // Mark these as custom actions
+                return array_merge($config, [
+                    'id' => 'custom_' . $action->id,
+                    'source' => 'custom',
+                ]);
+            })
             ->toArray();
     }
     

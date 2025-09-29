@@ -11,7 +11,7 @@ use App\Models\Invoice;
 use App\Domains\Project\Models\Project;
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Knowledge\Models\KbArticle;
-use App\Services\QuickActionService;
+use App\Domains\Core\Services\QuickActionService;
 use App\Models\CustomQuickAction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -38,7 +38,14 @@ class CommandPalette extends Component
         $this->results = [];
         // Store the current route name for filtering
         // This will be the initial page route, not livewire.update
-        $this->currentRoute = request()->route() ? request()->route()->getName() : null;
+        $route = request()->route();
+        if ($route) {
+            $routeName = $route->getName();
+            // Filter out Livewire-specific routes
+            if (!in_array($routeName, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
+                $this->currentRoute = $routeName;
+            }
+        }
     }
     
     public function setCurrentRoute($routeName)
@@ -51,13 +58,14 @@ class CommandPalette extends Component
         $this->isOpen = true;
         $this->search = '';
         
-        // If a route is passed, use it. Otherwise try to detect it.
-        if ($currentRoute) {
+        // If a route is passed explicitly, always use it
+        if ($currentRoute && !in_array($currentRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
             $this->currentRoute = $currentRoute;
-        } else {
-            // During Livewire updates, this will be 'livewire.update', so we keep the existing route
+        } elseif (!$currentRoute) {
+            // Try to detect current route if not passed
             $detectedRoute = request()->route() ? request()->route()->getName() : null;
-            if ($detectedRoute !== 'livewire.update' && $detectedRoute !== 'livewire.message') {
+            // Only update if it's not a Livewire route
+            if ($detectedRoute && !in_array($detectedRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
                 $this->currentRoute = $detectedRoute;
             }
         }
@@ -322,7 +330,7 @@ class CommandPalette extends Component
                 'title' => $action['title'],
                 'subtitle' => 'Quick Action • ' . ($action['description'] ?? ''),
                 'icon' => $action['icon'] ?? 'bolt',
-                'action_data' => $action,
+                'action_data' => $action, // This includes all settings including open_in
             ];
             
             // Add route information if available
@@ -402,7 +410,7 @@ class CommandPalette extends Component
     private function getAllNavigationCommands()
     {
         $commands = [];
-        $sidebarProvider = app(\App\Services\SidebarConfigProvider::class);
+        $sidebarProvider = app(\App\Domains\Core\Services\SidebarConfigProvider::class);
 
         // Define all contexts to load
         $contexts = ['clients', 'tickets', 'email', 'assets', 'financial', 'projects', 'reports', 'settings'];
@@ -475,7 +483,7 @@ class CommandPalette extends Component
         }
 
         $processed = [];
-        $selectedClient = \App\Services\NavigationService::getSelectedClient();
+        $selectedClient = \App\Domains\Core\Services\NavigationService::getSelectedClient();
 
         foreach ($params as $key => $value) {
             // Handle 'current' client parameter
@@ -604,7 +612,7 @@ class CommandPalette extends Component
                     'title' => $action['title'],
                     'subtitle' => '⭐ Favorite • ' . ($action['description'] ?? 'Quick Action'),
                     'icon' => $action['icon'] ?? 'star',
-                    'action_data' => $action,
+                    'action_data' => $action, // This includes all settings including open_in
                 ];
                 
                 // Add route information if available
@@ -642,7 +650,7 @@ class CommandPalette extends Component
                         'title' => $action['title'],
                         'subtitle' => 'Quick Action • ' . ($action['description'] ?? ''),
                         'icon' => $action['icon'] ?? 'bolt',
-                        'action_data' => $action,
+                        'action_data' => $action, // This includes all settings including open_in
                     ];
                     
                     // Add route information if available
@@ -798,41 +806,99 @@ class CommandPalette extends Component
 
         if (isset($this->results[$index])) {
             $result = $this->results[$index];
-
-            // Close the modal first
-            $this->close();
+            
+            \Log::info('CommandPalette::selectResult - Full result data', [
+                'index' => $index,
+                'result' => $result,
+                'has_action_data' => isset($result['action_data']),
+                'result_type' => $result['type'] ?? 'unknown',
+            ]);
 
             // Handle quick actions
             if ($result['type'] === 'quick_action' && isset($result['action_data'])) {
                 $action = $result['action_data'];
                 
-                // Handle custom actions
-                if (isset($action['custom_id'])) {
-                    $customAction = CustomQuickAction::find($action['custom_id']);
+                \Log::info('CommandPalette::selectResult - Action data extracted', [
+                    'action' => $action,
+                    'result_has_custom_id' => isset($result['custom_id']),
+                    'action_has_custom_id' => isset($action['custom_id']),
+                    'action_type' => $action['type'] ?? 'not_set',
+                    'action_target' => $action['target'] ?? 'not_set',
+                ]);
+                
+                // Handle custom actions - check both result level and action level for custom_id
+                if (isset($result['custom_id']) || isset($action['custom_id'])) {
+                    $customId = $result['custom_id'] ?? $action['custom_id'];
+                    // Debug logging
+                    \Log::info('CommandPalette: Processing custom action', [
+                        'custom_id' => $customId,
+                        'action' => $action,
+                        'has_type' => isset($action['type']),
+                        'has_target' => isset($action['target']),
+                    ]);
                     
-                    if ($customAction && $customAction->canBeExecutedBy(Auth::user())) {
-                        $customAction->recordUsage();
-                        
-                        if ($customAction->type === 'route') {
+                    // Get the custom action from database to ensure we have all data
+                    $customAction = CustomQuickAction::find($customId);
+                    if (!$customAction || !$customAction->canBeExecutedBy(Auth::user())) {
+                        \Log::warning('CommandPalette: Custom action not found or no permission', [
+                            'custom_id' => $customId,
+                            'found' => $customAction ? 'yes' : 'no',
+                        ]);
+                        return;
+                    }
+                    
+                    $customAction->recordUsage();
+                    
+                    // Use values from database (most reliable source)
+                    $actionType = $customAction->type;
+                    $actionTarget = $customAction->target;
+                    $actionOpenIn = $customAction->open_in;
+                    $actionParameters = $customAction->parameters ?? [];
+                    
+                    // Log what we're about to execute
+                    \Log::info('CommandPalette: Executing action', [
+                        'type' => $actionType,
+                        'target' => $actionTarget,
+                        'open_in' => $actionOpenIn,
+                    ]);
+                    
+                    // Now execute the action based on type
+                    if ($actionType === 'route') {
+                        // Respect the open_in setting for routes
+                        if ($actionOpenIn === 'new_tab') {
+                            $routeUrl = route($actionTarget, $actionParameters);
+                            $this->js("window.open('$routeUrl', '_blank')");
+                            $this->close();
+                            return;
+                        } else {
+                            $this->close();
                             return $this->redirectRoute(
-                                $customAction->target,
-                                $customAction->parameters ?? [],
+                                $actionTarget,
+                                $actionParameters,
                                 navigate: true
                             );
-                        } elseif ($customAction->type === 'url') {
-                            $url = $customAction->target;
-                            if (!empty($customAction->parameters)) {
-                                $url .= '?' . http_build_query($customAction->parameters);
-                            }
-                            
-                            if ($customAction->open_in === 'new_tab') {
-                                $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
-                                return;
-                            } else {
-                                return $this->redirect($url, navigate: true);
-                            }
+                        }
+                    } elseif ($actionType === 'url') {
+                        $url = $actionTarget;
+                        if (!empty($actionParameters)) {
+                            $url .= '?' . http_build_query($actionParameters);
+                        }
+                        
+                        \Log::info('CommandPalette: Opening URL', ['url' => $url, 'open_in' => $actionOpenIn]);
+                        
+                        if ($actionOpenIn === 'new_tab') {
+                            // For new tab, dispatch browser event and close modal after
+                            $this->js("window.open('$url', '_blank')");
+                            $this->close();
+                            return;
+                        } else {
+                            // For same tab, close modal first then redirect
+                            $this->close();
+                            return $this->redirect($url, navigate: true);
                         }
                     }
+                    
+                    return; // End of custom action handling
                 }
                 // Handle system actions with special dispatch events
                 elseif (isset($action['action'])) {
@@ -847,21 +913,32 @@ class CommandPalette extends Component
                             $this->dispatch('quick-action-executed', ['action' => $action['action']]);
                             break;
                     }
+                    $this->close();
                     return;
                 }
                 // Handle route-based system actions
                 elseif (isset($action['route'])) {
-                    return $this->redirectRoute(
-                        $action['route'],
-                        $action['parameters'] ?? [],
-                        navigate: true
-                    );
+                    // Check if system action has open_in setting
+                    if (isset($action['open_in']) && $action['open_in'] === 'new_tab') {
+                        $routeUrl = route($action['route'], $action['parameters'] ?? []);
+                        $this->js("window.open('$routeUrl', '_blank')");
+                        $this->close();
+                        return;
+                    } else {
+                        $this->close();
+                        return $this->redirectRoute(
+                            $action['route'],
+                            $action['parameters'] ?? [],
+                            navigate: true
+                        );
+                    }
                 }
             }
 
             // Use redirectRoute with navigate for SPA-like behavior
             if (isset($result['route_name'])) {
                 // Just navigate - let middleware handle any client requirements
+                $this->close();
                 return $this->redirectRoute(
                     $result['route_name'],
                     $result['route_params'] ?? [],
@@ -871,6 +948,7 @@ class CommandPalette extends Component
 
             // Fallback for any results that still have URL
             if (isset($result['url'])) {
+                $this->close();
                 return $this->redirect($result['url'], navigate: true);
             }
         }

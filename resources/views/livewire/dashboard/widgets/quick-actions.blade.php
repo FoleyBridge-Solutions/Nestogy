@@ -67,9 +67,25 @@
                             $customAction = \App\Models\CustomQuickAction::find($action['custom_id']);
                             $canEdit = false;
                             if ($customAction) {
-                                // User can edit if they created it OR if they're a super-admin and it's a company action
-                                $canEdit = $customAction->user_id === auth()->id() || 
-                                          (\Bouncer::is(auth()->user())->an('super-admin') && $customAction->visibility === 'company');
+                                $user = auth()->user();
+                                // User can edit their own actions
+                                if ($customAction->user_id === $user->id) {
+                                    $canEdit = true;
+                                }
+                                // Super-admin can edit company actions
+                                elseif ($customAction->visibility === 'company' && \Bouncer::is($user)->an('super-admin')) {
+                                    $canEdit = true;
+                                }
+                                // Admin/company-admin can edit company actions
+                                elseif ($customAction->visibility === 'company' && 
+                                        $customAction->company_id === $user->company_id && 
+                                        (\Bouncer::is($user)->an('admin') || \Bouncer::is($user)->an('company-admin'))) {
+                                    $canEdit = true;
+                                }
+                                // User with manage-quick-actions permission can edit company actions
+                                elseif ($customAction->visibility === 'company' && $user->can('manage-quick-actions')) {
+                                    $canEdit = true;
+                                }
                             }
                         @endphp
                         @if($canEdit)
@@ -416,16 +432,42 @@
                 </flux:text>
                 
                 @php
-                    $customActions = collect($actions)->filter(function ($action) {
-                        return ($action['type'] ?? '') === 'custom';
-                    });
+                    // Get ALL custom actions, not just the ones shown on dashboard
+                    $customActions = collect($this->getAllCustomActions());
                 @endphp
                 
                 @if($customActions->count() > 0)
                     <div>
-                        <flux:heading size="sm" class="mb-3">Your Custom Actions</flux:heading>
+                        <flux:heading size="sm" class="mb-3">Custom Actions</flux:heading>
                         <div class="space-y-2">
                             @foreach($customActions as $action)
+                                @php
+                                    $customAction = \App\Models\CustomQuickAction::find($action['custom_id']);
+                                    $canEdit = false;
+                                    if ($customAction) {
+                                        $user = auth()->user();
+                                        // Check edit permissions
+                                        if ($customAction->user_id === $user->id) {
+                                            $canEdit = true;
+                                        } elseif ($customAction->visibility === 'company' && 
+                                                 (\Bouncer::is($user)->an('super-admin') || 
+                                                  \Bouncer::is($user)->an('admin') || 
+                                                  \Bouncer::is($user)->an('company-admin') ||
+                                                  $user->can('manage-quick-actions'))) {
+                                            $canEdit = true;
+                                        }
+                                    }
+                                    
+                                    // Determine visibility label
+                                    $visibilityLabel = 'Private';
+                                    if ($customAction) {
+                                        if ($customAction->visibility === 'company') {
+                                            $visibilityLabel = 'Company';
+                                        } elseif ($customAction->visibility === 'role') {
+                                            $visibilityLabel = 'Role';
+                                        }
+                                    }
+                                @endphp
                                 <div class="flex items-center justify-between p-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
                                     <div class="flex items-center gap-3">
                                         <div class="p-2 rounded-lg bg-{{ $action['color'] }}-100 dark:bg-{{ $action['color'] }}-900/30">
@@ -433,21 +475,28 @@
                                         </div>
                                         <div>
                                             <flux:text weight="medium">{{ $action['title'] }}</flux:text>
-                                            <flux:text size="xs" class="text-zinc-500">{{ $action['description'] }}</flux:text>
+                                            <flux:text size="xs" class="text-zinc-500">
+                                                {{ $action['description'] }}
+                                                <span class="ml-2 text-zinc-400">• {{ $visibilityLabel }}</span>
+                                            </flux:text>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <flux:button variant="ghost" size="sm" wire:click="openEditModal({{ $action['custom_id'] }})">
-                                            <flux:icon.pencil class="size-4" />
-                                        </flux:button>
-                                        <flux:button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            wire:click="deleteCustomAction({{ $action['custom_id'] }})"
-                                            wire:confirm="Are you sure you want to delete this action?"
-                                        >
-                                            <flux:icon.trash class="size-4" />
-                                        </flux:button>
+                                        @if($canEdit)
+                                            <flux:button variant="ghost" size="sm" wire:click="openEditModal({{ $action['custom_id'] }})">
+                                                <flux:icon.pencil class="size-4" />
+                                            </flux:button>
+                                            <flux:button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                wire:click="deleteCustomAction({{ $action['custom_id'] }})"
+                                                wire:confirm="Are you sure you want to delete this action?"
+                                            >
+                                                <flux:icon.trash class="size-4" />
+                                            </flux:button>
+                                        @else
+                                            <flux:text size="xs" class="text-zinc-400 px-2">View only</flux:text>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
