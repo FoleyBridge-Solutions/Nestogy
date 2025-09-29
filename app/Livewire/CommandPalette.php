@@ -511,16 +511,32 @@ class CommandPalette extends Component
         $commands = [];
         
         if ($user) {
-            // Get popular quick actions from the service
-            $popularActions = QuickActionService::getPopularActions($user);
+            // Get ALL favorite quick actions first - these should be the primary items shown
+            $allActions = QuickActionService::getActionsForUser($user);
+            $favoriteIds = QuickActionService::getFavoriteIdentifiers($user);
             
-            foreach ($popularActions as $action) {
+            // Filter to get only favorites and format them for display
+            $favoriteActions = $allActions->filter(function ($action) use ($favoriteIds) {
+                // Check various identifiers to see if this action is favorited
+                $actionId = $action['id'] ?? null;
+                $route = $action['route'] ?? null;
+                $actionKey = $action['action'] ?? null;
+                $customId = isset($action['custom_id']) ? 'custom_' . $action['custom_id'] : null;
+                
+                return in_array($actionId, $favoriteIds) ||
+                       in_array($route, $favoriteIds) ||
+                       in_array($actionKey, $favoriteIds) ||
+                       in_array($customId, $favoriteIds);
+            });
+            
+            // Add all favorite actions with a star indicator
+            foreach ($favoriteActions as $action) {
                 $command = [
                     'type' => 'quick_action',
                     'id' => $action['id'] ?? null,
                     'title' => $action['title'],
-                    'subtitle' => ($action['is_favorite'] ?? false) ? '⭐ Favorite Quick Action • ' . ($action['description'] ?? '') : 'Quick Action • ' . ($action['description'] ?? ''),
-                    'icon' => $action['icon'] ?? 'bolt',
+                    'subtitle' => '⭐ Favorite • ' . ($action['description'] ?? 'Quick Action'),
+                    'icon' => $action['icon'] ?? 'star',
                     'action_data' => $action,
                 ];
                 
@@ -542,85 +558,88 @@ class CommandPalette extends Component
                 
                 $commands[] = $command;
             }
+            
+            // If no favorites, show some popular quick actions
+            if (empty($commands)) {
+                $popularActions = QuickActionService::getPopularActions($user);
+                
+                foreach ($popularActions as $action) {
+                    $command = [
+                        'type' => 'quick_action',
+                        'id' => $action['id'] ?? null,
+                        'title' => $action['title'],
+                        'subtitle' => 'Quick Action • ' . ($action['description'] ?? ''),
+                        'icon' => $action['icon'] ?? 'bolt',
+                        'action_data' => $action,
+                    ];
+                    
+                    // Add route information if available
+                    if (isset($action['route'])) {
+                        $command['route_name'] = $action['route'];
+                        $command['route_params'] = $action['parameters'] ?? [];
+                    }
+                    
+                    // Add custom action ID if it's a custom action
+                    if (isset($action['custom_id'])) {
+                        $command['custom_id'] = $action['custom_id'];
+                    }
+                    
+                    // Add action key for system actions
+                    if (isset($action['action'])) {
+                        $command['action_key'] = $action['action'];
+                    }
+                    
+                    $commands[] = $command;
+                }
+            }
         }
         
-        // Add standard navigation commands
-        $navigationCommands = [
-            [
-                'type' => 'navigation',
-                'title' => 'Dashboard',
-                'subtitle' => 'Navigation • Main',
-                'route_name' => 'dashboard',
-                'route_params' => [],
-                'icon' => 'home'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Clients',
-                'subtitle' => 'Navigation • View all clients',
-                'route_name' => 'clients.index',
-                'route_params' => [],
-                'icon' => 'user-group'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Tickets',
-                'subtitle' => 'Navigation • Support tickets',
-                'route_name' => 'tickets.index',
-                'route_params' => [],
-                'icon' => 'ticket'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Email Inbox',
-                'subtitle' => 'Navigation • Email',
-                'route_name' => 'email.inbox.index',
-                'route_params' => [],
-                'icon' => 'envelope'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Invoices',
-                'subtitle' => 'Navigation • Financial',
-                'route_name' => 'financial.invoices.index',
-                'route_params' => [],
-                'icon' => 'document-text'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Projects',
-                'subtitle' => 'Navigation • Project management',
-                'route_name' => 'projects.index',
-                'route_params' => [],
-                'icon' => 'folder'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Assets',
-                'subtitle' => 'Navigation • Equipment & inventory',
-                'route_name' => 'assets.index',
-                'route_params' => [],
-                'icon' => 'computer-desktop'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Reports',
-                'subtitle' => 'Navigation • Analytics',
-                'route_name' => 'reports.index',
-                'route_params' => [],
-                'icon' => 'chart-bar'
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Settings',
-                'subtitle' => 'Navigation • System configuration',
-                'route_name' => 'settings.index',
-                'route_params' => [],
-                'icon' => 'cog-6-tooth'
-            ]
-        ];
+        // Add standard navigation commands (but only if we don't have too many favorites)
+        $navigationCommands = [];
         
-        // Merge commands, limiting total to reasonable number
+        // Only add navigation if we have less than 5 favorites
+        if (count($commands) < 5) {
+            $navigationCommands = [
+                [
+                    'type' => 'navigation',
+                    'title' => 'Dashboard',
+                    'subtitle' => 'Navigation • Main',
+                    'route_name' => 'dashboard',
+                    'route_params' => [],
+                    'icon' => 'home'
+                ],
+                [
+                    'type' => 'navigation',
+                    'title' => 'Clients',
+                    'subtitle' => 'Navigation • View all clients',
+                    'route_name' => 'clients.index',
+                    'route_params' => [],
+                    'icon' => 'user-group'
+                ],
+                [
+                    'type' => 'navigation',
+                    'title' => 'Tickets',
+                    'subtitle' => 'Navigation • Support tickets',
+                    'route_name' => 'tickets.index',
+                    'route_params' => [],
+                    'icon' => 'ticket'
+                ],
+                [
+                    'type' => 'navigation',
+                    'title' => 'Invoices',
+                    'subtitle' => 'Navigation • Financial',
+                    'route_name' => 'financial.invoices.index',
+                    'route_params' => [],
+                    'icon' => 'document-text'
+                ]
+            ];
+            
+            // Limit navigation commands based on how many favorites we have
+            $maxNavCommands = max(0, 10 - count($commands));
+            $navigationCommands = array_slice($navigationCommands, 0, $maxNavCommands);
+        }
+        
+        // Merge commands, favorites first
         return array_merge($commands, $navigationCommands);
     }
 
