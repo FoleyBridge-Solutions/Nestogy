@@ -24,6 +24,12 @@ class CommandPalette extends Component
     public $selectedIndex = 0;
 
     protected $listeners = ['openCommandPalette' => 'open'];
+    
+    public function mount()
+    {
+        // Initialize with empty results - they'll be populated when opened
+        $this->results = [];
+    }
 
     public function open()
     {
@@ -597,9 +603,15 @@ class CommandPalette extends Component
         // Add standard navigation commands (but only if we don't have too many favorites)
         $navigationCommands = [];
         
-        // Only add navigation if we have less than 5 favorites
-        if (count($commands) < 5) {
-            $navigationCommands = [
+        // Collect routes that are already in favorites to avoid duplicates
+        $existingRoutes = collect($commands)->pluck('route_name')->filter()->toArray();
+        $existingTitles = collect($commands)->pluck('title')->map(function ($title) {
+            return strtolower($title);
+        })->toArray();
+        
+        // Only add navigation if we have less than 8 favorites
+        if (count($commands) < 8) {
+            $allNavigationCommands = [
                 [
                     'type' => 'navigation',
                     'title' => 'Dashboard',
@@ -631,12 +643,64 @@ class CommandPalette extends Component
                     'route_name' => 'financial.invoices.index',
                     'route_params' => [],
                     'icon' => 'document-text'
+                ],
+                [
+                    'type' => 'navigation',
+                    'title' => 'Projects',
+                    'subtitle' => 'Navigation • Project management',
+                    'route_name' => 'projects.index',
+                    'route_params' => [],
+                    'icon' => 'folder'
+                ],
+                [
+                    'type' => 'navigation',
+                    'title' => 'Assets',
+                    'subtitle' => 'Navigation • Equipment & inventory',
+                    'route_name' => 'assets.index',
+                    'route_params' => [],
+                    'icon' => 'computer-desktop'
                 ]
             ];
             
-            // Limit navigation commands based on how many favorites we have
-            $maxNavCommands = max(0, 10 - count($commands));
-            $navigationCommands = array_slice($navigationCommands, 0, $maxNavCommands);
+            // Filter out navigation items that are already in favorites
+            foreach ($allNavigationCommands as $navCommand) {
+                $isDuplicate = false;
+                
+                // Check if route already exists in favorites
+                if (isset($navCommand['route_name']) && in_array($navCommand['route_name'], $existingRoutes)) {
+                    $isDuplicate = true;
+                }
+                
+                // Check if title is similar (to catch things like "View Tickets" vs "Tickets")
+                $navTitleLower = strtolower($navCommand['title']);
+                foreach ($existingTitles as $existingTitle) {
+                    if (str_contains($existingTitle, 'ticket') && str_contains($navTitleLower, 'ticket')) {
+                        $isDuplicate = true;
+                        break;
+                    }
+                    if (str_contains($existingTitle, 'client') && str_contains($navTitleLower, 'client')) {
+                        $isDuplicate = true;
+                        break;
+                    }
+                    if (str_contains($existingTitle, 'invoice') && str_contains($navTitleLower, 'invoice')) {
+                        $isDuplicate = true;
+                        break;
+                    }
+                    if ($existingTitle === $navTitleLower) {
+                        $isDuplicate = true;
+                        break;
+                    }
+                }
+                
+                if (!$isDuplicate) {
+                    $navigationCommands[] = $navCommand;
+                }
+                
+                // Stop if we have enough commands
+                if (count($commands) + count($navigationCommands) >= 10) {
+                    break;
+                }
+            }
         }
         
         // Merge commands, favorites first

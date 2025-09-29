@@ -7,6 +7,7 @@ use App\Models\QuickActionFavorite;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class QuickActionService

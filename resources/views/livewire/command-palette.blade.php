@@ -19,8 +19,8 @@
                 autofocus
             />
             
-            {{-- Debug: Search = {{ $search }}, Results = {{ count($results) }} --}}
-            @if(strlen($search) >= 1 && count($results) > 0)
+            {{-- Show results whenever we have them (from search or popular commands) --}}
+            @if(count($results) > 0)
                 <flux:command.items>
                     @foreach($results as $index => $result)
                         @php
@@ -38,7 +38,7 @@
                                     <div class="font-medium">{{ $result['title'] }}</div>
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $result['subtitle'] }}</div>
                                 </div>
-                                @if($result['type'] === 'action')
+                                @if(isset($result['type']) && in_array($result['type'], ['action', 'quick_action']))
                                     <flux:icon name="arrow-right" variant="mini" class="w-4 h-4 text-zinc-400" />
                                 @endif
                             </div>
@@ -50,12 +50,11 @@
                     No results found for "{{ $search }}"
                 </div>
             @else
+                {{-- Fallback if no results loaded (shouldn't happen) --}}
                 <flux:command.items>
-                    <flux:command.item wire:click="navigateToRoute('dashboard')" icon="home" kbd="⌘H">Go to Dashboard</flux:command.item>
-                    <flux:command.item wire:click="navigateToRoute('tickets.index')" icon="ticket" kbd="⌘T">View All Tickets</flux:command.item>
-                    <flux:command.item wire:click="navigateToRoute('clients.index')" icon="building-office" kbd="⌘C">View All Clients</flux:command.item>
-                    <flux:command.item wire:click="navigateToRoute('tickets.create')" icon="plus-circle">Create New Ticket</flux:command.item>
-                    <flux:command.item wire:click="navigateToRoute('settings.index')" icon="cog-6-tooth" kbd="⌘,">Settings</flux:command.item>
+                    <flux:command.item wire:click="navigateToRoute('dashboard')" icon="home">Go to Dashboard</flux:command.item>
+                    <flux:command.item wire:click="navigateToRoute('tickets.index')" icon="ticket">View All Tickets</flux:command.item>
+                    <flux:command.item wire:click="navigateToRoute('clients.index')" icon="building-office">View All Clients</flux:command.item>
                 </flux:command.items>
             @endif
         </flux:command>
