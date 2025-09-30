@@ -23,10 +23,13 @@ class ClientFactory extends Factory
      */
     public function definition(): array
     {
+        $isCompany = $this->faker->boolean(70); // 70% chance of being a company
+        
         return [
             'company_id' => Company::factory(),
-            'name' => $this->faker->company(),
-            'company_name' => $this->faker->company() . ' Inc.',
+            'name' => $isCompany ? $this->faker->company() : $this->faker->name(),
+            'company_name' => $isCompany ? $this->faker->company() . ' Inc.' : null,
+            'type' => $isCompany ? 'company' : 'individual',
             'email' => $this->faker->unique()->companyEmail(),
             'phone' => $this->faker->phoneNumber(),
             'website' => $this->faker->optional()->url(),

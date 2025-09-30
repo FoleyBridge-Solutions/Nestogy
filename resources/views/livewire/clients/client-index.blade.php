@@ -198,8 +198,11 @@
                         </flux:table.cell>
                         
                         <flux:table.cell>
-                            <flux:badge variant="{{ $client->type === 'company' ? 'primary' : 'outline' }}">
-                                {{ ucfirst($client->type ?? 'individual') }}
+                            @php
+                                $displayType = $client->type ?: ($client->company_name ? 'company' : 'individual');
+                            @endphp
+                            <flux:badge variant="{{ $displayType === 'company' ? 'primary' : 'outline' }}">
+                                {{ ucfirst($displayType) }}
                             </flux:badge>
                         </flux:table.cell>
                         
