@@ -88,10 +88,11 @@
                     <option value="company">Company</option>
                 </flux:select>
                 
-                <flux:select wire:model.live="status" placeholder="All Status">
-                    <option value="">All Status</option>
+                <flux:select wire:model.live="status">
+                    <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
                 </flux:select>
                 
                 <flux:select wire:model.live="perPage">

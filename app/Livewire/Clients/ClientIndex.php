@@ -16,7 +16,7 @@ class ClientIndex extends Component
 
     public $search = '';
     public $type = '';
-    public $status = '';
+    public $status = 'active'; // Default to active clients only
     public $showLeads = false;
     public $perPage = 25;
     public $sortField = 'name';
@@ -32,7 +32,7 @@ class ClientIndex extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'type' => ['except' => ''],
-        'status' => ['except' => ''],
+        'status' => ['except' => 'active'], // Default is active, don't show in URL when it's the default
         'showLeads' => ['except' => false],
         'perPage' => ['except' => 25],
     ];
@@ -198,8 +198,8 @@ class ClientIndex extends Component
         }
 
         // Apply status filter
-        if ($this->status) {
-            $query->where('is_active', $this->status === 'active');
+        if ($this->status && $this->status !== 'all') {
+            $query->where('status', $this->status);
         }
 
         // Apply sorting
