@@ -20,7 +20,7 @@ use App\Domains\Contract\Requests\UpdateContractRequest;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Domains\Contract\Requests\ContractStatusRequest;
 use App\Domains\Contract\Services\ContractGenerationService;
-use App\Services\DigitalSignatureService;
+use App\Domains\Security\Services\DigitalSignatureService;
 use Carbon\Carbon;
 
 /**

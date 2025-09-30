@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\ConfigurationValidationService;
+use App\Domains\Core\Services\ConfigurationValidationService;
 
 class ValidateConfiguration extends Command
 {

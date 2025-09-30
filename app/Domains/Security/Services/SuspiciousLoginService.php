@@ -2,7 +2,7 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use App\Domains\Security\Models\SuspiciousLoginAttempt;
 use App\Domains\Security\Models\TrustedDevice;
 use App\Domains\Security\Models\IpLookupLog;

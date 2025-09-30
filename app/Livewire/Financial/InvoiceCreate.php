@@ -7,7 +7,7 @@ use App\Models\Category;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

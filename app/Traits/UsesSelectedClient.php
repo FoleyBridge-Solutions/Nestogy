@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Http\Request;
 
 trait UsesSelectedClient

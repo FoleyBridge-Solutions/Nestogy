@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Services\VoIPTaxComplianceService;
-use App\Services\VoIPTaxReportingService;
+use App\Domains\Financial\Services\VoIPTaxComplianceService;
+use App\Domains\Financial\Services\VoIPTaxReportingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public OAuth callback route (must be outside auth middleware)
 Route::middleware(['web'])->prefix('email')->name('email.')->group(function () {
-    Route::get('oauth/callback', [\App\Http\Controllers\Email\OAuthCallbackController::class, 'callback'])->name('oauth.callback');
+    Route::get('oauth/callback', [\App\Domains\Email\Controllers\Legacy\OAuthCallbackController::class, 'callback'])->name('oauth.callback');
 });
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('email')->name('email.')->group(function () {
@@ -14,8 +14,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('email')->name('email.')-
         Route::post('accounts/{emailAccount}/test-connection', [\App\Domains\Email\Controllers\EmailAccountController::class, 'testConnection'])->name('accounts.test-connection');
         Route::post('accounts/{emailAccount}/sync', [\App\Domains\Email\Controllers\EmailAccountController::class, 'sync'])->name('accounts.sync');
         Route::post('accounts/{emailAccount}/set-default', [\App\Domains\Email\Controllers\EmailAccountController::class, 'setDefault'])->name('accounts.set-default');
-        Route::post('accounts/connect-oauth', [\App\Http\Controllers\Email\EmailAccountController::class, 'connectOAuth'])->name('accounts.connect-oauth');
-        Route::post('accounts/{emailAccount}/refresh-tokens', [\App\Http\Controllers\Email\EmailAccountController::class, 'refreshTokens'])->name('accounts.refresh-tokens');
+        Route::post('accounts/connect-oauth', [\App\Domains\Email\Controllers\Legacy\EmailAccountController::class, 'connectOAuth'])->name('accounts.connect-oauth');
+        Route::post('accounts/{emailAccount}/refresh-tokens', [\App\Domains\Email\Controllers\Legacy\EmailAccountController::class, 'refreshTokens'])->name('accounts.refresh-tokens');
         
         // Inbox management routes
         Route::get('inbox', [\App\Domains\Email\Controllers\InboxController::class, 'index'])->name('inbox.index');

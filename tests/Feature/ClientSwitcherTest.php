@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Client;
-use App\Services\ClientFavoriteService;
-use App\Services\NavigationService;
+use App\Domains\Client\Services\ClientFavoriteService;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;

@@ -6,7 +6,7 @@ use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Services\ContractTemplateService;
 use App\Domains\Contract\Requests\StoreContractTemplateRequest;
 use App\Domains\Contract\Requests\UpdateContractTemplateRequest;
-use App\Http\Controllers\BaseResourceController;
+use App\Domains\Core\Controllers\BaseResourceController;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;

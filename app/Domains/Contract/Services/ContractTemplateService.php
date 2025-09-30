@@ -3,7 +3,7 @@
 namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\ContractTemplate;
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;

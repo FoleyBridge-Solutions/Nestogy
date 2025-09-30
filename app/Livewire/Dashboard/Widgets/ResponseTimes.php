@@ -81,8 +81,7 @@ class ResponseTimes extends Component
                 ];
             });
         
-        // Get daily trends for chart
-        // Generate data for each day in the period
+        // Get daily trends for chart - optimized bulk query
         $days = match($this->period) {
             'day' => 1,
             'week' => 7,
@@ -90,22 +89,30 @@ class ResponseTimes extends Component
             default => 7
         };
         
+        $endDate = Carbon::now();
+        $startDate = Carbon::now()->subDays($days - 1);
+        
+        // Get all ticket counts in one query
+        $dailyCounts = DB::table('tickets')
+            ->where('company_id', $companyId)
+            ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date')
+            ->toArray();
+        
+        // Build the trends data
         $dailyTrends = collect();
         for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            
-            // Get actual ticket count for this day
-            $ticketCount = DB::table('tickets')
-                ->where('company_id', $companyId)
-                ->whereDate('created_at', $date->toDateString())
-                ->count();
+            $date = Carbon::now()->subDays($i)->toDateString();
+            $ticketCount = $dailyCounts[$date] ?? 0;
             
             // Simulate response time (in reality would calculate from actual response times)
             $baseResponse = 240; // 4 hours base
             $variance = rand(-60, 60);
             
             $dailyTrends->push((object) [
-                'date' => $date->toDateString(),
+                'date' => $date,
                 'avg_response' => $baseResponse + $variance,
                 'ticket_count' => $ticketCount
             ]);

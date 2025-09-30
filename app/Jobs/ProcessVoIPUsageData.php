@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Recurring;
-use App\Services\VoIPUsageService;
+use App\Domains\Product\Services\VoIPUsageService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

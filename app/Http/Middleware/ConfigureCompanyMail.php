@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\Services\DynamicMailConfigService;
+use App\Domains\Email\Services\DynamicMailConfigService;
 
 class ConfigureCompanyMail
 {

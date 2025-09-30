@@ -4,7 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Services\DistributedSchedulerService;
+use App\Domains\Core\Services\DistributedSchedulerService;
 
 class Kernel extends ConsoleKernel
 {

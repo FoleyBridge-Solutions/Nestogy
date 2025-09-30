@@ -14,7 +14,7 @@ use App\Models\RevenueMetric;
 use App\Models\AnalyticsSnapshot;
 use App\Models\KpiCalculation;
 use App\Models\CashFlowProjection;
-use App\Services\VoIPTaxService;
+use App\Domains\Financial\Services\VoIPTaxService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -31,12 +31,24 @@ class FinancialAnalyticsService
 {
     protected int $companyId;
     protected VoIPTaxService $voipTaxService;
+    protected static array $tableExistsCache = [];
     
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
         $this->voipTaxService = new VoIPTaxService();
         $this->voipTaxService->setCompanyId($companyId);
+    }
+    
+    /**
+     * Check if table exists with caching to avoid repeated DB queries
+     */
+    protected function tableExists(string $tableName): bool
+    {
+        if (!isset(self::$tableExistsCache[$tableName])) {
+            self::$tableExistsCache[$tableName] = DB::getSchemaBuilder()->hasTable($tableName);
+        }
+        return self::$tableExistsCache[$tableName];
     }
 
     /**
@@ -336,7 +348,7 @@ class FinancialAnalyticsService
         // Credit note analysis - check if table exists first
         $creditNotes = collect();
         try {
-            if (DB::getSchemaBuilder()->hasTable('credit_notes')) {
+            if ($this->tableExists('credit_notes')) {
                 $creditNotes = CreditNote::where('company_id', $this->companyId)
                     ->whereBetween('issue_date', [$startDate, $endDate])
                     ->with(['items', 'client'])
@@ -350,7 +362,7 @@ class FinancialAnalyticsService
         // Refund analysis - check if table exists first  
         $refunds = collect();
         try {
-            if (DB::getSchemaBuilder()->hasTable('refund_transactions')) {
+            if ($this->tableExists('refund_transactions')) {
                 $refunds = RefundTransaction::whereHas('refundRequest', function($query) {
                         $query->where('company_id', $this->companyId);
                     })
@@ -453,7 +465,7 @@ class FinancialAnalyticsService
         // MRR from recurring invoices - check if table exists first
         $recurringMRR = 0;
         try {
-            if (DB::getSchemaBuilder()->hasTable('recurring_invoices')) {
+            if ($this->tableExists('recurring_invoices')) {
                 $recurringMRR = RecurringInvoice::where('company_id', $this->companyId)
                     ->where('status', 'active')
                     ->where('start_date', '<=', $endDate)
@@ -471,7 +483,7 @@ class FinancialAnalyticsService
         // MRR from active contracts - check if table exists first
         $contractMRR = 0;
         try {
-            if (DB::getSchemaBuilder()->hasTable('contracts')) {
+            if ($this->tableExists('contracts')) {
                 $contractMRR = Contract::where('company_id', $this->companyId)
                     ->where('status', Contract::STATUS_ACTIVE)
                     ->where('start_date', '<=', $endDate)
@@ -649,7 +661,7 @@ class FinancialAnalyticsService
     private function getMRRByServiceType(string $serviceType, Carbon $startDate, Carbon $endDate): float
     {
         try {
-            if (DB::getSchemaBuilder()->hasTable('contracts')) {
+            if ($this->tableExists('contracts')) {
                 return Contract::where('company_id', $this->companyId)
                     ->where('status', Contract::STATUS_ACTIVE)
                     ->where('start_date', '<=', $endDate)

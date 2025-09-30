@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Payment;
 use App\Domains\Financial\Models\Expense;

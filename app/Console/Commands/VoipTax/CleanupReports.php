@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\VoipTax;
 
-use App\Services\VoIPTaxScheduledReportService;
+use App\Domains\Financial\Services\VoIPTaxScheduledReportService;
 use Illuminate\Console\Command;
 
 /**

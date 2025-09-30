@@ -7,7 +7,7 @@ use App\Models\ProductBundle;
 use App\Models\Product;
 use App\Domains\Product\Requests\StoreBundleRequest;
 use App\Domains\Product\Requests\UpdateBundleRequest;
-use App\Services\BundleService;
+use App\Domains\Product\Services\BundleService;
 use Illuminate\Http\Request;
 
 class BundleController extends Controller

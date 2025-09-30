@@ -183,27 +183,36 @@ class TicketChart extends Component
     
     protected function loadTimelineData($companyId)
     {
-        $data = [];
         $days = $this->period === 'week' ? 7 : ($this->period === 'month' ? 30 : 90);
+        $startDate = Carbon::now()->subDays($days - 1);
+        $endDate = Carbon::now();
         
+        // Get all created tickets in one query
+        $createdTickets = Ticket::where('company_id', $companyId)
+            ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date')
+            ->toArray();
+        
+        // Get all resolved tickets in one query
+        $resolvedTickets = Ticket::where('company_id', $companyId)
+            ->whereIn('status', ['resolved', 'closed'])
+            ->whereBetween('updated_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->selectRaw('DATE(updated_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date')
+            ->toArray();
+        
+        // Build the data array
+        $data = [];
         for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            
-            $query = Ticket::where('company_id', $companyId)
-                ->whereDate('created_at', $date);
-                
-            
-            $created = clone $query;
-            // For resolved tickets, use updated_at with status check
-            $resolved = Ticket::where('company_id', $companyId)
-                ->whereIn('status', ['resolved', 'closed'])
-                ->whereDate('updated_at', $date);
-                
+            $date = Carbon::now()->subDays($i)->toDateString();
             
             $data[] = [
-                'date' => $date->toDateString(),
-                'created' => (int)$created->count(),
-                'resolved' => (int)$resolved->count(),
+                'date' => $date,
+                'created' => (int)($createdTickets[$date] ?? 0),
+                'resolved' => (int)($resolvedTickets[$date] ?? 0),
             ];
         }
         

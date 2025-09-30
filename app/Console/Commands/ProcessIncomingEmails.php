@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\ImapService;
+use App\Domains\Email\Services\ImapService;
 use App\Domains\Ticket\Services\TicketService;
 use App\Models\Client;
 use App\Models\Contact;

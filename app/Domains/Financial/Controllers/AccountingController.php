@@ -12,7 +12,7 @@ class AccountingController extends Controller
 {
     public function chartOfAccounts(Request $request): View
     {
-        $accounts = collect(); // TODO: Load from chart_of_accounts table
+        $accounts = \App\Models\Account::orderBy('type')->orderBy('name')->get();
         
         $accountTypes = [
             'assets' => ['Current Assets', 'Fixed Assets', 'Other Assets'],
@@ -33,7 +33,7 @@ class AccountingController extends Controller
 
     public function journalEntries(Request $request): View
     {
-        $entries = collect(); // TODO: Load from journal_entries table
+        $query = \App\Models\Payment::query();
         
         $filters = [
             'date_from' => $request->get('date_from', Carbon::now()->subMonth()),
@@ -42,8 +42,21 @@ class AccountingController extends Controller
             'entry_type' => $request->get('entry_type')
         ];
         
-        $totalDebits = 0; // TODO: Calculate from entries
-        $totalCredits = 0; // TODO: Calculate from entries
+        // Apply filters
+        if ($filters['date_from']) {
+            $query->whereDate('date', '>=', $filters['date_from']);
+        }
+        if ($filters['date_to']) {
+            $query->whereDate('date', '<=', $filters['date_to']);
+        }
+        if ($filters['account_id']) {
+            $query->where('account_id', $filters['account_id']);
+        }
+        
+        $entries = $query->orderBy('date', 'desc')->get();
+        
+        $totalDebits = $entries->where('type', 'debit')->sum('amount');
+        $totalCredits = $entries->where('type', 'credit')->sum('amount');
         
         return view('financial.accounting.journal-entries', compact(
             'entries',
@@ -55,14 +68,26 @@ class AccountingController extends Controller
 
     public function reconciliation(Request $request): View
     {
-        $bankAccounts = collect(); // TODO: Load bank accounts
+        $bankAccounts = \App\Models\Account::whereNotNull('plaid_id')->get();
         $selectedAccount = $request->get('account_id');
         
-        $transactions = collect(); // TODO: Load transactions for reconciliation
-        $unreconciledItems = collect(); // TODO: Load unreconciled items
+        $transactions = collect();
+        $unreconciledItems = collect();
+        $bankBalance = 0;
+        $bookBalance = 0;
         
-        $bankBalance = 0; // TODO: Get from bank feed
-        $bookBalance = 0; // TODO: Calculate from ledger
+        if ($selectedAccount) {
+            $account = \App\Models\Account::find($selectedAccount);
+            $transactions = \App\Models\Payment::where('account_id', $selectedAccount)
+                ->whereNull('reconciled_at')
+                ->get();
+            $unreconciledItems = $transactions;
+            
+            $bankBalance = $account->opening_balance ?? 0;
+            $bookBalance = \App\Models\Payment::where('account_id', $selectedAccount)
+                ->whereNotNull('reconciled_at')
+                ->sum('amount') + $account->opening_balance;
+        }
         $difference = abs($bankBalance - $bookBalance);
         
         return view('financial.accounting.reconciliation', compact(
@@ -99,7 +124,30 @@ class AccountingController extends Controller
                 ->withInput();
         }
         
-        // TODO: Create journal entry
+        DB::transaction(function () use ($validated) {
+            // Create journal entry record
+            $entryData = [
+                'date' => $validated['entry_date'],
+                'description' => $validated['description'],
+                'reference' => $validated['reference_number'],
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+            
+            // Create payment records for each line
+            foreach ($validated['lines'] as $line) {
+                if ($line['debit'] > 0 || $line['credit'] > 0) {
+                    \App\Models\Payment::create([
+                        'date' => $validated['entry_date'],
+                        'account_id' => $line['account_id'],
+                        'amount' => $line['debit'] ?: -$line['credit'],
+                        'type' => $line['debit'] ? 'debit' : 'credit',
+                        'description' => $line['description'] ?? $validated['description'],
+                        'reference_number' => $validated['reference_number']
+                    ]);
+                }
+            }
+        });
         
         return redirect()->route('financial.accounting.journal-entries')
             ->with('success', 'Journal entry created successfully');
@@ -113,7 +161,14 @@ class AccountingController extends Controller
             'notes' => 'nullable|string|max:255'
         ]);
         
-        // TODO: Mark transactions as reconciled
+        // Mark transaction as reconciled
+        $payment = \App\Models\Payment::find($validated['transaction_id']);
+        if ($payment) {
+            $payment->update([
+                'reconciled_at' => now(),
+                'reconciliation_notes' => $validated['notes']
+            ]);
+        }
         
         return redirect()->back()->with('success', 'Transaction reconciled successfully');
     }
@@ -122,9 +177,31 @@ class AccountingController extends Controller
     {
         $date = $request->get('date', Carbon::now());
         
-        // TODO: Generate trial balance report
+        // Generate trial balance data
+        $accounts = \App\Models\Account::with(['payments' => function($query) use ($date) {
+            $query->whereDate('date', '<=', $date);
+        }])->get();
         
-        return response()->download('trial-balance.pdf');
+        $trialBalance = [];
+        foreach ($accounts as $account) {
+            $debits = $account->payments->where('type', 'debit')->sum('amount');
+            $credits = abs($account->payments->where('type', 'credit')->sum('amount'));
+            $balance = $account->opening_balance + $debits - $credits;
+            
+            $trialBalance[] = [
+                'account' => $account->name,
+                'debit' => $debits > $credits ? $balance : 0,
+                'credit' => $credits > $debits ? abs($balance) : 0
+            ];
+        }
+        
+        // For now, return JSON. In production, generate PDF
+        return response()->json([
+            'date' => $date->format('Y-m-d'),
+            'trial_balance' => $trialBalance,
+            'total_debits' => collect($trialBalance)->sum('debit'),
+            'total_credits' => collect($trialBalance)->sum('credit')
+        ]);
     }
 
     public function exportGeneralLedger(Request $request)
@@ -132,14 +209,56 @@ class AccountingController extends Controller
         $dateFrom = $request->get('date_from', Carbon::now()->startOfYear());
         $dateTo = $request->get('date_to', Carbon::now());
         
-        // TODO: Generate general ledger report
+        // Generate general ledger data
+        $accounts = \App\Models\Account::with(['payments' => function($query) use ($dateFrom, $dateTo) {
+            $query->whereBetween('date', [$dateFrom, $dateTo])
+                  ->orderBy('date');
+        }])->get();
         
-        return response()->download('general-ledger.pdf');
+        $ledger = [];
+        foreach ($accounts as $account) {
+            $runningBalance = $account->opening_balance;
+            $entries = [];
+            
+            foreach ($account->payments as $payment) {
+                $amount = $payment->type === 'debit' ? $payment->amount : -$payment->amount;
+                $runningBalance += $amount;
+                
+                $entries[] = [
+                    'date' => $payment->date,
+                    'description' => $payment->description,
+                    'debit' => $payment->type === 'debit' ? $payment->amount : null,
+                    'credit' => $payment->type === 'credit' ? abs($payment->amount) : null,
+                    'balance' => $runningBalance
+                ];
+            }
+            
+            if (count($entries) > 0) {
+                $ledger[$account->name] = $entries;
+            }
+        }
+        
+        // For now, return JSON. In production, generate PDF
+        return response()->json([
+            'period' => [
+                'from' => $dateFrom->format('Y-m-d'),
+                'to' => $dateTo->format('Y-m-d')
+            ],
+            'ledger' => $ledger
+        ]);
     }
 
     private function calculateAccountBalances(): array
     {
-        // TODO: Calculate current balances for all accounts
-        return [];
+        $accounts = \App\Models\Account::with('payments')->get();
+        $balances = [];
+        
+        foreach ($accounts as $account) {
+            $debits = $account->payments->where('type', 'debit')->sum('amount');
+            $credits = abs($account->payments->where('type', 'credit')->sum('amount'));
+            $balances[$account->id] = $account->opening_balance + $debits - $credits;
+        }
+        
+        return $balances;
     }
 }

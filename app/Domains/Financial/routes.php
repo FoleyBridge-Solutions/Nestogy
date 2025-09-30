@@ -132,10 +132,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     });
 
     // Payment routes
-    // Route::resource('payments', \App\Http\Controllers\PaymentController::class);
+    // Route::resource('payments', \App\Domains\Financial\Controllers\PaymentController::class);
 
     // Expense routes
-    Route::resource('expenses', \App\Http\Controllers\ExpenseController::class);
+    Route::resource('expenses', \App\Domains\Financial\Controllers\ExpenseController::class);
 
     // Recurring invoices routes
     Route::resource('recurring-invoices', \App\Domains\Client\Controllers\RecurringInvoiceController::class);

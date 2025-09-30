@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use App\Models\Client;
 use Illuminate\Database\Eloquent\Builder;
 

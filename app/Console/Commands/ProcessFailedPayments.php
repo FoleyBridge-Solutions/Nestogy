@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Domains\Financial\Services\RecurringBillingService;
 use App\Domains\Financial\Models\Invoice;
-use App\Services\NotificationService;
+use App\Domains\Core\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 

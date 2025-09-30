@@ -3,7 +3,7 @@
 namespace App\Domains\Report\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\ReportService;
+use App\Domains\Report\Services\ReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;

@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\TicketReply;
-use App\Services\TaxEngine\SentimentAnalysisService;
+use App\Domains\Financial\Services\TaxEngine\SentimentAnalysisService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

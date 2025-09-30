@@ -13,7 +13,7 @@ use App\Models\Quote;
 use App\Models\Payment;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Financial\Services\InvoiceService;
-use App\Services\VoIPTaxService;
+use App\Domains\Financial\Services\VoIPTaxService;
 use Carbon\Carbon;
 
 /**

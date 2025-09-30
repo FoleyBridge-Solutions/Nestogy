@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Closure;
 use Illuminate\Http\Request;
 

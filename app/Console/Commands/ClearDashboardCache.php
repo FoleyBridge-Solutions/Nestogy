@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\DashboardLazyLoadService;
+use App\Domains\Core\Services\DashboardLazyLoadService;
 use Illuminate\Support\Facades\Cache;
 
 class ClearDashboardCache extends Command

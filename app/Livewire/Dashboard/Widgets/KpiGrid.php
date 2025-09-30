@@ -14,6 +14,7 @@ use App\Traits\LazyLoadable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use App\Domains\Core\Services\DashboardCacheService;
 
 #[Lazy]
 class KpiGrid extends Component  
@@ -67,40 +68,39 @@ class KpiGrid extends Component
         // Get date range based on selected period
         [$startDate, $endDate, $previousStartDate, $previousEndDate] = $this->getDateRanges();
 
+        // Use centralized cache service to get all invoice stats at once
+        $currentStats = DashboardCacheService::getInvoiceStats($companyId, $startDate, $endDate);
+        $previousStats = DashboardCacheService::getInvoiceStats($companyId, $previousStartDate, $previousEndDate);
+        
         // Calculate revenue based on recognition method
         if ($method === 'cash') {
-            $totalRevenue = $this->sumPaymentsBetween($companyId, $startDate, $endDate);
-            $previousRevenue = $this->sumPaymentsBetween($companyId, $previousStartDate, $previousEndDate);
+            $paymentStats = DashboardCacheService::getPaymentStats($companyId, $startDate, $endDate);
+            $previousPaymentStats = DashboardCacheService::getPaymentStats($companyId, $previousStartDate, $previousEndDate);
+            $totalRevenue = $paymentStats['completed_amount'] ?? 0;
+            $previousRevenue = $previousPaymentStats['completed_amount'] ?? 0;
         } else {
-            $totalRevenue = Invoice::where($baseQuery)
-                ->where('status', Invoice::STATUS_PAID)
-                ->whereBetween('date', [$startDate, $endDate])
-                ->sum('amount');
-
-            $previousRevenue = Invoice::where($baseQuery)
-                ->where('status', Invoice::STATUS_PAID)
-                ->whereBetween('date', [$previousStartDate, $previousEndDate])
-                ->sum('amount');
+            $totalRevenue = $currentStats['paid_amount'] ?? 0;
+            $previousRevenue = $previousStats['paid_amount'] ?? 0;
         }
 
         $revenueChange = $this->calculatePercentageChange($totalRevenue, $previousRevenue);
             
-        // Pending Invoices
-        $pendingInvoices = Invoice::where($baseQuery)
-            ->whereIn('status', ['draft', 'sent'])
-            ->sum('amount');
-        $pendingCount = Invoice::where($baseQuery)
-            ->whereIn('status', ['draft', 'sent'])
-            ->count();
+        // Pending Invoices - get from cached stats
+        $pendingInvoices = ($currentStats['draft_amount'] ?? 0) + ($currentStats['sent_amount'] ?? 0);
+        $pendingCount = ($currentStats['draft_count'] ?? 0) + ($currentStats['sent_count'] ?? 0);
             
-        // Active Clients - with actual change calculation
-        $activeClients = Client::where('company_id', $companyId)
-            ->where('status', 'active')
-            ->count();
+        // Active Clients - use cached stats
+        $clientStats = DashboardCacheService::getClientStats($companyId, $endDate);
+        $activeClients = $clientStats['active_count'] ?? 0;
         
-        $newClientsThisPeriod = Client::where('company_id', $companyId)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->count();
+        // Calculate new clients based on period
+        $newClientsThisPeriod = match($this->period) {
+            'month' => $clientStats['new_this_month'] ?? 0,
+            'quarter' => $clientStats['new_this_quarter'] ?? 0,
+            default => Client::where('company_id', $companyId)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count()
+        };
                 
         // Open Tickets
         $openTickets = Ticket::where($baseQuery)

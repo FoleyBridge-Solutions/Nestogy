@@ -3,7 +3,7 @@
 namespace Tests\Unit\Financial\CalculationAccuracy;
 
 use Tests\Unit\Financial\FinancialTestCase;
-use App\Services\VoIPTaxService;
+use App\Domains\Financial\Services\VoIPTaxService;
 use App\Models\InvoiceItem;
 
 /**

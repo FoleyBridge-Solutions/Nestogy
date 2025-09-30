@@ -2,409 +2,304 @@
 
 namespace App\Domains\Email\Services;
 
-use App\Domains\Email\Models\EmailAccount;
-use App\Domains\Email\Models\EmailFolder;
-use App\Domains\Email\Models\EmailMessage;
-use App\Domains\Email\Models\EmailAttachment;
-use App\Domains\Email\Services\CommunicationLogIntegrationService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Client;
 use Webklex\PHPIMAP\Folder;
 use Webklex\PHPIMAP\Message;
+use Illuminate\Support\Collection;
 
 class ImapService
 {
-    private ClientManager $clientManager;
-    private CommunicationLogIntegrationService $communicationLogService;
+    protected ClientManager $clientManager;
+    protected array $config;
+    protected ?Client $client = null;
 
-    public function __construct(CommunicationLogIntegrationService $communicationLogService)
+    public function __construct(ClientManager $clientManager, array $config)
     {
-        $this->clientManager = new ClientManager();
-        $this->communicationLogService = $communicationLogService;
-    }
-
-    public function testConnection(EmailAccount $account): array
-    {
-        try {
-            $client = $this->createClient($account);
-            $client->connect();
-            
-            $folders = $client->getFolders();
-            
-            return [
-                'success' => true,
-                'message' => 'Connection successful',
-                'folder_count' => $folders->count(),
-                'folders' => $folders->map(fn($folder) => $folder->name)->toArray(),
-            ];
-            
-        } catch (\Exception $e) {
-            Log::error('IMAP connection test failed', [
-                'account_id' => $account->id,
-                'error' => $e->getMessage(),
-            ]);
-            
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-            ];
-        }
-    }
-
-    public function syncAccount(EmailAccount $account): array
-    {
-        $results = [
-            'folders_synced' => 0,
-            'messages_synced' => 0,
-            'errors' => [],
-        ];
-
-        try {
-            $client = $this->createClient($account);
-            $client->connect();
-
-            // Sync folders first
-            $this->syncFolders($account, $client);
-            $results['folders_synced'] = $account->folders()->count();
-
-            // Sync messages for each folder
-            foreach ($account->folders as $folder) {
-                try {
-                    $messageCount = $this->syncFolderMessages($account, $folder, $client);
-                    $results['messages_synced'] += $messageCount;
-                } catch (\Exception $e) {
-                    $results['errors'][] = "Folder {$folder->name}: " . $e->getMessage();
-                }
-            }
-
-            $account->update([
-                'last_synced_at' => now(),
-                'sync_error' => null,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Account sync failed', [
-                'account_id' => $account->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            $account->update([
-                'sync_error' => $e->getMessage(),
-            ]);
-
-            $results['errors'][] = $e->getMessage();
-        }
-
-        return $results;
-    }
-
-    public function syncFolders(EmailAccount $account, Client $client): void
-    {
-        $remoteFolders = $client->getFolders();
-        $existingFolders = $account->folders()->pluck('path', 'path');
-
-        foreach ($remoteFolders as $remoteFolder) {
-            $folderPath = $remoteFolder->path;
-            
-            if (!isset($existingFolders[$folderPath])) {
-                EmailFolder::create([
-                    'email_account_id' => $account->id,
-                    'name' => $remoteFolder->name,
-                    'path' => $folderPath,
-                    'type' => $this->determineFolderType($remoteFolder->name, $folderPath),
-                    'message_count' => $remoteFolder->examine()['exists'] ?? 0,
-                    'unread_count' => $remoteFolder->examine()['recent'] ?? 0,
-                    'is_subscribed' => true,
-                    'is_selectable' => $remoteFolder->hasChildren() === false,
-                    'attributes' => $remoteFolder->getAttributes(),
-                    'last_synced_at' => now(),
-                ]);
-            } else {
-                // Update existing folder stats
-                $folder = $account->folders()->where('path', $folderPath)->first();
-                if ($folder) {
-                    $stats = $remoteFolder->examine();
-                    $folder->update([
-                        'message_count' => $stats['exists'] ?? 0,
-                        'last_synced_at' => now(),
-                    ]);
-                }
-            }
-        }
-    }
-
-    public function syncFolderMessages(EmailAccount $account, EmailFolder $folder, Client $client, int $limit = 100): int
-    {
-        $remoteFolder = $client->getFolderByPath($folder->path);
-        if (!$remoteFolder) {
-            throw new \Exception("Folder not found: {$folder->path}");
-        }
-
-        // Get messages from server (newest first)
-        $messages = $remoteFolder->messages()
-            ->setFetchOrder('desc')
-            ->limit($limit, 1)
-            ->get();
-
-        $syncedCount = 0;
-        $existingMessages = $folder->messages()->pluck('uid', 'uid');
-
-        foreach ($messages as $message) {
-            try {
-                $uid = $message->getUid();
-                
-                // Skip if message already exists
-                if (isset($existingMessages[$uid])) {
-                    continue;
-                }
-
-                $this->storeMessage($account, $folder, $message);
-                $syncedCount++;
-
-            } catch (\Exception $e) {
-                Log::warning('Failed to sync message', [
-                    'account_id' => $account->id,
-                    'folder_id' => $folder->id,
-                    'message_uid' => $message->getUid() ?? 'unknown',
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        // Update folder unread count
-        $folder->update([
-            'unread_count' => $folder->messages()->where('is_read', false)->count(),
-            'last_synced_at' => now(),
-        ]);
-
-        return $syncedCount;
-    }
-
-    public function storeMessage(EmailAccount $account, EmailFolder $folder, Message $message): EmailMessage
-    {
-        $messageId = $message->getMessageId();
-        $uid = $message->getUid();
-        
-        // Determine thread ID (simplified - could be enhanced with proper threading)
-        $threadId = $this->generateThreadId($message);
-
-        // Process addresses
-        $fromAddress = $message->getFrom()->first();
-        $toAddresses = $message->getTo()->map(fn($addr) => $addr->mail)->toArray();
-        $ccAddresses = $message->getCc()->map(fn($addr) => $addr->mail)->toArray();
-        $bccAddresses = $message->getBcc()->map(fn($addr) => $addr->mail)->toArray();
-        $replyToAddresses = $message->getReplyTo()->map(fn($addr) => $addr->mail)->toArray();
-
-        // Create message record
-        $emailMessage = EmailMessage::create([
-            'email_account_id' => $account->id,
-            'email_folder_id' => $folder->id,
-            'message_id' => $messageId,
-            'uid' => $uid,
-            'thread_id' => $threadId,
-            'subject' => $message->getSubject(),
-            'from_address' => $fromAddress ? $fromAddress->mail : '',
-            'from_name' => $fromAddress ? $fromAddress->personal : null,
-            'to_addresses' => $toAddresses,
-            'cc_addresses' => $ccAddresses,
-            'bcc_addresses' => $bccAddresses,
-            'reply_to_addresses' => $replyToAddresses,
-            'body_text' => $message->getTextBody(),
-            'body_html' => $message->getHTMLBody(),
-            'preview' => $this->generatePreview($message),
-            'sent_at' => $message->getDate(),
-            'received_at' => now(),
-            'size_bytes' => $message->getSize(),
-            'priority' => $this->determinePriority($message),
-            'is_read' => $message->hasFlag('Seen'),
-            'is_flagged' => $message->hasFlag('Flagged'),
-            'is_draft' => $message->hasFlag('Draft'),
-            'is_answered' => $message->hasFlag('Answered'),
-            'has_attachments' => $message->hasAttachments(),
-            'headers' => $message->getHeader()->toArray(),
-            'flags' => $message->getFlags(),
-        ]);
-
-        // Store attachments
-        if ($message->hasAttachments()) {
-            $this->storeAttachments($emailMessage, $message);
-        }
-
-        // Auto-process if enabled
-        if ($this->communicationLogService->shouldCreateCommunicationLog($emailMessage)) {
-            $this->communicationLogService->createCommunicationLogFromEmail($emailMessage);
-        }
-
-        if ($account->auto_create_tickets && $this->shouldCreateTicket($emailMessage)) {
-            $this->createTicketFromEmail($emailMessage);
-        }
-
-        return $emailMessage;
-    }
-
-    public function storeAttachments(EmailMessage $emailMessage, Message $message): void
-    {
-        foreach ($message->getAttachments() as $attachment) {
-            try {
-                $filename = $attachment->getName() ?: 'attachment_' . uniqid();
-                $contentType = $attachment->getContentType();
-                $sizeBytes = $attachment->getSize();
-                $content = $attachment->getContent();
-
-                // Generate file hash for deduplication
-                $hash = hash('sha256', $content);
-
-                // Store file
-                $storagePath = 'email_attachments/' . $emailMessage->id . '/' . $filename;
-                Storage::disk('local')->put($storagePath, $content);
-
-                // Create attachment record
-                $emailAttachment = EmailAttachment::create([
-                    'email_message_id' => $emailMessage->id,
-                    'filename' => $filename,
-                    'content_type' => $contentType,
-                    'size_bytes' => $sizeBytes,
-                    'content_id' => $attachment->getContentId(),
-                    'is_inline' => $attachment->getDisposition() === 'inline',
-                    'encoding' => $attachment->getEncoding(),
-                    'disposition' => $attachment->getDisposition() ?: 'attachment',
-                    'storage_disk' => 'local',
-                    'storage_path' => $storagePath,
-                    'hash' => $hash,
-                    'is_image' => Str::startsWith($contentType, 'image/'),
-                ]);
-
-                // Generate thumbnail for images
-                if ($emailAttachment->is_image) {
-                    $this->generateThumbnail($emailAttachment);
-                }
-
-            } catch (\Exception $e) {
-                Log::warning('Failed to store attachment', [
-                    'message_id' => $emailMessage->id,
-                    'attachment_name' => $attachment->getName(),
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-    }
-
-    private function createClient(EmailAccount $account): Client
-    {
-        // For OAuth accounts, use the OAuth token manager to ensure valid tokens
-        if ($account->connection_type === 'oauth') {
-            $tokenManager = app(\App\Domains\Email\Services\OAuthTokenManager::class);
-            $tokenManager->ensureValidTokens($account);
-        }
-
-        $config = [
-            'host' => $account->imap_host,
-            'port' => $account->imap_port,
-            'encryption' => $account->imap_encryption,
-            'validate_cert' => $account->imap_validate_cert,
-        ];
-
-        // Configure authentication based on connection type
-        if ($account->connection_type === 'oauth') {
-            // For OAuth, use XOAUTH2 authentication
-            $config['authentication'] = 'oauth';
-            $config['username'] = $account->email_address;
-            $config['password'] = $this->generateOAuthToken($account);
-        } else {
-            // Traditional username/password authentication
-            $config['username'] = $account->imap_username;
-            $config['password'] = $account->imap_password;
-        }
-
-        return $this->clientManager->make($config);
+        $this->clientManager = $clientManager;
+        $this->config = $config;
     }
 
     /**
-     * Generate OAuth token for IMAP authentication
+     * Connect to IMAP server
      */
-    private function generateOAuthToken(EmailAccount $account): string
+    public function connect(string $account = 'default'): bool
     {
-        if (!$account->oauth_access_token) {
-            throw new \Exception('No OAuth access token available');
+        try {
+            $this->client = $this->clientManager->account($account);
+            $this->client->connect();
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('IMAP connection failed', [
+                'account' => $account,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Disconnect from IMAP server
+     */
+    public function disconnect(): void
+    {
+        if ($this->client) {
+            $this->client->disconnect();
+            $this->client = null;
+        }
+    }
+
+    /**
+     * Get all folders
+     */
+    public function getFolders(): Collection
+    {
+        if (!$this->client) {
+            throw new \Exception('IMAP client not connected');
         }
 
-        // For Microsoft 365, use XOAUTH2 format
-        if ($account->oauth_provider === 'microsoft365') {
-            return base64_encode("user={$account->email_address}\x01auth=Bearer {$account->oauth_access_token}\x01\x01");
+        return $this->client->getFolders();
+    }
+
+    /**
+     * Get folder by name
+     */
+    public function getFolder(string $name): ?Folder
+    {
+        if (!$this->client) {
+            throw new \Exception('IMAP client not connected');
         }
 
-        // For Google Workspace, use OAuth2 format
-        if ($account->oauth_provider === 'google_workspace') {
-            return "user={$account->email_address}\x01auth=Bearer {$account->oauth_access_token}\x01\x01";
-        }
-
-        throw new \Exception("Unsupported OAuth provider: {$account->oauth_provider}");
+        return $this->client->getFolder($name);
     }
 
-    private function determineFolderType(string $name, string $path): string
+    /**
+     * Get messages from folder
+     */
+    public function getMessages(string $folderName = 'INBOX', int $limit = 50): Collection
     {
-        $name = strtolower($name);
-        $path = strtolower($path);
-
-        return match (true) {
-            str_contains($name, 'inbox') || $path === 'inbox' => 'inbox',
-            str_contains($name, 'sent') => 'sent',
-            str_contains($name, 'draft') => 'drafts',
-            str_contains($name, 'trash') || str_contains($name, 'deleted') => 'trash',
-            str_contains($name, 'spam') || str_contains($name, 'junk') => 'spam',
-            default => 'custom'
-        };
-    }
-
-    private function generateThreadId(Message $message): string
-    {
-        // Simple thread ID generation - could be enhanced with proper threading logic
-        $subject = preg_replace('/^(re:|fwd?:)\s*/i', '', $message->getSubject() ?: '');
-        return hash('md5', $subject . $message->getMessageId());
-    }
-
-    private function generatePreview(Message $message, int $length = 200): string
-    {
-        $text = $message->getTextBody() ?: strip_tags($message->getHTMLBody() ?: '');
-        return Str::limit($text, $length);
-    }
-
-    private function determinePriority(Message $message): string
-    {
-        $priority = $message->getPriority();
+        $folder = $this->getFolder($folderName);
         
-        return match ($priority) {
-            1, 2 => 'high',
-            4, 5 => 'low',
-            default => 'normal'
-        };
+        if (!$folder) {
+            return collect();
+        }
+
+        return $folder->messages()->limit($limit)->get();
     }
 
-    private function generateThumbnail(EmailAttachment $attachment): void
+    /**
+     * Get unread messages
+     */
+    public function getUnreadMessages(string $folderName = 'INBOX', int $limit = 50): Collection
     {
-        // This would implement thumbnail generation for images
-        // For now, just log that it should be implemented
-        Log::info('Thumbnail generation needed', ['attachment_id' => $attachment->id]);
+        $folder = $this->getFolder($folderName);
+        
+        if (!$folder) {
+            return collect();
+        }
+
+        return $folder->messages()->unseen()->limit($limit)->get();
     }
 
-
-
-    private function shouldCreateTicket(EmailMessage $emailMessage): bool
+    /**
+     * Search messages
+     */
+    public function searchMessages(array $criteria, string $folderName = 'INBOX'): Collection
     {
-        // Logic to determine if a ticket should be created
-        // This is a simple implementation - could be enhanced with filters
-        return $emailMessage->isFromClient() && 
-               $emailMessage->emailFolder->type === 'inbox' &&
-               !$emailMessage->is_answered;
+        $folder = $this->getFolder($folderName);
+        
+        if (!$folder) {
+            return collect();
+        }
+
+        $query = $folder->messages();
+
+        foreach ($criteria as $key => $value) {
+            switch ($key) {
+                case 'from':
+                    $query->from($value);
+                    break;
+                case 'to':
+                    $query->to($value);
+                    break;
+                case 'subject':
+                    $query->subject($value);
+                    break;
+                case 'body':
+                    $query->body($value);
+                    break;
+                case 'since':
+                    $query->since($value);
+                    break;
+                case 'before':
+                    $query->before($value);
+                    break;
+                case 'seen':
+                    if ($value) {
+                        $query->seen();
+                    } else {
+                        $query->unseen();
+                    }
+                    break;
+            }
+        }
+
+        return $query->get();
     }
 
-    private function createTicketFromEmail(EmailMessage $emailMessage): void
+    /**
+     * Mark message as read
+     */
+    public function markAsRead(Message $message): bool
     {
-        // This would create a ticket from the email
-        // Will be implemented when we get to the email-to-ticket task
-        Log::info('Ticket creation needed', ['message_id' => $emailMessage->id]);
+        try {
+            $message->setFlag('Seen');
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to mark message as read', [
+                'message_id' => $message->getMessageId(),
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Mark message as unread
+     */
+    public function markAsUnread(Message $message): bool
+    {
+        try {
+            $message->unsetFlag('Seen');
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to mark message as unread', [
+                'message_id' => $message->getMessageId(),
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Move message to folder
+     */
+    public function moveMessage(Message $message, string $folderName): bool
+    {
+        try {
+            $message->move($folderName);
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to move message', [
+                'message_id' => $message->getMessageId(),
+                'folder' => $folderName,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Delete message
+     */
+    public function deleteMessage(Message $message): bool
+    {
+        try {
+            $message->delete();
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to delete message', [
+                'message_id' => $message->getMessageId(),
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Get message attachments
+     */
+    public function getAttachments(Message $message): Collection
+    {
+        return $message->getAttachments();
+    }
+
+    /**
+     * Download attachment
+     */
+    public function downloadAttachment($attachment, string $path): bool
+    {
+        try {
+            $attachment->save($path);
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to download attachment', [
+                'attachment' => $attachment->getName(),
+                'path' => $path,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Process incoming emails for ticket creation
+     */
+    public function processIncomingEmails(): array
+    {
+        $processed = [];
+        
+        try {
+            $messages = $this->getUnreadMessages();
+            
+            foreach ($messages as $message) {
+                $processed[] = $this->processEmailForTicket($message);
+                $this->markAsRead($message);
+            }
+        } catch (\Exception $e) {
+            logger()->error('Failed to process incoming emails', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $processed;
+    }
+
+    /**
+     * Process individual email for ticket creation
+     */
+    protected function processEmailForTicket(Message $message): array
+    {
+        return [
+            'message_id' => $message->getMessageId(),
+            'from' => $message->getFrom()->first()->mail ?? '',
+            'from_name' => $message->getFrom()->first()->personal ?? '',
+            'subject' => $message->getSubject(),
+            'body' => $message->getHTMLBody() ?: $message->getTextBody(),
+            'date' => $message->getDate(),
+            'attachments' => $this->getAttachments($message)->count(),
+            'processed_at' => now(),
+        ];
+    }
+
+    /**
+     * Test IMAP connection
+     */
+    public function testConnection(string $account = 'default'): bool
+    {
+        try {
+            $client = $this->clientManager->account($account);
+            $client->connect();
+            $folders = $client->getFolders();
+            $client->disconnect();
+            
+            return $folders->count() > 0;
+        } catch (\Exception $e) {
+            logger()->error('IMAP connection test failed', [
+                'account' => $account,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 }

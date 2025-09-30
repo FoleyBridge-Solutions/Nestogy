@@ -4,24 +4,26 @@
     'icon' => null
 ])
 
-<div class="bg-white rounded-lg shadow-sm p-6">
-    @if($title)
-        <div class="flex items-center mb-6">
-            @if($icon)
-                <div class="mr-2">
-                    {{ $icon }}
+<flux:card>
+    <flux:card.header>
+        @if($title)
+            <flux:between>
+                <div class="flex items-center gap-3">
+                    @if($icon)
+                        <flux:icon name="{{ $icon }}" class="w-5 h-5" />
+                    @endif
+                    <div>
+                        <flux:heading size="md">{{ $title }}</flux:heading>
+                        @if($description)
+                            <flux:text size="sm" class="mt-1">{{ $description }}</flux:text>
+                        @endif
+                    </div>
                 </div>
-            @endif
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900">{{ $title }}</h2>
-                @if($description)
-                    <p class="text-sm text-gray-600 mt-1">{{ $description }}</p>
-                @endif
-            </div>
-        </div>
-    @endif
+            </flux:between>
+        @endif
+    </flux:card.header>
     
-    <div {{ $attributes->merge(['class' => '']) }}>
+    <flux:card.body {{ $attributes }}>
         {{ $slot }}
-    </div>
-</div>
+    </flux:card.body>
+</flux:card>

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\DomainRouteManager;
+use App\Domains\Core\Services\DomainRouteManager;
 use Illuminate\Console\Command;
 
 class RoutesDomainList extends Command

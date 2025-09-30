@@ -7,7 +7,7 @@ use App\Domains\Marketing\Models\CampaignSequence;
 use App\Domains\Marketing\Models\CampaignEnrollment;
 use App\Domains\Marketing\Services\CampaignEmailService;
 use App\Domains\Lead\Models\Lead;
-use App\Http\Controllers\BaseResourceController;
+use App\Domains\Core\Controllers\BaseResourceController;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

@@ -11,6 +11,7 @@ return [
     App\Providers\ContractPluginServiceProvider::class,
     App\Providers\SidebarServiceProvider::class,
     App\Providers\PhysicalMailServiceProvider::class,
+    App\Providers\Smtp2goServiceProvider::class,
     Flux\FluxServiceProvider::class,
     FluxPro\FluxProServiceProvider::class,
 ];

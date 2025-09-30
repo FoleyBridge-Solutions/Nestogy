@@ -30,7 +30,7 @@ class LocationController extends Controller
     public function index(Request $request)
     {
         // Get client from session
-        $client = \App\Services\NavigationService::getSelectedClient();
+        $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
         
         // If no client selected, redirect to client selection
         if (!$client) {
@@ -111,7 +111,7 @@ class LocationController extends Controller
     public function create(Request $request)
     {
         // Get client from session
-        $client = \App\Services\NavigationService::getSelectedClient();
+        $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
         
         // If no client selected, redirect to client selection
         if (!$client) {
@@ -135,7 +135,7 @@ class LocationController extends Controller
     public function store(Request $request)
     {
         // Get client from session
-        $client = \App\Services\NavigationService::getSelectedClient();
+        $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
         
         // If no client selected, redirect to client selection
         if (!$client) {
@@ -222,8 +222,8 @@ class LocationController extends Controller
         $client = $location->client;
         
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
-            \App\Services\NavigationService::setSelectedClient($client->id);
+        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
         
         // Authorize using policies
@@ -246,8 +246,8 @@ class LocationController extends Controller
         $client = $location->client;
         
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
-            \App\Services\NavigationService::setSelectedClient($client->id);
+        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
         
         // Authorize using policies
@@ -269,8 +269,8 @@ class LocationController extends Controller
         $client = $location->client;
         
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
-            \App\Services\NavigationService::setSelectedClient($client->id);
+        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
         
         // Authorize access
@@ -356,8 +356,8 @@ class LocationController extends Controller
         $client = $location->client;
         
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Services\NavigationService::getSelectedClient())->id) {
-            \App\Services\NavigationService::setSelectedClient($client->id);
+        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
         
         // Authorize access
@@ -385,7 +385,7 @@ class LocationController extends Controller
     public function export(Request $request)
     {
         // Get client from session
-        $client = \App\Services\NavigationService::getSelectedClient();
+        $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
         
         // If no client selected, redirect to client selection
         if (!$client) {
@@ -495,7 +495,7 @@ class LocationController extends Controller
     public function getContacts()
     {
         // Get client from session
-        $client = \App\Services\NavigationService::getSelectedClient();
+        $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
         
         // If no client selected, return error
         if (!$client) {

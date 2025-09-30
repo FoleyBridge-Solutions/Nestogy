@@ -1,9 +1,0 @@
-@extends('layouts.app')
-
-@section('title', 'Invoices')
-
-@section('content')
-<div class="w-full px-4 py-4">
-    <livewire:financial.invoice-index />
-</div>
-@endsection

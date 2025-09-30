@@ -11,7 +11,7 @@ use App\Domains\Ticket\Services\SLAService;
 use App\Models\User;
 use App\Models\Client;
 use App\Domains\Contract\Models\Contract;
-use App\Services\NotificationService;
+use App\Domains\Core\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

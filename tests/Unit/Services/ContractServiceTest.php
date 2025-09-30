@@ -4,7 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Domains\Contract\Services\ContractService;
 use App\Domains\Contract\Models\Contract;
-use App\Services\TemplateVariableMapper;
+use App\Domains\Core\Services\TemplateVariableMapper;
 use Tests\TestCase;
 use Mockery;
 

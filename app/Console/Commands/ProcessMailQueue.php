@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\UnifiedMailService;
+use App\Domains\Email\Services\UnifiedMailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 

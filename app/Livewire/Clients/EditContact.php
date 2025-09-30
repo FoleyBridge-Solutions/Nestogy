@@ -3,7 +3,7 @@
 namespace App\Livewire\Clients;
 
 use App\Models\Contact;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Livewire\Component;
 
 class EditContact extends Component
@@ -318,7 +318,7 @@ class EditContact extends Component
      */
     public function sendInvitation()
     {
-        $invitationService = app(\App\Services\PortalInvitationService::class);
+        $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
         $result = $invitationService->sendInvitation($this->contact, auth()->user());
         
         if ($result['success']) {
@@ -336,7 +336,7 @@ class EditContact extends Component
      */
     public function resendInvitation()
     {
-        $invitationService = app(\App\Services\PortalInvitationService::class);
+        $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
         $result = $invitationService->resendInvitation($this->contact, auth()->user());
         
         if ($result['success']) {
@@ -353,7 +353,7 @@ class EditContact extends Component
      */
     public function revokeInvitation()
     {
-        $invitationService = app(\App\Services\PortalInvitationService::class);
+        $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
         $result = $invitationService->revokeInvitation($this->contact, auth()->user());
         
         if ($result['success']) {

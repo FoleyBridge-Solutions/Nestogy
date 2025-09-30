@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Http\Request;
 
 class PaymentMethodController extends Controller

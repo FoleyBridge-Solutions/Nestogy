@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\Company;
 use App\Models\CompanyMailSettings;
 use App\Models\MailQueue;
-use App\Services\UnifiedMailService;
+use App\Domains\Email\Services\UnifiedMailService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 

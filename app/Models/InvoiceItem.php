@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToCompany;
-use App\Services\VoIPTaxService;
+use App\Domains\Financial\Services\VoIPTaxService;
 use App\Models\TaxCategory;
 use App\Models\TaxExemptionUsage;
 

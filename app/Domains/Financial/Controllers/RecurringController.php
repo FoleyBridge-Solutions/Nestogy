@@ -17,10 +17,10 @@ use App\Http\Requests\UpdateRecurringRequest;
 use App\Http\Requests\ProcessUsageDataRequest;
 use App\Http\Requests\GenerateRecurringInvoicesRequest;
 use App\Domains\Financial\Services\RecurringBillingService;
-use App\Services\VoIPUsageService;
-use App\Services\VoIPTaxService;
-use App\Services\EmailService;
-use App\Services\PdfService;
+use App\Domains\Product\Services\VoIPUsageService;
+use App\Domains\Financial\Services\VoIPTaxService;
+use App\Domains\Email\Services\EmailService;
+use App\Domains\Core\Services\PdfService;
 use Carbon\Carbon;
 
 /**

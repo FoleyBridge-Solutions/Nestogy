@@ -10,7 +10,7 @@ use App\Domains\Ticket\Services\ResolutionService;
 use App\Domains\Ticket\Services\TimeTrackingService;
 use App\Domains\Ticket\Services\WorkTypeClassificationService;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Traits\UsesSelectedClient;
+use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Traits\FiltersClientsByAssignment;
 use App\Models\Client;
 use App\Models\User;
@@ -90,7 +90,7 @@ class TicketController extends Controller
 
         // Advanced filters
         if ($request->has('overdue')) {
-            $query->where('due_date', '<', now())
+            $query->where('scheduled_at', '<', now())
                 ->whereNotIn('status', ['closed', 'resolved']);
         }
 
@@ -134,7 +134,7 @@ class TicketController extends Controller
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
 
-        $allowedSorts = ['created_at', 'updated_at', 'due_date', 'priority', 'status', 'number', 'sentiment_score', 'sentiment_analyzed_at'];
+        $allowedSorts = ['created_at', 'updated_at', 'scheduled_at', 'priority', 'status', 'number', 'sentiment_score', 'sentiment_analyzed_at'];
         if (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortOrder);
         }
@@ -225,7 +225,7 @@ class TicketController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'due_date' => 'nullable|date|after:now',
+            'scheduled_at' => 'nullable|date|after:now',
             'estimated_hours' => 'nullable|numeric|min:0|max:999.99',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
@@ -254,7 +254,7 @@ class TicketController extends Controller
                     'status' => $request->status,
                     'assigned_to' => $request->assigned_to,
                     'created_by' => auth()->id(),
-                    'due_date' => $request->due_date,
+                    'scheduled_at' => $request->scheduled_at,
                     'estimated_hours' => $request->estimated_hours,
                     'tags' => $request->tags ?? [],
                     'custom_fields' => $request->custom_fields ?? [],
@@ -556,7 +556,7 @@ class TicketController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'due_date' => 'nullable|date',
+            'scheduled_at' => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0|max:999.99',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
@@ -580,7 +580,7 @@ class TicketController extends Controller
                 'priority',
                 'status',
                 'assigned_to',
-                'due_date',
+                'scheduled_at',
                 'estimated_hours',
                 'tags',
                 'custom_fields',
@@ -1339,7 +1339,7 @@ class TicketController extends Controller
                     $ticket->priority,
                     $ticket->assignee?->name ?? 'Unassigned',
                     $ticket->created_at->format('Y-m-d H:i:s'),
-                    $ticket->due_date?->format('Y-m-d H:i:s') ?? '',
+                    $ticket->scheduled_at?->format('Y-m-d H:i:s') ?? '',
                     $ticket->resolved_at?->format('Y-m-d H:i:s') ?? '',
                 ]);
             }
@@ -1463,7 +1463,7 @@ class TicketController extends Controller
     private function trackTicketChanges(Ticket $ticket, array $oldData, array $newData): void
     {
         $changes = [];
-        $significantFields = ['status', 'priority', 'assigned_to', 'due_date'];
+        $significantFields = ['status', 'priority', 'assigned_to', 'scheduled_at'];
 
         foreach ($significantFields as $field) {
             if (isset($oldData[$field]) && isset($newData[$field]) &&
@@ -1834,5 +1834,250 @@ class TicketController extends Controller
             });
 
         return response()->json(['tickets' => $tickets]);
+    }
+    
+    /**
+     * Display active timers
+     */
+    public function activeTimers(Request $request)
+    {
+        $user = auth()->user();
+        $query = \App\Domains\Ticket\Models\TicketTimeEntry::runningTimers()
+            ->with(['ticket', 'user', 'ticket.client'])
+            ->where('company_id', $user->company_id);
+        
+        // If not admin, only show user's own timers
+        if (!$user->hasRole('admin') && !$user->hasPermission('tickets.view-all-timers')) {
+            $query->where('user_id', $user->id);
+        }
+        
+        $activeTimers = $query->orderBy('started_at', 'desc')->paginate(20);
+        
+        // Get timer statistics
+        $statistics = [
+            'total_active' => $activeTimers->total(),
+            'total_time_today' => $this->getTodayTimeStatistics($user),
+            'users_with_timers' => $activeTimers->pluck('user_id')->unique()->count(),
+        ];
+        
+        return view('tickets.active-timers', compact('activeTimers', 'statistics'));
+    }
+    
+    /**
+     * Display SLA violations
+     */
+    public function slaViolations(Request $request)
+    {
+        // Redirect to tickets index with SLA violation filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'sla_violation',
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+        ]);
+    }
+    
+    /**
+     * Display SLA warning tickets
+     */
+    public function slaWarning(Request $request)
+    {
+        // Redirect to tickets index with SLA warning filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'sla_warning',
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+        ]);
+    }
+    
+    /**
+     * Display unassigned tickets
+     */
+    public function unassigned(Request $request)
+    {
+        // Redirect to tickets index with unassigned filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'unassigned',
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+        ]);
+    }
+    
+    /**
+     * Display tickets due today
+     */
+    public function dueToday(Request $request)
+    {
+        // Redirect to tickets index with due today filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'due_today',
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+        ]);
+    }
+    
+    /**
+     * Display team queue
+     */
+    public function teamQueue(Request $request)
+    {
+        // Redirect to tickets index with team filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'team',
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+        ]);
+    }
+    
+    /**
+     * Display tickets waiting for customer
+     */
+    public function customerWaiting(Request $request)
+    {
+        // Redirect to tickets index with waiting customer status
+        return redirect()->route('tickets.index', [
+            'selectedStatuses' => ['waiting_customer']
+        ]);
+    }
+    
+    /**
+     * Display watched tickets
+     */
+    public function watched(Request $request)
+    {
+        // Redirect to tickets index with watched filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'watched'
+        ]);
+    }
+    
+    /**
+     * Display escalated tickets
+     */
+    public function escalated(Request $request)
+    {
+        // Redirect to tickets index with escalated filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'escalated',
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+        ]);
+    }
+    
+    /**
+     * Display merged tickets
+     */
+    public function merged(Request $request)
+    {
+        // Redirect to tickets index with merged filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'merged'
+        ]);
+    }
+    
+    /**
+     * Display archived tickets
+     */
+    public function archive(Request $request)
+    {
+        // Redirect to tickets index with archived filter
+        return redirect()->route('tickets.index', [
+            'filter' => 'archived'
+        ]);
+    }
+    
+
+    
+
+    
+    /**
+     * Display time and billing view
+     */
+    public function timeBilling(Request $request)
+    {
+        $user = auth()->user();
+        $timeEntries = \App\Domains\Ticket\Models\TicketTimeEntry::where('company_id', $user->company_id);
+        
+        if (!$user->hasRole('admin')) {
+            $timeEntries->where('user_id', $user->id);
+        }
+        
+        $timeEntries = $timeEntries->with(['ticket', 'user', 'ticket.client'])
+            ->orderBy('work_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        
+        $statistics = [
+            'total_hours' => $timeEntries->sum('hours_worked'),
+            'billable_hours' => $timeEntries->where('billable', true)->sum('hours_worked'),
+            'total_amount' => $timeEntries->sum('amount'),
+        ];
+        
+        return view('tickets.time-billing', compact('timeEntries', 'statistics'));
+    }
+    
+    /**
+     * Display analytics dashboard
+     */
+    public function analytics(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        
+        // Get various analytics metrics
+        $metrics = [
+            'total_tickets' => Ticket::where('company_id', $company_id)->count(),
+            'open_tickets' => Ticket::where('company_id', $company_id)->whereIn('status', ['open', 'in_progress'])->count(),
+            'avg_resolution_time' => Ticket::where('company_id', $company_id)
+                ->whereNotNull('resolved_at')
+                ->selectRaw("AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600) as avg_hours")
+                ->value('avg_hours'),
+            'tickets_by_priority' => Ticket::where('company_id', $company_id)
+                ->selectRaw('priority, COUNT(*) as count')
+                ->groupBy('priority')
+                ->pluck('count', 'priority'),
+            'tickets_by_status' => Ticket::where('company_id', $company_id)
+                ->selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status'),
+        ];
+        
+        return view('tickets.analytics', compact('metrics'));
+    }
+    
+    /**
+     * Display knowledge base integration
+     */
+    public function knowledgeBase(Request $request)
+    {
+        // This would integrate with knowledge base module
+        $articles = [];
+        $categories = [];
+        
+        return view('tickets.knowledge-base', compact('articles', 'categories'));
+    }
+    
+    /**
+     * Display automation rules
+     */
+    public function automationRules(Request $request)
+    {
+        $workflows = \App\Domains\Ticket\Models\TicketWorkflow::where('company_id', auth()->user()->company_id)
+            ->with(['creator'])
+            ->orderBy('name')
+            ->paginate(20);
+        
+        return view('tickets.automation-rules', compact('workflows'));
+    }
+    
+    /**
+     * Get today's time statistics (helper method)
+     */
+    private function getTodayTimeStatistics($user)
+    {
+        $query = \App\Domains\Ticket\Models\TicketTimeEntry::where('company_id', $user->company_id)
+            ->where('work_date', today());
+            
+        if (!$user->hasRole('admin') && !$user->hasPermission('tickets.view-all-timers')) {
+            $query->where('user_id', $user->id);
+        }
+        
+        return [
+            'total_hours' => $query->sum('hours_worked'),
+            'billable_hours' => $query->billable()->sum('hours_worked'),
+            'entries_count' => $query->count()
+        ];
     }
 }

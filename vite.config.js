@@ -11,6 +11,8 @@ export default defineConfig({
                 'resources/js/contract-clauses.js',
                 'resources/js/it-documentation-diagram.js',
                 'resources/js/components/settings.js',
+                'resources/js/legacy/quote-integration.js',
+                'resources/js/legacy/quote-integration-simple.js',
             ],
             refresh: true,
         }),

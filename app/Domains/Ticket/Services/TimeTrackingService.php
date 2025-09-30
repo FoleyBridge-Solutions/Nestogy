@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Domains\Contract\Models\Contract;
-use App\Services\RateConfigurationService;
+use App\Domains\Product\Services\RateConfigurationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

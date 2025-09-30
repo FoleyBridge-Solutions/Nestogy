@@ -2,9 +2,9 @@
 
 @php
 // Get navigation context
-$selectedClient = \App\Services\NavigationService::getSelectedClient();
-$currentWorkflow = \App\Services\NavigationService::getWorkflowContext(); 
-$workflowHighlights = \App\Services\NavigationService::getWorkflowNavigationHighlights($currentWorkflow);
+$selectedClient = \App\Domains\Core\Services\NavigationService::getSelectedClient();
+$currentWorkflow = \App\Domains\Core\Services\NavigationService::getWorkflowContext(); 
+$workflowHighlights = \App\Domains\Core\Services\NavigationService::getWorkflowNavigationHighlights($currentWorkflow);
 
 // Prepare badge counts
 $badges = [

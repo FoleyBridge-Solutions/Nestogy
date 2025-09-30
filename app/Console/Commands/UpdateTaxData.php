@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TaxEngine\OfficialTaxDataService;
+use App\Domains\Financial\Services\TaxEngine\OfficialTaxDataService;
 use App\Notifications\TexasTaxDataUpdated;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;

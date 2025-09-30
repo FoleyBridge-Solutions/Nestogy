@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Services\SettingsService;
+use App\Domains\Core\Services\SettingsService;
 
 class SettingsUpdateRequest extends FormRequest
 {

@@ -4,7 +4,7 @@ namespace App\Domains\Ticket\Services;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use App\Services\Notification\NotificationDispatcher;
+use App\Domains\Core\Services\Notification\NotificationDispatcher;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 

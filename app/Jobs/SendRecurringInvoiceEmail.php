@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Invoice;
-use App\Services\EmailService;
+use App\Domains\Email\Services\EmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

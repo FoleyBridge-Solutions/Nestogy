@@ -61,7 +61,7 @@
                         </flux:select>
 
                         <!-- Client Filter -->
-                        @php $selectedClient = \App\Services\NavigationService::getSelectedClient(); @endphp
+                        @php $selectedClient = \App\Domains\Core\Services\NavigationService::getSelectedClient(); @endphp
                         @if(!$selectedClient)
                             <flux:select name="client_id" placeholder="All Clients" value="{{ request('client_id') }}">
                                 <flux:select.option value="">All Clients</flux:select.option>

@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Domains\Product\Requests\StoreProductRequest;
 use App\Domains\Product\Requests\UpdateProductRequest;
-use App\Services\ProductService;
+use App\Domains\Product\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;

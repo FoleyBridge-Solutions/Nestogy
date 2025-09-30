@@ -7,7 +7,7 @@ use App\Domains\Ticket\Services\TicketService;
 use App\Domains\Ticket\Services\SLAService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Client;
-use App\Services\NotificationService;
+use App\Domains\Core\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 
 class CheckSlaBreaches extends Command

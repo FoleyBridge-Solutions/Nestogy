@@ -5,7 +5,7 @@ namespace App\Domains\Client\Services;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Location;
@@ -258,25 +258,66 @@ class ClientService extends BaseService
 
 
     /**
-     * Get client statistics
+     * Get client statistics with request-level caching
      */
     public function getClientStats(Client $client)
     {
-        return [
-            'total_tickets' => $client->tickets()->count(),
-            'open_tickets' => $client->tickets()->whereIn('status', ['Open', 'In Progress', 'Waiting'])->count(),
-            'closed_tickets' => $client->tickets()->where('status', 'Closed')->count(),
-            'total_invoices' => $client->invoices()->count(),
-            'draft_invoices' => $client->invoices()->where('status', 'Draft')->count(),
-            'sent_invoices' => $client->invoices()->where('status', 'Sent')->count(),
-            'paid_invoices' => $client->invoices()->where('status', 'Paid')->count(),
-            'total_revenue' => $client->invoices()->where('status', 'Paid')->sum('amount'),
-            'outstanding_balance' => $client->invoices()->whereIn('status', ['Draft', 'Sent'])->sum('amount'),
-            'total_assets' => $client->assets()->whereNull('archived_at')->count(),
-            'active_assets' => $client->assets()->whereNull('archived_at')->where('status', 'Active')->count(),
-            'total_contacts' => $client->contacts()->whereNull('archived_at')->count(),
-            'total_locations' => $client->locations()->whereNull('archived_at')->count(),
-        ];
+        // Use request-level cache to avoid duplicate queries within the same request
+        $cacheKey = 'client_stats_' . $client->id . '_' . request()->fingerprint();
+        
+        return cache()->remember($cacheKey, 1, function() use ($client) {
+            // Execute all counting queries in a single database round trip using raw SQL
+            $ticketStats = DB::selectOne("
+                SELECT 
+                    COUNT(*) as total_tickets,
+                    COUNT(CASE WHEN status IN ('Open', 'In Progress', 'Waiting') THEN 1 END) as open_tickets,
+                    COUNT(CASE WHEN status = 'Closed' THEN 1 END) as closed_tickets
+                FROM tickets 
+                WHERE client_id = ? AND company_id = ? AND archived_at IS NULL
+            ", [$client->id, $client->company_id]);
+            
+            $invoiceStats = DB::selectOne("
+                SELECT 
+                    COUNT(*) as total_invoices,
+                    COUNT(CASE WHEN status = 'Draft' THEN 1 END) as draft_invoices,
+                    COUNT(CASE WHEN status = 'Sent' THEN 1 END) as sent_invoices,
+                    COUNT(CASE WHEN status = 'Paid' THEN 1 END) as paid_invoices,
+                    SUM(CASE WHEN status = 'Paid' THEN amount ELSE 0 END) as total_revenue,
+                    SUM(CASE WHEN status IN ('Draft', 'Sent') THEN amount ELSE 0 END) as outstanding_balance
+                FROM invoices 
+                WHERE client_id = ? AND archived_at IS NULL AND company_id = ?
+            ", [$client->id, $client->company_id]);
+            
+            $assetStats = DB::selectOne("
+                SELECT 
+                    COUNT(*) as total_assets,
+                    COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_assets
+                FROM assets 
+                WHERE client_id = ? AND archived_at IS NULL AND company_id = ?
+            ", [$client->id, $client->company_id]);
+            
+            $contactLocationStats = DB::selectOne("
+                SELECT 
+                    (SELECT COUNT(*) FROM contacts WHERE client_id = ? AND archived_at IS NULL AND company_id = ?) as total_contacts,
+                    (SELECT COUNT(*) FROM locations WHERE client_id = ? AND archived_at IS NULL AND company_id = ?) as total_locations
+            ", [$client->id, $client->company_id, $client->id, $client->company_id]);
+            
+            return [
+                'total_tickets' => $ticketStats->total_tickets,
+                'open_tickets' => $ticketStats->open_tickets,
+                'closed_tickets' => $ticketStats->closed_tickets,
+                'total_invoices' => $invoiceStats->total_invoices,
+                'draft_invoices' => $invoiceStats->draft_invoices,
+                'sent_invoices' => $invoiceStats->sent_invoices,
+                'paid_invoices' => $invoiceStats->paid_invoices,
+                'total_revenue' => $invoiceStats->total_revenue ?? 0,
+                'outstanding_balance' => $invoiceStats->outstanding_balance ?? 0,
+                'total_assets' => $assetStats->total_assets,
+                'active_assets' => $assetStats->active_assets,
+                'total_contacts' => $contactLocationStats->total_contacts,
+                'total_locations' => $contactLocationStats->total_locations,
+            ];
+        });
     }
 
     /**

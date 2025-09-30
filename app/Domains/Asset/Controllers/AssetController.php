@@ -6,7 +6,7 @@ use App\Domains\Asset\Requests\StoreAssetRequest;
 use App\Domains\Asset\Requests\UpdateAssetRequest;
 use App\Domains\Asset\Services\AssetService;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Traits\UsesSelectedClient;
+use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Models\Asset;
 use Illuminate\Http\Request;
 

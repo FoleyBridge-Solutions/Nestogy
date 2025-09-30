@@ -6,29 +6,53 @@ use App\Models\Client;
 use App\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ClientMetricsService
 {
+    protected $metricsCache = [];
+    
     public function getMetrics(Client $client): array
     {
-        return [
-            'sla_compliance' => $this->calculateSlaCompliance($client),
-            'satisfaction_score' => $this->calculateSatisfactionScore($client),
-            'avg_resolution_time' => $this->calculateAvgResolutionTime($client),
-            'monthly_revenue' => $this->calculateMonthlyRevenue($client),
-            'active_services' => $this->getActiveServices($client),
-            'total_monthly_cost' => $this->calculateMonthlyServiceCost($client),
-            'ticket_stats' => $this->getTicketStats($client),
-            'project_stats' => $this->getProjectStats($client),
-        ];
+        // Use request-level cache to avoid duplicate queries within the same request
+        $cacheKey = 'client_metrics_' . $client->id . '_' . request()->fingerprint();
+        
+        return Cache::remember($cacheKey, 1, function() use ($client) {
+            // Store calculated values to avoid recalculating in other methods
+            $this->metricsCache[$client->id] = [
+                'sla_compliance' => $this->calculateSlaCompliance($client),
+                'satisfaction_score' => $this->calculateSatisfactionScore($client),
+                'avg_resolution_time' => $this->calculateAvgResolutionTime($client),
+                'monthly_revenue' => $this->calculateMonthlyRevenue($client),
+                'active_services' => $this->getActiveServices($client),
+                'ticket_stats' => $this->getTicketStats($client),
+                'project_stats' => $this->getProjectStats($client),
+            ];
+            
+            // Calculate total monthly cost after services are fetched
+            $this->metricsCache[$client->id]['total_monthly_cost'] = $this->calculateMonthlyServiceCost(
+                $client, 
+                $this->metricsCache[$client->id]['active_services']
+            );
+            
+            return $this->metricsCache[$client->id];
+        });
     }
 
     protected function calculateSlaCompliance(Client $client): float
     {
-        $tickets = $client->tickets()
-            ->whereNotNull('closed_at')
-            ->where('created_at', '>=', now()->subMonths(3))
-            ->get();
+        // Check cache first to avoid duplicate ticket queries
+        if (isset($this->metricsCache[$client->id]['tickets_for_sla'])) {
+            $tickets = $this->metricsCache[$client->id]['tickets_for_sla'];
+        } else {
+            $tickets = $client->tickets()
+                ->whereNotNull('closed_at')
+                ->where('created_at', '>=', now()->subMonths(3))
+                ->select('id', 'created_at', 'closed_at', 'priority')
+                ->get();
+            
+            $this->metricsCache[$client->id]['tickets_for_sla'] = $tickets;
+        }
 
         if ($tickets->isEmpty()) {
             return 100.0;
@@ -61,30 +85,42 @@ class ClientMetricsService
 
     protected function calculateSatisfactionScore(Client $client): float
     {
+        // Use cached ticket IDs to avoid duplicate query
+        $ticketIds = Cache::remember('client_ticket_ids_' . $client->id, 1, function() use ($client) {
+            return $client->tickets()->pluck('id');
+        });
+        
         // Check if we have a ticket_ratings table or satisfaction field
         $ratings = DB::table('ticket_ratings')
-            ->whereIn('ticket_id', $client->tickets()->pluck('id'))
+            ->whereIn('ticket_id', $ticketIds)
             ->where('created_at', '>=', now()->subMonths(6))
             ->pluck('rating');
 
         if ($ratings->isEmpty()) {
             // If no ratings system, use ticket resolution as proxy
-            $resolvedTickets = $client->tickets()
-                ->where('status', 'closed')
-                ->where('created_at', '>=', now()->subMonths(3))
-                ->count();
+            // Use a single query with conditional counting
+            $ticketCounts = DB::selectOne("
+                SELECT 
+                    COUNT(CASE WHEN status = 'closed' AND created_at >= ? THEN 1 END) as resolved_tickets,
+                    COUNT(CASE WHEN created_at >= ? THEN 1 END) as total_tickets
+                FROM tickets 
+                WHERE client_id = ? AND company_id = ? AND archived_at IS NULL
+            ", [
+                now()->subMonths(3),
+                now()->subMonths(3),
+                $client->id,
+                $client->company_id
+            ]);
                 
-            $totalTickets = $client->tickets()
-                ->where('created_at', '>=', now()->subMonths(3))
-                ->count();
-                
-            if ($totalTickets === 0) {
+            if ($ticketCounts->total_tickets === 0) {
                 return 0.0;
             }
             
             // Base satisfaction on resolution rate + SLA compliance
-            $resolutionRate = ($resolvedTickets / $totalTickets) * 100;
-            $slaCompliance = $this->calculateSlaCompliance($client);
+            $resolutionRate = ($ticketCounts->resolved_tickets / $ticketCounts->total_tickets) * 100;
+            $slaCompliance = isset($this->metricsCache[$client->id]['sla_compliance']) 
+                ? $this->metricsCache[$client->id]['sla_compliance']
+                : $this->calculateSlaCompliance($client);
             
             return round(($resolutionRate * 0.6 + $slaCompliance * 0.4), 1);
         }
@@ -94,10 +130,16 @@ class ClientMetricsService
 
     protected function calculateAvgResolutionTime(Client $client): string
     {
-        $tickets = $client->tickets()
-            ->whereNotNull('closed_at')
-            ->where('created_at', '>=', now()->subMonths(3))
-            ->get();
+        // Reuse cached tickets if available from SLA calculation
+        if (isset($this->metricsCache[$client->id]['tickets_for_sla'])) {
+            $tickets = $this->metricsCache[$client->id]['tickets_for_sla'];
+        } else {
+            $tickets = $client->tickets()
+                ->whereNotNull('closed_at')
+                ->where('created_at', '>=', now()->subMonths(3))
+                ->select('id', 'created_at', 'closed_at')
+                ->get();
+        }
 
         if ($tickets->isEmpty()) {
             return 'N/A';
@@ -171,9 +213,10 @@ class ClientMetricsService
         return $services;
     }
 
-    protected function calculateMonthlyServiceCost(Client $client): float
+    protected function calculateMonthlyServiceCost(Client $client, ?array $services = null): float
     {
-        $services = $this->getActiveServices($client);
+        // Use passed services or fetch them
+        $services = $services ?? $this->getActiveServices($client);
         $totalMonthly = 0;
 
         foreach ($services as $service) {

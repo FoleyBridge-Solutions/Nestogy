@@ -133,6 +133,17 @@ The application follows DDD principles with 13 bounded contexts:
 - **PDF Generation**: Invoice and report generation with customizable templates
 - **Email Queue System**: Background email processing with retry mechanisms
 
+## 📖 Documentation
+
+- [Installation Guide](docs/INSTALL.md)
+- [Development Guide](docs/DEVELOPMENT.md)
+- [Deployment Commands](docs/DEPLOYMENT_COMMANDS.md)
+- [Feature List](docs/NESTOGY_FEATURE_LIST.md)
+- [Claude AI Integration](docs/CLAUDE.md)
+- [AI Agents Documentation](docs/AGENTS.md)
+- [Architecture Documentation](docs/architecture/)
+- [Style Guide](docs/STYLE_GUIDE.md)
+
 ## 🚀 Getting Started
 
 ### Prerequisites

@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Client;
-use App\Services\StripeSubscriptionService;
+use App\Domains\Core\Services\StripeSubscriptionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

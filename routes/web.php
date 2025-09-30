@@ -13,15 +13,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [\App\Http\Controllers\WelcomeController::class, 'index']);
+Route::get('/', [\App\Domains\Core\Controllers\WelcomeController::class, 'index']);
 
 // Setup Wizard Routes (when no companies exist)
 Route::prefix('setup')->name('setup.wizard.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\SetupWizardController::class, 'index'])->name('index');
+    Route::get('/', [\App\Domains\Core\Controllers\SetupWizardController::class, 'index'])->name('index');
     Route::get('/company', \App\Livewire\Setup\SetupWizard::class)->name('company-form');
     // Legacy routes for backward compatibility
-    Route::post('/company', [\App\Http\Controllers\SetupWizardController::class, 'processSetup'])->name('process');
-    Route::post('/test-smtp', [\App\Http\Controllers\SetupWizardController::class, 'testSmtp'])->name('test-smtp');
+    Route::post('/company', [\App\Domains\Core\Controllers\SetupWizardController::class, 'processSetup'])->name('process');
+    Route::post('/test-smtp', [\App\Domains\Core\Controllers\SetupWizardController::class, 'testSmtp'])->name('test-smtp');
 });
 
 // Redirect /register to our SaaS signup form
@@ -31,10 +31,10 @@ Route::get('/register', function () {
 
 // Company Registration Routes (pre-login)
 Route::prefix('signup')->name('signup.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\CompanyRegistrationController::class, 'showRegistrationForm'])->name('form');
-    Route::post('/', [\App\Http\Controllers\CompanyRegistrationController::class, 'register'])->name('submit');
-    Route::get('plans', [\App\Http\Controllers\CompanyRegistrationController::class, 'getPlans'])->name('plans');
-    Route::post('validate-step', [\App\Http\Controllers\CompanyRegistrationController::class, 'validateStep'])->name('validate-step');
+    Route::get('/', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'showRegistrationForm'])->name('form');
+    Route::post('/', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'register'])->name('submit');
+    Route::get('plans', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'getPlans'])->name('plans');
+    Route::post('validate-step', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'validateStep'])->name('validate-step');
 });
 
 // Security verification routes (suspicious login handling)
@@ -59,21 +59,21 @@ Route::prefix('security')->name('security.')->group(function () {
 });
 
 // Additional auth route for checking suspicious login approval
-Route::post('/auth/check-suspicious-login', [\App\Http\Controllers\Auth\LoginController::class, 'checkSuspiciousLoginApproval'])->name('auth.check-suspicious-login');
+Route::post('/auth/check-suspicious-login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'checkSuspiciousLoginApproval'])->name('auth.check-suspicious-login');
 
 // Custom secure authentication routes (override Fortify)
 Route::middleware('guest')->group(function() {
     // Override Fortify's login routes with our secure implementation
-    Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login']);
+    Route::get('/login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'login']);
     
     // Company selection routes for multi-company users
-    Route::get('/auth/select-company', [\App\Http\Controllers\Auth\LoginController::class, 'showCompanySelection'])->name('auth.company-select');
-    Route::post('/auth/select-company', [\App\Http\Controllers\Auth\LoginController::class, 'selectCompany']);
+    Route::get('/auth/select-company', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'showCompanySelection'])->name('auth.company-select');
+    Route::post('/auth/select-company', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'selectCompany']);
 });
 
 // Logout route (authenticated users only)
-Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])
+Route::post('/logout', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
@@ -88,7 +88,7 @@ Route::get('/test-financial', function() {
         return 'Not authenticated';
     }
     
-    $client = \App\Services\NavigationService::getSelectedClient();
+    $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
     $invoicesUrl = '/financial/invoices'; // Direct URL instead of route helper
     
     return 'Authenticated as: ' . auth()->user()->email . 
@@ -103,22 +103,22 @@ Route::get('/dashboard-enhanced', function () {
 
 // Dashboard API endpoints
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/api/dashboard/realtime', [\App\Http\Controllers\DashboardController::class, 'getRealtimeData'])->name('dashboard.realtime');
-    Route::get('/api/dashboard/export', [\App\Http\Controllers\DashboardController::class, 'exportData'])->name('dashboard.export');
-    Route::get('/api/dashboard/notifications', [\App\Http\Controllers\DashboardController::class, 'getNotifications'])->name('dashboard.notifications');
-    Route::post('/api/dashboard/notifications/{id}/read', [\App\Http\Controllers\DashboardController::class, 'markNotificationRead'])->name('dashboard.notifications.read');
+    Route::get('/api/dashboard/realtime', [\App\Domains\Core\Controllers\DashboardController::class, 'getRealtimeData'])->name('dashboard.realtime');
+    Route::get('/api/dashboard/export', [\App\Domains\Core\Controllers\DashboardController::class, 'exportData'])->name('dashboard.export');
+    Route::get('/api/dashboard/notifications', [\App\Domains\Core\Controllers\DashboardController::class, 'getNotifications'])->name('dashboard.notifications');
+    Route::post('/api/dashboard/notifications/{id}/read', [\App\Domains\Core\Controllers\DashboardController::class, 'markNotificationRead'])->name('dashboard.notifications.read');
     
     // Widget endpoints
-    Route::get('/api/dashboard/widget', [\App\Http\Controllers\DashboardController::class, 'getWidgetData'])->name('dashboard.widget');
-    Route::post('/api/dashboard/widgets/multiple', [\App\Http\Controllers\DashboardController::class, 'getMultipleWidgetData'])->name('dashboard.widgets.multiple');
+    Route::get('/api/dashboard/widget', [\App\Domains\Core\Controllers\DashboardController::class, 'getWidgetData'])->name('dashboard.widget');
+    Route::post('/api/dashboard/widgets/multiple', [\App\Domains\Core\Controllers\DashboardController::class, 'getMultipleWidgetData'])->name('dashboard.widgets.multiple');
     
     // Configuration endpoints
-    Route::post('/api/dashboard/config/save', [\App\Http\Controllers\DashboardController::class, 'saveDashboardConfig'])->name('dashboard.config.save');
-    Route::get('/api/dashboard/config/load', [\App\Http\Controllers\DashboardController::class, 'loadDashboardConfig'])->name('dashboard.config.load');
+    Route::post('/api/dashboard/config/save', [\App\Domains\Core\Controllers\DashboardController::class, 'saveDashboardConfig'])->name('dashboard.config.save');
+    Route::get('/api/dashboard/config/load', [\App\Domains\Core\Controllers\DashboardController::class, 'loadDashboardConfig'])->name('dashboard.config.load');
     
     // Preset endpoints
-    Route::get('/api/dashboard/presets', [\App\Http\Controllers\DashboardController::class, 'getPresets'])->name('dashboard.presets');
-    Route::post('/api/dashboard/preset/apply', [\App\Http\Controllers\DashboardController::class, 'applyPreset'])->name('dashboard.preset.apply');
+    Route::get('/api/dashboard/presets', [\App\Domains\Core\Controllers\DashboardController::class, 'getPresets'])->name('dashboard.presets');
+    Route::post('/api/dashboard/preset/apply', [\App\Domains\Core\Controllers\DashboardController::class, 'applyPreset'])->name('dashboard.preset.apply');
 });
 
 // Company switching route
@@ -130,26 +130,26 @@ Route::post('/switch-company', [\App\Http\Middleware\SubsidiaryAccessMiddleware:
 Route::middleware(['auth', 'verified', 'subsidiary.access'])->group(function () {
     Route::prefix('subsidiaries')->name('subsidiaries.')->group(function () {
         // Main subsidiary management
-        Route::get('/', [\App\Http\Controllers\SubsidiaryManagementController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\SubsidiaryManagementController::class, 'store'])->name('store');
-        Route::get('/{subsidiary}', [\App\Http\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
-        Route::get('/{subsidiary}/edit', [\App\Http\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
-        Route::put('/{subsidiary}', [\App\Http\Controllers\SubsidiaryManagementController::class, 'update'])->name('update');
-        Route::delete('/{subsidiary}', [\App\Http\Controllers\SubsidiaryManagementController::class, 'destroy'])->name('destroy');
+        Route::get('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'store'])->name('store');
+        Route::get('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
+        Route::get('/{subsidiary}/edit', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
+        Route::put('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'update'])->name('update');
+        Route::delete('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'destroy'])->name('destroy');
         
         // Hierarchy visualization
-        Route::get('/hierarchy/tree', [\App\Http\Controllers\SubsidiaryManagementController::class, 'hierarchyTree'])->name('hierarchy.tree');
+        Route::get('/hierarchy/tree', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'hierarchyTree'])->name('hierarchy.tree');
         
         // Permission management
-        Route::get('/{subsidiary}/permissions', [\App\Http\Controllers\SubsidiaryManagementController::class, 'permissions'])->name('permissions');
-        Route::post('/permissions/grant', [\App\Http\Controllers\SubsidiaryManagementController::class, 'grantPermission'])->name('grant-permission');
-        Route::delete('/permissions/{permission}/revoke', [\App\Http\Controllers\SubsidiaryManagementController::class, 'revokePermission'])->name('revoke-permission');
+        Route::get('/{subsidiary}/permissions', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'permissions'])->name('permissions');
+        Route::post('/permissions/grant', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'grantPermission'])->name('grant-permission');
+        Route::delete('/permissions/{permission}/revoke', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'revokePermission'])->name('revoke-permission');
         
         // User management
-        Route::get('/{subsidiary}/users', [\App\Http\Controllers\SubsidiaryManagementController::class, 'users'])->name('users');
-        Route::post('/users/grant-access', [\App\Http\Controllers\SubsidiaryManagementController::class, 'grantUserAccess'])->name('grant-user-access');
-        Route::delete('/users/{crossCompanyUser}/revoke', [\App\Http\Controllers\SubsidiaryManagementController::class, 'revokeUserAccess'])->name('revoke-user-access');
+        Route::get('/{subsidiary}/users', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'users'])->name('users');
+        Route::post('/users/grant-access', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'grantUserAccess'])->name('grant-user-access');
+        Route::delete('/users/{crossCompanyUser}/revoke', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'revokeUserAccess'])->name('revoke-user-access');
     });
 });
 
@@ -199,17 +199,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Tax Reporting Routes
         Route::prefix('tax')->name('tax.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\TaxReportController::class, 'index'])->name('index');
-            Route::get('/summary', [\App\Http\Controllers\TaxReportController::class, 'summary'])->name('summary');
-            Route::get('/jurisdictions', [\App\Http\Controllers\TaxReportController::class, 'jurisdictions'])->name('jurisdictions');
-            Route::get('/compliance', [\App\Http\Controllers\TaxReportController::class, 'compliance'])->name('compliance');
-            Route::get('/performance', [\App\Http\Controllers\TaxReportController::class, 'performance'])->name('performance');
-            Route::get('/export', [\App\Http\Controllers\TaxReportController::class, 'export'])->name('export');
-            Route::get('/api-data', [\App\Http\Controllers\TaxReportController::class, 'apiData'])->name('api-data');
+            Route::get('/', [\App\Domains\Financial\Controllers\TaxReportController::class, 'index'])->name('index');
+            Route::get('/summary', [\App\Domains\Financial\Controllers\TaxReportController::class, 'summary'])->name('summary');
+            Route::get('/jurisdictions', [\App\Domains\Financial\Controllers\TaxReportController::class, 'jurisdictions'])->name('jurisdictions');
+            Route::get('/compliance', [\App\Domains\Financial\Controllers\TaxReportController::class, 'compliance'])->name('compliance');
+            Route::get('/performance', [\App\Domains\Financial\Controllers\TaxReportController::class, 'performance'])->name('performance');
+            Route::get('/export', [\App\Domains\Financial\Controllers\TaxReportController::class, 'export'])->name('export');
+            Route::get('/api-data', [\App\Domains\Financial\Controllers\TaxReportController::class, 'apiData'])->name('api-data');
         });
     
     // Search route
-    Route::get('/search', [\App\Http\Controllers\SearchController::class, 'search'])->name('search');
+    Route::get('/search', [\App\Domains\Core\Controllers\SearchController::class, 'search'])->name('search');
     
     // Global AJAX utility routes (authenticated)
     Route::get('shortcuts/active', [App\Domains\Financial\Controllers\QuoteController::class, 'getActiveShortcuts'])->name('shortcuts.active');
@@ -218,47 +218,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Navigation API routes
     Route::prefix('api/navigation')->name('api.navigation.')->group(function () {
-        Route::get('tree', [\App\Http\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
-        Route::get('badges', [\App\Http\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
-        Route::get('suggestions', [\App\Http\Controllers\NavigationController::class, 'getSuggestions'])->name('suggestions');
-        Route::get('recent', [\App\Http\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
-        Route::get('workflow-highlights', [\App\Http\Controllers\NavigationController::class, 'getWorkflowHighlights'])->name('workflow-highlights');
-        Route::post('command', [\App\Http\Controllers\NavigationController::class, 'executeCommand'])->name('command');
-        Route::post('workflow', [\App\Http\Controllers\NavigationController::class, 'setWorkflow'])->name('workflow');
+        Route::get('tree', [\App\Domains\Core\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
+        Route::get('badges', [\App\Domains\Core\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
+        Route::get('suggestions', [\App\Domains\Core\Controllers\NavigationController::class, 'getSuggestions'])->name('suggestions');
+        Route::get('recent', [\App\Domains\Core\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
+        Route::get('workflow-highlights', [\App\Domains\Core\Controllers\NavigationController::class, 'getWorkflowHighlights'])->name('workflow-highlights');
+        Route::post('command', [\App\Domains\Core\Controllers\NavigationController::class, 'executeCommand'])->name('command');
+        Route::post('workflow', [\App\Domains\Core\Controllers\NavigationController::class, 'setWorkflow'])->name('workflow');
     });
     
     // Search API routes
     Route::prefix('api/search')->name('api.search.')->group(function () {
-        Route::get('query', [\App\Http\Controllers\NavigationController::class, 'search'])->name('query');
-        Route::post('command-palette', [\App\Http\Controllers\SearchController::class, 'commandPalette'])->name('command-palette');
+        Route::get('query', [\App\Domains\Core\Controllers\NavigationController::class, 'search'])->name('query');
+        Route::post('command-palette', [\App\Domains\Core\Controllers\SearchController::class, 'commandPalette'])->name('command-palette');
     });
     
     // User routes
     Route::prefix('users')->name('users.')->group(function () {
-        Route::get('/profile', [\App\Http\Controllers\UserController::class, 'profile'])->name('profile');
-        Route::put('/profile', [\App\Http\Controllers\UserController::class, 'updateProfile'])->name('profile.update');
-        Route::put('/password', [\App\Http\Controllers\UserController::class, 'updateOwnPassword'])->name('password.update');
-        Route::put('/settings', [\App\Http\Controllers\UserController::class, 'updateSettings'])->name('settings.update');
-        Route::put('/preferences', [\App\Http\Controllers\UserController::class, 'updatePreferences'])->name('preferences.update');
-        Route::delete('/account', [\App\Http\Controllers\UserController::class, 'destroyAccount'])->name('account.destroy');
-        Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
-        Route::get('/export', [\App\Http\Controllers\UserController::class, 'export'])->name('export.csv');
-        Route::get('/create', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
-        Route::get('/{user}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
-        Route::get('/{user}/edit', [\App\Http\Controllers\UserController::class, 'edit'])->name('edit');
-        Route::put('/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
+        Route::get('/profile', [\App\Domains\Security\Controllers\UserController::class, 'profile'])->name('profile');
+        Route::put('/profile', [\App\Domains\Security\Controllers\UserController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/password', [\App\Domains\Security\Controllers\UserController::class, 'updateOwnPassword'])->name('password.update');
+        Route::put('/settings', [\App\Domains\Security\Controllers\UserController::class, 'updateSettings'])->name('settings.update');
+        Route::put('/preferences', [\App\Domains\Security\Controllers\UserController::class, 'updatePreferences'])->name('preferences.update');
+        Route::delete('/account', [\App\Domains\Security\Controllers\UserController::class, 'destroyAccount'])->name('account.destroy');
+        Route::get('/', [\App\Domains\Security\Controllers\UserController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Domains\Security\Controllers\UserController::class, 'export'])->name('export.csv');
+        Route::get('/create', [\App\Domains\Security\Controllers\UserController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Security\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
+        Route::get('/{user}', [\App\Domains\Security\Controllers\UserController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [\App\Domains\Security\Controllers\UserController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [\App\Domains\Security\Controllers\UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [\App\Domains\Security\Controllers\UserController::class, 'destroy'])->name('destroy');
     });
     
     // Mail Queue Management
     Route::prefix('mail-queue')->name('mail-queue.')->middleware(['auth'])->group(function () {
-        Route::get('/', [\App\Http\Controllers\MailQueueController::class, 'index'])->name('index');
-        Route::get('/{mailQueue}', [\App\Http\Controllers\MailQueueController::class, 'show'])->name('show');
-        Route::post('/{mailQueue}/retry', [\App\Http\Controllers\MailQueueController::class, 'retry'])->name('retry');
-        Route::delete('/{mailQueue}/cancel', [\App\Http\Controllers\MailQueueController::class, 'cancel'])->name('cancel');
-        Route::post('/process', [\App\Http\Controllers\MailQueueController::class, 'process'])->name('process');
-        Route::get('/export/csv', [\App\Http\Controllers\MailQueueController::class, 'export'])->name('export');
+        Route::get('/', [\App\Domains\Email\Controllers\MailQueueController::class, 'index'])->name('index');
+        Route::get('/{mailQueue}', [\App\Domains\Email\Controllers\MailQueueController::class, 'show'])->name('show');
+        Route::post('/{mailQueue}/retry', [\App\Domains\Email\Controllers\MailQueueController::class, 'retry'])->name('retry');
+        Route::delete('/{mailQueue}/cancel', [\App\Domains\Email\Controllers\MailQueueController::class, 'cancel'])->name('cancel');
+        Route::post('/process', [\App\Domains\Email\Controllers\MailQueueController::class, 'process'])->name('process');
+        Route::get('/export/csv', [\App\Domains\Email\Controllers\MailQueueController::class, 'export'])->name('export');
     });
     
     // Include unified settings routes
@@ -281,21 +281,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
     // Collections Dashboard
-    Route::get('/collections/dashboard', [\App\Http\Controllers\CollectionDashboardController::class, 'index'])->name('collections.dashboard');
+    Route::get('/collections/dashboard', [\App\Domains\Financial\Controllers\CollectionDashboardController::class, 'index'])->name('collections.dashboard');
     
     // Customer Billing Portal
     Route::prefix('billing')->name('billing.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\BillingController::class, 'index'])->name('index');
-        Route::get('/subscription', [\App\Http\Controllers\BillingController::class, 'subscription'])->name('subscription');
-        Route::get('/payment-methods', [\App\Http\Controllers\BillingController::class, 'paymentMethods'])->name('payment-methods');
-        Route::get('/change-plan', [\App\Http\Controllers\BillingController::class, 'changePlan'])->name('change-plan');
-        Route::patch('/update-plan', [\App\Http\Controllers\BillingController::class, 'updatePlan'])->name('update-plan');
-        Route::get('/invoices', [\App\Http\Controllers\BillingController::class, 'invoices'])->name('invoices');
-        Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\BillingController::class, 'downloadInvoice'])->name('invoices.download');
-        Route::get('/usage', [\App\Http\Controllers\BillingController::class, 'usage'])->name('usage');
-        Route::post('/cancel-subscription', [\App\Http\Controllers\BillingController::class, 'cancelSubscription'])->name('cancel-subscription');
-        Route::post('/reactivate-subscription', [\App\Http\Controllers\BillingController::class, 'reactivateSubscription'])->name('reactivate-subscription');
-        Route::get('/portal', [\App\Http\Controllers\BillingController::class, 'billingPortal'])->name('portal');
+        Route::get('/', [\App\Domains\Financial\Controllers\BillingController::class, 'index'])->name('index');
+        Route::get('/subscription', [\App\Domains\Financial\Controllers\BillingController::class, 'subscription'])->name('subscription');
+        Route::get('/payment-methods', [\App\Domains\Financial\Controllers\BillingController::class, 'paymentMethods'])->name('payment-methods');
+        Route::get('/change-plan', [\App\Domains\Financial\Controllers\BillingController::class, 'changePlan'])->name('change-plan');
+        Route::patch('/update-plan', [\App\Domains\Financial\Controllers\BillingController::class, 'updatePlan'])->name('update-plan');
+        Route::get('/invoices', [\App\Domains\Financial\Controllers\BillingController::class, 'invoices'])->name('invoices');
+        Route::get('/invoices/{invoice}/download', [\App\Domains\Financial\Controllers\BillingController::class, 'downloadInvoice'])->name('invoices.download');
+        Route::get('/usage', [\App\Domains\Financial\Controllers\BillingController::class, 'usage'])->name('usage');
+        Route::post('/cancel-subscription', [\App\Domains\Financial\Controllers\BillingController::class, 'cancelSubscription'])->name('cancel-subscription');
+        Route::post('/reactivate-subscription', [\App\Domains\Financial\Controllers\BillingController::class, 'reactivateSubscription'])->name('reactivate-subscription');
+        Route::get('/portal', [\App\Domains\Financial\Controllers\BillingController::class, 'billingPortal'])->name('portal');
     });
 });
 
@@ -442,20 +442,20 @@ Route::middleware(['auth', 'verified'])->prefix('api/tax-engine')->name('tax-eng
 
 // Tax Administration Routes (Admin only)
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin/tax')->name('admin.tax.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\TaxAdminController::class, 'index'])->name('index');
-    Route::get('/profiles', [\App\Http\Controllers\TaxAdminController::class, 'profiles'])->name('profiles');
-    Route::get('/rates', [\App\Http\Controllers\TaxAdminController::class, 'rates'])->name('rates');
-    Route::get('/jurisdictions', [\App\Http\Controllers\TaxAdminController::class, 'jurisdictions'])->name('jurisdictions');
-    Route::get('/performance', [\App\Http\Controllers\TaxAdminController::class, 'performance'])->name('performance');
+    Route::get('/', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'index'])->name('index');
+    Route::get('/profiles', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'profiles'])->name('profiles');
+    Route::get('/rates', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'rates'])->name('rates');
+    Route::get('/jurisdictions', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'jurisdictions'])->name('jurisdictions');
+    Route::get('/performance', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'performance'])->name('performance');
     
     // Management actions
-    Route::post('/bulk-operations', [\App\Http\Controllers\TaxAdminController::class, 'bulkOperations'])->name('bulk-operations');
-    Route::post('/clear-caches', [\App\Http\Controllers\TaxAdminController::class, 'clearCaches'])->name('clear-caches');
-    Route::post('/warm-caches', [\App\Http\Controllers\TaxAdminController::class, 'warmCaches'])->name('warm-caches');
+    Route::post('/bulk-operations', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'bulkOperations'])->name('bulk-operations');
+    Route::post('/clear-caches', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'clearCaches'])->name('clear-caches');
+    Route::post('/warm-caches', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'warmCaches'])->name('warm-caches');
     
     // Export and testing
-    Route::get('/export-config', [\App\Http\Controllers\TaxAdminController::class, 'exportConfig'])->name('export-config');
-    Route::post('/test-calculation', [\App\Http\Controllers\TaxAdminController::class, 'testCalculation'])->name('test-calculation');
+    Route::get('/export-config', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'exportConfig'])->name('export-config');
+    Route::post('/test-calculation', [\App\Domains\Financial\Controllers\TaxAdminController::class, 'testCalculation'])->name('test-calculation');
 });
 
 // API routes for contract analytics (for AJAX calls) - TODO: Create ContractAnalyticsController
@@ -476,15 +476,15 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
     Route::post('adobe-sign', [\App\Domains\Contract\Controllers\ContractController::class, 'adobeSignWebhook'])->name('adobe-sign');
     
     // Stripe webhooks
-    Route::post('stripe', [\App\Http\Controllers\Api\Webhooks\StripeWebhookController::class, 'handle'])->name('stripe');
+    Route::post('stripe', [\App\Domains\Financial\Http\Controllers\Webhooks\StripeWebhookController::class, 'handle'])->name('stripe');
 });
 
 // Email Tracking Routes (public)
 Route::prefix('email')->name('email.')->group(function () {
-    Route::get('/track/open/{token}', [\App\Http\Controllers\EmailTrackingController::class, 'trackOpen'])->name('track.open');
-    Route::get('/track/click/{token}', [\App\Http\Controllers\EmailTrackingController::class, 'trackClick'])->name('track.click');
-    Route::get('/view/{uuid}', [\App\Http\Controllers\EmailTrackingController::class, 'viewEmail'])->name('view');
-    Route::get('/unsubscribe/{token}', [\App\Http\Controllers\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
+    Route::get('/track/open/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackOpen'])->name('track.open');
+    Route::get('/track/click/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackClick'])->name('track.click');
+    Route::get('/view/{uuid}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'viewEmail'])->name('view');
+    Route::get('/unsubscribe/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
 });
 
 // Public routes for client portal
@@ -495,9 +495,9 @@ Route::prefix('client-portal')->name('client.')->group(function () {
     
     // Invitation routes
     Route::prefix('invitation')->name('invitation.')->group(function () {
-        Route::get('{token}', [\App\Http\Controllers\Portal\PortalInvitationController::class, 'show'])->name('show');
-        Route::post('{token}/accept', [\App\Http\Controllers\Portal\PortalInvitationController::class, 'accept'])->name('accept');
-        Route::get('expired', [\App\Http\Controllers\Portal\PortalInvitationController::class, 'expired'])->name('expired');
+        Route::get('{token}', [\App\Domains\Client\Controllers\Portal\PortalInvitationController::class, 'show'])->name('show');
+        Route::post('{token}/accept', [\App\Domains\Client\Controllers\Portal\PortalInvitationController::class, 'accept'])->name('accept');
+        Route::get('expired', [\App\Domains\Client\Controllers\Portal\PortalInvitationController::class, 'expired'])->name('expired');
     });
     
     // Authenticated client routes

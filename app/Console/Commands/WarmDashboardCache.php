@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Company;
 use App\Models\User;
-use App\Services\DashboardLazyLoadService;
+use App\Domains\Core\Services\DashboardLazyLoadService;
 use Illuminate\Support\Facades\Auth;
 
 class WarmDashboardCache extends Command

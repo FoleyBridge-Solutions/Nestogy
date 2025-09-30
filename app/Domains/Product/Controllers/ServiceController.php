@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Domains\Product\Requests\StoreServiceRequest;
 use App\Domains\Product\Requests\UpdateServiceRequest;
-use App\Services\ProductService;
+use App\Domains\Product\Services\ProductService;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller

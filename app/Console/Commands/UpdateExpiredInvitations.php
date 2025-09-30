@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\PortalInvitationService;
+use App\Domains\Client\Services\PortalInvitationService;
 use Illuminate\Console\Command;
 
 class UpdateExpiredInvitations extends Command

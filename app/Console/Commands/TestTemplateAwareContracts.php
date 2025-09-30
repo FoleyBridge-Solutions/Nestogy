@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\TemplateVariableMapper;
-use App\Services\TemplateContentGenerator;
-use App\Services\DefinitionRegistry;
+use App\Domains\Core\Services\TemplateVariableMapper;
+use App\Domains\Core\Services\TemplateContentGenerator;
+use App\Domains\Core\Services\DefinitionRegistry;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Models\Contract;
 use App\Models\Client;

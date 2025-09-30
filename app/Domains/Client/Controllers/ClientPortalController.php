@@ -9,7 +9,7 @@ use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractMilestone;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Services\DigitalSignatureService;
+use App\Domains\Security\Services\DigitalSignatureService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -1030,7 +1030,7 @@ class ClientPortalController extends Controller
                 'contact_id' => $contact->id,
                 'company_id' => $contact->company_id,
                 'source' => 'Portal',
-                'created_by' => 1, // Default to admin user ID - TODO: adjust this based on business logic
+                'created_by' => $contact->id, // Use the contact ID who created the ticket
             ]);
             
             \Log::info('Ticket created successfully', ['ticket_id' => $ticket->id]);
@@ -1279,7 +1279,7 @@ class ClientPortalController extends Controller
         try {
             $quote->load(['client', 'items', 'category']);
             
-            $pdfService = app(\App\Services\PdfService::class);
+            $pdfService = app(\App\Domains\Core\Services\PdfService::class);
             $filename = $pdfService->generateFilename('quote', $quote->getFullNumber());
             
             return $pdfService->download(

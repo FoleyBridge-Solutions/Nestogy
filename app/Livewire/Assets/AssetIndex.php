@@ -41,7 +41,7 @@ class AssetIndex extends Component
     public function mount()
     {
         // Get client from session if available
-        $selectedClient = app(\App\Services\NavigationService::class)->getSelectedClient();
+        $selectedClient = app(\App\Domains\Core\Services\NavigationService::class)->getSelectedClient();
         if ($selectedClient) {
             // Extract the ID if it's an object, otherwise use the value directly
             $this->clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;

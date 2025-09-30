@@ -14,6 +14,38 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::post('time-tracking/start-timer', [\App\Domains\Ticket\Controllers\TimeTrackingController::class, 'startTimer'])->name('time-tracking.start-timer');
         Route::post('time-tracking/stop-timer', [\App\Domains\Ticket\Controllers\TimeTrackingController::class, 'stopTimer'])->name('time-tracking.stop-timer');
         
+        // NEW FEATURE ROUTES
+        // Active Timers
+        Route::get('active-timers', [\App\Domains\Ticket\Controllers\TicketController::class, 'activeTimers'])->name('active-timers');
+        
+        // SLA Management
+        Route::get('sla-violations', [\App\Domains\Ticket\Controllers\TicketController::class, 'slaViolations'])->name('sla-violations');
+        Route::get('sla-warning', [\App\Domains\Ticket\Controllers\TicketController::class, 'slaWarning'])->name('sla-warning');
+        
+        // Queue Management
+        Route::get('unassigned', [\App\Domains\Ticket\Controllers\TicketController::class, 'unassigned'])->name('unassigned');
+        Route::get('due-today', [\App\Domains\Ticket\Controllers\TicketController::class, 'dueToday'])->name('due-today');
+        Route::get('team-queue', [\App\Domains\Ticket\Controllers\TicketController::class, 'teamQueue'])->name('team-queue');
+        Route::get('customer-waiting', [\App\Domains\Ticket\Controllers\TicketController::class, 'customerWaiting'])->name('customer-waiting');
+        
+        // Watched & Related
+        Route::get('watched', [\App\Domains\Ticket\Controllers\TicketController::class, 'watched'])->name('watched');
+        Route::get('escalated', [\App\Domains\Ticket\Controllers\TicketController::class, 'escalated'])->name('escalated');
+        Route::get('merged', [\App\Domains\Ticket\Controllers\TicketController::class, 'merged'])->name('merged');
+        
+        // Analytics & Reports
+        Route::get('time-billing', [\App\Domains\Ticket\Controllers\TicketController::class, 'timeBilling'])->name('time-billing');
+        Route::get('analytics', [\App\Domains\Ticket\Controllers\TicketController::class, 'analytics'])->name('analytics');
+        
+        // Knowledge Base Integration
+        Route::get('knowledge-base', [\App\Domains\Ticket\Controllers\TicketController::class, 'knowledgeBase'])->name('knowledge-base');
+        
+        // Automation
+        Route::get('automation-rules', [\App\Domains\Ticket\Controllers\TicketController::class, 'automationRules'])->name('automation-rules');
+        
+        // Archive
+        Route::get('archive', [\App\Domains\Ticket\Controllers\TicketController::class, 'archive'])->name('archive');
+        
         Route::resource('priority-queue', \App\Domains\Ticket\Controllers\PriorityQueueController::class);
         Route::resource('workflows', \App\Domains\Ticket\Controllers\WorkflowController::class);
         Route::resource('assignments', \App\Domains\Ticket\Controllers\AssignmentController::class);

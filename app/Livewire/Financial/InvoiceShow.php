@@ -140,7 +140,7 @@ class InvoiceShow extends Component
             $this->authorize('view', $this->invoice);
 
             // Use the EmailService to send the invoice
-            $emailService = app(\App\Services\EmailService::class);
+            $emailService = app(\App\Domains\Email\Services\EmailService::class);
             
             file_put_contents(storage_path('logs/debug.log'), 
                 '[' . now() . '] Calling EmailService->sendInvoiceEmail' . PHP_EOL, 

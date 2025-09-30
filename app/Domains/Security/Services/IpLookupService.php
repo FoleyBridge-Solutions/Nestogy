@@ -2,7 +2,7 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use App\Domains\Security\Models\IpLookupLog;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Http;

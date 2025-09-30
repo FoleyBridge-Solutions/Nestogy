@@ -6,7 +6,7 @@ use App\Domains\Client\Requests\StoreClientRequest;
 use App\Domains\Client\Requests\UpdateClientRequest;
 use App\Domains\Client\Services\ClientService;
 use App\Domains\Client\Services\ClientMetricsService;
-use App\Http\Controllers\BaseController;
+use App\Domains\Core\Controllers\BaseController;
 use App\Imports\ClientsImport;
 use App\Models\Asset;
 use App\Models\Client;
@@ -58,7 +58,7 @@ class ClientController extends BaseController
 
         // Automatically select the newly created client
         if (isset($data['client_id'])) {
-            \App\Services\NavigationService::setSelectedClient($data['client_id']);
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($data['client_id']);
         }
 
         return $data;
@@ -77,7 +77,7 @@ class ClientController extends BaseController
         }
 
         // Check if there's a selected client in the session
-        $selectedClient = \App\Services\NavigationService::getSelectedClient();
+        $selectedClient = \App\Domains\Core\Services\NavigationService::getSelectedClient();
         if ($selectedClient) {
             // Verify client belongs to user's company
             if ($selectedClient->company_id === $user->company_id) {
@@ -87,7 +87,7 @@ class ClientController extends BaseController
                 return $this->show($request, $selectedClient);
             } else {
                 // Clear invalid client selection
-                \App\Services\NavigationService::clearSelectedClient();
+                \App\Domains\Core\Services\NavigationService::clearSelectedClient();
             }
         }
 
@@ -267,7 +267,7 @@ class ClientController extends BaseController
             $clientData = $this->clientService->createClient($request->validated());
 
             // Automatically select the newly created client
-            \App\Services\NavigationService::setSelectedClient($clientData['client_id']);
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($clientData['client_id']);
 
             Log::info('Client created and selected', [
                 'client_id' => $clientData['client_id'],
@@ -313,7 +313,7 @@ class ClientController extends BaseController
 
         // Set the client in session and redirect to clients index
         // This will let dynamicIndex handle displaying the client
-        \App\Services\NavigationService::setSelectedClient($client->id);
+        \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
 
         // Only redirect if we're accessing via /clients/{id} directly
         // Check if we're being called from dynamicIndex to avoid loop
@@ -738,7 +738,7 @@ class ClientController extends BaseController
             $client->convertToCustomer();
 
             // Automatically select the converted client
-            \App\Services\NavigationService::setSelectedClient($client->id);
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
 
             Log::info('Lead converted to customer and selected', [
                 'client_id' => $client->id,
@@ -961,7 +961,7 @@ class ClientController extends BaseController
         $this->authorize('view', $client);
 
         try {
-            \App\Services\NavigationService::setSelectedClient($client->id);
+            \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
 
             Log::info('Client selected for session', [
                 'client_id' => $client->id,
@@ -1045,7 +1045,7 @@ class ClientController extends BaseController
     public function clearSelection(Request $request)
     {
         try {
-            \App\Services\NavigationService::clearSelectedClient();
+            \App\Domains\Core\Services\NavigationService::clearSelectedClient();
 
             Log::info('Client selection cleared', [
                 'user_id' => Auth::id(),

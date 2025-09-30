@@ -9,7 +9,7 @@ use App\Models\Client;
 use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Services\ContractClauseService;
-use App\Services\TemplateVariableMapper;
+use App\Domains\Core\Services\TemplateVariableMapper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,12 +36,12 @@ class ContractGenerationService
         PdfService $pdfService = null,
         DigitalSignatureService $signatureService = null,
         ContractClauseService $clauseService = null,
-        \App\Services\TemplateVariableMapper $variableMapper = null
+        \App\Domains\Core\Services\TemplateVariableMapper $variableMapper = null
     ) {
         $this->pdfService = $pdfService;
         $this->signatureService = $signatureService;
         $this->clauseService = $clauseService ?: new ContractClauseService();
-        $this->variableMapper = $variableMapper ?: new \App\Services\TemplateVariableMapper();
+        $this->variableMapper = $variableMapper ?: new \App\Domains\Core\Services\TemplateVariableMapper();
     }
 
     /**

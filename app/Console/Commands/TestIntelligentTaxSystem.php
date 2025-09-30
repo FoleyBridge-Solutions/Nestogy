@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\TaxEngine\IntelligentJurisdictionDiscoveryService;
-use App\Services\TaxEngine\NationwideTaxDiscoveryService;
-use App\Services\TaxEngine\LocalTaxRateService;
+use App\Domains\Financial\Services\TaxEngine\IntelligentJurisdictionDiscoveryService;
+use App\Domains\Financial\Services\TaxEngine\NationwideTaxDiscoveryService;
+use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
 
 class TestIntelligentTaxSystem extends Command
 {

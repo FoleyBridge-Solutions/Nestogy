@@ -39,7 +39,7 @@
     <!-- Company Customization Styles -->
     @if(auth()->check() && auth()->user()->company_id)
         @php
-            $settingsService = app(\App\Services\SettingsService::class);
+            $settingsService = app(\App\Domains\Core\Services\SettingsService::class);
             $companyCss = $settingsService->generateCompanyCss(auth()->user()->company);
         @endphp
         <style>
@@ -112,8 +112,7 @@
             <!-- Navbar Timer -->
             @livewire('navbar-timer')
             
-            <!-- Command Palette -->
-            @livewire('command-palette')
+            <!-- Command Palette loaded in main layout -->
             
             {{-- Global keyboard shortcut for command palette --}}
             <script>

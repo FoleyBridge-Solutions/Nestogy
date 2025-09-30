@@ -93,7 +93,7 @@ class SaasRegistrationTest extends TestCase
     public function test_complete_registration_creates_all_records()
     {
         // Mock Stripe service to avoid actual API calls
-        $this->mock(\App\Services\StripeSubscriptionService::class, function ($mock) {
+        $this->mock(\App\Domains\Core\Services\StripeSubscriptionService::class, function ($mock) {
             $mock->shouldReceive('createCompleteSubscription')
                 ->once()
                 ->andReturn([
@@ -183,7 +183,7 @@ class SaasRegistrationTest extends TestCase
     public function test_registration_fails_when_stripe_fails()
     {
         // Mock Stripe service to simulate failure
-        $this->mock(\App\Services\StripeSubscriptionService::class, function ($mock) {
+        $this->mock(\App\Domains\Core\Services\StripeSubscriptionService::class, function ($mock) {
             $mock->shouldReceive('createCompleteSubscription')
                 ->once()
                 ->andThrow(new \Exception('Stripe error'));
@@ -215,7 +215,7 @@ class SaasRegistrationTest extends TestCase
     public function test_user_is_logged_in_after_successful_registration()
     {
         // Mock Stripe service
-        $this->mock(\App\Services\StripeSubscriptionService::class, function ($mock) {
+        $this->mock(\App\Domains\Core\Services\StripeSubscriptionService::class, function ($mock) {
             $mock->shouldReceive('createCompleteSubscription')
                 ->once()
                 ->andReturn([

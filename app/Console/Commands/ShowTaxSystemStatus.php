@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\TaxEngine\IntelligentJurisdictionDiscoveryService;
-use App\Services\TaxEngine\NationwideTaxDiscoveryService;
+use App\Domains\Financial\Services\TaxEngine\IntelligentJurisdictionDiscoveryService;
+use App\Domains\Financial\Services\TaxEngine\NationwideTaxDiscoveryService;
 use Illuminate\Support\Facades\DB;
 
 class ShowTaxSystemStatus extends Command

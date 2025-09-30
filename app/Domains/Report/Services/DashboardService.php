@@ -269,30 +269,40 @@ class DashboardService
     }
 
     /**
-     * Get trend data for charts
+     * Get trend data for charts - Optimized to use single queries instead of loop
      */
     protected function getTrendData(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
+        // Get all revenue data in a single query
+        $revenueByDate = Payment::where('company_id', $companyId)
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->selectRaw('DATE(payment_date) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date')
+            ->toArray();
+
+        // Get all ticket counts in a single query
+        $ticketsByDate = Ticket::where('company_id', $companyId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->pluck('count', 'date')
+            ->toArray();
+
+        // Build the arrays with all dates
         $days = [];
         $revenueData = [];
         $ticketData = [];
         $current = $startDate->copy();
 
         while ($current <= $endDate) {
+            $dateKey = $current->format('Y-m-d');
             $days[] = $current->format('M j');
             
-            // Daily revenue
-            $dailyRevenue = Payment::where('company_id', $companyId)
-                ->whereDate('payment_date', $current)
-                ->where('status', 'completed')
-                ->sum('amount');
-            $revenueData[] = (float) $dailyRevenue;
-
-            // Daily tickets
-            $dailyTickets = Ticket::where('company_id', $companyId)
-                ->whereDate('created_at', $current)
-                ->count();
-            $ticketData[] = $dailyTickets;
+            // Use pre-fetched data instead of queries
+            $revenueData[] = (float) ($revenueByDate[$dateKey] ?? 0);
+            $ticketData[] = (int) ($ticketsByDate[$dateKey] ?? 0);
 
             $current->addDay();
         }

@@ -49,6 +49,11 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'smtp2go' => [
+            'transport' => 'smtp2go',
+            'api_key' => env('SMTP2GO_API_KEY'),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -115,4 +120,15 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mail Tracking Configuration
+    |--------------------------------------------------------------------------
+    */
+    'track_opens' => env('MAIL_TRACK_OPENS', true),
+    'track_clicks' => env('MAIL_TRACK_CLICKS', true),
+    'queue_immediately' => env('MAIL_QUEUE_IMMEDIATELY', false),
+
 ];
+
+

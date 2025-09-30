@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use App\Services\PermissionService;
+use App\Domains\Security\Services\PermissionService;
 
 /**
  * Enhanced permission checking trait with wildcard support

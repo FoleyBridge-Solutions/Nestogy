@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             // Register domain routes using the Domain Route Manager
-            $routeManager = app(\App\Services\DomainRouteManager::class);
+            $routeManager = app(\App\Domains\Core\Services\DomainRouteManager::class);
             $routeManager->registerDomainRoutes();
         }
     )

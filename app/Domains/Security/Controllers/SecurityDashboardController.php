@@ -2,7 +2,7 @@
 
 namespace App\Domains\Security\Controllers;
 
-use App\Http\Controllers\BaseResourceController;
+use App\Domains\Core\Controllers\BaseResourceController;
 use App\Domains\Security\Services\IpLookupService;
 use App\Domains\Security\Services\SuspiciousLoginService;
 use App\Domains\Security\Models\IpLookupLog;

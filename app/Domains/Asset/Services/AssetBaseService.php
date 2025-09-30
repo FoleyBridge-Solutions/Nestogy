@@ -2,7 +2,7 @@
 
 namespace App\Domains\Asset\Services;
 
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 
 abstract class AssetBaseService extends BaseService

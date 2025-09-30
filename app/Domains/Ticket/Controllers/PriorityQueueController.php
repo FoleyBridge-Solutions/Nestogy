@@ -47,19 +47,25 @@ class PriorityQueueController extends Controller
         }
 
         if ($priority = $request->get('priority_level')) {
-            $query->where('priority_level', $priority);
+            $query->whereHas('ticket', function($q) use ($priority) {
+                $q->where('priority', $priority);
+            });
         }
 
         if ($request->has('sla_breached')) {
             if ($request->boolean('sla_breached')) {
-                $query->where('sla_due_at', '<', now());
+                $query->where('sla_deadline', '<', now());
             } else {
-                $query->where('sla_due_at', '>=', now());
+                $query->where('sla_deadline', '>=', now());
             }
         }
 
         if ($request->has('escalated')) {
-            $query->where('is_escalated', $request->boolean('escalated'));
+            if ($request->boolean('escalated')) {
+                $query->whereNotNull('escalated_at');
+            } else {
+                $query->whereNull('escalated_at');
+            }
         }
 
         // Order by queue position for queue view, by priority score for other views
@@ -75,7 +81,7 @@ class PriorityQueueController extends Controller
 
         // Get filter options
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
+                        ->whereNull('archived_at')
                         ->orderBy('name')
                         ->get();
 
@@ -167,11 +173,9 @@ class PriorityQueueController extends Controller
         $queueItem = TicketPriorityQueue::create([
             'company_id' => auth()->user()->company_id,
             'ticket_id' => $request->ticket_id,
-            'priority_level' => $request->priority_level,
             'queue_position' => $nextPosition,
-            'sla_due_at' => $slaDueAt,
-            'escalation_rule_config' => $request->escalation_rule_config ?? [],
-            'notes' => $request->notes,
+            'sla_deadline' => $slaDueAt,
+            'escalation_rules' => $request->escalation_rule_config ?? [],
             'added_by' => auth()->id(),
         ]);
 
@@ -245,16 +249,14 @@ class PriorityQueueController extends Controller
         }
 
         // Calculate new SLA due date if hours changed
-        $slaDueAt = $queueItem->sla_due_at;
+        $slaDueAt = $queueItem->sla_deadline;
         if ($request->filled('sla_hours')) {
             $slaDueAt = now()->addHours($request->sla_hours);
         }
 
         $queueItem->update([
-            'priority_level' => $request->priority_level,
-            'sla_due_at' => $slaDueAt,
-            'escalation_rule_config' => $request->escalation_rule_config ?? [],
-            'notes' => $request->notes,
+            'sla_deadline' => $slaDueAt,
+            'escalation_rules' => $request->escalation_rule_config ?? [],
         ]);
 
         // Recalculate priority score
@@ -347,7 +349,7 @@ class PriorityQueueController extends Controller
                                            ->where('company_id', auth()->user()->company_id)
                                            ->first();
 
-            if ($queueItem && !$queueItem->is_escalated) {
+            if ($queueItem && !$queueItem->escalated_at) {
                 $queueItem->escalate($request->escalation_reason);
                 $escalatedCount++;
             }
@@ -376,7 +378,7 @@ class PriorityQueueController extends Controller
             // Sort based on method
             switch ($method) {
                 case 'sla':
-                    $sorted = $queueItems->sortBy('sla_due_at');
+                    $sorted = $queueItems->sortBy('sla_deadline');
                     break;
                 case 'age':
                     $sorted = $queueItems->sortBy('created_at');
@@ -435,21 +437,22 @@ class PriorityQueueController extends Controller
             foreach ($queueItems as $item) {
                 switch ($request->action) {
                     case 'escalate':
-                        if (!$item->is_escalated) {
+                        if (!$item->escalated_at) {
                             $item->escalate($request->escalation_reason);
                             $count++;
                         }
                         break;
 
                     case 'change_priority':
-                        $item->update(['priority_level' => $request->priority_level]);
+                        // Update priority on the ticket itself
+                        $item->ticket->update(['priority' => $request->priority_level]);
                         $item->calculatePriorityScore();
                         $count++;
                         break;
 
                     case 'set_sla':
                         $item->update([
-                            'sla_due_at' => now()->addHours($request->sla_hours)
+                            'sla_deadline' => now()->addHours($request->sla_hours)
                         ]);
                         $count++;
                         break;
@@ -499,7 +502,7 @@ class PriorityQueueController extends Controller
 
         foreach ($queueItems as $item) {
             $urgency = $this->calculateUrgency($item);
-            $matrix[$item->priority_level][$urgency][] = $item;
+            $matrix[$item->ticket->priority ?? 'medium'][$urgency][] = $item;
         }
 
         return response()->json([
@@ -565,11 +568,11 @@ class PriorityQueueController extends Controller
                     $item->ticket->ticket_number,
                     $item->ticket->subject,
                     $item->ticket->client->name,
-                    $item->priority_level,
+                    $item->ticket->priority,
                     $item->priority_score,
                     $item->ticket->assignee?->name,
-                    $item->sla_due_at?->format('Y-m-d H:i'),
-                    $item->is_escalated ? 'Yes' : 'No',
+                    $item->sla_deadline?->format('Y-m-d H:i'),
+                    $item->escalated_at ? 'Yes' : 'No',
                     $item->created_at->diffInDays(now()),
                     $item->created_at->format('Y-m-d H:i:s'),
                 ]);
@@ -589,15 +592,20 @@ class PriorityQueueController extends Controller
         $query = TicketPriorityQueue::where('company_id', auth()->user()->company_id);
 
         $totalItems = $query->count();
-        $escalatedItems = $query->where('is_escalated', true)->count();
-        $slaBreach = $query->where('sla_due_at', '<', now())->count();
+        $escalatedItems = $query->whereNotNull('escalated_at')->count();
+        $slaBreach = $query->where('sla_deadline', '<', now())->count();
         
-        $avgWaitTime = $query->selectRaw('AVG(DATEDIFF(NOW(), created_at)) as avg_days')
+        // PostgreSQL compatible date difference calculation
+        $avgWaitTime = $query->selectRaw("AVG(EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400) as avg_days")
                             ->value('avg_days');
 
-        $priorityBreakdown = $query->selectRaw('priority_level, COUNT(*) as count')
-                                  ->groupBy('priority_level')
-                                  ->pluck('count', 'priority_level')
+        // Get priority breakdown from tickets
+        $priorityBreakdown = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
+                                  ->whereHas('ticket')
+                                  ->with('ticket:id,priority')
+                                  ->get()
+                                  ->groupBy('ticket.priority')
+                                  ->map->count()
                                   ->toArray();
 
         return [
@@ -629,11 +637,11 @@ class PriorityQueueController extends Controller
      */
     private function calculateUrgency(TicketPriorityQueue $item): string
     {
-        if ($item->sla_due_at && $item->sla_due_at < now()) {
+        if ($item->sla_deadline && $item->sla_deadline < now()) {
             return 'High';
         }
 
-        if ($item->sla_due_at && $item->sla_due_at < now()->addHours(24)) {
+        if ($item->sla_deadline && $item->sla_deadline < now()->addHours(24)) {
             return 'Medium';
         }
 

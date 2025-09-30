@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Settings\UnifiedSettingsController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\PermissionController;
+use App\Domains\Core\Controllers\Settings\UnifiedSettingsController;
+use App\Domains\Security\Controllers\RoleController;
+use App\Domains\Security\Controllers\PermissionController;
 
 /*
 |--------------------------------------------------------------------------

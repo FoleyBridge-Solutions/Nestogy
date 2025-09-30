@@ -2,7 +2,7 @@
 
 @php
 // Get selected client for client-aware navigation
-$selectedClient = \App\Services\NavigationService::getSelectedClient();
+$selectedClient = \App\Domains\Core\Services\NavigationService::getSelectedClient();
 
 $domains = [
     'clients' => [

@@ -4,6 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\VoIPTaxController;
 use App\Http\Controllers\Api\VoIPTaxReportController;
+use App\Domains\Financial\Http\Controllers\Webhooks\StripeWebhookController;
+use App\Domains\Integration\Http\Controllers\Webhooks\ConnectWiseWebhookController;
+use App\Domains\Integration\Http\Controllers\Webhooks\DattoWebhookController;
+use App\Domains\Integration\Http\Controllers\Webhooks\NinjaOneWebhookController;
+use App\Domains\Integration\Http\Controllers\Webhooks\GenericRMMWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,16 +91,16 @@ Route::middleware(['auth:sanctum'])->prefix('voip-tax')->name('api.voip-tax.')->
 
 // Authentication API Routes (Public)
 Route::prefix('auth')->name('api.auth.')->group(function () {
-    Route::post('login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
-    Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register');
-    // Route::post('forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('forgot-password');
+    Route::post('login', [App\Domains\Security\Controllers\Auth\LoginController::class, 'login'])->name('login');
+    Route::post('register', [App\Domains\Security\Controllers\Auth\RegisterController::class, 'register'])->name('register');
+    // Route::post('forgot-password', [App\Domains\Security\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('forgot-password');
     
     // Authenticated Auth Routes
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
-        Route::post('refresh', [App\Http\Controllers\Auth\LoginController::class, 'refresh'])->name('refresh');
+        Route::post('logout', [App\Domains\Security\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+        Route::post('refresh', [App\Domains\Security\Controllers\Auth\LoginController::class, 'refresh'])->name('refresh');
         Route::get('me', function (Request $request) { return $request->user(); })->name('me');
-        // Route::post('change-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('change-password');
+        // Route::post('change-password', [App\Domains\Security\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('change-password');
     });
 });
 
@@ -104,10 +109,10 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     
     // Dashboard API
     Route::prefix('dashboard')->name('api.dashboard.')->group(function () {
-        Route::get('stats', [App\Http\Controllers\DashboardController::class, 'getData'])->name('stats');
-        Route::get('notifications', [App\Http\Controllers\DashboardController::class, 'getNotifications'])->name('notifications');
-        Route::patch('notifications/{id}/read', [App\Http\Controllers\DashboardController::class, 'markNotificationRead'])->name('notifications.read');
-        Route::get('recent-activity', [App\Http\Controllers\DashboardController::class, 'getData'])->name('recent-activity');
+        Route::get('stats', [App\Domains\Core\Controllers\DashboardController::class, 'getData'])->name('stats');
+        Route::get('notifications', [App\Domains\Core\Controllers\DashboardController::class, 'getNotifications'])->name('notifications');
+        Route::patch('notifications/{id}/read', [App\Domains\Core\Controllers\DashboardController::class, 'markNotificationRead'])->name('notifications.read');
+        Route::get('recent-activity', [App\Domains\Core\Controllers\DashboardController::class, 'getData'])->name('recent-activity');
     });
     
     // Client Management API
@@ -141,7 +146,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         
         // Quick Access
         Route::get('active', [App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('active');
-        Route::get('search', [App\Http\Controllers\SearchController::class, 'clients'])->name('search');
+        Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'clients'])->name('search');
         Route::post('{client}/mark-accessed', [App\Domains\Client\Controllers\ClientController::class, 'markAsAccessed'])->name('mark-accessed');
         Route::post('validate-batch', [App\Domains\Client\Controllers\ClientController::class, 'validateBatch'])->name('validate-batch');
         
@@ -186,7 +191,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // });
         
         // Quick Access
-        Route::get('search', [App\Http\Controllers\SearchController::class, 'tickets'])->name('search');
+        Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'tickets'])->name('search');
         Route::get('my-tickets', [App\Domains\Ticket\Controllers\TicketController::class, 'myTickets'])->name('my-tickets');
         
         // New SLA and Bulk Operations
@@ -217,7 +222,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // Asset Data
         Route::get('types', [App\Domains\Asset\Controllers\AssetController::class, 'getAssetTypes'])->name('types');
         Route::get('warranties/expiring', [App\Domains\Asset\Controllers\AssetController::class, 'getExpiringWarranties'])->name('warranties.expiring');
-        Route::get('search', [App\Http\Controllers\SearchController::class, 'assets'])->name('search');
+        Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'assets'])->name('search');
     });
 
     // Financial Management API
@@ -275,7 +280,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             // Quick Access
             Route::get('overdue', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('overdue');
             Route::get('draft', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('draft');
-            Route::get('search', [App\Http\Controllers\SearchController::class, 'invoices'])->name('search');
+            Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'invoices'])->name('search');
             
             // New Recurring and Automation
             Route::post('generate-recurring', [App\Http\Controllers\Api\InvoicesController::class, 'generateRecurring'])->name('generate-recurring');
@@ -286,28 +291,28 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         
         // Payment API - Commented out until PaymentController is implemented
         // Route::prefix('payments')->name('payments.')->group(function () {
-        //     Route::get('/', [App\Http\Controllers\PaymentController::class, 'index'])->name('index');
-        //     Route::post('/', [App\Http\Controllers\PaymentController::class, 'store'])->name('store');
-        //     Route::get('{payment}', [App\Http\Controllers\PaymentController::class, 'show'])->name('show');
-        //     Route::put('{payment}', [App\Http\Controllers\PaymentController::class, 'update'])->name('update');
-        //     Route::delete('{payment}', [App\Http\Controllers\PaymentController::class, 'destroy'])->name('destroy');
+        //     Route::get('/', [App\Domains\Financial\Controllers\PaymentController::class, 'index'])->name('index');
+        //     Route::post('/', [App\Domains\Financial\Controllers\PaymentController::class, 'store'])->name('store');
+        //     Route::get('{payment}', [App\Domains\Financial\Controllers\PaymentController::class, 'show'])->name('show');
+        //     Route::put('{payment}', [App\Domains\Financial\Controllers\PaymentController::class, 'update'])->name('update');
+        //     Route::delete('{payment}', [App\Domains\Financial\Controllers\PaymentController::class, 'destroy'])->name('destroy');
             
         //     // Payment Actions
-        //     Route::post('{payment}/refund', [App\Http\Controllers\PaymentController::class, 'refund'])->name('refund');
-        //     Route::get('recent', [App\Http\Controllers\PaymentController::class, 'recent'])->name('recent');
+        //     Route::post('{payment}/refund', [App\Domains\Financial\Controllers\PaymentController::class, 'refund'])->name('refund');
+        //     Route::get('recent', [App\Domains\Financial\Controllers\PaymentController::class, 'recent'])->name('recent');
         // });
         
         // Expense API
         Route::prefix('expenses')->name('expenses.')->group(function () {
-            Route::get('/', [App\Http\Controllers\ExpenseController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\ExpenseController::class, 'store'])->name('store');
-            Route::get('{expense}', [App\Http\Controllers\ExpenseController::class, 'show'])->name('show');
-            Route::put('{expense}', [App\Http\Controllers\ExpenseController::class, 'update'])->name('update');
-            Route::delete('{expense}', [App\Http\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
+            Route::get('/', [App\Domains\Financial\Controllers\ExpenseController::class, 'index'])->name('index');
+            Route::post('/', [App\Domains\Financial\Controllers\ExpenseController::class, 'store'])->name('store');
+            Route::get('{expense}', [App\Domains\Financial\Controllers\ExpenseController::class, 'show'])->name('show');
+            Route::put('{expense}', [App\Domains\Financial\Controllers\ExpenseController::class, 'update'])->name('update');
+            Route::delete('{expense}', [App\Domains\Financial\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
             
             // Expense Categories
-            Route::get('categories', [App\Http\Controllers\ExpenseController::class, 'categories'])->name('categories');
-            Route::get('monthly-summary', [App\Http\Controllers\ExpenseController::class, 'monthlySummary'])->name('monthly-summary');
+            Route::get('categories', [App\Domains\Financial\Controllers\ExpenseController::class, 'categories'])->name('categories');
+            Route::get('monthly-summary', [App\Domains\Financial\Controllers\ExpenseController::class, 'monthlySummary'])->name('monthly-summary');
         });
     });
 
@@ -415,30 +420,30 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     // User Management API
     Route::prefix('users')->name('api.users.')->group(function () {
         // Profile Routes (All Users)
-        Route::get('profile', [App\Http\Controllers\UserController::class, 'profile'])->name('profile');
-        Route::put('profile', [App\Http\Controllers\UserController::class, 'updateProfile'])->name('profile.update');
-        Route::put('profile/settings', [App\Http\Controllers\UserController::class, 'updateSettings'])->name('profile.settings.update');
+        Route::get('profile', [App\Domains\Security\Controllers\UserController::class, 'profile'])->name('profile');
+        Route::put('profile', [App\Domains\Security\Controllers\UserController::class, 'updateProfile'])->name('profile.update');
+        Route::put('profile/settings', [App\Domains\Security\Controllers\UserController::class, 'updateSettings'])->name('profile.settings.update');
         
         // User Management (Admin/Manager Only)
         Route::middleware('role:manager')->group(function () {
-            Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
-            Route::get('{user}', [App\Http\Controllers\UserController::class, 'show'])->name('show');
-            Route::put('{user}', [App\Http\Controllers\UserController::class, 'update'])->name('update');
-            Route::delete('{user}', [App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
+            Route::get('/', [App\Domains\Security\Controllers\UserController::class, 'index'])->name('index');
+            Route::post('/', [App\Domains\Security\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
+            Route::get('{user}', [App\Domains\Security\Controllers\UserController::class, 'show'])->name('show');
+            Route::put('{user}', [App\Domains\Security\Controllers\UserController::class, 'update'])->name('update');
+            Route::delete('{user}', [App\Domains\Security\Controllers\UserController::class, 'destroy'])->name('destroy');
             
             // User Actions
-            Route::patch('{user}/role', [App\Http\Controllers\UserController::class, 'updateRole'])->name('role.update');
-            Route::patch('{user}/status', [App\Http\Controllers\UserController::class, 'updateStatus'])->name('status.update');
-            Route::patch('{user}/archive', [App\Http\Controllers\UserController::class, 'archive'])->name('archive');
-            Route::patch('{user}/restore', [App\Http\Controllers\UserController::class, 'restore'])->name('restore');
+            Route::patch('{user}/role', [App\Domains\Security\Controllers\UserController::class, 'updateRole'])->name('role.update');
+            Route::patch('{user}/status', [App\Domains\Security\Controllers\UserController::class, 'updateStatus'])->name('status.update');
+            Route::patch('{user}/archive', [App\Domains\Security\Controllers\UserController::class, 'archive'])->name('archive');
+            Route::patch('{user}/restore', [App\Domains\Security\Controllers\UserController::class, 'restore'])->name('restore');
             
-            Route::get('{user}/activity', [App\Http\Controllers\UserController::class, 'getActivityLog'])->name('activity');
+            Route::get('{user}/activity', [App\Domains\Security\Controllers\UserController::class, 'getActivityLog'])->name('activity');
         });
         
         // Quick Access
-        Route::get('technicians', [App\Http\Controllers\UserController::class, 'getActiveTechnicians'])->name('technicians');
-        Route::get('online', [App\Http\Controllers\UserController::class, 'getOnlineUsers'])->name('online');
+        Route::get('technicians', [App\Domains\Security\Controllers\UserController::class, 'getActiveTechnicians'])->name('technicians');
+        Route::get('online', [App\Domains\Security\Controllers\UserController::class, 'getOnlineUsers'])->name('online');
     });
     
     // File Management API
@@ -454,20 +459,20 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     
     // Navigation API (for command palette and workflow navigation)
     Route::prefix('navigation')->name('api.navigation.')->group(function () {
-        Route::get('tree', [App\Http\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
-        Route::get('badges', [App\Http\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
-        Route::get('suggestions', [App\Http\Controllers\NavigationController::class, 'getSuggestions'])->name('suggestions');
-        Route::post('command', [App\Http\Controllers\NavigationController::class, 'executeCommand'])->name('command');
-        Route::post('workflow', [App\Http\Controllers\NavigationController::class, 'setWorkflow'])->name('workflow');
-        Route::get('workflow-highlights', [App\Http\Controllers\NavigationController::class, 'getWorkflowHighlights'])->name('workflow-highlights');
-        Route::get('recent', [App\Http\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
+        Route::get('tree', [App\Domains\Core\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
+        Route::get('badges', [App\Domains\Core\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
+        Route::get('suggestions', [App\Domains\Core\Controllers\NavigationController::class, 'getSuggestions'])->name('suggestions');
+        Route::post('command', [App\Domains\Core\Controllers\NavigationController::class, 'executeCommand'])->name('command');
+        Route::post('workflow', [App\Domains\Core\Controllers\NavigationController::class, 'setWorkflow'])->name('workflow');
+        Route::get('workflow-highlights', [App\Domains\Core\Controllers\NavigationController::class, 'getWorkflowHighlights'])->name('workflow-highlights');
+        Route::get('recent', [App\Domains\Core\Controllers\NavigationController::class, 'getRecentItems'])->name('recent');
     });
     
     // Keyboard Shortcuts API
     Route::prefix('shortcuts')->name('api.shortcuts.')->group(function () {
         Route::get('active', [App\Http\Controllers\Api\ShortcutsController::class, 'active'])->name('active');
-        Route::post('execute', [App\Http\Controllers\ShortcutController::class, 'executeShortcutCommand'])->name('execute');
-        Route::get('help', [App\Http\Controllers\ShortcutController::class, 'getShortcutHelp'])->name('help');
+        Route::post('execute', [App\Domains\Core\Controllers\ShortcutController::class, 'executeShortcutCommand'])->name('execute');
+        Route::get('help', [App\Domains\Core\Controllers\ShortcutController::class, 'getShortcutHelp'])->name('help');
     });
     
     // Product Catalog API (using the main products API above)
@@ -483,38 +488,38 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     
     // Search API
     Route::prefix('search')->name('api.search.')->group(function () {
-        Route::get('global', [App\Http\Controllers\SearchController::class, 'global'])->name('global');
-        Route::get('clients', [App\Http\Controllers\SearchController::class, 'clients'])->name('clients');
-        Route::get('tickets', [App\Http\Controllers\SearchController::class, 'tickets'])->name('tickets');
-        Route::get('assets', [App\Http\Controllers\SearchController::class, 'assets'])->name('assets');
-        Route::get('invoices', [App\Http\Controllers\SearchController::class, 'invoices'])->name('invoices');
-        Route::get('users', [App\Http\Controllers\SearchController::class, 'users'])->name('users');
-        Route::get('projects', [App\Http\Controllers\SearchController::class, 'projects'])->name('projects');
-        Route::get('query', [App\Http\Controllers\NavigationController::class, 'search'])->name('query');
-        Route::get('suggestions', [App\Http\Controllers\SearchController::class, 'suggestions'])->name('suggestions');
+        Route::get('global', [App\Domains\Core\Controllers\SearchController::class, 'global'])->name('global');
+        Route::get('clients', [App\Domains\Core\Controllers\SearchController::class, 'clients'])->name('clients');
+        Route::get('tickets', [App\Domains\Core\Controllers\SearchController::class, 'tickets'])->name('tickets');
+        Route::get('assets', [App\Domains\Core\Controllers\SearchController::class, 'assets'])->name('assets');
+        Route::get('invoices', [App\Domains\Core\Controllers\SearchController::class, 'invoices'])->name('invoices');
+        Route::get('users', [App\Domains\Core\Controllers\SearchController::class, 'users'])->name('users');
+        Route::get('projects', [App\Domains\Core\Controllers\SearchController::class, 'projects'])->name('projects');
+        Route::get('query', [App\Domains\Core\Controllers\NavigationController::class, 'search'])->name('query');
+        Route::get('suggestions', [App\Domains\Core\Controllers\SearchController::class, 'suggestions'])->name('suggestions');
     });
     
     // Settings API (Admin Only)
     Route::prefix('settings')->name('api.settings.')->middleware('role:admin')->group(function () {
-        Route::get('/', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'index'])->name('index');
-        Route::put('/', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'update'])->name('update');
+        Route::get('/', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'index'])->name('index');
+        Route::put('/', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'update'])->name('update');
         
-        Route::get('company', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'company'])->name('company');
-        Route::put('company', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'updateCompany'])->name('company.update');
+        Route::get('company', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'company'])->name('company');
+        Route::put('company', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'updateCompany'])->name('company.update');
         
-        Route::get('email', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'email'])->name('email');
-        Route::put('email', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'updateEmail'])->name('email.update');
-        Route::post('email/test', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'testEmail'])->name('email.test');
+        Route::get('email', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'email'])->name('email');
+        Route::put('email', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'updateEmail'])->name('email.update');
+        Route::post('email/test', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'testEmail'])->name('email.test');
         
-        Route::get('integrations', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'integrations'])->name('integrations');
-        Route::put('integrations', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'updateIntegrations'])->name('integrations.update');
+        Route::get('integrations', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'integrations'])->name('integrations');
+        Route::put('integrations', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'updateIntegrations'])->name('integrations.update');
         
-        Route::post('backup', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'createBackup'])->name('backup.create');
-        Route::get('logs', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'logs'])->name('logs');
+        Route::post('backup', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'createBackup'])->name('backup.create');
+        Route::get('logs', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'logs'])->name('logs');
         
         // Billing Settings
-        Route::get('billing-defaults', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'billingDefaults'])->name('billing-defaults');
-        Route::get('tax', [App\Http\Controllers\Settings\UnifiedSettingsController::class, 'taxSettings'])->name('tax');
+        Route::get('billing-defaults', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'billingDefaults'])->name('billing-defaults');
+        Route::get('tax', [App\Domains\Core\Controllers\Settings\UnifiedSettingsController::class, 'taxSettings'])->name('tax');
     });
     
     // RMM Integration Management API (Admin Only)
@@ -683,7 +688,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 // Integration Webhooks (No Authentication Required)
 Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->group(function () {
     // Legacy webhooks
-    Route::post('stripe', [\App\Http\Controllers\Api\Webhooks\StripeWebhookController::class, 'handle'])->name('stripe');
+    Route::post('stripe', [StripeWebhookController::class, 'handle'])->name('stripe');
     // Route::post('plaid', [App\Http\Controllers\Integration\Controllers\PlaidWebhookController::class, 'handle'])->name('plaid'); // TODO: Check if exists
     // Route::post('email', [App\Http\Controllers\Integration\Controllers\EmailWebhookController::class, 'handle'])->name('email'); // TODO: Check if exists
     // Route::post('sms', [App\Http\Controllers\Integration\Controllers\SmsWebhookController::class, 'handle'])->name('sms'); // TODO: Check if exists
@@ -692,31 +697,31 @@ Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->g
     Route::middleware('throttle:1000,1')->group(function () {
         // ConnectWise Automate webhooks
         Route::prefix('connectwise')->name('connectwise.')->group(function () {
-            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\ConnectWiseWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\ConnectWiseWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\ConnectWiseWebhookController::class, 'test'])->name('test');
+            Route::post('{integration}', [ConnectWiseWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [ConnectWiseWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [ConnectWiseWebhookController::class, 'test'])->name('test');
         });
         
         // Datto RMM webhooks
         Route::prefix('datto')->name('datto.')->group(function () {
-            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\DattoWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\DattoWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\DattoWebhookController::class, 'test'])->name('test');
+            Route::post('{integration}', [DattoWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [DattoWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [DattoWebhookController::class, 'test'])->name('test');
         });
         
         // NinjaOne webhooks
         Route::prefix('ninja')->name('ninja.')->group(function () {
-            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\NinjaOneWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\NinjaOneWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\NinjaOneWebhookController::class, 'test'])->name('test');
+            Route::post('{integration}', [NinjaOneWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [NinjaOneWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [NinjaOneWebhookController::class, 'test'])->name('test');
         });
         
         // Generic RMM webhooks
         Route::prefix('generic')->name('generic.')->group(function () {
-            Route::post('{integration}', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'test'])->name('test');
-            Route::post('{integration}/suggest-mappings', [App\Http\Controllers\Api\Webhooks\GenericRMMWebhookController::class, 'suggestFieldMappings'])->name('suggest-mappings');
+            Route::post('{integration}', [GenericRMMWebhookController::class, 'handle'])->name('webhook');
+            Route::get('{integration}/health', [GenericRMMWebhookController::class, 'health'])->name('health');
+            Route::post('{integration}/test', [GenericRMMWebhookController::class, 'test'])->name('test');
+            Route::post('{integration}/suggest-mappings', [GenericRMMWebhookController::class, 'suggestFieldMappings'])->name('suggest-mappings');
         });
     });
 });

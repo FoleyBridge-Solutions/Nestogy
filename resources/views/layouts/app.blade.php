@@ -39,7 +39,7 @@
     <!-- Company Customization Styles -->
     @if(auth()->check() && auth()->user()->company_id)
         @php
-            $settingsService = app(\App\Services\SettingsService::class);
+            $settingsService = app(\App\Domains\Core\Services\SettingsService::class);
             $companyCss = $settingsService->generateCompanyCss(auth()->user()->company);
         @endphp
         <style>

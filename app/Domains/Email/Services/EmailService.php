@@ -2,328 +2,484 @@
 
 namespace App\Domains\Email\Services;
 
-use App\Domains\Email\Models\EmailAccount;
-use App\Domains\Email\Models\EmailMessage;
-use App\Domains\Email\Models\EmailSignature;
-use Illuminate\Support\Facades\Log;
+use App\Contracts\Services\EmailServiceInterface;
+use App\Contracts\Services\PdfServiceInterface;
+use Illuminate\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Mail\Mailable;
+use Illuminate\Support\Collection;
+use App\Models\Quote;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
-class EmailService
+class EmailService implements EmailServiceInterface
 {
-    public function __construct(
-        private ImapService $imapService
-    ) {}
+    protected Mailer $mailer;
+    protected PdfServiceInterface $pdfService;
 
-    public function sendEmail(array $data, EmailAccount $account): array
+    public function __construct(Mailer $mailer, PdfServiceInterface $pdfService)
+    {
+        $this->mailer = $mailer;
+        $this->pdfService = $pdfService;
+    }
+
+    /**
+     * Get configuration value
+     */
+    protected function config(?string $key = null)
+    {
+        $config = config('mail');
+        return $key ? ($config[$key] ?? null) : $config;
+    }
+
+    /**
+     * Send a simple email
+     */
+    public function send(string $to, string $subject, string $body, array $attachments = []): bool
     {
         try {
-            // Configure mailer for this account
-            $this->configureMailer($account);
+            Mail::send([], [], function ($message) use ($to, $subject, $body, $attachments) {
+                $message->to($to)
+                    ->subject($subject)
+                    ->html($body);
 
-            // Prepare email data
-            $to = $data['to'] ?? [];
-            $cc = $data['cc'] ?? [];
-            $bcc = $data['bcc'] ?? [];
-            $subject = $data['subject'] ?? '';
-            $body = $data['body'] ?? '';
-            $attachments = $data['attachments'] ?? [];
-            $signature = $data['signature_id'] ? 
-                EmailSignature::find($data['signature_id']) : null;
-
-            // Add signature if specified
-            if ($signature) {
-                $signatureContent = $signature->processVariables($data['signature_variables'] ?? []);
-                $body .= "\n\n" . $signatureContent['html'];
-            }
-
-            // Create and send email
-            Mail::send([], [], function ($message) use ($to, $cc, $bcc, $subject, $body, $attachments, $account) {
-                $message->from($account->email_address, $account->user->name);
-                
-                foreach ((array) $to as $recipient) {
-                    $message->to($recipient);
-                }
-                
-                foreach ((array) $cc as $recipient) {
-                    $message->cc($recipient);
-                }
-                
-                foreach ((array) $bcc as $recipient) {
-                    $message->bcc($recipient);
-                }
-                
-                $message->subject($subject);
-                $message->html($body);
-                
-                // Add attachments
                 foreach ($attachments as $attachment) {
-                    if (isset($attachment['path'])) {
+                    if (is_array($attachment)) {
                         $message->attach($attachment['path'], [
                             'as' => $attachment['name'] ?? null,
                             'mime' => $attachment['mime'] ?? null,
                         ]);
+                    } else {
+                        $message->attach($attachment);
                     }
                 }
             });
 
-            // Store sent email in database (optional)
-            $this->storeSentEmail($account, $data);
-
-            return [
-                'success' => true,
-                'message' => 'Email sent successfully',
-            ];
-
+            return true;
         } catch (\Exception $e) {
-            Log::error('Email send failed', [
-                'account_id' => $account->id,
+            logger()->error('Failed to send email', [
+                'to' => $to,
+                'subject' => $subject,
                 'error' => $e->getMessage(),
             ]);
-
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-            ];
+            return false;
         }
     }
 
-    public function saveDraft(array $data, EmailAccount $account): EmailMessage
+    /**
+     * Send email using a Mailable class
+     */
+    public function sendMailable(string $to, Mailable $mailable): bool
     {
-        // Find sent folder or create it
-        $draftsFolder = $account->folders()
-            ->where('type', 'drafts')
-            ->first();
-
-        if (!$draftsFolder) {
-            $draftsFolder = $account->folders()->create([
-                'name' => 'Drafts',
-                'path' => 'Drafts',
-                'type' => 'drafts',
-                'is_subscribed' => true,
-                'is_selectable' => true,
+        try {
+            Mail::to($to)->send($mailable);
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to send mailable', [
+                'to' => $to,
+                'mailable' => get_class($mailable),
+                'error' => $e->getMessage(),
             ]);
+            return false;
         }
-
-        return EmailMessage::create([
-            'email_account_id' => $account->id,
-            'email_folder_id' => $draftsFolder->id,
-            'message_id' => 'draft_' . uniqid(),
-            'uid' => 'draft_' . uniqid(),
-            'subject' => $data['subject'] ?? '',
-            'from_address' => $account->email_address,
-            'from_name' => $account->user->name,
-            'to_addresses' => (array) ($data['to'] ?? []),
-            'cc_addresses' => (array) ($data['cc'] ?? []),
-            'bcc_addresses' => (array) ($data['bcc'] ?? []),
-            'body_html' => $data['body'] ?? '',
-            'body_text' => strip_tags($data['body'] ?? ''),
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($data['body'] ?? ''), 200),
-            'sent_at' => null,
-            'received_at' => now(),
-            'is_draft' => true,
-            'is_read' => true,
-        ]);
     }
 
-    public function forwardEmail(EmailMessage $originalMessage, array $data, EmailAccount $account): array
+    /**
+     * Send bulk emails
+     */
+    public function sendBulk(array $recipients, string $subject, string $body, array $attachments = []): array
     {
-        $forwardData = [
-            'to' => $data['to'] ?? [],
-            'cc' => $data['cc'] ?? [],
-            'bcc' => $data['bcc'] ?? [],
-            'subject' => 'Fwd: ' . $originalMessage->subject,
-            'body' => $this->buildForwardBody($originalMessage, $data['body'] ?? ''),
-            'attachments' => $data['attachments'] ?? [],
+        $results = [];
+        
+        foreach ($recipients as $recipient) {
+            $email = is_array($recipient) ? $recipient['email'] : $recipient;
+            $name = is_array($recipient) ? ($recipient['name'] ?? null) : null;
+            
+            $results[$email] = $this->send($email, $subject, $body, $attachments);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Send notification email
+     */
+    public function sendNotification(string $to, string $type, array $data): bool
+    {
+        $templates = [
+            'ticket_created' => [
+                'subject' => 'New Ticket Created: #{{ticket_id}}',
+                'template' => 'emails.notifications.ticket-created',
+            ],
+            'ticket_updated' => [
+                'subject' => 'Ticket Updated: #{{ticket_id}}',
+                'template' => 'emails.notifications.ticket-updated',
+            ],
+            'invoice_generated' => [
+                'subject' => 'Invoice Generated: #{{invoice_number}}',
+                'template' => 'emails.notifications.invoice-generated',
+            ],
+            'payment_received' => [
+                'subject' => 'Payment Received: #{{invoice_number}}',
+                'template' => 'emails.notifications.payment-received',
+            ],
         ];
 
-        $result = $this->sendEmail($forwardData, $account);
-
-        if ($result['success']) {
-            $originalMessage->update(['is_answered' => true]);
+        if (!isset($templates[$type])) {
+            logger()->warning('Unknown notification type', ['type' => $type]);
+            return false;
         }
 
-        return $result;
-    }
+        $template = $templates[$type];
+        $subject = $this->replaceTokens($template['subject'], $data);
 
-    public function replyToEmail(EmailMessage $originalMessage, array $data, EmailAccount $account): array
-    {
-        $replyData = [
-            'to' => [$originalMessage->from_address],
-            'cc' => $data['reply_all'] ? $originalMessage->cc_addresses : [],
-            'subject' => 'Re: ' . preg_replace('/^re:\s*/i', '', $originalMessage->subject),
-            'body' => $this->buildReplyBody($originalMessage, $data['body'] ?? ''),
-            'attachments' => $data['attachments'] ?? [],
-        ];
-
-        $result = $this->sendEmail($replyData, $account);
-
-        if ($result['success']) {
-            $originalMessage->update(['is_answered' => true]);
-        }
-
-        return $result;
-    }
-
-    public function markAsRead(EmailMessage $message): void
-    {
-        $message->markAsRead();
-        
-        // If connected to IMAP, mark on server too
         try {
-            $account = $message->emailAccount;
-            $client = $this->imapService->createClient($account);
-            $client->connect();
-            
-            $folder = $client->getFolderByPath($message->emailFolder->path);
-            if ($folder) {
-                $remoteMessage = $folder->getMessage($message->uid);
-                if ($remoteMessage) {
-                    $remoteMessage->setFlag('Seen');
-                }
-            }
+            Mail::send($template['template'], $data, function ($message) use ($to, $subject) {
+                $message->to($to)->subject($subject);
+            });
+
+            return true;
         } catch (\Exception $e) {
-            Log::warning('Failed to mark message as read on server', [
-                'message_id' => $message->id,
+            logger()->error('Failed to send notification', [
+                'to' => $to,
+                'type' => $type,
                 'error' => $e->getMessage(),
             ]);
+            return false;
         }
     }
 
-    public function markAsUnread(EmailMessage $message): void
+    /**
+     * Replace tokens in template strings
+     */
+    protected function replaceTokens(string $template, array $data): string
     {
-        $message->markAsUnread();
-        
-        // If connected to IMAP, mark on server too
+        foreach ($data as $key => $value) {
+            $template = str_replace('{{' . $key . '}}', $value, $template);
+        }
+        return $template;
+    }
+
+    /**
+     * Get email configuration
+     */
+    public function getConfig(): array
+    {
+        return config('mail');
+    }
+
+    /**
+     * Test email connection
+     */
+    public function testConnection(): bool
+    {
         try {
-            $account = $message->emailAccount;
-            $client = $this->imapService->createClient($account);
-            $client->connect();
+            // Send a test email to the configured from address
+            $fromAddress = config('mail.from.address', 'test@example.com');
             
-            $folder = $client->getFolderByPath($message->emailFolder->path);
-            if ($folder) {
-                $remoteMessage = $folder->getMessage($message->uid);
-                if ($remoteMessage) {
-                    $remoteMessage->unsetFlag('Seen');
-                }
-            }
+            return $this->send(
+                $fromAddress,
+                'Email Connection Test',
+                'This is a test email to verify the email configuration is working correctly.'
+            );
         } catch (\Exception $e) {
-            Log::warning('Failed to mark message as unread on server', [
-                'message_id' => $message->id,
-                'error' => $e->getMessage(),
-            ]);
+            logger()->error('Email connection test failed', ['error' => $e->getMessage()]);
+            return false;
         }
     }
 
-    public function deleteEmail(EmailMessage $message): void
+    /**
+     * Send quote email to client
+     */
+    public function sendQuoteEmail(Quote $quote): bool
     {
-        // Move to trash folder if it exists, otherwise just mark as deleted
-        $account = $message->emailAccount;
-        $trashFolder = $account->folders()->where('type', 'trash')->first();
-
-        if ($trashFolder) {
-            $message->update([
-                'email_folder_id' => $trashFolder->id,
-                'is_deleted' => true,
-            ]);
-        } else {
-            $message->update(['is_deleted' => true]);
-        }
-
-        // Delete on IMAP server
         try {
-            $client = $this->imapService->createClient($account);
-            $client->connect();
+            $client = $quote->client;
             
-            $folder = $client->getFolderByPath($message->emailFolder->path);
-            if ($folder) {
-                $remoteMessage = $folder->getMessage($message->uid);
-                if ($remoteMessage) {
-                    $remoteMessage->delete();
-                }
+            if (!$client || !$client->email) {
+                Log::warning('Cannot send quote email - no client email', [
+                    'quote_id' => $quote->id,
+                    'client_id' => $client->id ?? null
+                ]);
+                return false;
             }
+
+            $emailData = [
+                'quote' => $quote,
+                'client' => $client,
+                'viewUrl' => $this->generateSecureQuoteUrl($quote),
+                'expiryDate' => $quote->expire_date ?? $quote->valid_until,
+                'totalAmount' => $quote->getFormattedAmount(),
+            ];
+
+            Mail::send('emails.quotes.send', $emailData, function ($message) use ($client, $quote) {
+                $message->to($client->email, $client->name)
+                        ->subject("Quote #{$quote->getFullNumber()}")
+                        ->from(config('mail.from.address'), config('app.name'));
+            });
+
+            Log::info('Quote email sent successfully', [
+                'quote_id' => $quote->id,
+                'client_email' => $client->email
+            ]);
+
+            return true;
+
         } catch (\Exception $e) {
-            Log::warning('Failed to delete message on server', [
-                'message_id' => $message->id,
-                'error' => $e->getMessage(),
+            Log::error('Failed to send quote email', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage()
             ]);
+            return false;
         }
     }
 
-    private function configureMailer(EmailAccount $account): void
+    /**
+     * Send quote approval request email
+     */
+    public function sendQuoteApprovalRequest(Quote $quote, User $approver): bool
     {
-        config([
-            'mail.mailers.smtp.host' => $account->smtp_host,
-            'mail.mailers.smtp.port' => $account->smtp_port,
-            'mail.mailers.smtp.username' => $account->smtp_username,
-            'mail.mailers.smtp.password' => $account->smtp_password,
-            'mail.mailers.smtp.encryption' => $account->smtp_encryption,
-            'mail.from.address' => $account->email_address,
-            'mail.from.name' => $account->user->name,
-        ]);
-    }
+        try {
+            if (!$approver->email) {
+                return false;
+            }
 
-    private function storeSentEmail(EmailAccount $account, array $data): void
-    {
-        // Find sent folder or create it
-        $sentFolder = $account->folders()
-            ->where('type', 'sent')
-            ->first();
+            $emailData = [
+                'quote' => $quote,
+                'approver' => $approver,
+                'approvalUrl' => route('financial.quotes.approve', $quote),
+                'client' => $quote->client,
+                'totalAmount' => $quote->getFormattedAmount(),
+            ];
 
-        if (!$sentFolder) {
-            $sentFolder = $account->folders()->create([
-                'name' => 'Sent',
-                'path' => 'Sent',
-                'type' => 'sent',
-                'is_subscribed' => true,
-                'is_selectable' => true,
+            Mail::send('emails.quotes.approval-request', $emailData, function ($message) use ($approver, $quote) {
+                $message->to($approver->email, $approver->name)
+                        ->subject("Quote Approval Required: #{$quote->getFullNumber()}")
+                        ->priority(1);
+            });
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote approval request', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage()
             ]);
+            return false;
         }
-
-        EmailMessage::create([
-            'email_account_id' => $account->id,
-            'email_folder_id' => $sentFolder->id,
-            'message_id' => 'sent_' . uniqid(),
-            'uid' => 'sent_' . uniqid(),
-            'subject' => $data['subject'] ?? '',
-            'from_address' => $account->email_address,
-            'from_name' => $account->user->name,
-            'to_addresses' => (array) ($data['to'] ?? []),
-            'cc_addresses' => (array) ($data['cc'] ?? []),
-            'bcc_addresses' => (array) ($data['bcc'] ?? []),
-            'body_html' => $data['body'] ?? '',
-            'body_text' => strip_tags($data['body'] ?? ''),
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($data['body'] ?? ''), 200),
-            'sent_at' => now(),
-            'received_at' => now(),
-            'is_read' => true,
-        ]);
     }
 
-    private function buildReplyBody(EmailMessage $originalMessage, string $newBody): string
+    /**
+     * Send quote expiry reminder
+     */
+    public function sendQuoteExpiryReminder(Quote $quote, int $daysUntilExpiry): bool
     {
-        $replyHeader = "On {$originalMessage->sent_at->format('M j, Y')} at {$originalMessage->sent_at->format('g:i A')}, {$originalMessage->from_name} <{$originalMessage->from_address}> wrote:";
-        
-        $quotedBody = collect(explode("\n", strip_tags($originalMessage->body_text ?: $originalMessage->body_html)))
-            ->map(fn($line) => '> ' . $line)
-            ->implode("\n");
+        try {
+            $client = $quote->client;
+            
+            if (!$client || !$client->email) {
+                return false;
+            }
 
-        return $newBody . "\n\n" . $replyHeader . "\n" . $quotedBody;
+            $emailData = [
+                'quote' => $quote,
+                'client' => $client,
+                'daysUntilExpiry' => $daysUntilExpiry,
+                'viewUrl' => $this->generateSecureQuoteUrl($quote),
+            ];
+
+            $subject = $daysUntilExpiry === 1 
+                ? "Quote #{$quote->getFullNumber()} expires tomorrow"
+                : "Quote #{$quote->getFullNumber()} expires in {$daysUntilExpiry} days";
+
+            Mail::send('emails.quotes.expiry-reminder', $emailData, function ($message) use ($client, $subject) {
+                $message->to($client->email, $client->name)
+                        ->subject($subject);
+            });
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote expiry reminder', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
-    private function buildForwardBody(EmailMessage $originalMessage, string $newBody): string
+    /**
+     * Generate secure URL for quote viewing
+     */
+    private function generateSecureQuoteUrl(Quote $quote): string
     {
-        $forwardHeader = "---------- Forwarded message ---------\n";
-        $forwardHeader .= "From: {$originalMessage->from_name} <{$originalMessage->from_address}>\n";
-        $forwardHeader .= "Date: {$originalMessage->sent_at->format('D, M j, Y \\a\\t g:i A')}\n";
-        $forwardHeader .= "Subject: {$originalMessage->subject}\n";
-        
-        if ($originalMessage->to_addresses) {
-            $forwardHeader .= "To: " . implode(', ', $originalMessage->to_addresses) . "\n";
+        if (!$quote->url_key) {
+            $quote->generateUrlKey();
         }
-        
-        $forwardHeader .= "\n";
 
-        return $newBody . "\n\n" . $forwardHeader . ($originalMessage->body_text ?: strip_tags($originalMessage->body_html));
+        return url('/quote/' . $quote->url_key);
+    }
+
+    /**
+     * Send invoice email to client
+     */
+    /**
+     * Generate invoice PDF for email attachment
+     */
+    protected function generateInvoicePdf(Invoice $invoice): ?string
+    {
+        try {
+            $invoice->load(['client', 'items', 'payments']);
+
+            // Generate PDF content
+            $pdfContent = $this->pdfService->generateInvoice(['invoice' => $invoice]);
+
+            // Generate filename
+            $filename = $this->pdfService->generateFilename('invoice', $invoice->invoice_number ?? $invoice->number);
+
+            // Save to temporary storage for email attachment
+            $tempPath = 'temp/' . $filename;
+            Storage::disk('local')->put($tempPath, $pdfContent);
+
+            // Return the full path to the temporary file
+            return Storage::disk('local')->path($tempPath);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to generate invoice PDF for email', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    public function sendInvoiceEmail(Invoice $invoice, array $options = []): bool
+    {
+        try {
+            $client = $invoice->client;
+
+            // Use custom recipient if provided, otherwise use client email
+            $recipientEmail = $options['to'] ?? $client->email ?? null;
+
+            if (!$recipientEmail) {
+                Log::warning('Cannot send invoice email - no recipient email', [
+                    'invoice_id' => $invoice->id,
+                    'client_id' => $client->id ?? null
+                ]);
+                return false;
+            }
+
+            // Prepare options for the mailable
+            $mailOptions = [
+                'to' => $recipientEmail,
+                'recipient_name' => $options['recipient_name'] ?? $client->name,
+                'subject' => $this->generateInvoiceSubject($invoice, $options),
+                'message' => $options['message'] ?? null,
+                'attach_pdf' => $options['attach_pdf'] ?? true,
+                'view_url' => $this->generateSecureInvoiceUrl($invoice),
+            ];
+
+            // Queue the email for processing
+            $invoiceEmail = new \App\Mail\InvoiceEmail($invoice, $mailOptions);
+            Mail::queue($invoiceEmail);
+
+            Log::info('Invoice email queued successfully', [
+                'invoice_id' => $invoice->id,
+                'recipient_email' => $recipientEmail,
+                'attach_pdf' => $mailOptions['attach_pdf']
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to queue invoice email', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Generate subject line for invoice email
+     */
+    private function generateInvoiceSubject(Invoice $invoice, array $options): string
+    {
+        if (isset($options['subject'])) {
+            return $options['subject'];
+        }
+
+        $companyName = config('app.name');
+        if (Auth::check() && Auth::user()->company) {
+            $companyName = Auth::user()->company->name;
+        }
+
+        return "Invoice #" . ($invoice->invoice_number ?? $invoice->number) . " from " . $companyName;
+    }
+
+    /**
+     * Send payment receipt email
+     */
+    public function sendPaymentReceiptEmail(Payment $payment): bool
+    {
+        try {
+            $invoice = $payment->invoice;
+            $client = $invoice->client;
+            
+            if (!$client || !$client->email) {
+                Log::warning('Cannot send payment receipt - no client email', [
+                    'payment_id' => $payment->id,
+                    'invoice_id' => $invoice->id,
+                    'client_id' => $client->id ?? null
+                ]);
+                return false;
+            }
+
+            $emailData = [
+                'payment' => $payment,
+                'invoice' => $invoice,
+                'client' => $client,
+                'paymentAmount' => number_format($payment->amount, 2),
+                'paymentDate' => $payment->payment_date,
+                'paymentMethod' => $payment->payment_method,
+                'invoiceBalance' => number_format($invoice->amount - $invoice->payments->sum('amount'), 2),
+            ];
+
+            Mail::send('emails.payments.receipt', $emailData, function ($message) use ($client, $invoice, $payment) {
+                $message->to($client->email, $client->name)
+                        ->subject("Payment Receipt - Invoice #{$invoice->number}")
+                        ->from(config('mail.from.address'), config('app.name'));
+            });
+
+            Log::info('Payment receipt email sent successfully', [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'client_email' => $client->email
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send payment receipt email', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Generate secure URL for invoice viewing
+     */
+    private function generateSecureInvoiceUrl(Invoice $invoice): string
+    {
+        // Use the correct financial.invoices.show route
+        return route('financial.invoices.show', $invoice);
     }
 }

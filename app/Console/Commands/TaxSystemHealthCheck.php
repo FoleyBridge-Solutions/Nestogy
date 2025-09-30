@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use App\Services\TaxEngine\TaxEngineRouter;
+use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Models\ServiceTaxRate;
 use App\Models\TaxProfile;
 

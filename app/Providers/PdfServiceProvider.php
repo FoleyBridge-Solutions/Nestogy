@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 use Spatie\LaravelPdf\Facades\Pdf as SpatiePdf;
 use App\Contracts\Services\PdfServiceInterface;
-use App\Services\PdfService;
+use App\Domains\Core\Services\PdfService;
 
 class PdfServiceProvider extends ServiceProvider
 {

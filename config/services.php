@@ -60,4 +60,24 @@ return [
         'oauth_token' => env('CLAUDE_CODE_OAUTH_TOKEN'),
     ],
 
+    'taxcloud' => [
+        'api_login_id' => env('TAXCLOUD_API_LOGIN_ID'),
+        'api_key' => env('TAXCLOUD_API_KEY'),
+        'customer_id' => env('TAXCLOUD_CUSTOMER_ID'),
+        'connection_id' => env('TAXCLOUD_CONNECTION_ID'),
+        'v3_api_key' => env('TAXCLOUD_V3_API_KEY_ENCODED'),
+    ],
+
+    'census' => [
+        'api_key' => env('CENSUS_API_KEY'),
+    ],
+
+    'company' => [
+        'address1' => env('COMPANY_ADDRESS1', '123 Business St'),
+        'address2' => env('COMPANY_ADDRESS2', ''),
+        'city' => env('COMPANY_CITY', 'Los Angeles'),
+        'state' => env('COMPANY_STATE', 'CA'),
+        'zip5' => env('COMPANY_ZIP5', '90210'),
+        'zip4' => env('COMPANY_ZIP4', ''),
+    ],
 ];

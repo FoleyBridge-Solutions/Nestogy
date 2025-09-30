@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Client;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Support\Facades\Auth;
 
 class ClientsList extends Component

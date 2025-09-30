@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Services\Notification\NotificationDispatcher;
+use App\Domains\Core\Services\Notification\NotificationDispatcher;
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

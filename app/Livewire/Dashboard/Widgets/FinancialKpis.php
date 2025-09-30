@@ -11,6 +11,7 @@ use App\Models\Recurring;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Domains\Core\Services\DashboardCacheService;
 
 class FinancialKpis extends Component
 {
@@ -29,71 +30,101 @@ class FinancialKpis extends Component
         $this->loading = true;
         $companyId = Auth::user()->company_id;
         
-        // Monthly Recurring Revenue
-        // Calculate MRR based on frequency
-        $recurringItems = Recurring::where('company_id', $companyId)
-            ->where('status', true)
-            ->get();
+        // Use cache for frequently accessed data
+        $cacheKey = "financial_kpis_{$companyId}_" . Carbon::now()->format('Y-m-d-H');
         
-        $mrr = $recurringItems->reduce(function ($total, $item) {
-            // Convert to monthly amount based on frequency
-            return $total + match(strtolower($item->frequency)) {
-                'monthly' => $item->amount,
-                'quarterly' => $item->amount / 3,
-                'yearly', 'annual' => $item->amount / 12,
-                'weekly' => $item->amount * 4.33, // Average weeks per month
-                'daily' => $item->amount * 30,
-                default => 0
-            };
-        }, 0);
+        $kpiData = cache()->remember($cacheKey, 60, function() use ($companyId) {
+            $now = Carbon::now();
+            
+            // Batch all invoice queries into one with conditional aggregates
+            $invoiceStats = DB::selectOne("
+                SELECT 
+                    SUM(CASE WHEN status IN ('Sent', 'Viewed', 'Partial') THEN amount ELSE 0 END) as outstanding,
+                    AVG(CASE WHEN date >= ? AND date <= ? THEN amount END) as avg_invoice,
+                    SUM(CASE WHEN date >= ? AND date <= ? THEN amount ELSE 0 END) as total_invoiced
+                FROM invoices
+                WHERE company_id = ? AND archived_at IS NULL
+            ", [
+                $now->copy()->startOfMonth(),
+                $now->copy()->endOfMonth(),
+                $now->copy()->startOfMonth(),
+                $now->copy()->endOfMonth(),
+                $companyId
+            ]);
+            
+            // Batch client queries
+            $clientStats = DB::selectOne("
+                SELECT 
+                    COUNT(CASE WHEN status = 'active' THEN 1 END) as active_clients,
+                    COUNT(CASE WHEN created_at < ? THEN 1 END) as clients_start_of_month
+                FROM clients
+                WHERE company_id = ? AND deleted_at IS NULL
+            ", [
+                $now->copy()->startOfMonth(),
+                $companyId
+            ]);
+            
+            // Get churned clients count
+            $churnedThisMonth = DB::table('clients')
+                ->where('company_id', $companyId)
+                ->whereNotNull('deleted_at')
+                ->whereMonth('deleted_at', $now->month)
+                ->whereYear('deleted_at', $now->year)
+                ->count();
+            
+            // Calculate MRR from recurring items
+            $recurringItems = Recurring::where('company_id', $companyId)
+                ->where('status', true)
+                ->select('amount', 'frequency')
+                ->get();
+            
+            $mrr = $recurringItems->reduce(function ($total, $item) {
+                return $total + match(strtolower($item->frequency)) {
+                    'monthly' => $item->amount,
+                    'quarterly' => $item->amount / 3,
+                    'yearly', 'annual' => $item->amount / 12,
+                    'weekly' => $item->amount * 4.33,
+                    'daily' => $item->amount * 30,
+                    default => 0
+                };
+            }, 0);
+            
+            // Get payment stats
+            $totalCollected = Payment::where('company_id', $companyId)
+                ->where('status', 'completed')
+                ->whereNotNull('payment_date')
+                ->whereMonth('payment_date', $now->month)
+                ->whereYear('payment_date', $now->year)
+                ->sum('amount') ?? 0;
+            
+            return [
+                'mrr' => $mrr,
+                'arr' => $mrr * 12,
+                'outstanding' => $invoiceStats->outstanding ?? 0,
+                'avg_invoice' => $invoiceStats->avg_invoice ?? 0,
+                'total_invoiced' => $invoiceStats->total_invoiced ?? 0,
+                'total_collected' => $totalCollected,
+                'active_clients' => $clientStats->active_clients ?? 0,
+                'clients_start_of_month' => $clientStats->clients_start_of_month ?? 0,
+                'churned_this_month' => $churnedThisMonth
+            ];
+        });
         
-        // Annual Recurring Revenue
-        $arr = $mrr * 12;
+        // Calculate metrics from cached data
+        $mrr = $kpiData['mrr'];
+        $arr = $kpiData['arr'];
+        $outstanding = $kpiData['outstanding'];
+        $avgInvoice = $kpiData['avg_invoice'];
+        $activeClients = $kpiData['active_clients'];
         
-        // Total Revenue This Month
+        $churnRate = $kpiData['clients_start_of_month'] > 0 ? 
+            round(($kpiData['churned_this_month'] / $kpiData['clients_start_of_month']) * 100, 1) : 0;
+        
+        $collectionRate = $kpiData['total_invoiced'] > 0 ? 
+            ($kpiData['total_collected'] / $kpiData['total_invoiced']) * 100 : 0;
+        
+        // Get revenue with optimized queries
         [$monthlyRevenue, $previousRevenue] = $this->calculateMonthlyRevenue($companyId);
-
-        // Outstanding Invoices
-        $outstanding = Invoice::where('company_id', $companyId)
-            ->whereIn('status', ['Sent', 'Viewed', 'Partial'])
-            ->sum('amount') ?? 0;
-        
-        // Average Invoice Value
-        $avgInvoice = Invoice::where('company_id', $companyId)
-            ->whereMonth('date', Carbon::now()->month)
-            ->whereYear('date', Carbon::now()->year)
-            ->avg('amount') ?? 0;
-        
-        // Customer Count
-        $activeClients = Client::where('company_id', $companyId)
-            ->where('status', 'active')
-            ->count();
-        
-        // Calculate Churn Rate from actual client data
-        $totalClientsStartOfMonth = Client::where('company_id', $companyId)
-            ->where('created_at', '<', Carbon::now()->startOfMonth())
-            ->count();
-        
-        $churnedThisMonth = Client::where('company_id', $companyId)
-            ->onlyTrashed()
-            ->whereMonth('deleted_at', Carbon::now()->month)
-            ->whereYear('deleted_at', Carbon::now()->year)
-            ->count();
-        
-        $churnRate = $totalClientsStartOfMonth > 0 ? 
-            round(($churnedThisMonth / $totalClientsStartOfMonth) * 100, 1) : 0;
-        
-        // Collection Rate
-        $totalInvoiced = Invoice::where('company_id', $companyId)
-            ->whereMonth('date', Carbon::now()->month)
-            ->whereYear('date', Carbon::now()->year)
-            ->sum('amount') ?? 1;
-        $totalCollected = Payment::where('company_id', $companyId)
-            ->where('status', 'completed')
-            ->whereNotNull('payment_date')
-            ->whereMonth('payment_date', Carbon::now()->month)
-            ->sum('amount') ?? 0;
-        $collectionRate = $totalInvoiced > 0 ? ($totalCollected / $totalInvoiced) * 100 : 0;
         
         // Calculate trends by comparing with previous month
         $lastMonthMRR = $this->calculateLastMonthMRR($companyId);
@@ -210,39 +241,51 @@ class FinancialKpis extends Component
 
     protected function calculateMonthlyRevenue(int $companyId): array
     {
-        $method = $this->getRevenueRecognitionMethod();
-        $now = Carbon::now();
+        // Cache monthly revenue calculations
+        $cacheKey = "monthly_revenue_{$companyId}_" . Carbon::now()->format('Y-m');
+        
+        return cache()->remember($cacheKey, 300, function() use ($companyId) {
+            $method = $this->getRevenueRecognitionMethod();
+            $now = Carbon::now();
 
-        $currentStart = $now->copy()->startOfMonth();
-        $currentEnd = $now->copy()->endOfMonth();
-        $previousStart = $now->copy()->subMonth()->startOfMonth();
-        $previousEnd = $now->copy()->subMonth()->endOfMonth();
+            $currentStart = $now->copy()->startOfMonth();
+            $currentEnd = $now->copy()->endOfMonth();
+            $previousStart = $now->copy()->subMonth()->startOfMonth();
+            $previousEnd = $now->copy()->subMonth()->endOfMonth();
 
-        if ($method === 'cash') {
-            $current = Payment::where('company_id', $companyId)
-                ->where('status', 'completed')
-                ->whereNotNull('payment_date')
-                ->whereBetween('payment_date', [$currentStart, $currentEnd])
-                ->sum('amount');
-
-            $previous = Payment::where('company_id', $companyId)
-                ->where('status', 'completed')
-                ->whereNotNull('payment_date')
-                ->whereBetween('payment_date', [$previousStart, $previousEnd])
-                ->sum('amount');
-        } else {
-            $current = Invoice::where('company_id', $companyId)
-                ->where('status', Invoice::STATUS_PAID)
-                ->whereBetween('date', [$currentStart, $currentEnd])
-                ->sum('amount');
-
-            $previous = Invoice::where('company_id', $companyId)
-                ->where('status', Invoice::STATUS_PAID)
-                ->whereBetween('date', [$previousStart, $previousEnd])
-                ->sum('amount');
-        }
-
-        return [(float) $current, (float) $previous];
+            if ($method === 'cash') {
+                // Use a single query with conditional aggregates
+                $revenues = DB::selectOne("
+                    SELECT 
+                        SUM(CASE WHEN payment_date >= ? AND payment_date <= ? THEN amount ELSE 0 END) as current_revenue,
+                        SUM(CASE WHEN payment_date >= ? AND payment_date <= ? THEN amount ELSE 0 END) as previous_revenue
+                    FROM payments
+                    WHERE company_id = ? AND status = 'completed' AND payment_date IS NOT NULL
+                ", [
+                    $currentStart, $currentEnd,
+                    $previousStart, $previousEnd,
+                    $companyId
+                ]);
+                
+                return [(float) $revenues->current_revenue, (float) $revenues->previous_revenue];
+            } else {
+                // Use a single query for accrual method
+                $revenues = DB::selectOne("
+                    SELECT 
+                        SUM(CASE WHEN date >= ? AND date <= ? THEN amount ELSE 0 END) as current_revenue,
+                        SUM(CASE WHEN date >= ? AND date <= ? THEN amount ELSE 0 END) as previous_revenue
+                    FROM invoices
+                    WHERE company_id = ? AND status = ? AND archived_at IS NULL
+                ", [
+                    $currentStart, $currentEnd,
+                    $previousStart, $previousEnd,
+                    $companyId,
+                    Invoice::STATUS_PAID
+                ]);
+                
+                return [(float) $revenues->current_revenue, (float) $revenues->previous_revenue];
+            }
+        });
     }
 
     protected function getRevenueRecognitionMethod(): string

@@ -149,7 +149,7 @@ class LazyLoadingTest extends TestCase
             ['type' => 'kpi-grid'],
         ];
         
-        $sorted = \App\Services\DashboardLazyLoadService::sortByPriority($widgets);
+        $sorted = \App\Domains\Core\Services\DashboardLazyLoadService::sortByPriority($widgets);
         
         // Alert panel should be first (priority 1)
         $this->assertEquals('alert-panel', $sorted[0]['type']);

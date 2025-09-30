@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\Services\SubscriptionService;
+use App\Domains\Product\Services\SubscriptionService;
 use App\Exceptions\UserLimitExceededException;
 use Symfony\Component\HttpFoundation\Response;
 

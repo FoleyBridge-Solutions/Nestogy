@@ -3,84 +3,48 @@
 @section('title', $metadata['name'] ?? 'Settings')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<flux:container>
     <!-- Breadcrumb -->
-    <nav class="flex mb-6" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 md:space-x-3">
-            <li class="inline-flex items-center">
-                <a href="{{ route('settings.index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg>
-                    Settings
-                </a>
-            </li>
-            <li>
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <a href="{{ route('settings.domain.index', $domain) }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                        {{ $domainInfo['name'] }}
-                    </a>
-                </div>
-            </li>
-            <li aria-current="page">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                        {{ $metadata['name'] }}
-                    </span>
-                </div>
-            </li>
-        </ol>
-    </nav>
+    <flux:breadcrumbs class="mb-6">
+        <flux:breadcrumbs.item href="{{ route('settings.index') }}" icon="home">
+            Settings
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item href="{{ route('settings.domain.index', $domain) }}">
+            {{ $domainInfo['name'] }}
+        </flux:breadcrumbs.item>
+        <flux:breadcrumbs.item>
+            {{ $metadata['name'] }}
+        </flux:breadcrumbs.item>
+    </flux:breadcrumbs>
 
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $metadata['name'] }}</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-2">{{ $metadata['description'] }}</p>
-    </div>
+    <flux:card class="mb-6">
+        <flux:card.body>
+            <flux:heading size="xl">{{ $metadata['name'] }}</flux:heading>
+            <flux:text class="mt-2">{{ $metadata['description'] }}</flux:text>
+        </flux:card.body>
+    </flux:card>
 
+    <!-- Success/Error Messages -->
     @if(session('success'))
-        <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 mb-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium">{{ session('success') }}</p>
-                </div>
-            </div>
-        </div>
+        <flux:toast variant="success" dismissible class="mb-6">
+            {{ session('success') }}
+        </flux:toast>
     @endif
 
     @if(session('error'))
-        <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium">{{ session('error') }}</p>
-                </div>
-            </div>
-        </div>
+        <flux:toast variant="danger" dismissible class="mb-6">
+            {{ session('error') }}
+        </flux:toast>
     @endif
 
     <!-- Settings Form -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+    <flux:card>
         <form action="{{ route('settings.category.update', [$domain, $category]) }}" method="POST" id="settings-form">
             @csrf
             @method('PUT')
             
-            <div class="p-6">
+            <flux:card.body>
                 @if($category === 'email' && $domain === 'communication')
                     @include('settings.unified.forms.communication-email', ['settings' => $settings])
                 @elseif($category === 'physical_mail' && $domain === 'communication')
@@ -91,56 +55,57 @@
                     @include('settings.unified.forms.financial-billing', ['settings' => $settings])
                 @else
                     <!-- Generic form for other categories -->
-                    <div class="space-y-6">
+                    <flux:field.group>
                         @foreach($settings as $key => $value)
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {{ ucfirst(str_replace('_', ' ', $key)) }}
-                                </label>
+                            <flux:field>
+                                <flux:label>{{ ucfirst(str_replace('_', ' ', $key)) }}</flux:label>
                                 @if(is_bool($value))
-                                    <select name="{{ $key }}" class="form-select rounded-md border-gray-300 w-full">
-                                        <option value="1" {{ $value ? 'selected' : '' }}>Yes</option>
-                                        <option value="0" {{ !$value ? 'selected' : '' }}>No</option>
-                                    </select>
+                                    <flux:select name="{{ $key }}">
+                                        <flux:option value="1" {{ $value ? 'selected' : '' }}>Yes</flux:option>
+                                        <flux:option value="0" {{ !$value ? 'selected' : '' }}>No</flux:option>
+                                    </flux:select>
                                 @elseif(is_array($value))
-                                    <textarea name="{{ $key }}" rows="3" class="form-textarea rounded-md border-gray-300 w-full">{{ json_encode($value) }}</textarea>
+                                    <flux:textarea name="{{ $key }}" rows="3">{{ json_encode($value) }}</flux:textarea>
                                 @else
-                                    <input type="text" name="{{ $key }}" value="{{ $value }}" class="form-input rounded-md border-gray-300 w-full">
+                                    <flux:input type="text" name="{{ $key }}" value="{{ $value }}" />
                                 @endif
-                            </div>
+                            </flux:field>
                         @endforeach
-                    </div>
+                    </flux:field.group>
                 @endif
-            </div>
+            </flux:card.body>
             
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
-                <div>
-                    @if(in_array($category, ['email', 'physical_mail']) && $domain === 'communication')
-                        <button type="button" onclick="testConfiguration()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                            <i class="fas fa-vial mr-2"></i>Test Configuration
-                        </button>
-                    @endif
+            <flux:card.footer>
+                <flux:between>
+                    <flux:button.group>
+                        @if(in_array($category, ['email', 'physical_mail']) && $domain === 'communication')
+                            <flux:button type="button" variant="secondary" icon="beaker" onclick="testConfiguration()">
+                                Test Configuration
+                            </flux:button>
+                        @endif
+                        
+                        <flux:button type="button" variant="secondary" icon="arrow-uturn-left" onclick="resetToDefaults()">
+                            Reset to Defaults
+                        </flux:button>
+                    </flux:button.group>
                     
-                    <button type="button" onclick="resetToDefaults()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 ml-2">
-                        <i class="fas fa-undo mr-2"></i>Reset to Defaults
-                    </button>
-                </div>
-                
-                <div>
-                    <a href="{{ route('settings.domain.index', $domain) }}" class="px-4 py-2 text-gray-600 hover:text-gray-800 mr-2">
-                        Cancel
-                    </a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        <i class="fas fa-save mr-2"></i>Save Settings
-                    </button>
-                </div>
-            </div>
+                    <flux:button.group>
+                        <flux:button variant="ghost" href="{{ route('settings.domain.index', $domain) }}">
+                            Cancel
+                        </flux:button>
+                        <flux:button type="submit" variant="primary" icon="check">
+                            Save Settings
+                        </flux:button>
+                    </flux:button.group>
+                </flux:between>
+            </flux:card.footer>
         </form>
-    </div>
+    </flux:card>
 
-    <div id="test-result" class="mt-4"></div>
-</div>
+    <div id="test-result"></div>
+</flux:container>
 
+@push('scripts')
 <script>
 function testConfiguration() {
     const form = document.getElementById('settings-form');
@@ -159,14 +124,24 @@ function testConfiguration() {
         const resultDiv = document.getElementById('test-result');
         if (data.success) {
             resultDiv.innerHTML = `
-                <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg p-4">
-                    <strong>Success!</strong> ${data.message}
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-center gap-2 text-green-700">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <strong>${data.message}</strong>
+                    </div>
                 </div>
             `;
         } else {
             resultDiv.innerHTML = `
-                <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
-                    <strong>Error!</strong> ${data.message}
+                <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-center gap-2 text-red-700">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <strong>${data.message}</strong>
+                    </div>
                 </div>
             `;
         }
@@ -174,8 +149,13 @@ function testConfiguration() {
     .catch(error => {
         const resultDiv = document.getElementById('test-result');
         resultDiv.innerHTML = `
-            <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
-                <strong>Error!</strong> Failed to test configuration: ${error.message}
+            <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center gap-2 text-red-700">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <strong>Failed to test configuration: ${error.message}</strong>
+                </div>
             </div>
         `;
     });
@@ -183,8 +163,17 @@ function testConfiguration() {
 
 function resetToDefaults() {
     if (confirm('Are you sure you want to reset these settings to defaults? This action cannot be undone.')) {
-        window.location.href = '{{ route('settings.category.reset', [$domain, $category]) }}';
+        fetch('{{ route('settings.category.reset', [$domain, $category]) }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            }
+        })
+        .then(() => window.location.reload())
+        .catch(error => alert('Failed to reset: ' + error.message));
     }
 }
 </script>
+@endpush
 @endsection

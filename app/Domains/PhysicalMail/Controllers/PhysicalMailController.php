@@ -5,7 +5,7 @@ namespace App\Domains\PhysicalMail\Controllers;
 use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
 use App\Http\Controllers\Controller;
 use App\Domains\PhysicalMail\Services\PhysicalMailService;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;

@@ -78,7 +78,7 @@ class AssignmentController extends Controller
 
         // Get filter options
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
+                        ->whereNull('archived_at')
                         ->orderBy('name')
                         ->get();
 
@@ -504,7 +504,7 @@ class AssignmentController extends Controller
     public function getTeamOverview(Request $request)
     {
         $teamMembers = User::where('company_id', auth()->user()->company_id)
-                          ->where('is_active', true)
+                          ->whereNull('archived_at')
                           ->withCount([
                               'assignedTickets',
                               'assignedTickets as open_tickets_count' => function($q) {
@@ -574,7 +574,7 @@ class AssignmentController extends Controller
 
         // Get available assignees
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true);
+                        ->whereNull('archived_at');
 
         if ($request->has('assignee_pool')) {
             $assignees->whereIn('id', $request->assignee_pool);
@@ -710,7 +710,7 @@ class AssignmentController extends Controller
         // This would typically get team members based on user's department/team
         // For now, return all active users in the tenant
         return User::where('company_id', auth()->user()->company_id)
-                  ->where('is_active', true)
+                  ->whereNull('archived_at')
                   ->pluck('id')
                   ->toArray();
     }

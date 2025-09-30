@@ -4,7 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Models\User;
 use App\Models\UserSetting;
-use App\Services\UserService;
+use App\Domains\Security\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;

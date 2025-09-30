@@ -420,7 +420,7 @@ class User extends Authenticatable
         }
         
         // Use the enhanced permission service that supports wildcards
-        return app(\App\Services\PermissionService::class)->userHasPermission($this, $ability);
+        return app(\App\Domains\Security\Services\PermissionService::class)->userHasPermission($this, $ability);
     }
     
     /**

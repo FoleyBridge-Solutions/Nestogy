@@ -3,8 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\Client;
-use App\Services\ClientFavoriteService;
-use App\Services\NavigationService;
+use App\Domains\Client\Services\ClientFavoriteService;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -398,12 +398,24 @@ class ClientSwitcher extends Component
             return false;
         }
 
+        // Cache the favorite status check to avoid duplicate queries
+        static $favoriteCache = [];
+        $cacheKey = $this->user->id . '_' . $clientId;
+        
+        if (isset($favoriteCache[$cacheKey])) {
+            return $favoriteCache[$cacheKey];
+        }
+
         $client = Client::find($clientId);
         if (! $client) {
+            $favoriteCache[$cacheKey] = false;
             return false;
         }
 
-        return $this->favoriteService->isFavorite($this->user, $client);
+        $isFavorite = $this->favoriteService->isFavorite($this->user, $client);
+        $favoriteCache[$cacheKey] = $isFavorite;
+        
+        return $isFavorite;
     }
 
     /**

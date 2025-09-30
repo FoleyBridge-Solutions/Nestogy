@@ -144,7 +144,7 @@ class BillingPortalTest extends TestCase
     public function test_plan_change_updates_subscription()
     {
         // Mock Stripe service
-        $this->mock(\App\Services\StripeSubscriptionService::class, function ($mock) {
+        $this->mock(\App\Domains\Core\Services\StripeSubscriptionService::class, function ($mock) {
             $mock->shouldReceive('updateSubscription')
                 ->once()
                 ->with('sub_test123', 'price_new123')
@@ -185,7 +185,7 @@ class BillingPortalTest extends TestCase
     public function test_subscription_cancellation_works()
     {
         // Mock Stripe service
-        $this->mock(\App\Services\StripeSubscriptionService::class, function ($mock) {
+        $this->mock(\App\Domains\Core\Services\StripeSubscriptionService::class, function ($mock) {
             $mock->shouldReceive('cancelSubscription')
                 ->once()
                 ->with('sub_test123', false) // Cancel at period end
@@ -205,7 +205,7 @@ class BillingPortalTest extends TestCase
     public function test_subscription_reactivation_works()
     {
         // Mock Stripe service
-        $this->mock(\App\Services\StripeSubscriptionService::class, function ($mock) {
+        $this->mock(\App\Domains\Core\Services\StripeSubscriptionService::class, function ($mock) {
             $mock->shouldReceive('updateSubscription')
                 ->once()
                 ->with('sub_test123', null) // Remove cancellation

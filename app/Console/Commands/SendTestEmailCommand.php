@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Company;
-use App\Services\DynamicMailConfigService;
-use App\Services\EmailService;
+use App\Domains\Email\Services\DynamicMailConfigService;
+use App\Domains\Email\Services\EmailService;
 use Exception;
 
 class SendTestEmailCommand extends Command

@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\RecurringBillingPerformanceService;
+use App\Domains\Financial\Services\RecurringBillingPerformanceService;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Throwable;

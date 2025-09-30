@@ -2,7 +2,7 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Services\BaseService;
+use App\Domains\Core\Services\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 
 abstract class FinancialBaseService extends BaseService
@@ -150,7 +150,7 @@ abstract class FinancialBaseService extends BaseService
     
     protected function logFinancialActivity($model, string $action, array $data = []): void
     {
-        // Enhanced logging for financial activities (required per CLAUDE.md)
+        // Enhanced logging for financial activities (required per docs/CLAUDE.md)
         \Log::info('Financial activity', [
             'action' => $action,
             'model_type' => get_class($model),

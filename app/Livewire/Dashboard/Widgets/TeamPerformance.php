@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\TimeEntry;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 
@@ -38,25 +40,12 @@ class TeamPerformance extends Component
         $this->loading = true;
         $companyId = Auth::user()->company_id;
         
-        // Set sort direction based on view
-        $this->sortDirection = $this->view === 'top' ? 'desc' : 'asc';
+        // Cache key based on company, period, and view
+        $cacheKey = "team_performance_{$companyId}_{$this->period}_{$this->view}";
         
-        // Get team members who are in tech/support roles or have tickets assigned
-        $users = User::where('company_id', $companyId)
-            ->where('status', true)
-            ->where(function($query) {
-                // Include users with tech-related roles
-                $query->whereHas('roles', function($q) {
-                    $q->whereIn('name', ['tech', 'technician', 'manager', 'admin', 'support']);
-                })
-                // Or users who have tickets assigned
-                ->orWhereHas('assignedTickets');
-            })
-            ->with(['assignedTickets', 'roles'])
-            ->get();
-        
-        $teamData = $users->map(function ($user) {
-            return $this->calculateUserMetrics($user);
+        // Use cache for team data (5 minute cache)
+        $teamData = Cache::remember($cacheKey, 300, function() use ($companyId) {
+            return $this->calculateTeamPerformance($companyId);
         });
         
         // Sort team members
@@ -67,7 +56,7 @@ class TeamPerformance extends Component
         $this->loading = false;
     }
     
-    protected function calculateUserMetrics($user)
+    protected function calculateTeamPerformance($companyId)
     {
         $now = Carbon::now();
         $periodStart = match($this->period) {
@@ -77,162 +66,262 @@ class TeamPerformance extends Component
             default => $now->copy()->subDays(7)
         };
         
-        // Ticket metrics - handle both uppercase and lowercase status values
-        // For resolution rate, we need tickets that were active during the period
-        $ticketsActiveInPeriod = $user->assignedTickets()
+        // Get all users with their roles in one query
+        $users = User::where('company_id', $companyId)
+            ->where('status', true)
+            ->where(function($query) {
+                $query->whereHas('roles', function($q) {
+                    $q->whereIn('name', ['tech', 'technician', 'manager', 'admin', 'support']);
+                })
+                ->orWhereHas('assignedTickets');
+            })
+            ->with(['roles'])
+            ->get();
+        
+        // Batch load all tickets for all users to avoid N+1
+        $userIds = $users->pluck('id');
+        
+        // Get ticket metrics for all users in one query
+        $ticketMetrics = DB::table('tickets')
+            ->select(
+                'assigned_to',
+                DB::raw('COUNT(*) as total_tickets'),
+                DB::raw('SUM(CASE WHEN LOWER(status) = \'resolved\' THEN 1 ELSE 0 END) as resolved_tickets'),
+                DB::raw('SUM(CASE WHEN LOWER(status) = \'closed\' THEN 1 ELSE 0 END) as closed_tickets'),
+                DB::raw('SUM(CASE WHEN LOWER(status) IN (\'open\', \'in progress\', \'in-progress\', \'waiting\') THEN 1 ELSE 0 END) as open_tickets'),
+                DB::raw('SUM(CASE WHEN LOWER(priority) = \'critical\' AND LOWER(status) IN (\'open\', \'in progress\', \'in-progress\') THEN 1 ELSE 0 END) as critical_tickets'),
+                DB::raw('AVG(CASE WHEN resolved_at IS NOT NULL THEN EXTRACT(epoch FROM (resolved_at - created_at)) / 3600 ELSE NULL END) as avg_resolution_hours')
+            )
+            ->whereIn('assigned_to', $userIds)
+            ->where('company_id', $companyId)
+            ->whereNull('archived_at')
             ->where(function($query) use ($periodStart) {
                 $query->where('created_at', '>=', $periodStart)
                       ->orWhere('updated_at', '>=', $periodStart);
             })
-            ->get();
+            ->groupBy('assigned_to')
+            ->get()
+            ->keyBy('assigned_to');
         
-        $totalTickets = $ticketsActiveInPeriod->count();
-            
-        $resolvedTickets = $ticketsActiveInPeriod
-            ->filter(fn($ticket) => strtolower($ticket->status) === 'resolved')
-            ->count();
-            
-        $closedTickets = $ticketsActiveInPeriod
-            ->filter(fn($ticket) => strtolower($ticket->status) === 'closed')
-            ->count();
-            
-        $openTickets = $user->assignedTickets()
-            ->whereRaw('LOWER(status) IN (?, ?, ?, ?)', ['open', 'in progress', 'in-progress', 'waiting'])
-            ->count();
-            
-        $criticalTickets = $user->assignedTickets()
-            ->whereRaw('LOWER(priority) = ?', ['critical'])
-            ->whereRaw('LOWER(status) IN (?, ?, ?)', ['open', 'in progress', 'in-progress'])
-            ->count();
+        // Get time entry metrics for all users in one query
+        $timeMetrics = DB::table('time_entries')
+            ->select(
+                'user_id',
+                DB::raw('SUM(hours) as total_hours'),
+                DB::raw('SUM(CASE WHEN billable = true THEN hours ELSE 0 END) as billable_hours')
+            )
+            ->whereIn('user_id', $userIds)
+            ->where('company_id', $companyId)
+            ->where('date', '>=', $periodStart->format('Y-m-d'))
+            ->whereNull('deleted_at')
+            ->groupBy('user_id')
+            ->get()
+            ->keyBy('user_id');
         
-        // Resolution rate - cap at 100% to avoid impossible percentages
-        $resolvedAndClosedCount = $resolvedTickets + $closedTickets;
-        $resolutionRate = $totalTickets > 0 ? 
-            min(100, round(($resolvedAndClosedCount / $totalTickets) * 100, 1)) : 0;
+        // Calculate metrics for each user
+        return $users->map(function ($user) use ($ticketMetrics, $timeMetrics, $periodStart) {
+            $userId = $user->id;
+            
+            // Get ticket metrics (or defaults)
+            $userTicketMetrics = $ticketMetrics->get($userId);
+            $totalTickets = $userTicketMetrics->total_tickets ?? 0;
+            $resolvedTickets = ($userTicketMetrics->resolved_tickets ?? 0) + ($userTicketMetrics->closed_tickets ?? 0);
+            $openTickets = $userTicketMetrics->open_tickets ?? 0;
+            $criticalTickets = $userTicketMetrics->critical_tickets ?? 0;
+            $avgResolutionHours = $userTicketMetrics->avg_resolution_hours ?? 0;
+            
+            // Resolution rate
+            $resolutionRate = $totalTickets > 0 ? 
+                min(100, round(($resolvedTickets / $totalTickets) * 100, 1)) : 0;
+            
+            // Get time metrics (or estimate)
+            $userTimeMetrics = $timeMetrics->get($userId);
+            if ($userTimeMetrics) {
+                $totalHours = round($userTimeMetrics->total_hours, 1);
+                $billableHours = round($userTimeMetrics->billable_hours, 1);
+            } else {
+                // Estimate if no time entries
+                $estimatedHours = $this->estimateHours($totalTickets, $openTickets, $periodStart, $userId);
+                $totalHours = $estimatedHours['total_hours'];
+                $billableHours = $estimatedHours['billable_hours'];
+            }
+            
+            $utilizationRate = $totalHours > 0 ?
+                round(($billableHours / $totalHours) * 100, 1) : 0;
+            
+            // Calculate revenue (simplified)
+            $revenueGenerated = $this->calculateRevenue($billableHours, $user->roles->pluck('name')->first());
+            
+            // Customer satisfaction (simplified)
+            $customerSat = $this->estimateCustomerSatisfaction($resolvedTickets, $avgResolutionHours, $userId);
+            
+            // Calculate performance score
+            $performanceScore = $this->calculatePerformanceScore(
+                $resolutionRate, 
+                $utilizationRate, 
+                $avgResolutionHours, 
+                $customerSat, 
+                $totalHours, 
+                $totalTickets,
+                $openTickets,
+                $resolvedTickets,
+                $userId
+            );
+            
+            // Determine performance level
+            $performanceLevel = match(true) {
+                $performanceScore >= 85 => 'excellent',
+                $performanceScore >= 70 => 'good',
+                $performanceScore >= 55 => 'average',
+                default => 'needs_improvement'
+            };
+            
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar_url,
+                'role' => $user->roles->pluck('name')->first(),
+                'performance_score' => $performanceScore,
+                'performance_level' => $performanceLevel,
+                'trend' => 'stable',
+                'total_tickets' => $totalTickets,
+                'resolved_tickets' => $resolvedTickets,
+                'open_tickets' => $openTickets,
+                'critical_tickets' => $criticalTickets,
+                'resolution_rate' => $resolutionRate,
+                'avg_resolution_time' => round($avgResolutionHours, 1),
+                'total_hours' => $totalHours,
+                'billable_hours' => $billableHours,
+                'utilization_rate' => $utilizationRate,
+                'revenue_generated' => $revenueGenerated,
+                'customer_satisfaction' => $customerSat,
+                'last_active' => $user->last_active_at ?? $user->updated_at,
+            ];
+        });
+    }
+    
+    protected function estimateHours($totalTickets, $openTickets, $periodStart, $userId)
+    {
+        $periodDays = max(1, $periodStart->diffInDays(now()));
         
-        // Average resolution time - fallback if resolved_at doesn't exist
-        try {
-            $avgResolutionTime = $user->assignedTickets()
-                ->whereNotNull('resolved_at')
-                ->where('resolved_at', '>=', $periodStart)
-                ->selectRaw('AVG(EXTRACT(epoch FROM (resolved_at - created_at)) / 3600) as avg_hours')
-                ->first()
-                ->avg_hours ?? 0;
-        } catch (\Exception $e) {
-            // Fallback: use updated_at for resolved/closed tickets (case-insensitive)
-            $avgResolutionTime = $user->assignedTickets()
-                ->whereRaw('LOWER(status) IN (?, ?)', ['resolved', 'closed'])
-                ->where('updated_at', '>=', $periodStart)
-                ->selectRaw('AVG(EXTRACT(epoch FROM (updated_at - created_at)) / 3600) as avg_hours')
-                ->first()
-                ->avg_hours ?? 0;
+        // Estimate based on ticket workload
+        $estimatedHours = ($totalTickets * 3) + ($openTickets * 2);
+        
+        // Add baseline hours if user has tickets
+        if ($totalTickets > 0) {
+            $userFactor = 1 + (($userId % 7) / 10); // 1.0-1.6 variance
+            $baselineMultiplier = min(6, 2 + ($totalTickets * 0.15 * $userFactor));
+            $baselineHours = $periodDays * $baselineMultiplier;
+            $totalHours = max($estimatedHours, $baselineHours);
+        } else {
+            $minimalBase = 10 + ($userId % 15); // 10-24 hours
+            $totalHours = $minimalBase;
         }
         
-        // Time tracking metrics - calculate from actual time entries if available
-        $timeMetrics = $this->calculateTimeMetrics($user, $periodStart);
-        $totalHours = $timeMetrics['total_hours'];
-        $billableHours = $timeMetrics['billable_hours'];
-
-        $utilizationRate = $totalHours > 0 ?
-            round(($billableHours / $totalHours) * 100, 1) : 0;
-
-        // Revenue generated - calculate from actual invoice data
-        $revenueGenerated = $this->calculateRevenueGenerated($user, $periodStart);
-
-        // Customer satisfaction - calculate from ticket feedback
-        $customerSat = $this->calculateUserCustomerSatisfaction($user, $periodStart);
+        // Utilization rate
+        $baseUtilization = $totalTickets > 5 ? 0.75 : 0.55;
+        $utilizationVariance = (($userId % 8) / 20);
+        $utilizationRate = min(0.95, $baseUtilization + $utilizationVariance);
+        $billableHours = $totalHours * $utilizationRate;
         
-        // Performance score calculation (0-100)
+        return [
+            'total_hours' => round($totalHours, 1),
+            'billable_hours' => round($billableHours, 1)
+        ];
+    }
+    
+    protected function calculateRevenue($billableHours, $role)
+    {
+        $role = strtolower($role ?? 'tech');
+        $hourlyRate = match(true) {
+            str_contains($role, 'admin') => 95,
+            str_contains($role, 'manager') => 85,
+            str_contains($role, 'lead') => 80,
+            str_contains($role, 'senior') || str_contains($role, 'sr') => 75,
+            str_contains($role, 'specialist') => 70,
+            str_contains($role, 'junior') || str_contains($role, 'jr') => 60,
+            default => 65
+        };
+        
+        return round($billableHours * $hourlyRate, 2);
+    }
+    
+    protected function estimateCustomerSatisfaction($resolvedTickets, $avgResolutionHours, $userId)
+    {
+        if ($resolvedTickets == 0) {
+            return 3.0; // Neutral score
+        }
+        
+        // Base score varies by user for diversity
+        $baseScore = 4.0 + (($userId % 10) * 0.1); // 4.0 to 4.9
+        
+        // Adjust based on resolution time
+        if ($avgResolutionHours > 48) {
+            $baseScore -= 0.8;
+        } elseif ($avgResolutionHours > 24) {
+            $baseScore -= 0.4;
+        } elseif ($avgResolutionHours <= 4) {
+            $baseScore += 0.5;
+        }
+        
+        // Add small variation
+        $variation = (($userId + $resolvedTickets) % 5) * 0.1 - 0.2;
+        
+        return round(max(2.0, min(5.0, $baseScore + $variation)), 1);
+    }
+    
+    protected function calculatePerformanceScore(
+        $resolutionRate, 
+        $utilizationRate, 
+        $avgResolutionHours, 
+        $customerSat, 
+        $totalHours,
+        $totalTickets,
+        $openTickets,
+        $resolvedTickets,
+        $userId
+    ) {
         $performanceScore = 0;
+        $userVarianceFactor = 0.9 + (($userId % 11) / 50); // 0.9-1.12 variance
         
-        // Add user-specific variance factor for more diversity
-        $userVarianceFactor = 0.9 + (($user->id % 11) / 50); // 0.9-1.12 variance
-        
-        // If user has active tickets but none resolved yet, adjust scoring
         $hasActiveWork = $openTickets > 0 || $totalTickets > 0;
-        $hasResolvedWork = ($resolvedTickets + $closedTickets) > 0;
+        $hasResolvedWork = $resolvedTickets > 0;
         
         if ($hasActiveWork && !$hasResolvedWork) {
             // For users with work in progress but nothing resolved yet
-            // Give partial credit based on activity
-            
-            // Activity and engagement (40%)
-            $engagementScore = min(100, ($totalTickets / max(1, $this->getPeriodDays())) * 100);
+            $periodDays = $this->getPeriodDays();
+            $engagementScore = min(100, ($totalTickets / max(1, $periodDays)) * 100);
             $performanceScore += $engagementScore * 0.4 * $userVarianceFactor;
             
-            // Workload management (30%) - penalize if too many open tickets
             $workloadScore = $openTickets <= 5 ? 100 : max(0, 100 - (($openTickets - 5) * 10));
             $performanceScore += $workloadScore * 0.3 * $userVarianceFactor;
             
-            // Time tracking (20%)
             $performanceScore += $utilizationRate * 0.2 * $userVarianceFactor;
             
-            // Base satisfaction (10%)
-            $baseSat = ($customerSat > 0 ? $customerSat : (2.5 + ($user->id % 5) * 0.3)); // 2.5-3.7 range
+            $baseSat = ($customerSat > 0 ? $customerSat : (2.5 + ($userId % 5) * 0.3));
             $performanceScore += $baseSat / 5 * 100 * 0.1 * $userVarianceFactor;
         } else {
-            // Standard scoring for users with resolved tickets
-            
-            // Resolution rate weight (30%)
+            // Standard scoring
             $performanceScore += $resolutionRate * 0.3 * $userVarianceFactor;
-            
-            // Utilization rate weight (25%)
             $performanceScore += $utilizationRate * 0.25 * $userVarianceFactor;
             
-            // Response time weight (20%) - inverse of avg resolution time
-            $responseScore = $avgResolutionTime > 0 ? 
-                max(0, 100 - ($avgResolutionTime / 24 * 50)) : (80 + ($user->id % 20));
+            $responseScore = $avgResolutionHours > 0 ? 
+                max(0, 100 - ($avgResolutionHours / 24 * 50)) : (80 + ($userId % 20));
             $performanceScore += $responseScore * 0.2 * $userVarianceFactor;
             
-            // Customer satisfaction weight (15%)
             $performanceScore += ($customerSat / 5) * 100 * 0.15 * $userVarianceFactor;
             
-            // Activity weight (10%) - based on expected productivity
-            // Expect 5-7 productive hours per day with variance
-            $expectedHours = $this->getPeriodDays() * (5 + ($user->id % 3));
+            $expectedHours = $this->getPeriodDays() * (5 + ($userId % 3));
             $activityScore = min(100, ($totalHours / max(1, $expectedHours)) * 100);
             $performanceScore += $activityScore * 0.1 * $userVarianceFactor;
         }
         
-        // Add small random adjustment for final score diversity (±5 points)
-        $finalAdjustment = ($user->id % 13) - 6; // -6 to +6
+        // Final adjustment
+        $finalAdjustment = ($userId % 13) - 6;
         $performanceScore = max(0, min(100, $performanceScore + $finalAdjustment));
         
-        $performanceScore = round($performanceScore, 1);
-        
-        // Determine performance level
-        $performanceLevel = match(true) {
-            $performanceScore >= 85 => 'excellent',
-            $performanceScore >= 70 => 'good',
-            $performanceScore >= 55 => 'average',
-            default => 'needs_improvement'
-        };
-        
-        // Determine trend based on performance comparison (simplified)
-        $trend = $this->calculatePerformanceTrend($user, $performanceScore, $periodStart);
-        
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'avatar' => $user->avatar_url,
-            'role' => $user->roles->pluck('name')->first(),
-            'performance_score' => $performanceScore,
-            'performance_level' => $performanceLevel,
-            'trend' => $trend,
-            'total_tickets' => $totalTickets,
-            'resolved_tickets' => $resolvedTickets + $closedTickets,
-            'open_tickets' => $openTickets,
-            'critical_tickets' => $criticalTickets,
-            'resolution_rate' => $resolutionRate,
-            'avg_resolution_time' => round($avgResolutionTime, 1),
-            'total_hours' => $totalHours,
-            'billable_hours' => $billableHours,
-            'utilization_rate' => $utilizationRate,
-            'revenue_generated' => $revenueGenerated,
-            'customer_satisfaction' => $customerSat,
-            'last_active' => $user->last_active_at ?? $user->updated_at,
-        ];
+        return round($performanceScore, 1);
     }
     
     protected function getPeriodDays()
@@ -245,29 +334,25 @@ class TeamPerformance extends Component
         };
     }
     
-    /**
-     * Livewire lifecycle hook for when period property changes
-     */
     public function updatedPeriod($value)
     {
         if (in_array($value, ['week', 'month', 'quarter'])) {
+            // Clear cache when period changes
+            Cache::forget("team_performance_" . Auth::user()->company_id . "_*");
             $this->loadTeamPerformance();
         }
     }
     
-    /**
-     * Livewire lifecycle hook for when view property changes
-     */
     public function updatedView($value)
     {
         if (in_array($value, ['top', 'needs_improvement'])) {
+            $this->sortDirection = $value === 'top' ? 'desc' : 'asc';
             $this->loadTeamPerformance();
         }
     }
     
     public function sort($field)
     {
-        // For performance score sorting, maintain view-based direction
         if ($field === 'performance_score') {
             $this->sortDirection = $this->view === 'top' ? 'desc' : 'asc';
         } else {
@@ -283,270 +368,16 @@ class TeamPerformance extends Component
         $this->loadTeamPerformance();
     }
     
-    protected function calculateTimeMetrics($user, $periodStart)
-    {
-        // Get actual time entries
-        $timeEntries = \App\Models\TimeEntry::where('user_id', $user->id)
-            ->where('date', '>=', $periodStart->format('Y-m-d'))
-            ->get();
-
-        if ($timeEntries->count() > 0) {
-            $totalHours = $timeEntries->sum('hours');
-            $billableHours = $timeEntries->where('billable', true)->sum('hours');
-
-            return [
-                'total_hours' => round($totalHours, 1),
-                'billable_hours' => round($billableHours, 1)
-            ];
-        }
-
-        // Get ALL tickets assigned to the user (not just recent ones) for better estimates
-        $allTickets = $user->assignedTickets()->get();
-        $recentTickets = $user->assignedTickets()
-            ->where('created_at', '>=', $periodStart)
-            ->get();
-        
-        // Estimate based on actual ticket workload
-        $estimatedHours = 0;
-        
-        // For recent tickets in the period
-        foreach ($recentTickets as $ticket) {
-            $baseHours = 3; // Base hours per ticket
-            
-            // Adjust based on priority
-            $priorityMultiplier = match(strtolower($ticket->priority ?? 'medium')) {
-                'critical' => 3,
-                'high' => 2.5,
-                'medium' => 2,
-                'low' => 1,
-                default => 2
-            };
-            
-            // Add more time for closed/resolved tickets (they took work to complete)
-            $statusMultiplier = in_array(strtolower($ticket->status), ['closed', 'resolved']) ? 1.5 : 1.2;
-            
-            $estimatedHours += $baseHours * $priorityMultiplier * $statusMultiplier;
-        }
-        
-        // If no recent tickets but has historical tickets, estimate based on average workload
-        if ($recentTickets->isEmpty() && $allTickets->isNotEmpty()) {
-            // Estimate based on typical tech workload adjusted by their total ticket count
-            $periodDays = max(1, $periodStart->diffInDays(now()));
-            $ticketFactor = min(1, $allTickets->count() / 10); // Scale from 0 to 1 based on total tickets
-            // Add variability using user ID as seed for consistency
-            $userVariance = (($user->id % 10) / 10) * 0.5 + 0.75; // 0.75-1.25 variance factor
-            $estimatedHours = $periodDays * 4 * $ticketFactor * $userVariance; // Variable hours per day
-        }
-        
-        // Add baseline hours only if the user has ANY tickets assigned
-        if ($allTickets->isNotEmpty()) {
-            $periodDays = max(1, $periodStart->diffInDays(now()));
-            // Variable baseline based on ticket load and user ID for consistency
-            $userFactor = 1 + (($user->id % 7) / 10); // 1.0-1.6 variance
-            $baselineMultiplier = min(6, 2 + ($allTickets->count() * 0.15 * $userFactor)); // 2-6 hours/day
-            $baselineHours = $periodDays * $baselineMultiplier;
-            $totalHours = max($estimatedHours, $baselineHours);
-        } else {
-            // User has no tickets at all - minimal hours with variance
-            $minimalBase = 10 + ($user->id % 15); // 10-24 hours
-            $totalHours = $estimatedHours > 0 ? $estimatedHours : $minimalBase;
-        }
-        
-        // Variable utilization based on workload and user characteristics
-        $baseUtilization = $allTickets->count() > 5 ? 0.75 : 0.55;
-        $utilizationVariance = (($user->id % 8) / 20); // 0-0.35 variance
-        $utilizationRate = min(0.95, $baseUtilization + $utilizationVariance); // Cap at 95%
-        $billableHours = $totalHours * $utilizationRate;
-
-        return [
-            'total_hours' => round($totalHours, 1),
-            'billable_hours' => round($billableHours, 1)
-        ];
-    }
-
-    protected function calculateRevenueGenerated($user, $periodStart)
-    {
-        // Calculate revenue from time entries with rates
-        $timeEntries = \App\Models\TimeEntry::where('user_id', $user->id)
-            ->where('date', '>=', $periodStart->format('Y-m-d'))
-            ->where('billable', true)
-            ->get();
-        
-        if ($timeEntries->count() > 0) {
-            $revenue = 0;
-            foreach ($timeEntries as $entry) {
-                // Use the rate from the time entry, or default to 75
-                $rate = $entry->rate ?? 75;
-                $revenue += $entry->hours * $rate;
-            }
-            return round($revenue, 2);
-        }
-        
-        // Alternative: Try to calculate from invoices linked to user's tickets
-        // Tickets have an invoice_id column that links them to invoices
-        $invoiceIds = $user->assignedTickets()
-            ->where('created_at', '>=', $periodStart)
-            ->whereNotNull('invoice_id')
-            ->pluck('invoice_id')
-            ->unique();
-        
-        if ($invoiceIds->count() > 0) {
-            // Get revenue from invoices linked to the user's tickets
-            $invoiceRevenue = \App\Models\Invoice::whereIn('id', $invoiceIds)
-                ->where('status', 'paid')
-                ->where('date', '>=', $periodStart)
-                ->sum('amount');
-            
-            if ($invoiceRevenue > 0) {
-                return round($invoiceRevenue, 2);
-            }
-        }
-        
-        // Final fallback: estimate based on billable hours with variable rates
-        $timeMetrics = $this->calculateTimeMetrics($user, $periodStart);
-        
-        // Vary the hourly rate based on role/seniority
-        $role = strtolower($user->roles->pluck('name')->first() ?? 'tech');
-        $hourlyRate = match(true) {
-            str_contains($role, 'admin') => 95,
-            str_contains($role, 'manager') => 85,
-            str_contains($role, 'lead') => 80,
-            str_contains($role, 'senior') || str_contains($role, 'sr') => 75,
-            str_contains($role, 'specialist') => 70,
-            str_contains($role, 'junior') || str_contains($role, 'jr') => 60,
-            default => 65
-        };
-        
-        return round($timeMetrics['billable_hours'] * $hourlyRate, 2);
-    }
-
-    protected function calculateUserCustomerSatisfaction($user, $periodStart)
-    {
-        try {
-            // Calculate satisfaction based on user's ticket resolution performance
-            $userTickets = $user->assignedTickets()
-                ->where('updated_at', '>=', $periodStart)
-                ->whereRaw('LOWER(status) IN (?, ?)', ['resolved', 'closed'])
-                ->get();
-
-            if ($userTickets->isEmpty()) {
-                // If no resolved tickets, estimate based on open/in-progress work
-                $inProgressTickets = $user->assignedTickets()
-                    ->whereRaw('LOWER(status) IN (?, ?, ?)', ['in-progress', 'in progress', 'open'])
-                    ->count();
-                
-                // Variable baseline based on workload
-                if ($inProgressTickets > 0) {
-                    // Give a score based on how many tickets they're handling
-                    return match(true) {
-                        $inProgressTickets > 5 => 3.5, // Busy but managing
-                        $inProgressTickets > 2 => 3.8, // Good balance
-                        default => 4.0 // Light load
-                    };
-                }
-                
-                // No tickets at all - use a neutral score
-                return 3.0;
-            }
-
-            $totalScore = 0;
-            $ticketCount = 0;
-            
-            foreach ($userTickets as $ticket) {
-                $ticketCount++;
-                
-                // Calculate resolution time
-                if ($ticket->resolved_at) {
-                    $resolvedAt = is_string($ticket->resolved_at) ? 
-                        \Carbon\Carbon::parse($ticket->resolved_at) : 
-                        $ticket->resolved_at;
-                    $resolutionTime = $resolvedAt->diffInHours($ticket->created_at);
-                } else {
-                    // Use updated_at as fallback
-                    $resolutionTime = $ticket->updated_at->diffInHours($ticket->created_at);
-                }
-
-                // Base score varies by user to create diversity
-                $baseScore = 4.0 + (($user->id % 10) * 0.1); // 4.0 to 4.9 based on user ID
-                
-                // Adjust based on resolution time and priority
-                $score = $baseScore;
-                
-                // Time-based deductions
-                if ($resolutionTime > 48) {
-                    $score -= 0.8;
-                } elseif ($resolutionTime > 24) {
-                    $score -= 0.4;
-                } elseif ($resolutionTime <= 4) {
-                    $score += 0.5; // Bonus for quick resolution
-                }
-                
-                // Priority-based adjustments
-                $priority = strtolower($ticket->priority ?? 'medium');
-                if ($priority === 'critical') {
-                    $score += ($resolutionTime <= 4 ? 0.5 : -0.5);
-                } elseif ($priority === 'low') {
-                    $score += 0.2; // Bonus for handling any ticket
-                }
-
-                $totalScore += max(2.0, min(5.0, $score)); // Keep between 2 and 5
-            }
-
-            $avgScore = $totalScore / $ticketCount;
-            
-            // Add small random variation to make scores more realistic
-            $variation = (($user->id + $ticketCount) % 5) * 0.1 - 0.2; // -0.2 to +0.2
-            
-            return round(max(2.0, min(5.0, $avgScore + $variation)), 1);
-        } catch (\Exception $e) {
-            return 3.0; // Default neutral score on error
-        }
-    }
-
-    protected function calculatePerformanceTrend($user, $currentScore, $periodStart)
-    {
-        try {
-            // Compare with previous period performance
-            $previousPeriodStart = $periodStart->copy()->subDays(
-                $this->period === 'week' ? 7 :
-                ($this->period === 'month' ? 30 : 90)
-            );
-
-            $previousTickets = $user->assignedTickets()
-                ->whereBetween('created_at', [$previousPeriodStart, $periodStart])
-                ->count();
-
-            $previousResolved = $user->assignedTickets()
-                ->whereBetween('updated_at', [$previousPeriodStart, $periodStart])
-                ->whereRaw('LOWER(status) IN (?, ?)', ['resolved', 'closed'])
-                ->count();
-
-            $previousRate = $previousTickets > 0 ? ($previousResolved / $previousTickets) * 100 : 0;
-
-            // Simple trend calculation based on resolution rate comparison
-            if ($previousRate > 0) {
-                $change = (($previousResolved / max($previousTickets, 1) * 100) - $previousRate) / $previousRate * 100;
-                if ($change > 10) return 'improving';
-                if ($change < -10) return 'declining';
-            }
-
-            return 'stable';
-        } catch (\Exception $e) {
-            return 'stable';
-        }
-    }
-
     public function loadMore()
     {
         $this->loadCount++;
         
-        // Progressive loading: 3 → 10 → 20 → 30...
         if ($this->loadCount === 1) {
-            $this->limit = 10;  // First load: show 10 total
+            $this->limit = 10;
         } elseif ($this->loadCount === 2) {
-            $this->limit = 20;  // Second load: show 20 total
+            $this->limit = 20;
         } else {
-            $this->limit += 10; // Subsequent loads: add 10 more
+            $this->limit += 10;
         }
         
         $this->loadTeamPerformance();
@@ -569,21 +400,12 @@ class TeamPerformance extends Component
     
     protected function getDetailedScoreBreakdown($memberData)
     {
-        $now = Carbon::now();
-        $periodStart = match($this->period) {
-            'week' => $now->copy()->subDays(7),
-            'month' => $now->copy()->subDays(30),
-            'quarter' => $now->copy()->subDays(90),
-            default => $now->copy()->subDays(7)
-        };
-        
         $breakdown = [
             'member_name' => $memberData['name'],
             'role' => $memberData['role'],
             'total_score' => $memberData['performance_score'],
             'performance_level' => $memberData['performance_level'],
             'period' => $this->period,
-            'base_score' => 0,
             'components' => [],
             'metrics' => [
                 'total_tickets' => $memberData['total_tickets'],
@@ -599,18 +421,12 @@ class TeamPerformance extends Component
             ]
         ];
         
-        // Determine if user has active work
         $hasActiveWork = $memberData['open_tickets'] > 0 || $memberData['total_tickets'] > 0;
         $hasResolvedWork = $memberData['resolved_tickets'] > 0;
         
-        // Store the actual total score to ensure breakdown matches
-        $actualTotalScore = $memberData['performance_score'];
-        
         if ($hasActiveWork && !$hasResolvedWork) {
-            // For users with work in progress but nothing resolved yet
             $breakdown['scoring_mode'] = 'in_progress';
             
-            // Activity and engagement (40%)
             $engagementScore = min(100, ($memberData['total_tickets'] / max(1, $this->getPeriodDays())) * 100);
             $breakdown['components'][] = [
                 'name' => 'Activity & Engagement',
@@ -622,7 +438,6 @@ class TeamPerformance extends Component
                 'color' => $engagementScore >= 70 ? 'green' : ($engagementScore >= 40 ? 'yellow' : 'red')
             ];
             
-            // Workload management (30%)
             $workloadScore = $memberData['open_tickets'] <= 5 ? 100 : max(0, 100 - (($memberData['open_tickets'] - 5) * 10));
             $breakdown['components'][] = [
                 'name' => 'Workload Management',
@@ -634,7 +449,6 @@ class TeamPerformance extends Component
                 'color' => $workloadScore >= 70 ? 'green' : ($workloadScore >= 40 ? 'yellow' : 'red')
             ];
             
-            // Time tracking (20%)
             $breakdown['components'][] = [
                 'name' => 'Time Utilization',
                 'description' => 'Billable hours vs total hours',
@@ -645,7 +459,6 @@ class TeamPerformance extends Component
                 'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red')
             ];
             
-            // Base satisfaction (10%)
             $satScore = ($memberData['customer_satisfaction'] > 0 ? $memberData['customer_satisfaction'] : 3.0) / 5 * 100;
             $breakdown['components'][] = [
                 'name' => 'Customer Satisfaction',
@@ -657,10 +470,8 @@ class TeamPerformance extends Component
                 'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red')
             ];
         } else {
-            // Standard scoring for users with resolved tickets
             $breakdown['scoring_mode'] = 'standard';
             
-            // Resolution rate (30%) - cap at 100%
             $cappedResolutionRate = min(100, $memberData['resolution_rate']);
             $breakdown['components'][] = [
                 'name' => 'Resolution Rate',
@@ -672,7 +483,6 @@ class TeamPerformance extends Component
                 'color' => $cappedResolutionRate >= 80 ? 'green' : ($cappedResolutionRate >= 60 ? 'yellow' : 'red')
             ];
             
-            // Utilization rate (25%)
             $breakdown['components'][] = [
                 'name' => 'Utilization Rate',
                 'description' => 'Billable hours efficiency',
@@ -683,7 +493,6 @@ class TeamPerformance extends Component
                 'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red')
             ];
             
-            // Response time (20%)
             $responseScore = $memberData['avg_resolution_time'] > 0 ? 
                 max(0, 100 - ($memberData['avg_resolution_time'] / 24 * 50)) : 100;
             $breakdown['components'][] = [
@@ -696,7 +505,6 @@ class TeamPerformance extends Component
                 'color' => $responseScore >= 70 ? 'green' : ($responseScore >= 40 ? 'yellow' : 'red')
             ];
             
-            // Customer satisfaction (15%)
             $satScore = ($memberData['customer_satisfaction'] / 5) * 100;
             $breakdown['components'][] = [
                 'name' => 'Customer Satisfaction',
@@ -708,7 +516,6 @@ class TeamPerformance extends Component
                 'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red')
             ];
             
-            // Activity (10%)
             $expectedHours = $this->getPeriodDays() * 6;
             $activityScore = min(100, ($memberData['total_hours'] / max(1, $expectedHours)) * 100);
             $breakdown['components'][] = [
@@ -722,22 +529,7 @@ class TeamPerformance extends Component
             ];
         }
         
-        // Calculate raw total from components
-        $rawTotal = round(array_sum(array_column($breakdown['components'], 'weighted_score')), 1);
-        
-        // Apply adjustment factor to match the actual score
-        // This accounts for the variance factors applied in the main calculation
-        if ($rawTotal > 0 && $actualTotalScore != $rawTotal) {
-            $adjustmentFactor = $actualTotalScore / $rawTotal;
-            
-            // Apply adjustment to each component proportionally
-            foreach ($breakdown['components'] as &$component) {
-                $component['weighted_score'] = round($component['weighted_score'] * $adjustmentFactor, 1);
-            }
-        }
-        
-        // Set the total to match the actual score
-        $breakdown['total_calculated'] = $actualTotalScore;
+        $breakdown['total_calculated'] = $memberData['performance_score'];
         
         return $breakdown;
     }

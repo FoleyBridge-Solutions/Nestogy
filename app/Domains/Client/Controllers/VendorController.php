@@ -8,7 +8,7 @@ use App\Models\ClientVendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 
 class VendorController extends Controller

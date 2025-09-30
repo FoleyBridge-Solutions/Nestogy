@@ -15,9 +15,9 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2 flex-1 min-w-0">
                     {{-- Ticket Info --}}
-                    <span class="text-sm font-bold">#{{ $ticket->ticket_number ?? $ticket->number }}</span>
+                    <span class="font-bold">#{{ $ticket->ticket_number ?? $ticket->number }}</span>
                     <span class="text-gray-400">|</span>
-                    <span class="text-sm font-medium truncate">{{ $ticket->subject }}</span>
+                    <span class="font-medium truncate">{{ $ticket->subject }}</span>
 
                     {{-- Status & Priority --}}
                     <flux:badge color="{{
@@ -26,7 +26,7 @@
                         ($ticket->status === 'pending' ? 'amber' :
                         ($ticket->status === 'resolved' ? 'purple' :
                         ($ticket->status === 'closed' ? 'zinc' : 'red'))))
-                    }}" size="sm">
+                    }}">
                         {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                     </flux:badge>
 
@@ -36,13 +36,13 @@
                         ($ticket->priority === 'high' ? 'orange' :
                         ($ticket->priority === 'medium' ? 'yellow' :
                         ($ticket->priority === 'low' ? 'gray' : 'zinc'))))
-                    }}" size="sm">
+                    }}">
                         {{ ucfirst($ticket->priority) }}
                     </flux:badge>
 
                     {{-- Key Info Inline --}}
                     <span class="text-gray-400">|</span>
-                    <span class="text-xs text-gray-600">
+                    <span class="text-sm text-gray-600">
                         <strong>Client:</strong>
                         @if($ticket->client)
                             <a href="{{ route('clients.show', $ticket->client) }}" class="text-blue-600 hover:underline">{{ $ticket->client->name }}</a>
@@ -51,16 +51,16 @@
                         @endif
                     </span>
                     <span class="text-gray-400">|</span>
-                    <span class="text-xs text-gray-600"><strong>Contact:</strong> {{ $ticket->contact?->name ?? '-' }}</span>
+                    <span class="text-sm text-gray-600"><strong>Contact:</strong> {{ $ticket->contact?->name ?? '-' }}</span>
                     <span class="text-gray-400">|</span>
-                    <span class="text-xs text-gray-600"><strong>Assignee:</strong> {{ $ticket->assignee?->name ?? 'Unassigned' }}</span>
+                    <span class="text-sm text-gray-600"><strong>Assignee:</strong> {{ $ticket->assignee?->name ?? 'Unassigned' }}</span>
 
                     @php
                         $totalMinutes = $ticket->timeLogs->sum('minutes_worked') ?? 0;
                     @endphp
                     @if($totalMinutes > 0)
                         <span class="text-gray-400">|</span>
-                        <span class="text-xs text-gray-600"><strong>Time:</strong> {{ floor($totalMinutes / 60) }}h {{ $totalMinutes % 60 }}m</span>
+                        <span class="text-sm text-gray-600"><strong>Time:</strong> {{ floor($totalMinutes / 60) }}h {{ $totalMinutes % 60 }}m</span>
                     @endif
 
                     @if($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline)
@@ -69,29 +69,29 @@
                             $isBreached = now()->isAfter($deadline);
                         @endphp
                         <span class="text-gray-400">|</span>
-                        <span class="text-xs {{ $isBreached ? 'text-red-600 font-bold' : 'text-green-600' }}">
+                        <span class="text-sm {{ $isBreached ? 'text-red-600 font-bold' : 'text-green-600' }}">
                             <strong>SLA:</strong> {{ $isBreached ? 'BREACHED' : $deadline->diffForHumans(null, true) }}
                         </span>
                     @endif
 
                     <span class="text-gray-400">|</span>
-                    <span class="text-xs text-gray-500">{{ $ticket->created_at->diffForHumans() }}</span>
+                    <span class="text-sm text-gray-500">{{ $ticket->created_at->diffForHumans() }}</span>
                 </div>
 
                 {{-- Timer Display --}}
                 @if($activeTimer)
-                    <div class="flex items-center gap-2 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/20 rounded text-xs" wire:poll.1s="updateElapsedTime">
+                    <div class="flex items-center gap-2 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/20 rounded text-sm" wire:poll.1s="updateElapsedTime">
                         <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                         <span class="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {{ $elapsedTime }}
                         </span>
-                        <button type="button" wire:click="stopTimer" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700">
+                        <button type="button" wire:click="stopTimer" class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700">
                             <flux:icon.stop class="size-3" />
                             Stop
                         </button>
                     </div>
                 @else
-                    <button type="button" wire:click="startTimer" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-emerald-600 rounded hover:bg-emerald-700">
+                    <button type="button" wire:click="startTimer" class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-white bg-emerald-600 rounded hover:bg-emerald-700">
                         <flux:icon.play class="size-3" />
                         Start Timer
                     </button>
@@ -99,32 +99,32 @@
 
                 {{-- Actions --}}
                 <div class="flex items-center gap-1 ml-2">
-                    <flux:button variant="ghost" size="xs" wire:click="toggleWatch">
-                        <flux:icon.eye class="size-3 {{ $isWatching ? 'text-yellow-600' : '' }}" />
+                    <flux:button variant="ghost" size="sm" wire:click="toggleWatch">
+                        <flux:icon.eye class="size-4 {{ $isWatching ? 'text-yellow-600' : '' }}" />
                     </flux:button>
-                    <flux:button variant="ghost" size="xs" href="{{ route('tickets.edit', $ticket) }}">
-                        <flux:icon.pencil class="size-3" />
+                    <flux:button variant="ghost" size="sm" href="{{ route('tickets.edit', $ticket) }}">
+                        <flux:icon.pencil class="size-4" />
                     </flux:button>
                     <flux:dropdown>
-                        <flux:button variant="ghost" size="xs">
-                            <flux:icon.ellipsis-horizontal class="size-3" />
+                        <flux:button variant="ghost" size="sm">
+                            <flux:icon.ellipsis-horizontal class="size-4" />
                         </flux:button>
                         <flux:menu>
-                            <flux:menu.item wire:click="$set('showStatusChangeModal', true)" size="xs">
-                                <flux:icon.arrow-path class="size-3" />
+                            <flux:menu.item wire:click="$set('showStatusChangeModal', true)">
+                                <flux:icon.arrow-path class="size-4" />
                                 Status
                             </flux:menu.item>
-                            <flux:menu.item wire:click="cloneTicket" size="xs">
-                                <flux:icon.document-duplicate class="size-3" />
+                            <flux:menu.item wire:click="cloneTicket">
+                                <flux:icon.document-duplicate class="size-4" />
                                 Clone
                             </flux:menu.item>
-                            <flux:menu.item href="{{ route('tickets.pdf', $ticket) }}" target="_blank" size="xs">
-                                <flux:icon.document-arrow-down class="size-3" />
+                            <flux:menu.item href="{{ route('tickets.pdf', $ticket) }}" target="_blank">
+                                <flux:icon.document-arrow-down class="size-4" />
                                 PDF
                             </flux:menu.item>
                             <flux:menu.separator />
-                            <flux:menu.item variant="danger" wire:click="archiveTicket" size="xs">
-                                <flux:icon.archive-box class="size-3" />
+                            <flux:menu.item variant="danger" wire:click="archiveTicket">
+                                <flux:icon.archive-box class="size-4" />
                                 Archive
                             </flux:menu.item>
                         </flux:menu>
@@ -136,7 +136,7 @@
 
     {{-- Inline Metrics Bar --}}
     <div class="bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
-        <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center justify-between text-sm">
             <div class="flex items-center gap-3">
                 <div class="flex items-center gap-1">
                     <span class="text-gray-500">Age:</span>
@@ -196,7 +196,7 @@
             <flux:card>
                 <div class="p-3">
                     <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-sm font-semibold">Description</h3>
+                        <h3 class="font-semibold">Description</h3>
                         <div class="flex items-center gap-2">
                             @if($ticket->sentiment_label)
                                 <span class="text-xs px-2 py-1 rounded {{

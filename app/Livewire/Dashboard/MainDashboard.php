@@ -5,10 +5,11 @@ namespace App\Livewire\Dashboard;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Reactive;
-use App\Services\DashboardDataService;
-use App\Services\DashboardLazyLoadService;
+use App\Domains\Core\Services\DashboardDataService;
+use App\Domains\Core\Services\DashboardLazyLoadService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class MainDashboard extends Component
 {
@@ -125,8 +126,33 @@ class MainDashboard extends Component
         $cacheKey = "dashboard_data_{$this->view}_" . Auth::id();
         
         $this->metrics = Cache::remember($cacheKey, 60, function () {
-            // Load basic metrics for now - widgets will handle their own data loading
+            // Preload all common data that widgets will need
             $companyId = Auth::user()->company_id;
+            
+            // Preload common date ranges
+            $now = Carbon::now();
+            $periods = [
+                'current_month' => ['start' => $now->copy()->startOfMonth(), 'end' => $now->copy()->endOfMonth()],
+                'previous_month' => ['start' => $now->copy()->subMonth()->startOfMonth(), 'end' => $now->copy()->subMonth()->endOfMonth()],
+                'current_quarter' => ['start' => $now->copy()->startOfQuarter(), 'end' => $now->copy()->endOfQuarter()],
+                'previous_quarter' => ['start' => $now->copy()->subQuarter()->startOfQuarter(), 'end' => $now->copy()->subQuarter()->endOfQuarter()],
+                'current_year' => ['start' => $now->copy()->startOfYear(), 'end' => $now->copy()->endOfYear()],
+                'last_30_days' => ['start' => $now->copy()->subDays(30), 'end' => $now],
+                'last_7_days' => ['start' => $now->copy()->subDays(7), 'end' => $now],
+            ];
+            
+            // Preload invoice stats for all periods at once
+            $invoiceStats = \App\Domains\Core\Services\DashboardCacheService::getMultiPeriodInvoiceStats($companyId, $periods);
+            
+            // Preload client stats
+            $clientStats = \App\Domains\Core\Services\DashboardCacheService::getClientStats($companyId, $now);
+            
+            // Preload daily chart data for the last 30 days
+            $chartData = \App\Domains\Core\Services\DashboardCacheService::getDailyChartData(
+                $companyId, 
+                $now->copy()->subDays(30), 
+                $now
+            );
             
             try {
                 $service = new DashboardDataService($companyId);
@@ -144,10 +170,24 @@ class MainDashboard extends Component
                         : ['view' => 'support'],
                     default => []
                 };
+                
+                // Add preloaded data to the response
+                $data['preloaded'] = [
+                    'invoice_stats' => $invoiceStats,
+                    'client_stats' => $clientStats,
+                    'chart_data' => $chartData,
+                    'periods' => $periods,
+                ];
             } catch (\Exception $e) {
                 // Fallback data if service fails
                 $data = [
                     'view' => $this->view,
+                    'preloaded' => [
+                        'invoice_stats' => $invoiceStats,
+                        'client_stats' => $clientStats,
+                        'chart_data' => $chartData,
+                        'periods' => $periods,
+                    ],
                     'company_id' => $companyId,
                     'loaded_at' => now(),
                     'error' => 'Service temporarily unavailable'

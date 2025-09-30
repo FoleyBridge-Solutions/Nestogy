@@ -3,11 +3,11 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\ConfigurationValidationService;
-use App\Services\NavigationService;
-use App\Services\VoIPTaxService;
-use App\Services\VoIPUsageService;
-use App\Services\VoIPTieredPricingService;
+use App\Domains\Core\Services\ConfigurationValidationService;
+use App\Domains\Core\Services\NavigationService;
+use App\Domains\Financial\Services\VoIPTaxService;
+use App\Domains\Product\Services\VoIPUsageService;
+use App\Domains\Product\Services\VoIPTieredPricingService;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Http\ViewComposers\NavigationComposer;
 use App\Http\ViewComposers\ClientViewComposer;

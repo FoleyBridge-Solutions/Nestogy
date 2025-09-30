@@ -3,8 +3,8 @@
 namespace App\View\Components;
 
 use Illuminate\View\Component;
-use App\Services\NavigationService;
-use App\Services\SidebarConfigProvider;
+use App\Domains\Core\Services\NavigationService;
+use App\Domains\Core\Services\SidebarConfigProvider;
 
 class FluxSidebar extends Component
 {
@@ -50,7 +50,7 @@ class FluxSidebar extends Component
         
         foreach ($params as $key => $value) {
             // Skip client-related parameters - we use session-based client selection
-            // as per the architectural decision documented in CLAUDE.md
+            // as per the architectural decision documented in docs/CLAUDE.md
             if (in_array($key, ['client', 'client_id'])) {
                 // For routes that require a 'client' parameter (like clients.show),
                 // we still need to pass it, but not 'client_id' which is for filtering

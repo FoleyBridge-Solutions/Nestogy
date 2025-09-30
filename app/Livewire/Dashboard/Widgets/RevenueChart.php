@@ -11,6 +11,8 @@ use App\Traits\LazyLoadable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use App\Domains\Core\Services\DashboardCacheService;
+use Illuminate\Support\Facades\DB;
 
 #[Lazy]
 class RevenueChart extends Component
@@ -53,55 +55,87 @@ class RevenueChart extends Component
     {
         $data = [];
         
-        // Get data based on period
+        // Get data based on period - optimized to use bulk queries
         switch ($this->period) {
             case 'month':
-                // Last 30 days
+                // Get all data in bulk queries instead of loops
+                $startDate = Carbon::now()->subDays(29);
+                $endDate = Carbon::now();
+                $lastYearStart = $startDate->copy()->subYear();
+                $lastYearEnd = $endDate->copy()->subYear();
+                
+                // Bulk fetch all revenue data
+                $currentRevenues = $this->getBulkDailyRevenue($startDate, $endDate, $companyId);
+                $lastYearRevenues = $this->getBulkDailyRevenue($lastYearStart, $lastYearEnd, $companyId);
+                $currentInvoices = $this->getBulkDailyInvoices($startDate, $endDate, $companyId);
+                $currentPayments = $this->getBulkDailyPayments($startDate, $endDate, $companyId);
+                
+                // Build the data array
                 for ($i = 29; $i >= 0; $i--) {
                     $date = Carbon::now()->subDays($i);
-                    $dayRevenue = $this->getDayRevenue($date, $companyId);
-                    $lastYearRevenue = $this->getDayRevenue($date->copy()->subYear(), $companyId);
+                    $dateStr = $date->toDateString();
+                    $lastYearDateStr = $date->copy()->subYear()->toDateString();
                     
                     $data[] = [
-                        'date' => $date->toDateString(),
-                        'revenue' => $dayRevenue,
-                        'lastYear' => $lastYearRevenue,
-                        'invoices' => $this->getDayInvoices($date, $companyId),
-                        'payments' => $this->getDayPayments($date, $companyId),
+                        'date' => $dateStr,
+                        'revenue' => $currentRevenues[$dateStr] ?? 0,
+                        'lastYear' => $lastYearRevenues[$lastYearDateStr] ?? 0,
+                        'invoices' => $currentInvoices[$dateStr] ?? 0,
+                        'payments' => $currentPayments[$dateStr] ?? 0,
                     ];
                 }
                 break;
                 
             case 'quarter':
-                // Last 3 months
+                // Get all data in bulk for 3 months
+                $months = [];
                 for ($i = 2; $i >= 0; $i--) {
-                    $month = Carbon::now()->subMonths($i);
-                    $monthRevenue = $this->getMonthRevenue($month, $companyId);
-                    $lastYearRevenue = $this->getMonthRevenue($month->copy()->subYear(), $companyId);
+                    $months[] = Carbon::now()->subMonths($i);
+                }
+                
+                $currentRevenues = $this->getBulkMonthlyRevenue($months, $companyId);
+                $lastYearMonths = array_map(fn($m) => $m->copy()->subYear(), $months);
+                $lastYearRevenues = $this->getBulkMonthlyRevenue($lastYearMonths, $companyId);
+                $currentInvoices = $this->getBulkMonthlyInvoices($months, $companyId);
+                $currentPayments = $this->getBulkMonthlyPayments($months, $companyId);
+                
+                foreach ($months as $month) {
+                    $monthKey = $month->format('Y-m');
+                    $lastYearKey = $month->copy()->subYear()->format('Y-m');
                     
                     $data[] = [
-                        'date' => $month->format('Y-m'),
-                        'revenue' => $monthRevenue,
-                        'lastYear' => $lastYearRevenue,
-                        'invoices' => $this->getMonthInvoices($month, $companyId),
-                        'payments' => $this->getMonthPayments($month, $companyId),
+                        'date' => $monthKey,
+                        'revenue' => $currentRevenues[$monthKey] ?? 0,
+                        'lastYear' => $lastYearRevenues[$lastYearKey] ?? 0,
+                        'invoices' => $currentInvoices[$monthKey] ?? 0,
+                        'payments' => $currentPayments[$monthKey] ?? 0,
                     ];
                 }
                 break;
                 
             case 'year':
-                // Last 12 months
+                // Get all data in bulk for 12 months
+                $months = [];
                 for ($i = 11; $i >= 0; $i--) {
-                    $month = Carbon::now()->subMonths($i);
-                    $monthRevenue = $this->getMonthRevenue($month, $companyId);
-                    $lastYearRevenue = $this->getMonthRevenue($month->copy()->subYear(), $companyId);
+                    $months[] = Carbon::now()->subMonths($i);
+                }
+                
+                $currentRevenues = $this->getBulkMonthlyRevenue($months, $companyId);
+                $lastYearMonths = array_map(fn($m) => $m->copy()->subYear(), $months);
+                $lastYearRevenues = $this->getBulkMonthlyRevenue($lastYearMonths, $companyId);
+                $currentInvoices = $this->getBulkMonthlyInvoices($months, $companyId);
+                $currentPayments = $this->getBulkMonthlyPayments($months, $companyId);
+                
+                foreach ($months as $month) {
+                    $monthKey = $month->format('Y-m');
+                    $lastYearKey = $month->copy()->subYear()->format('Y-m');
                     
                     $data[] = [
-                        'date' => $month->format('Y-m'),
-                        'revenue' => $monthRevenue,
-                        'lastYear' => $lastYearRevenue,
-                        'invoices' => $this->getMonthInvoices($month, $companyId),
-                        'payments' => $this->getMonthPayments($month, $companyId),
+                        'date' => $monthKey,
+                        'revenue' => $currentRevenues[$monthKey] ?? 0,
+                        'lastYear' => $lastYearRevenues[$lastYearKey] ?? 0,
+                        'invoices' => $currentInvoices[$monthKey] ?? 0,
+                        'payments' => $currentPayments[$monthKey] ?? 0,
                     ];
                 }
                 break;
@@ -199,6 +233,106 @@ class RevenueChart extends Component
         }
         
         return $query->count();
+    }
+    
+    // Bulk query methods for performance optimization
+    protected function getBulkDailyRevenue($startDate, $endDate, $companyId)
+    {
+        $query = Payment::where('company_id', $companyId)
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->selectRaw('DATE(payment_date) as date, SUM(amount) as total')
+            ->groupBy('date');
+            
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+        
+        return $query->pluck('total', 'date')->toArray();
+    }
+    
+    protected function getBulkDailyInvoices($startDate, $endDate, $companyId)
+    {
+        $query = Invoice::where('company_id', $companyId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('DATE(date) as date, SUM(amount) as total')
+            ->groupBy('date');
+            
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+        
+        return $query->pluck('total', 'date')->toArray();
+    }
+    
+    protected function getBulkDailyPayments($startDate, $endDate, $companyId)
+    {
+        $query = Payment::where('company_id', $companyId)
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->selectRaw('DATE(payment_date) as date, COUNT(*) as count')
+            ->groupBy('date');
+            
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+        
+        return $query->pluck('count', 'date')->toArray();
+    }
+    
+    protected function getBulkMonthlyRevenue($months, $companyId)
+    {
+        $monthConditions = [];
+        foreach ($months as $month) {
+            $monthConditions[] = "(YEAR(payment_date) = {$month->year} AND MONTH(payment_date) = {$month->month})";
+        }
+        
+        $query = Payment::where('company_id', $companyId)
+            ->whereRaw('(' . implode(' OR ', $monthConditions) . ')')
+            ->selectRaw("CONCAT(YEAR(payment_date), '-', LPAD(MONTH(payment_date), 2, '0')) as month, SUM(amount) as total")
+            ->groupBy('month');
+            
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+        
+        return $query->pluck('total', 'month')->toArray();
+    }
+    
+    protected function getBulkMonthlyInvoices($months, $companyId)
+    {
+        $monthConditions = [];
+        foreach ($months as $month) {
+            $monthConditions[] = "(YEAR(date) = {$month->year} AND MONTH(date) = {$month->month})";
+        }
+        
+        $query = Invoice::where('company_id', $companyId)
+            ->whereRaw('(' . implode(' OR ', $monthConditions) . ')')
+            ->selectRaw("CONCAT(YEAR(date), '-', LPAD(MONTH(date), 2, '0')) as month, SUM(amount) as total")
+            ->groupBy('month');
+            
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+        
+        return $query->pluck('total', 'month')->toArray();
+    }
+    
+    protected function getBulkMonthlyPayments($months, $companyId)
+    {
+        $monthConditions = [];
+        foreach ($months as $month) {
+            $monthConditions[] = "(YEAR(payment_date) = {$month->year} AND MONTH(payment_date) = {$month->month})";
+        }
+        
+        $query = Payment::where('company_id', $companyId)
+            ->whereRaw('(' . implode(' OR ', $monthConditions) . ')')
+            ->selectRaw("CONCAT(YEAR(payment_date), '-', LPAD(MONTH(payment_date), 2, '0')) as month, COUNT(*) as count")
+            ->groupBy('month');
+            
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+        
+        return $query->pluck('count', 'month')->toArray();
     }
     
     public function exportChart()

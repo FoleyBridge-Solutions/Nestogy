@@ -24,9 +24,9 @@ use App\Domains\Financial\Exceptions\FinancialException;
 use App\Http\Resources\Financial\QuoteResource;
 use App\Http\Resources\Financial\QuoteCollection;
 use App\Http\Resources\ApiResponse;
-use App\Services\EmailService;
-use App\Services\PdfService;
-use App\Services\QuoteInvoiceConversionService;
+use App\Domains\Email\Services\EmailService;
+use App\Domains\Core\Services\PdfService;
+use App\Domains\Financial\Services\QuoteInvoiceConversionService;
 use App\Domains\Contract\Services\ContractGenerationService;
 use App\Domains\Contract\Models\Contract;
 
@@ -170,7 +170,7 @@ class QuoteController extends Controller
         
         // If no query parameter, check session for selected client
         if (!$selectedClient) {
-            $sessionClient = \App\Services\NavigationService::getSelectedClient();
+            $sessionClient = \App\Domains\Core\Services\NavigationService::getSelectedClient();
             if ($sessionClient) {
                 $selectedClient = $sessionClient;
             }

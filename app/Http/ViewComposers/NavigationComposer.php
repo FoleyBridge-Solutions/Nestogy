@@ -3,7 +3,7 @@
 namespace App\Http\ViewComposers;
 
 use Illuminate\View\View;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 
 class NavigationComposer
 {

@@ -3,7 +3,7 @@
 namespace App\Livewire\Clients;
 
 use App\Models\Contact;
-use App\Services\NavigationService;
+use App\Domains\Core\Services\NavigationService;
 use Livewire\Component;
 
 class CreateContact extends Component
@@ -254,7 +254,7 @@ class CreateContact extends Component
         
         // Send invitation if requested
         if ($this->send_invitation && $this->has_portal_access) {
-            $invitationService = app(\App\Services\PortalInvitationService::class);
+            $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
             $result = $invitationService->sendInvitation($contact, auth()->user());
             
             if (!$result['success']) {

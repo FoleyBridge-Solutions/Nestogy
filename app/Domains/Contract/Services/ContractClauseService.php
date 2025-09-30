@@ -5,7 +5,7 @@ namespace App\Domains\Contract\Services;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractClause;
 use App\Domains\Contract\Models\ContractTemplate;
-use App\Services\DefinitionRegistry;
+use App\Domains\Core\Services\DefinitionRegistry;
 use Illuminate\Support\Collection;
 
 /**
@@ -1208,7 +1208,7 @@ class ContractClauseService
         $requiredDefinitions = [];
         
         // Get the definition registry service
-        $definitionRegistry = app(\App\Services\DefinitionRegistryService::class);
+        $definitionRegistry = app(\App\Domains\Core\Services\DefinitionRegistryService::class);
         
         // Collect required definitions from each clause
         foreach ($clauses as $clause) {
@@ -1248,7 +1248,7 @@ class ContractClauseService
         }
         
         // Get the definition registry service
-        $definitionRegistry = app(\App\Services\DefinitionRegistryService::class);
+        $definitionRegistry = app(\App\Domains\Core\Services\DefinitionRegistryService::class);
         
         // Generate the definitions section using the registry
         $dynamicContent = $definitionRegistry->generateDefinitionsSection($requiredDefinitions, $variables);

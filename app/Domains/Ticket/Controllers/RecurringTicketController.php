@@ -74,7 +74,8 @@ class RecurringTicketController extends Controller
                                   ->get();
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
+                        ->whereNull('archived_at')
+                        ->whereNull('deleted_at')
                         ->orderBy('name')
                         ->get();
 

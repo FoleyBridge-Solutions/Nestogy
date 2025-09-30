@@ -39,7 +39,13 @@ class CollectionController extends Controller
             ->paginate(20);
 
         $totalDisputed = $disputes->sum('total');
-        $avgResolutionTime = 14; // TODO: Calculate from actual resolution data
+        
+        // Calculate average resolution time from resolved disputes
+        $avgResolutionTime = \App\Models\Invoice::where('company_id', $companyId)
+            ->where('status', 'disputed')
+            ->whereNotNull('resolved_at')
+            ->selectRaw('AVG(DATEDIFF(resolved_at, disputed_at)) as avg_days')
+            ->value('avg_days') ?? 14; // Default to 14 days if no data
 
         return view('financial.collections.disputes', compact(
             'disputes',

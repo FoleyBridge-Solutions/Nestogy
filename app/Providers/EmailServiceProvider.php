@@ -10,8 +10,8 @@ use Illuminate\Mail\Events\MessageSent;
 use Webklex\PHPIMAP\ClientManager;
 use App\Contracts\Services\EmailServiceInterface;
 use App\Contracts\Services\PdfServiceInterface;
-use App\Services\EmailService;
-use App\Services\ImapService;
+use App\Domains\Email\Services\EmailService;
+use App\Domains\Email\Services\ImapService;
 
 class EmailServiceProvider extends ServiceProvider
 {
@@ -49,29 +49,8 @@ class EmailServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Configure mail settings from environment
-        $this->configureMailSettings();
-
         // Register mail event listeners
         $this->registerMailEventListeners();
-    }
-
-    /**
-     * Configure mail settings from environment variables
-     */
-    protected function configureMailSettings(): void
-    {
-        if (config('mail.default') === 'smtp') {
-            config([
-                'mail.mailers.smtp.host' => env('MAIL_HOST', 'localhost'),
-                'mail.mailers.smtp.port' => env('MAIL_PORT', 587),
-                'mail.mailers.smtp.encryption' => env('MAIL_ENCRYPTION', 'tls'),
-                'mail.mailers.smtp.username' => env('MAIL_USERNAME'),
-                'mail.mailers.smtp.password' => env('MAIL_PASSWORD'),
-                'mail.from.address' => env('MAIL_FROM_ADDRESS', 'noreply@nestogy.com'),
-                'mail.from.name' => env('MAIL_FROM_NAME', 'Nestogy ERP'),
-            ]);
-        }
     }
 
     /**

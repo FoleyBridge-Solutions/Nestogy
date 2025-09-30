@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\DistributedSchedulerService;
+use App\Domains\Core\Services\DistributedSchedulerService;
 use Illuminate\Console\Command;
 
 class ProcessRecurringBillingDistributed extends Command

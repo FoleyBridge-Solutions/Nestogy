@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\SidebarConfigProvider;
+use App\Domains\Core\Services\SidebarConfigProvider;
 use Illuminate\Support\Facades\Event;
 
 class SidebarServiceProvider extends ServiceProvider

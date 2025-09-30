@@ -3,7 +3,7 @@
 namespace Tests\Unit\Services;
 
 use Tests\TestCase;
-use App\Services\VoIPTaxService;
+use App\Domains\Financial\Services\VoIPTaxService;
 use App\Models\VoIPTaxRate;
 use App\Models\TaxJurisdiction;
 use App\Models\TaxCategory;

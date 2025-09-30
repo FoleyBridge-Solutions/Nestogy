@@ -9,7 +9,7 @@ use App\Domains\Contract\Models\ContractSchedule;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Models\Quote;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
-use App\Services\TemplateVariableMapper;
+use App\Domains\Core\Services\TemplateVariableMapper;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -1756,7 +1756,7 @@ class ContractService
             
             // Test TemplateVariableMapper before full generation
             try {
-                $variableMapper = app(\App\Services\TemplateVariableMapper::class);
+                $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
                 $testAssetCount = $variableMapper->getClientAssetsForContract($contract)->count();
                 Log::debug('Pre-generation TemplateVariableMapper test', [
                     'contract_id' => $contract->id,
@@ -1913,7 +1913,7 @@ class ContractService
                     'method' => 'generateAssetListingVariables'
                 ]);
                 
-                $variableMapper = app(\App\Services\TemplateVariableMapper::class);
+                $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
                 $assetVariables = $variableMapper->generateAssetListingVariables($contract);
                 
                 Log::info('TemplateVariableMapper integration successful', [
@@ -2964,7 +2964,7 @@ Events beyond reasonable control including but not limited to:
             try {
                 // Use provided assetVariables to avoid duplicate TemplateVariableMapper calls
                 if ($assetVariables === null) {
-                    $variableMapper = app(\App\Services\TemplateVariableMapper::class);
+                    $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
                     $assetVariables = $variableMapper->generateAssetListingVariables($contract);
                 }
                 
@@ -3149,7 +3149,7 @@ Events beyond reasonable control including but not limited to:
             try {
                 // Use provided assetVariables to avoid duplicate TemplateVariableMapper calls
                 if ($assetVariables === null) {
-                    $variableMapper = app(\App\Services\TemplateVariableMapper::class);
+                    $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
                     $assetVariables = $variableMapper->generateAssetListingVariables($contract);
                 }
                 $assetCountsByType = $this->extractAssetCountsFromVariables($assetVariables);
@@ -3599,7 +3599,7 @@ Events beyond reasonable control including but not limited to:
         
         // Generate variables first
         Log::info('🔧 Starting variable generation...');
-        $variableMapper = app(\App\Services\TemplateVariableMapper::class);
+        $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
         $variables = $variableMapper->generateVariables($contract);
         
         Log::info('✅ Variables generated', [

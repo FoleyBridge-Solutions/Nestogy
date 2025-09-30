@@ -15,6 +15,7 @@ use App\Domains\Core\Services\QuickActionService;
 use App\Models\CustomQuickAction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 
 class CommandPalette extends Component
 {
@@ -23,6 +24,10 @@ class CommandPalette extends Component
     public $results = [];
     public $selectedIndex = 0;
     public $currentRoute = null;
+    
+    // Cache for computed results to ensure consistency
+    private $cachedResults = null;
+    private $lastSearchTerm = null;
 
     protected $listeners = ['openCommandPalette' => 'handleOpen'];
     
@@ -58,6 +63,10 @@ class CommandPalette extends Component
         $this->isOpen = true;
         $this->search = '';
         
+        // Clear cache when opening
+        $this->cachedResults = null;
+        $this->lastSearchTerm = null;
+        
         // If a route is passed explicitly, always use it
         if ($currentRoute && !in_array($currentRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
             $this->currentRoute = $currentRoute;
@@ -70,15 +79,17 @@ class CommandPalette extends Component
             }
         }
         
-        // DEBUG: Log what route we're on
+        // Initialize results with popular commands
+        $popularCommands = $this->getPopularCommands();
+        $this->results = $popularCommands;
+        $this->cachedResults = $popularCommands;
+        $this->selectedIndex = 0;
+        
         logger()->info('CommandPalette::open', [
             'current_route' => $this->currentRoute,
             'passed_route' => $currentRoute,
-            'detected_route' => request()->route() ? request()->route()->getName() : null,
+            'results_count' => count($this->results),
         ]);
-        
-        $this->results = $this->getPopularCommands();
-        $this->selectedIndex = 0;
     }
 
     public function close()
@@ -87,22 +98,46 @@ class CommandPalette extends Component
         $this->search = '';
         $this->results = [];
         $this->selectedIndex = 0;
+        // Clear cache
+        $this->cachedResults = null;
+        $this->lastSearchTerm = null;
     }
 
+    #[Computed]
+    public function searchResults()
+    {
+        // Use cached results if search term hasn't changed
+        if ($this->lastSearchTerm === $this->search && $this->cachedResults !== null) {
+            return $this->cachedResults;
+        }
+        
+        // Calculate results based on search term
+        if (strlen($this->search) < 1) {
+            $results = $this->getPopularCommands();
+        } else {
+            $results = $this->getSearchResults($this->search);
+        }
+        
+        // Cache the results
+        $this->cachedResults = $results;
+        $this->lastSearchTerm = $this->search;
+        $this->results = $results; // Keep this in sync
+        
+        return $results;
+    }
+    
     public function updatedSearch($value)
     {
-        if (strlen($value) < 1) {
-            // Show popular navigation commands when empty
-            $this->results = $this->getPopularCommands();
-            return;
-        }
-
-        // Perform search even for single character
-        $this->performSearch($value);
+        // Reset selected index when search changes
         $this->selectedIndex = 0;
+        // Clear cache to force recalculation
+        $this->cachedResults = null;
     }
 
-    private function performSearch($query)
+    /**
+     * Get search results without side effects
+     */
+    private function getSearchResults($query)
     {
         $results = [];
         $limit = 5;
@@ -290,17 +325,28 @@ class CommandPalette extends Component
 
             // Add quick actions
             $quickActions = $this->getQuickActions($query);
-            $results = array_merge($quickActions, $results);
+            
+            // Put actual search results first, then quick actions
+            // This makes the search results more prominent
+            $results = array_merge($results, $quickActions);
 
-            // Limit total results
-            $this->results = array_slice($results, 0, 15);
+            // Limit total results and return them
+            return array_slice($results, 0, 15);
         } catch (\Exception $e) {
             // Log the error but don't crash the search
             \Log::error('Command palette search error: ' . $e->getMessage(), [
                 'exception' => $e->getTraceAsString()
             ]);
-            $this->results = [];
+            return [];
         }
+    }
+    
+    /**
+     * Legacy method for backward compatibility - delegates to getSearchResults
+     */
+    private function performSearch($query)
+    {
+        $this->results = $this->getSearchResults($query);
     }
 
     private function getQuickActions($query)
@@ -799,43 +845,71 @@ class CommandPalette extends Component
             $this->selectedIndex--;
         }
     }
+    
+    public function setSelectedIndex($index)
+    {
+        $this->selectedIndex = $index;
+    }
+    
+    /**
+     * Get current state for debugging
+     */
+    public function getDebugState()
+    {
+        return [
+            'search' => $this->search,
+            'selectedIndex' => $this->selectedIndex,
+            'resultsCount' => count($this->searchResults),
+            'isOpen' => $this->isOpen,
+            'hasCache' => $this->cachedResults !== null,
+            'currentRoute' => $this->currentRoute,
+        ];
+    }
 
     public function selectResult($index = null)
     {
         $index = $index ?? $this->selectedIndex;
-
-        if (isset($this->results[$index])) {
-            $result = $this->results[$index];
-            
-            \Log::info('CommandPalette::selectResult - Full result data', [
+        
+        // Always use the computed property for consistency
+        $results = $this->searchResults;
+        
+        // Add debug logging to track the issue
+        \Log::info('CommandPalette::selectResult called', [
+            'index' => $index,
+            'search' => $this->search,
+            'results_count' => count($results),
+            'selected_index' => $this->selectedIndex,
+            'is_open' => $this->isOpen,
+            'has_cached_results' => $this->cachedResults !== null,
+            'result_exists' => isset($results[$index]),
+            'first_result_title' => isset($results[0]) ? $results[0]['title'] : 'no results',
+        ]);
+        
+        // Validate index is within bounds
+        if (!is_numeric($index) || $index < 0 || $index >= count($results)) {
+            \Log::warning('CommandPalette::selectResult - Invalid index', [
                 'index' => $index,
-                'result' => $result,
-                'has_action_data' => isset($result['action_data']),
-                'result_type' => $result['type'] ?? 'unknown',
+                'results_count' => count($results),
             ]);
+            return;
+        }
+        
+        if (isset($results[$index])) {
+            $result = $results[$index];
+            
+            // Close the modal first
+            $this->close();
 
             // Handle quick actions
             if ($result['type'] === 'quick_action' && isset($result['action_data'])) {
                 $action = $result['action_data'];
                 
-                \Log::info('CommandPalette::selectResult - Action data extracted', [
-                    'action' => $action,
-                    'result_has_custom_id' => isset($result['custom_id']),
-                    'action_has_custom_id' => isset($action['custom_id']),
-                    'action_type' => $action['type'] ?? 'not_set',
-                    'action_target' => $action['target'] ?? 'not_set',
-                ]);
+
                 
                 // Handle custom actions - check both result level and action level for custom_id
                 if (isset($result['custom_id']) || isset($action['custom_id'])) {
                     $customId = $result['custom_id'] ?? $action['custom_id'];
-                    // Debug logging
-                    \Log::info('CommandPalette: Processing custom action', [
-                        'custom_id' => $customId,
-                        'action' => $action,
-                        'has_type' => isset($action['type']),
-                        'has_target' => isset($action['target']),
-                    ]);
+
                     
                     // Get the custom action from database to ensure we have all data
                     $customAction = CustomQuickAction::find($customId);
@@ -855,12 +929,7 @@ class CommandPalette extends Component
                     $actionOpenIn = $customAction->open_in;
                     $actionParameters = $customAction->parameters ?? [];
                     
-                    // Log what we're about to execute
-                    \Log::info('CommandPalette: Executing action', [
-                        'type' => $actionType,
-                        'target' => $actionTarget,
-                        'open_in' => $actionOpenIn,
-                    ]);
+
                     
                     // Now execute the action based on type
                     if ($actionType === 'route') {
@@ -884,7 +953,7 @@ class CommandPalette extends Component
                             $url .= '?' . http_build_query($actionParameters);
                         }
                         
-                        \Log::info('CommandPalette: Opening URL', ['url' => $url, 'open_in' => $actionOpenIn]);
+
                         
                         if ($actionOpenIn === 'new_tab') {
                             // For new tab, dispatch browser event and close modal after
@@ -937,13 +1006,29 @@ class CommandPalette extends Component
 
             // Use redirectRoute with navigate for SPA-like behavior
             if (isset($result['route_name'])) {
-                // Just navigate - let middleware handle any client requirements
-                $this->close();
-                return $this->redirectRoute(
-                    $result['route_name'],
-                    $result['route_params'] ?? [],
-                    navigate: true
-                );
+
+                
+                try {
+                    // Verify the route exists
+                    $routeUrl = route($result['route_name'], $result['route_params'] ?? []);
+                    
+
+                    
+                    // Close modal and navigate
+                    $this->close();
+                    return $this->redirectRoute(
+                        $result['route_name'],
+                        $result['route_params'] ?? [],
+                        navigate: true
+                    );
+                } catch (\Exception $e) {
+                    \Log::error('CommandPalette: Route generation failed', [
+                        'route_name' => $result['route_name'],
+                        'error' => $e->getMessage(),
+                    ]);
+                    $this->close();
+                    return;
+                }
             }
 
             // Fallback for any results that still have URL
@@ -951,6 +1036,11 @@ class CommandPalette extends Component
                 $this->close();
                 return $this->redirect($result['url'], navigate: true);
             }
+        } else {
+            \Log::warning('CommandPalette::selectResult - No result at index', [
+                'index' => $index,
+                'results_count' => count($this->results),
+            ]);
         }
     }
     
