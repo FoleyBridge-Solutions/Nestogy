@@ -2931,4 +2931,32 @@ class NavigationService
 
         session(['recent_client_ids' => $recentIds]);
     }
+
+    /**
+     * Set the currently selected client in session
+     */
+    public static function setSelectedClient(?int $clientId): void
+    {
+        if ($clientId === null) {
+            session()->forget('selected_client_id');
+        } else {
+            session(['selected_client_id' => $clientId]);
+        }
+    }
+
+    /**
+     * Get the currently selected client ID from session
+     */
+    public static function getSelectedClient(): ?int
+    {
+        return session('selected_client_id');
+    }
+
+    /**
+     * Clear the selected client from session
+     */
+    public static function clearSelectedClient(): void
+    {
+        session()->forget('selected_client_id');
+    }
 }
