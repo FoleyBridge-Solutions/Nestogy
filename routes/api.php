@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\VoIPTaxController;
-use App\Http\Controllers\Api\VoIPTaxReportController;
+use App\Domains\Financial\Controllers\Api\VoIPTaxController;
+use App\Domains\Financial\Controllers\Api\VoIPTaxReportController;
 use App\Domains\Financial\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Domains\Integration\Http\Controllers\Webhooks\ConnectWiseWebhookController;
 use App\Domains\Integration\Http\Controllers\Webhooks\DattoWebhookController;
@@ -157,48 +157,15 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     // Ticket System API
     Route::prefix('tickets')->name('api.tickets.')->group(function () {
         // Standard CRUD
-        Route::get('/', [App\Http\Controllers\Api\TicketsController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\Api\TicketsController::class, 'store'])->name('store');
-        Route::get('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'show'])->name('show');
-        Route::put('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'update'])->name('update');
-        Route::delete('{ticket}', [App\Http\Controllers\Api\TicketsController::class, 'destroy'])->name('destroy');
-        
-        // Ticket Actions
-        Route::post('{ticket}/replies', [App\Domains\Ticket\Controllers\TicketController::class, 'addReply'])->name('replies.store');
-        Route::patch('{ticket}/assign', [App\Domains\Ticket\Controllers\TicketController::class, 'assign'])->name('assign');
-        Route::patch('{ticket}/status', [App\Domains\Ticket\Controllers\TicketController::class, 'updateStatus'])->name('status.update');
-        Route::patch('{ticket}/priority', [App\Domains\Ticket\Controllers\TicketController::class, 'updatePriority'])->name('priority.update');
-        Route::patch('{ticket}/schedule', [App\Domains\Ticket\Controllers\TicketController::class, 'schedule'])->name('schedule');
-        Route::post('{ticket}/watchers', [App\Domains\Ticket\Controllers\TicketController::class, 'addWatcher'])->name('watchers.add');
-        Route::post('{ticket}/merge', [App\Domains\Ticket\Controllers\TicketController::class, 'merge'])->name('merge');
-        
-        // Ticket File Management
-        Route::post('{ticket}/attachments', [App\Domains\Ticket\Controllers\TicketController::class, 'uploadAttachment'])->name('attachments.upload');
-        Route::delete('{ticket}/attachments/{attachment}', [App\Domains\Ticket\Controllers\TicketController::class, 'deleteAttachment'])->name('attachments.destroy');
-        
-        // Ticket Viewers and Activity
-        Route::get('{ticket}/viewers', [App\Domains\Ticket\Controllers\TicketController::class, 'getViewers'])->name('viewers');
-        Route::post('{ticket}/view', [App\Domains\Ticket\Controllers\TicketController::class, 'markAsViewed'])->name('view');
-        
-        // Time Tracking API - Temporarily commented out due to missing TimeEntryController
-        // Route::prefix('{ticket}/time')->name('time.')->group(function () {
-        //     Route::get('/', [App\Http\Controllers\TimeEntryController::class, 'index'])->name('index');
-        //     Route::post('/', [App\Http\Controllers\TimeEntryController::class, 'store'])->name('store');
-        //     Route::put('{timeEntry}', [App\Http\Controllers\TimeEntryController::class, 'update'])->name('update');
-        //     Route::delete('{timeEntry}', [App\Http\Controllers\TimeEntryController::class, 'destroy'])->name('destroy');
-        //     Route::post('start', [App\Http\Controllers\TimeEntryController::class, 'startTimer'])->name('start');
-        //     Route::post('stop', [App\Http\Controllers\TimeEntryController::class, 'stopTimer'])->name('stop');
-        // });
-        
-        // Quick Access
-        Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'tickets'])->name('search');
-        Route::get('my-tickets', [App\Domains\Ticket\Controllers\TicketController::class, 'myTickets'])->name('my-tickets');
-        
-        // New SLA and Bulk Operations
-        Route::post('bulk-assign', [App\Http\Controllers\Api\TicketsController::class, 'bulkAssign'])->name('bulk-assign');
-        Route::post('bulk-status', [App\Http\Controllers\Api\TicketsController::class, 'bulkUpdateStatus'])->name('bulk-status');
-        Route::get('sla-performance', [App\Http\Controllers\Api\TicketsController::class, 'slaPerformance'])->name('sla-performance');
-        Route::post('check-escalations', [App\Http\Controllers\Api\TicketsController::class, 'checkEscalations'])->name('check-escalations');
+        Route::get('/', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'index'])->name('index');
+        Route::post('/', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'store'])->name('store');
+        Route::get('{ticket}', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'show'])->name('show');
+        Route::put('{ticket}', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'update'])->name('update');
+        Route::delete('{ticket}', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'destroy'])->name('destroy');
+        Route::post('bulk-assign', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'bulkAssign'])->name('bulk-assign');
+        Route::post('bulk-status', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'bulkUpdateStatus'])->name('bulk-status');
+        Route::get('sla-performance', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'slaPerformance'])->name('sla-performance');
+        Route::post('check-escalations', [App\Domains\Ticket\Controllers\Api\TicketsController::class, 'checkEscalations'])->name('check-escalations');
     });
 
     // Asset Management API
@@ -256,11 +223,11 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // Invoice API
         Route::prefix('invoices')->name('invoices.')->group(function () {
             // Standard CRUD
-            Route::get('/', [App\Http\Controllers\Api\InvoicesController::class, 'index'])->name('index');
-            Route::post('/', [App\Http\Controllers\Api\InvoicesController::class, 'store'])->name('store');
-            Route::get('{invoice}', [App\Http\Controllers\Api\InvoicesController::class, 'show'])->name('show');
-            Route::put('{invoice}', [App\Http\Controllers\Api\InvoicesController::class, 'update'])->name('update');
-            Route::delete('{invoice}', [App\Http\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
+            Route::get('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'index'])->name('index');
+            Route::post('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'store'])->name('store');
+            Route::get('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
+            Route::put('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
+            Route::delete('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
 
             // Invoice Items
             Route::post('{invoice}/items', [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
@@ -283,10 +250,10 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'invoices'])->name('search');
             
             // New Recurring and Automation
-            Route::post('generate-recurring', [App\Http\Controllers\Api\InvoicesController::class, 'generateRecurring'])->name('generate-recurring');
-            Route::post('{invoice}/retry-payment', [App\Http\Controllers\Api\InvoicesController::class, 'retryPayment'])->name('retry-payment');
-            Route::get('forecast', [App\Http\Controllers\Api\InvoicesController::class, 'forecast'])->name('forecast');
-            Route::post('{invoice}/send-email', [App\Http\Controllers\Api\InvoicesController::class, 'sendEmail'])->name('send-email');
+            Route::post('generate-recurring', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'generateRecurring'])->name('generate-recurring');
+            Route::post('{invoice}/retry-payment', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'retryPayment'])->name('retry-payment');
+            Route::get('forecast', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'forecast'])->name('forecast');
+            Route::post('{invoice}/send-email', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'sendEmail'])->name('send-email');
         });
         
         // Payment API - Commented out until PaymentController is implemented
@@ -319,50 +286,50 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     // Product & Service Management API  
     Route::prefix('products')->name('api.products.')->group(function () {
         // Product Search & Discovery
-        Route::get('search', [App\Http\Controllers\Api\ProductController::class, 'search'])->name('search');
-        Route::get('quick-search', [App\Http\Controllers\Api\ProductController::class, 'quickSearch'])->name('quick-search');
-        Route::get('categories', [App\Http\Controllers\Api\ProductController::class, 'categories'])->name('categories');
-        Route::get('category/{category}', [App\Http\Controllers\Api\ProductController::class, 'byCategory'])->name('by-category');
+        Route::get('search', [App\Domains\Product\Controllers\Api\ProductController::class, 'search'])->name('search');
+        Route::get('quick-search', [App\Domains\Product\Controllers\Api\ProductController::class, 'quickSearch'])->name('quick-search');
+        Route::get('categories', [App\Domains\Product\Controllers\Api\ProductController::class, 'categories'])->name('categories');
+        Route::get('category/{category}', [App\Domains\Product\Controllers\Api\ProductController::class, 'byCategory'])->name('by-category');
         
         // Product Pricing
-        Route::post('pricing', [App\Http\Controllers\Api\ProductController::class, 'pricing'])->name('pricing');
-        Route::post('calculate-price', [App\Http\Controllers\Api\ProductController::class, 'calculatePrice'])->name('calculate-price');
-        Route::post('best-price', [App\Http\Controllers\Api\ProductController::class, 'bestPrice'])->name('best-price');
-        Route::post('apply-promo', [App\Http\Controllers\Api\ProductController::class, 'applyPromo'])->name('apply-promo');
+        Route::post('pricing', [App\Domains\Product\Controllers\Api\ProductController::class, 'pricing'])->name('pricing');
+        Route::post('calculate-price', [App\Domains\Product\Controllers\Api\ProductController::class, 'calculatePrice'])->name('calculate-price');
+        Route::post('best-price', [App\Domains\Product\Controllers\Api\ProductController::class, 'bestPrice'])->name('best-price');
+        Route::post('apply-promo', [App\Domains\Product\Controllers\Api\ProductController::class, 'applyPromo'])->name('apply-promo');
         
         // Product Details & Recommendations
-        Route::get('{product}/details', [App\Http\Controllers\Api\ProductController::class, 'details'])->name('details');
-        Route::get('recommendations', [App\Http\Controllers\Api\ProductController::class, 'recommendations'])->name('recommendations');
+        Route::get('{product}/details', [App\Domains\Product\Controllers\Api\ProductController::class, 'details'])->name('details');
+        Route::get('recommendations', [App\Domains\Product\Controllers\Api\ProductController::class, 'recommendations'])->name('recommendations');
     });
     
     // Service Tax Calculation API
     Route::prefix('services')->name('api.services.')->group(function () {
-        Route::post('calculate-tax', [App\Http\Controllers\Api\ServiceTaxController::class, 'calculateTax'])->name('calculate-tax');
-        Route::post('calculate-quote-tax', [App\Http\Controllers\Api\ServiceTaxController::class, 'calculateQuoteTax'])->name('calculate-quote-tax');
-        Route::get('customer/{customer}/address', [App\Http\Controllers\Api\ServiceTaxController::class, 'getCustomerAddress'])->name('customer-address');
+        Route::post('calculate-tax', [App\Domains\Financial\Controllers\Api\ServiceTaxController::class, 'calculateTax'])->name('calculate-tax');
+        Route::post('calculate-quote-tax', [App\Domains\Financial\Controllers\Api\ServiceTaxController::class, 'calculateQuoteTax'])->name('calculate-quote-tax');
+        Route::get('customer/{customer}/address', [App\Domains\Financial\Controllers\Api\ServiceTaxController::class, 'getCustomerAddress'])->name('customer-address');
     });
     
     // Bundle Management API
     Route::prefix('bundles')->name('api.bundles.')->group(function () {
         // Bundle Discovery
-        Route::get('/', [App\Http\Controllers\Api\BundleController::class, 'index'])->name('index');
-        Route::get('search', [App\Http\Controllers\Api\BundleController::class, 'search'])->name('search');
+        Route::get('/', [App\Domains\Product\Controllers\Api\BundleController::class, 'index'])->name('index');
+        Route::get('search', [App\Domains\Product\Controllers\Api\BundleController::class, 'search'])->name('search');
         
         // Bundle Details & Configuration
-        Route::get('{bundle}/details', [App\Http\Controllers\Api\BundleController::class, 'details'])->name('details');
-        Route::get('{bundle}/configurable-options', [App\Http\Controllers\Api\BundleController::class, 'configurableOptions'])->name('configurable-options');
+        Route::get('{bundle}/details', [App\Domains\Product\Controllers\Api\BundleController::class, 'details'])->name('details');
+        Route::get('{bundle}/configurable-options', [App\Domains\Product\Controllers\Api\BundleController::class, 'configurableOptions'])->name('configurable-options');
         
         // Bundle Pricing & Validation
-        Route::post('calculate-price', [App\Http\Controllers\Api\BundleController::class, 'calculatePrice'])->name('calculate-price');
-        Route::post('validate-selection', [App\Http\Controllers\Api\BundleController::class, 'validateSelection'])->name('validate-selection');
+        Route::post('calculate-price', [App\Domains\Product\Controllers\Api\BundleController::class, 'calculatePrice'])->name('calculate-price');
+        Route::post('validate-selection', [App\Domains\Product\Controllers\Api\BundleController::class, 'validateSelection'])->name('validate-selection');
         
         // Bundle Management
-        Route::post('{bundle}/duplicate', [App\Http\Controllers\Api\BundleController::class, 'duplicate'])->name('duplicate');
+        Route::post('{bundle}/duplicate', [App\Domains\Product\Controllers\Api\BundleController::class, 'duplicate'])->name('duplicate');
     });
     
     // Promo Code Management API
     Route::prefix('promo-codes')->name('api.promo-codes.')->group(function () {
-        Route::post('validate', [App\Http\Controllers\Api\ProductController::class, 'applyPromo'])->name('validate');
+        Route::post('validate', [App\Domains\Product\Controllers\Api\ProductController::class, 'applyPromo'])->name('validate');
     });
 
     // Project Management API
@@ -412,9 +379,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
     // Documentation Template API
     Route::prefix('documentation-templates')->name('api.documentation-templates.')->group(function () {
-        Route::get('/tabs', [\App\Http\Controllers\Api\DocumentationTemplateController::class, 'getAvailableTabs'])->name('tabs');
-        Route::get('/tabs/{category}', [\App\Http\Controllers\Api\DocumentationTemplateController::class, 'getDefaultTabs'])->name('tabs.category');
-        Route::get('/{templateKey}', [\App\Http\Controllers\Api\DocumentationTemplateController::class, 'getTemplate'])->name('template');
+        Route::get('/tabs', [App\Domains\Knowledge\Controllers\Api\DocumentationTemplateController::class, 'getAvailableTabs'])->name('tabs');
+        Route::get('/tabs/{category}', [App\Domains\Knowledge\Controllers\Api\DocumentationTemplateController::class, 'getDefaultTabs'])->name('tabs.category');
+        Route::get('/{templateKey}', [App\Domains\Knowledge\Controllers\Api\DocumentationTemplateController::class, 'getTemplate'])->name('template');
     });
 
     // User Management API
@@ -470,7 +437,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     
     // Keyboard Shortcuts API
     Route::prefix('shortcuts')->name('api.shortcuts.')->group(function () {
-        Route::get('active', [App\Http\Controllers\Api\ShortcutsController::class, 'active'])->name('active');
+        Route::get('active', [App\Domains\Core\Controllers\Api\ShortcutsController::class, 'active'])->name('active');
         Route::post('execute', [App\Domains\Core\Controllers\ShortcutController::class, 'executeShortcutCommand'])->name('execute');
         Route::get('help', [App\Domains\Core\Controllers\ShortcutController::class, 'getShortcutHelp'])->name('help');
     });
@@ -483,7 +450,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
     
     // Categories API
     Route::prefix('categories')->name('api.categories.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\CategoriesController::class, 'index'])->name('index');
+        Route::get('/', [App\Domains\Product\Controllers\Api\CategoriesController::class, 'index'])->name('index');
     });
     
     // Search API

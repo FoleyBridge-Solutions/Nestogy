@@ -2,6 +2,8 @@
 
 namespace App\Domains\Email\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\MailQueue;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;

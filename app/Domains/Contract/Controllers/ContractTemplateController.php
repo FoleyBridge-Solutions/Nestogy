@@ -2,6 +2,8 @@
 
 namespace App\Domains\Contract\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Services\ContractTemplateService;
 use App\Domains\Contract\Requests\StoreContractTemplateRequest;

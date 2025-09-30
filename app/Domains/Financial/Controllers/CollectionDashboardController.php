@@ -2,6 +2,8 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Financial\Services\CollectionAnalyticsService;
 use App\Domains\Financial\Services\CollectionManagementService;
 use App\Domains\Financial\Services\DunningAutomationService;

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Client\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Client\Requests\StoreClientRequest;
 use App\Domains\Client\Requests\UpdateClientRequest;
 use App\Domains\Client\Services\ClientService;

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\TaxCalculation;
 use App\Models\ServiceTaxRate;
 use App\Models\TaxProfile;

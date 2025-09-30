@@ -2,6 +2,8 @@
 
 namespace App\Domains\Lead\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Lead\Models\LeadSource;
 use App\Domains\Lead\Services\LeadScoringService;

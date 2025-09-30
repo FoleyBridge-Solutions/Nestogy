@@ -2,6 +2,8 @@
 
 namespace App\Domains\Client\Controllers\Api\Portal;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

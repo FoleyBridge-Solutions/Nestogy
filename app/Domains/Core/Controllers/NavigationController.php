@@ -2,6 +2,8 @@
 
 namespace App\Domains\Core\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Core\Services\CommandPaletteService;
 use Illuminate\Http\Request;

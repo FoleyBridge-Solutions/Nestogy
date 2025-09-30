@@ -2,6 +2,8 @@
 
 namespace App\Domains\Core\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Core\Services\ShortcutService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

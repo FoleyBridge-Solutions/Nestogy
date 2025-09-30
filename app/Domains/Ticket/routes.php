@@ -46,6 +46,12 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         // Archive
         Route::get('archive', [\App\Domains\Ticket\Controllers\TicketController::class, 'archive'])->name('archive');
         
+        // Priority Queue custom routes (must come before resource)
+        Route::post('priority-queue/auto-prioritize', [\App\Domains\Ticket\Controllers\PriorityQueueController::class, 'autoPrioritize'])->name('priority-queue.auto-prioritize');
+        Route::post('priority-queue/bulk-update', [\App\Domains\Ticket\Controllers\PriorityQueueController::class, 'bulkUpdate'])->name('priority-queue.bulk-update');
+        Route::post('priority-queue/escalate', [\App\Domains\Ticket\Controllers\PriorityQueueController::class, 'escalate'])->name('priority-queue.escalate');
+        Route::get('priority-queue/export', [\App\Domains\Ticket\Controllers\PriorityQueueController::class, 'export'])->name('priority-queue.export');
+        
         Route::resource('priority-queue', \App\Domains\Ticket\Controllers\PriorityQueueController::class);
         Route::resource('workflows', \App\Domains\Ticket\Controllers\WorkflowController::class);
         Route::resource('assignments', \App\Domains\Ticket\Controllers\AssignmentController::class);

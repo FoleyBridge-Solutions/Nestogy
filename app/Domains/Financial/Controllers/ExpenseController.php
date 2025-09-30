@@ -2,6 +2,8 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Client;

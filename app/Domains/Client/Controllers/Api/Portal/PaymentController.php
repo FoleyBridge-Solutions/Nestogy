@@ -2,6 +2,8 @@
 
 namespace App\Domains\Client\Controllers\Api\Portal;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
 use App\Models\AutoPayment;

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Payment;
 use App\Models\Invoice;
 use App\Models\Client;

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Security\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\User;
 use App\Domains\Security\Services\RoleService;
 use Illuminate\Http\Request;

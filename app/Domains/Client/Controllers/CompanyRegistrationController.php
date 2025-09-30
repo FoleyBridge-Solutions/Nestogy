@@ -2,6 +2,8 @@
 
 namespace App\Domains\Client\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\SubscriptionPlan;

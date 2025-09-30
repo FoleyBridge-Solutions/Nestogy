@@ -2,6 +2,8 @@
 
 namespace App\Domains\Marketing\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Domains\Marketing\Models\MarketingCampaign;
 use App\Domains\Marketing\Models\CampaignSequence;
 use App\Domains\Marketing\Models\CampaignEnrollment;

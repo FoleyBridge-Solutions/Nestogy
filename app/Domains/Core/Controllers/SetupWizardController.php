@@ -2,6 +2,8 @@
 
 namespace App\Domains\Core\Controllers;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Company;
 use App\Models\Setting;
 use App\Models\User;
